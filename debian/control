@@ -1,0 +1,16 @@
+Source: com.github.hezral.rogu
+Section: x11
+Priority: extra
+Maintainer: Adi Hezral <hezral@gmail.com>
+Build-Depends: debhelper (>= 10),
+               dh-python,
+               python-all,
+               python-setuptools,
+               libgranite-dev
+Standards-Version: 3.9.3
+
+Package: com.github.hezral.rogu
+Architecture: any
+Depends: python3, python-requests, ${misc:Depends}, ${shlibs:Depends}
+Description: Rogu
+ An application for checking your log files, designed for elementary OS.
