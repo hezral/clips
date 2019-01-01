@@ -1,6 +1,6 @@
 Format: http://dep.debian.net/deps/dep5
-Upstream-Name: rogu
-Source: https://github.com/hezral/rogu
+Upstream-Name: clips
+Source: https://github.com/hezral/clips
 
 Files: *
 Copyright: 2017 Adi Hezral <hezral@gmail.com>

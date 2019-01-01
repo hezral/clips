@@ -2,5 +2,5 @@
 
 set -e
 
-cd /usr/share/com.github.hezral.rogu
+cd /usr/share/com.github.hezral.clips
 sudo python3 setup.py install
