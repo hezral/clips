@@ -39,8 +39,8 @@ class Clips(Gtk.ApplicationWindow):
         self.set_default_size(640, 480)
 
         #set theme to light only
-        #settings = Gtk.Settings.get_default()
-        #settings.set_property("gtk-application-prefer-dark-theme", False)
+        settings = Gtk.Settings.get_default()
+        settings.set_property("gtk-application-prefer-dark-theme", False)
 
         #set titlebar
         self.titlebar = Gtk.HeaderBar()

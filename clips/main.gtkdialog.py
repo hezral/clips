@@ -23,3 +23,16 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk
 
+class Clips(Gtk.Dialog):
+    def __init__(self):
+        super(Clips, self).__init__()
+        self.set_keep_above(True)
+        self.props.window_position = Gtk.WindowPosition.CENTER
+        self.set_default_size(640, 480)
+        self.show_all()
+        self.get_action_area().visible = False
+
+win = Clips()
+win.connect("destroy", Gtk.main_quit)
+win.show_all()
+Gtk.main()
