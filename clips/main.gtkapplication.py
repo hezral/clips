@@ -36,7 +36,7 @@ class Clips(Gtk.ApplicationWindow):
 
         #set window style, size
         self.get_style_context().add_class("rounded")
-        self.set_default_size(500, 480)
+        self.set_default_size(400, 480)
         self.set_keep_above(True)
         self.props.window_position = Gtk.WindowPosition.CENTER
 
@@ -45,55 +45,38 @@ class Clips(Gtk.ApplicationWindow):
         #settings.set_property("gtk-application-prefer-dark-theme", False)
 
         
-        #headerbar
+        #header
         headerbar = Gtk.HeaderBar()
         #headerbar.props.title = "Clips"
         headerbar.set_show_close_button(True)
         #headerbar.has_subtitle = False
         #headerbar.get_style_context().add_class(Gtk.STYLE_CLASS_FLAT)
 
-        #search headerbar
+        #search field
         search_entry = Gtk.SearchEntry()
         search_entry.props.placeholder_text = "Search Clipboard\u2026"
-        search_entry.set_hexpand(True)
-        #search_entry.props.vexpand = True
-        '''
-        search_entry.props.margin_left = 5
-        search_entry.props.margin_left = 5
-        search_entry.props.margin_right = 5
-        search_entry.props.margin_top = 5
-        search_entry.props.margin_bottom = 5
-        '''
-
-        #box headerbar
-        box = Gtk.HBox(spacing=10)
-        box.get_style_context().add_class("linked")
-        #Gtk.StyleContext.add_class(box.get_style_context(), "linked")
-        #pack headerbar
-        #headerbar.pack_end(search_entry)
-        #headerbar.pack_start(search_entry)
-        box.add(search_entry)
-        headerbar.add(box)
+        search_entry.set_hexpand(True)   
+        search_entry.set_halign(Gtk.Align.FILL)
+        search_entry.set_size_request(400,32)
         
-        #set headerbar
-        #self.set_titlebar(box)
-        self.set_titlebar(headerbar)
-
         SEARCH_ENTRY_CSS = """
         .large-search-entry {
-            font-size: 175%;
+            font-size: 125%;
         }
         """
-        #search_text_provider = Gtk.CssProvider()
-        #search_text_provider.load_from_data(search_text,-1)
-        #search_entry.get_style_context().add_provider(search_text_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
-        #search_entry.get_style_context().add_class("large-search-entry")
+        search_text_provider = Gtk.CssProvider()
+        search_text_provider.load_from_data(bytes(SEARCH_ENTRY_CSS.encode()))
+        search_entry.get_style_context().add_provider(search_text_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+        search_entry.get_style_context().add_class("large-search-entry")
 
-        font_size_provider = Gtk.CssProvider()
-        font_size_provider.load_from_data(bytes(SEARCH_ENTRY_CSS.encode()))
-        style_context = search_entry.get_style_context()
-        style_context.add_provider(font_size_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
-        style_context.add_class("large-search-entry")
+        #box headerbar
+        box = Gtk.HBox(orientation=Gtk.Orientation.HORIZONTAL)
+        box.add(search_entry)
+        
+        #set header
+        headerbar.add(box)
+        #self.set_titlebar(box)
+        self.set_titlebar(headerbar)
 
         #list box
         list_box = Gtk.ListBox()
@@ -101,9 +84,27 @@ class Clips(Gtk.ApplicationWindow):
         list_box.set_activate_on_single_click(False)
 
         #rows
-        items = 'This is a sorted ListBox FailThis is a sorted ListBox FailThis is a sorted ListBox FailThis is a sorted ListBox FailThis is a sorted ListBox FailThis is a sorted ListBox Fail'.split()
+        items = """
+        This is a sorted ListBox Fail
+        This is a sorted ListBox Fail
+        This is a sorted ListBox Fail
+        This is a sorted ListBox Fail
+        This is a sorted ListBox Fail
+        This is a sorted ListBox Fail
+        """.split()
         for item in items:
             list_box.add(ListBoxRowWithData(item))
+
+        #grid rows
+        grid = Gtk.Grid()
+        grid.props.column_spacing = 12
+        grid.props.row_spacing = 3
+        grid.props.margin = 12
+        grid.props.margin_bottom = grid.props.margin_top = 6
+        list_box.add(grid)
+        
+
+
 
         #list box scrollwindow
         list_box_scrollwin = Gtk.ScrolledWindow()
