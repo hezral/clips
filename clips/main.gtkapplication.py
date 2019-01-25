@@ -21,7 +21,7 @@
 
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, Gdk, Pango
+from gi.repository import Gtk, Gdk, Pango, GdkPixbuf
 
 class InfoView(Gtk.Grid):
     def __init__(self, title, description, icon):
@@ -49,6 +49,7 @@ class InfoView(Gtk.Grid):
 class ClipsListRow(Gtk.ListBoxRow):
     def __init__(self, data):
         super(ClipsListRow, self).__init__()
+        
         #grid rows
         grid = Gtk.Grid()
         grid.props.column_spacing = 12
@@ -71,7 +72,6 @@ class ClipsListRow(Gtk.ListBoxRow):
 
         .button-view:hover {
             background: @colorAccentOpaque;
-            /* background: linear-gradient(#ff5858, #db36a4); */
             color: #FFFFFF;
             border: none;
         }
@@ -79,11 +79,6 @@ class ClipsListRow(Gtk.ListBoxRow):
         .transition {
             transition: 200ms;
             transition-timing-function: ease;
-        }
-
-        .photo {
-            background: none;
-            border: none;
         }
         """
 
@@ -101,30 +96,68 @@ class ClipsListRow(Gtk.ListBoxRow):
         btn_view.props.valign = Gtk.Align.CENTER
         btn_view.props.can_default = True
         
-        overlay = Gtk.Overlay()
-        overlay.props.can_focus = False
-        overlay.props.halign = Gtk.Align.CENTER
-        overlay.add(btn_view)
-        #overlay.add(item_icon)
-        overlay.props.width_request = 16
-        overlay.props.height_request = 16
-        #overlay.get_style_context().add_provider(btn_css, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
-        #overlay.get_style_context().add_class("photo")
-        #overlay.show_all()    
-
-        grid.attach(overlay, 2, 0, 1, 1)
-        grid.attach(item_icon, 0, 0, 1, 1)
-        
         item_content = Gtk.Label(data)
         item_content.get_style_context().add_class("h3")
         item_content.set_ellipsize(Pango.EllipsizeMode.MIDDLE)
         item_content.set_lines(1)
         item_content.set_single_line_mode(True)
         item_content.set_max_width_chars(60)
+
+        overlay = Gtk.Overlay()
+        overlay.props.can_focus = False
+        overlay.props.halign = Gtk.Align.CENTER
+        overlay.add(btn_view)
+        #overlay.add(item_icon)
+        #overlay.add(item_content)
+        #overlay.props.width_request = 16
+        #overlay.props.height_request = 16
+        #overlay.show_all()    
+
+        grid.attach(overlay, 2, 0, 1, 1)
+        grid.attach(item_icon, 0, 0, 1, 1)
         grid.attach(item_content, 1, 0, 1, 1)
-        
         self.add(grid)
-        
+
+class ClipsRow(Gtk.ListBoxRow):
+    def __init__(self, data):
+        super(ClipsRow, self).__init__()
+        thumb_clips_generic = Gtk.Image()
+        thumb_clips_generic.props.valign = Gtk.Align.CENTER
+        thumb_clips_generic.props.halign = Gtk.Align.CENTER
+        thumb_clips_generic.props.pixel_size = 64
+        thumb_clips_generic.props.pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_size()
+
+class ClipsListRow2(Gtk.ListBoxRow):
+    def __init__(self, data):
+        super(ClipsListRow2, self).__init__()
+
+        def generate_delete_button(self, delete_image):
+            delete_button = Gtk.EventBox()
+            delete_button.add(delete_image)
+            delete_button.set_tooltip_text("Remove this clip")
+            return delete_button
+
+        delete_image = Gtk.Image.new_from_icon_name("edit-delete-symbolic", Gtk.IconSize.SMALL_TOOLBAR)
+        icon = Gtk.Image.new_from_icon_name("utilities-terminal", Gtk.IconSize.DIALOG)
+        vertical_box = Gtk.Box(Gtk.Orientation.VERTICAL, 6)
+
+        delete_button = generate_delete_button(self, delete_image)
+        name_label = Gtk.Label(data)
+
+        vertical_box.add(name_label)
+
+        row = Gtk.Box(Gtk.Orientation.HORIZONTAL, 12)
+        row.props.margin = 12
+        row.add(icon)
+        row.add(vertical_box)
+
+        row.pack_end(delete_button, False, False, False)
+        self.add(row)
+    
+
+
+
+
 
 class Clips(Gtk.ApplicationWindow):
     def __init__(self):
@@ -137,10 +170,11 @@ class Clips(Gtk.ApplicationWindow):
         self.set_default_size(400, 480)
         self.set_keep_above(True)
         self.props.window_position = Gtk.WindowPosition.CENTER
+        
 
         #set application theme
-        settings = Gtk.Settings.get_default()
-        settings.set_property("gtk-application-prefer-dark-theme", False)
+        #settings = Gtk.Settings.get_default()
+        #settings.set_property("gtk-application-prefer-dark-theme", False)
 
         #header
         headerbar = Gtk.HeaderBar()
@@ -151,7 +185,7 @@ class Clips(Gtk.ApplicationWindow):
 
         #search field
         search_entry = Gtk.SearchEntry()
-        search_entry.props.placeholder_text = "Search Clipboard\u2026"
+        search_entry.props.placeholder_text = "Search Something\u2026"
         search_entry.set_hexpand(True)   
         search_entry.set_halign(Gtk.Align.FILL)
         search_entry.set_size_request(400,32)
@@ -175,6 +209,14 @@ class Clips(Gtk.ApplicationWindow):
         #self.set_titlebar(box)
         self.set_titlebar(headerbar)
 
+        def filter_func(row, data, notify_destroy):
+            if(row.get_index() % 2 == 0):
+                row.get_style_context().add_class("background")
+            else:
+                row.get_style_context().add_class("view")
+            #return False if row.data == 'Fail' else True
+            return True
+
         #list box
         list_box = Gtk.ListBox()
         list_box.set_selection_mode(Gtk.SelectionMode.SINGLE)
@@ -187,8 +229,11 @@ class Clips(Gtk.ApplicationWindow):
         This is a sorted ListBox Fail
         """.split()
         for item in items:
-            list_box.add(ClipsListRow(item))
+            #list_box.add(ClipsListRow(item))
+            list_box.add(ClipsListRow2(item))
         
+        list_box.set_filter_func(filter_func, None, False)
+
         #list box scrollwindow
         list_box_scrollwin = Gtk.ScrolledWindow()
         list_box_scrollwin.set_vexpand(True)
@@ -209,6 +254,7 @@ class Clips(Gtk.ApplicationWindow):
 
         #self.add(list_box_scrollwin)
         self.add(stack_view)
+
         self.show_all()
 
 
