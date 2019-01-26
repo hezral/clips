@@ -162,7 +162,7 @@ class ClipsListRow2(Gtk.ListBoxRow):
 class Clips(Gtk.ApplicationWindow):
     def __init__(self):
         #super(Clips, self).__init__(title="Clips", resizable=False, border_width=6)
-        Gtk.ApplicationWindow.__init__(self, title="Clips", resizable=False, border_width=6)
+        Gtk.ApplicationWindow.__init__(self, title="Clips", resizable=False, border_width=0)
 
         #set icon, window style, size
         self.set_icon_name("com.github.hezral.clips")
