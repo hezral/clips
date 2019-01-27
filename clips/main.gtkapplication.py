@@ -22,28 +22,7 @@
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk, Pango, GdkPixbuf
-
-class InfoView(Gtk.Grid):
-    def __init__(self, title, description, icon):
-        super(InfoView, self).__init__()
-        title_label = Gtk.Label(title)
-        title_label.get_style_context().add_class("h1")
-        description_label = Gtk.Label(description)
-        icon_image = Gtk.Image()
-        icon_image.set_from_icon_name(icon, Gtk.IconSize.DIALOG)
-        icon_box = Gtk.EventBox()
-        icon_box.props.margin_top = 6
-        icon_box.set_valign(Gtk.Align.START)
-        icon_box.add(icon_image)
-        self.props.column_spacing = 12
-        self.props.row_spacing = 6
-        self.set_halign(Gtk.Align.CENTER)
-        self.set_valign(Gtk.Align.CENTER)
-        self.set_vexpand(True)
-        self.props.margin = 24
-        self.attach(icon_box, 1, 1, 1, 2)
-        self.attach(title_label, 2, 1, 1, 1)
-        self.attach(description_label, 2, 2, 1, 1)
+import infoview
 
 
 class ClipsListRow(Gtk.ListBoxRow):
@@ -118,14 +97,6 @@ class ClipsListRow(Gtk.ListBoxRow):
         grid.attach(item_content, 1, 0, 1, 1)
         self.add(grid)
 
-class ClipsRow(Gtk.ListBoxRow):
-    def __init__(self, data):
-        super(ClipsRow, self).__init__()
-        thumb_clips_generic = Gtk.Image()
-        thumb_clips_generic.props.valign = Gtk.Align.CENTER
-        thumb_clips_generic.props.halign = Gtk.Align.CENTER
-        thumb_clips_generic.props.pixel_size = 64
-        thumb_clips_generic.props.pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_size()
 
 class ClipsListRow2(Gtk.ListBoxRow):
     def __init__(self, data):
@@ -136,6 +107,12 @@ class ClipsListRow2(Gtk.ListBoxRow):
             delete_button.add(delete_image)
             delete_button.set_tooltip_text("Remove this clip")
             return delete_button
+
+        thumb_clips_generic = Gtk.Image()
+        thumb_clips_generic.props.valign = Gtk.Align.CENTER
+        thumb_clips_generic.props.halign = Gtk.Align.CENTER
+        thumb_clips_generic.props.pixel_size = 64
+        #thumb_clips_generic.props.pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_size()
 
         delete_image = Gtk.Image.new_from_icon_name("edit-delete-symbolic", Gtk.IconSize.SMALL_TOOLBAR)
         icon = Gtk.Image.new_from_icon_name("utilities-terminal", Gtk.IconSize.DIALOG)
@@ -153,6 +130,8 @@ class ClipsListRow2(Gtk.ListBoxRow):
 
         row.pack_end(delete_button, False, False, False)
         self.add(row)
+        self.data = data
+        
     
 
 
@@ -171,16 +150,13 @@ class Clips(Gtk.ApplicationWindow):
         self.set_keep_above(True)
         self.props.window_position = Gtk.WindowPosition.CENTER
         
-
         #set application theme
         #settings = Gtk.Settings.get_default()
         #settings.set_property("gtk-application-prefer-dark-theme", False)
 
         #header
         headerbar = Gtk.HeaderBar()
-        #headerbar.props.title = "Clips"
         headerbar.set_show_close_button(True)
-        #headerbar.has_subtitle = False
         #headerbar.get_style_context().add_class(Gtk.STYLE_CLASS_FLAT)
 
         #search field
@@ -217,6 +193,11 @@ class Clips(Gtk.ApplicationWindow):
             #return False if row.data == 'Fail' else True
             return True
 
+        def on_row_activated(widget, row):
+            print(row.get_index())
+            print(row.data)
+
+
         #list box
         list_box = Gtk.ListBox()
         list_box.set_selection_mode(Gtk.SelectionMode.SINGLE)
@@ -233,6 +214,7 @@ class Clips(Gtk.ApplicationWindow):
             list_box.add(ClipsListRow2(item))
         
         list_box.set_filter_func(filter_func, None, False)
+        list_box.connect('row-activated', on_row_activated)
 
         #list box scrollwindow
         list_box_scrollwin = Gtk.ScrolledWindow()
@@ -241,7 +223,7 @@ class Clips(Gtk.ApplicationWindow):
         list_box_scrollwin.show_all()
 
         #view for no clipboard items
-        info_view = InfoView("No Clips Found","Start Copying Stuffs", "edit-find-symbolic")
+        info_view = infoview.InfoView("No Clips Found","Start Copying Stuffs", "edit-find-symbolic")
         info_view.show_all()
 
         stack_view = Gtk.Stack()
@@ -249,7 +231,7 @@ class Clips(Gtk.ApplicationWindow):
         list_box_scrollwin.set_visible(True)
         stack_view.add_named(list_box_scrollwin, "listbox")
         stack_view.add_named(info_view, "infoview")
-        stack_view.set_visible_child_name("listbox")
+        stack_view.set_visible_child_name("infoview")
         stack_view.show_all()
 
         #self.add(list_box_scrollwin)
