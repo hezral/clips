@@ -25,22 +25,31 @@ from gi.repository import Gtk, Gdk
 
 class InfoView(Gtk.Grid):
     def __init__(self, title, description, icon):
-        super(InfoView, self).__init__()
+        super().__init__()
+        
         title_label = Gtk.Label(title)
         title_label.get_style_context().add_class("h1")
         description_label = Gtk.Label(description)
-        #icon_image = Gtk.Image()
-        #icon_image.set_from_icon_name(icon, Gtk.IconSize.DIALOG)
+        icon_image = Gtk.Image()
+        
+        icon_image.set_from_icon_name(icon, Gtk.IconSize.DIALOG)
+        icon_image.set_pixel_size(96)
+
+        thumb_clips_generic = Gtk.Image()
+        thumb_clips_generic.props.valign = Gtk.Align.CENTER
+        thumb_clips_generic.props.halign = Gtk.Align.CENTER
+        thumb_clips_generic.props.pixel_size = 64
+        #thumb_clips_generic.props.pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_size()
+
         icon_box = Gtk.EventBox()
-        icon_box.props.margin_top = 6
         icon_box.set_valign(Gtk.Align.START)
-        #icon_box.add(icon_image)
+        icon_box.add(icon_image)
         self.props.column_spacing = 12
         self.props.row_spacing = 6
         self.set_halign(Gtk.Align.CENTER)
         self.set_valign(Gtk.Align.CENTER)
         self.set_vexpand(True)
         self.props.margin = 24
-        self.attach(icon_box, 1, 1, 1, 2)
-        self.attach(title_label, 2, 1, 1, 1)
-        self.attach(description_label, 2, 2, 1, 1)
+        self.attach(icon_box, 1, 1, 1, 1)
+        self.attach(title_label, 1, 2, 1, 1)
+        self.attach(description_label, 1, 3, 1, 1)
