@@ -36,7 +36,7 @@ class ClipsListRow(Gtk.ListBoxRow):
         def generate_edit_button():
             edit_button = Gtk.EventBox ()
             edit_button.add(edit_image)
-            edit_button.set_tooltip_text (_("Edit this alias"))
+            edit_button.set_tooltip_text("Edit this alias")
 
 
         thumb_clips_generic = Gtk.Image()

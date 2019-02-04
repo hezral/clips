@@ -45,12 +45,12 @@ class Clips(Gtk.ApplicationWindow):
         settings = Gtk.Settings.get_default()
         settings.set_property("gtk-application-prefer-dark-theme", True)
 
-        #header construct
+        #headerbar construct
         headerbar = Gtk.HeaderBar()
         headerbar.set_show_close_button(True)
         #headerbar.get_style_context().add_class(Gtk.STYLE_CLASS_FLAT)
 
-        #header search field
+        #headerbar search field
         search_entry = Gtk.SearchEntry()
         search_entry.props.placeholder_text = "Search Something\u2026"
         search_entry.set_hexpand(True)   
@@ -67,28 +67,23 @@ class Clips(Gtk.ApplicationWindow):
         search_entry.get_style_context().add_provider(search_text_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
         search_entry.get_style_context().add_class("large-search-entry")
 
-        #header box to hold widgets
+        #headerbar box to hold widgets
         box = Gtk.HBox(orientation=Gtk.Orientation.HORIZONTAL)
         box.add(search_entry)
 
-        #header construct
+        #headerbar construct
         headerbar.add(box)
         headerbar.show_all()
-
-        #self.set_titlebar(box)
         self.set_titlebar(headerbar)
 
-
-            
-
-
-
-
-
         #listbox construct
+        global last_row_selected_idx
+        last_row_selected_idx = 0
+
         list_box = Gtk.ListBox()
         list_box.set_selection_mode(Gtk.SelectionMode.SINGLE)
         list_box.set_activate_on_single_click(False)
+
 
         #listbox functions
         #function for styling alternate rows using filters
@@ -129,10 +124,6 @@ class Clips(Gtk.ApplicationWindow):
             list_box.add(ClipsListRow(item))
         
         list_box.set_filter_func(filter_func, None, False)
-
-        global last_row_selected_idx
-        last_row_selected_idx = 0
-
         list_box.connect('row-selected', on_row_selected)
         list_box.connect_after('activate_cursor_row', on_row_activated)
         
