@@ -33,6 +33,12 @@ class ClipsListRow(Gtk.ListBoxRow):
             delete_button.set_tooltip_text("Remove this clip")
             return delete_button
 
+        def generate_edit_button():
+            edit_button = Gtk.EventBox ()
+            edit_button.add(edit_image)
+            edit_button.set_tooltip_text (_("Edit this alias"))
+
+
         thumb_clips_generic = Gtk.Image()
         thumb_clips_generic.props.valign = Gtk.Align.CENTER
         thumb_clips_generic.props.halign = Gtk.Align.CENTER
@@ -40,13 +46,16 @@ class ClipsListRow(Gtk.ListBoxRow):
         #thumb_clips_generic.props.pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_size()
 
         delete_image = Gtk.Image.new_from_icon_name("edit-delete-symbolic", Gtk.IconSize.SMALL_TOOLBAR)
+        edit_image = Gtk.Image.new_from_icon_name("document-properties-symbolic", Gtk.IconSize.SMALL_TOOLBAR)
+
         icon = Gtk.Image.new_from_icon_name("utilities-terminal", Gtk.IconSize.DIALOG)
+        icon.set_pixel_size(64)
         vertical_box = Gtk.Box(Gtk.Orientation.VERTICAL, 6)
 
-        #delete_button = generate_delete_button(self, delete_image)
-        self.delete_button = Gtk.EventBox()
-        self.delete_button.add(delete_image)
-        self.delete_button.set_tooltip_text("Remove this clip")
+        self.delete_button = generate_delete_button(self, delete_image)
+        #self.delete_button = Gtk.EventBox()
+        #self.delete_button.add(delete_image)
+        #self.delete_button.set_tooltip_text("Remove this clip")
 
         name_label = Gtk.Label(data)
 
@@ -58,6 +67,7 @@ class ClipsListRow(Gtk.ListBoxRow):
         row.add(vertical_box)
 
         row.pack_end(self.delete_button, False, False, False)
+
         self.add(row)
         self.data = data
         self.show_all()

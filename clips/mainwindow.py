@@ -30,28 +30,27 @@ from widgets.clipslistrow import ClipsListRow
 class Clips(Gtk.ApplicationWindow):
     def __init__(self):
         super().__init__()
-
+        
+        #applicationwindow construct
         self.props.title = "Clips"
         self.props.resizable = False
         self.props.border_width = 0
-
-        #set icon, window style, size
         self.set_icon_name("com.github.hezral.clips")
         self.get_style_context().add_class("rounded")
         self.set_default_size(400, 480)
         self.set_keep_above(True)
         self.props.window_position = Gtk.WindowPosition.CENTER
         
-        #set application theme
-        #settings = Gtk.Settings.get_default()
-        #settings.set_property("gtk-application-prefer-dark-theme", False)
+        #applicationwindow theme
+        settings = Gtk.Settings.get_default()
+        settings.set_property("gtk-application-prefer-dark-theme", True)
 
-        #header
+        #header construct
         headerbar = Gtk.HeaderBar()
         headerbar.set_show_close_button(True)
         #headerbar.get_style_context().add_class(Gtk.STYLE_CLASS_FLAT)
 
-        #search field
+        #header search field
         search_entry = Gtk.SearchEntry()
         search_entry.props.placeholder_text = "Search Something\u2026"
         search_entry.set_hexpand(True)   
@@ -68,17 +67,31 @@ class Clips(Gtk.ApplicationWindow):
         search_entry.get_style_context().add_provider(search_text_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
         search_entry.get_style_context().add_class("large-search-entry")
 
-        #box headerbar
+        #header box to hold widgets
         box = Gtk.HBox(orientation=Gtk.Orientation.HORIZONTAL)
         box.add(search_entry)
-        
-        #set header
+
+        #header construct
         headerbar.add(box)
         headerbar.show_all()
 
         #self.set_titlebar(box)
         self.set_titlebar(headerbar)
 
+
+            
+
+
+
+
+
+        #listbox construct
+        list_box = Gtk.ListBox()
+        list_box.set_selection_mode(Gtk.SelectionMode.SINGLE)
+        list_box.set_activate_on_single_click(False)
+
+        #listbox functions
+        #function for styling alternate rows using filters
         def filter_func(row, data, notify_destroy):
             if(row.get_index() % 2 == 0):
                 row.get_style_context().add_class("background")
@@ -87,23 +100,25 @@ class Clips(Gtk.ApplicationWindow):
             #return False if row.data == 'Fail' else True
             return True
 
+        #function for displaying row buttons on row selection
         def on_row_selected(widget, row):
-            print('selected')
+            global last_row_selected_idx
+            last_row_idx = last_row_selected_idx
+            last_row = widget.get_row_at_index(last_row_idx)
+            
+            new_row = row
+            new_row_idx = new_row.get_index()     
 
-        
-        def on_row_activated(widget, row):
+            last_row.delete_button.hide()
+            new_row.delete_button.show()
+            
+            last_row_selected_idx = new_row_idx
+
+        #function for triggering actions on row activation
+        def on_row_activated(widget):
             print('nothing')
-
-
-
-
-
-        #list box
-        list_box = Gtk.ListBox()
-        list_box.set_selection_mode(Gtk.SelectionMode.SINGLE)
-        list_box.set_activate_on_single_click(False)
-
-        #rows
+        
+        #rows construct
         items = """
         This is a sorted ListBox Fail
         This is a sorted ListBox Fail
@@ -115,15 +130,11 @@ class Clips(Gtk.ApplicationWindow):
         
         list_box.set_filter_func(filter_func, None, False)
 
-        global last_row
-        last_row = 0
+        global last_row_selected_idx
+        last_row_selected_idx = 0
 
         list_box.connect('row-selected', on_row_selected)
-        list_box.connect_after('row-selected', on_row_activated)
-        #list_box.conne
-
-
-        #list_box.connect('selected_rows_changed', on_row_activated)
+        list_box.connect_after('activate_cursor_row', on_row_activated)
         
         list_box.show()
 
