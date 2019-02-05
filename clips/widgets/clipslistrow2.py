@@ -21,11 +21,11 @@
 
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, Gdk
+from gi.repository import Gtk, Gdk, Pango
 
-class ClipsListRow1(Gtk.ListBoxRow):
+class ClipsListRow2(Gtk.ListBoxRow):
     def __init__(self, data):
-        super(ClipsListRow, self).__init__()
+        super().__init__()
 
         #initialize imports
 
@@ -91,10 +91,11 @@ class ClipsListRow1(Gtk.ListBoxRow):
         #overlay.add(item_content)
         #overlay.props.width_request = 16
         #overlay.props.height_request = 16
-        #overlay.show_all()    
+        overlay.show_all()    
 
         grid.attach(overlay, 2, 0, 1, 1)
         grid.attach(item_icon, 0, 0, 1, 1)
         grid.attach(item_content, 1, 0, 1, 1)
         self.add(grid)
+        self.show_all()
 

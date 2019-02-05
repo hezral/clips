@@ -22,8 +22,10 @@
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk, Pango, GdkPixbuf
+from widgets.headerbar import HeaderBar
 from widgets.infoview import InfoView
 from widgets.clipslistrow import ClipsListRow
+from widgets.clipslistrow2 import ClipsListRow2
 
 
 
@@ -46,34 +48,7 @@ class Clips(Gtk.ApplicationWindow):
         settings.set_property("gtk-application-prefer-dark-theme", True)
 
         #headerbar construct
-        headerbar = Gtk.HeaderBar()
-        headerbar.set_show_close_button(True)
-        #headerbar.get_style_context().add_class(Gtk.STYLE_CLASS_FLAT)
-
-        #headerbar search field
-        search_entry = Gtk.SearchEntry()
-        search_entry.props.placeholder_text = "Search Something\u2026"
-        search_entry.set_hexpand(True)   
-        search_entry.set_halign(Gtk.Align.FILL)
-        search_entry.set_size_request(400,32)
-        
-        SEARCH_ENTRY_CSS = """
-        .large-search-entry {
-            font-size: 125%;
-        }
-        """
-        search_text_provider = Gtk.CssProvider()
-        search_text_provider.load_from_data(bytes(SEARCH_ENTRY_CSS.encode()))
-        search_entry.get_style_context().add_provider(search_text_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
-        search_entry.get_style_context().add_class("large-search-entry")
-
-        #headerbar box to hold widgets
-        box = Gtk.HBox(orientation=Gtk.Orientation.HORIZONTAL)
-        box.add(search_entry)
-
-        #headerbar construct
-        headerbar.add(box)
-        headerbar.show_all()
+        headerbar = HeaderBar()
         self.set_titlebar(headerbar)
 
         #listbox construct
@@ -86,7 +61,7 @@ class Clips(Gtk.ApplicationWindow):
 
 
         #listbox functions
-        #function for styling alternate rows using filters
+        #listbox function for styling alternate rows using filters
         def filter_func(row, data, notify_destroy):
             if(row.get_index() % 2 == 0):
                 row.get_style_context().add_class("background")
@@ -95,32 +70,32 @@ class Clips(Gtk.ApplicationWindow):
             #return False if row.data == 'Fail' else True
             return True
 
-        #function for displaying row buttons on row selection
+        #listbox function for displaying row buttons on row selection
         def on_row_selected(widget, row):
             global last_row_selected_idx
+
             last_row_idx = last_row_selected_idx
             last_row = widget.get_row_at_index(last_row_idx)
             
             new_row = row
             new_row_idx = new_row.get_index()     
 
-            last_row.delete_button.hide()
-            new_row.delete_button.show()
+            last_row.hide_buttons()
+            new_row.show_buttons()
             
             last_row_selected_idx = new_row_idx
 
-        #function for triggering actions on row activation
+        #listbox function for triggering actions on row activation
         def on_row_activated(widget):
             print('nothing')
         
-        #rows construct
+        #listbox rows construct
         items = """
         This is a sorted ListBox Fail
         This is a sorted ListBox Fail
         This is a sorted ListBox Fail
         """.split()
         for item in items:
-            #list_box.add(ClipsListRow(item))
             list_box.add(ClipsListRow(item))
         
         list_box.set_filter_func(filter_func, None, False)
@@ -151,9 +126,8 @@ class Clips(Gtk.ApplicationWindow):
 
         #self.add(list_box_scrollwin)
         self.add(stack_view)
-
         self.show()
-        #self.show()
+
 
 
 
