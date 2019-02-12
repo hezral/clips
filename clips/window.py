@@ -55,9 +55,9 @@ class Clips(Gtk.ApplicationWindow):
         global last_row_selected_idx
         last_row_selected_idx = 0
 
-        list_box = Gtk.ListBox()
-        list_box.set_selection_mode(Gtk.SelectionMode.SINGLE)
-        list_box.set_activate_on_single_click(False)
+        clips_listbox = Gtk.ListBox()
+        clips_listbox.set_selection_mode(Gtk.SelectionMode.SINGLE)
+        clips_listbox.set_activate_on_single_click(False)
 
 
         #listbox functions
@@ -96,19 +96,18 @@ class Clips(Gtk.ApplicationWindow):
         This is a sorted ListBox Fail
         """.split()
         for item in items:
-            list_box.add(ClipsListRow(item))
+            clips_listbox.add(ClipsListRow(item))
         
-        list_box.set_filter_func(filter_func, None, False)
-        list_box.connect('row-selected', on_row_selected)
-        list_box.connect_after('activate_cursor_row', on_row_activated)
-        
-        list_box.show()
+        clips_listbox.set_filter_func(filter_func, None, False)
+        clips_listbox.connect('row-selected', on_row_selected)
+        clips_listbox.connect_after('activate_cursor_row', on_row_activated)
+        clips_listbox.show()
 
         #list box scrollwindow
-        list_box_scrollwin = Gtk.ScrolledWindow()
-        list_box_scrollwin.set_vexpand(True)
-        list_box_scrollwin.add(list_box)
-        list_box_scrollwin.show()
+        clips_scrolledwindow = Gtk.ScrolledWindow()
+        clips_scrolledwindow.set_vexpand(True)
+        clips_scrolledwindow.add(clips_listbox)
+        clips_scrolledwindow.show()
         
 
         #view for no clipboard items
@@ -117,14 +116,14 @@ class Clips(Gtk.ApplicationWindow):
 
         stack_view = Gtk.Stack()
         info_view.set_visible(True)
-        list_box_scrollwin.set_visible(True)
-        stack_view.add_named(list_box_scrollwin, "listbox")
+        clips_scrolledwindow.set_visible(True)
+        stack_view.add_named(clips_scrolledwindow, "listbox")
         stack_view.add_named(info_view, "infoview")
         stack_view.set_visible_child_name("infoview")
         stack_view.set_visible_child_name("listbox")
         stack_view.show()
 
-        #self.add(list_box_scrollwin)
+        #self.add(clips_scrolledwindow)
         self.add(stack_view)
         self.show()
 
