@@ -64,7 +64,7 @@ class ClipsListRow(Gtk.ListBoxRow):
 
         BUTTONS_OVERLAY_CSS = """
         .toolbar-button {
-            color: #FFFFFF;
+            color: #FF00FF;
             border: none;
             box-shadow: none;
             border-radius: 50%;
@@ -72,7 +72,7 @@ class ClipsListRow(Gtk.ListBoxRow):
         }
 
         .toolbar-button:hover {
-            color: #FFFFFF;
+            color: #FF00FF;
             background-color: rgba(0,0,0,0.2);
             border: none;
         }
