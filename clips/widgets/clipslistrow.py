@@ -27,14 +27,14 @@ class ClipsListRow(Gtk.ListBoxRow):
     def __init__(self, data):
         super().__init__()
 
-        def generate_toolbar_button(self, image, tooltip):
-            toolbar_button = Gtk.EventBox()
-            toolbar_button.add(image)
-            toolbar_button.set_tooltip_text(tooltip)
-            toolbar_button.props.margin = 4
-            #toolbar_button.props.can_focus = False
-            #toolbar_button.props.can_default = True
-            return toolbar_button
+        # def generate_toolbar_button(self, image, tooltip):
+        #     toolbar_button = Gtk.EventBox()
+        #     toolbar_button.add(image)
+        #     toolbar_button.set_tooltip_text(tooltip)
+        #     toolbar_button.props.margin = 4
+        #     #toolbar_button.props.can_focus = False
+        #     #toolbar_button.props.can_default = True
+        #     return toolbar_button
 
         def generate_toolbar_button2(self, icon, tooltip):
             toolbar_button = Gtk.Button().new_from_icon_name(icon, Gtk.IconSize.SMALL_TOOLBAR)
