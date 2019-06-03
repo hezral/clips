@@ -28,7 +28,6 @@ from widgets.clipslistrow import ClipsListRow
 from widgets.clipslistrow2 import ClipsListRow2
 
 
-
 class Clips(Gtk.ApplicationWindow):
     def __init__(self):
         super().__init__()
@@ -58,7 +57,6 @@ class Clips(Gtk.ApplicationWindow):
         clips_listbox = Gtk.ListBox()
         clips_listbox.set_selection_mode(Gtk.SelectionMode.SINGLE)
         clips_listbox.set_activate_on_single_click(False)
-
 
         #listbox functions
         #listbox function for styling alternate rows using filters
