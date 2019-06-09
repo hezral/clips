@@ -24,8 +24,7 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk, Pango, GdkPixbuf
 from widgets.headerbar import HeaderBar
 from widgets.infoview import InfoView
-from widgets.clipslistrow import ClipsListRow
-from widgets.clipslistrow2 import ClipsListRow2
+from widgets.listboxrow import ClipsListRow
 
 
 class Clips(Gtk.ApplicationWindow):
@@ -35,10 +34,10 @@ class Clips(Gtk.ApplicationWindow):
         #applicationwindow construct
         self.props.title = "Clips"
         self.props.resizable = False
-        self.props.border_width = 0
+        self.props.border_width = 1
         self.set_icon_name("com.github.hezral.clips")
         self.get_style_context().add_class("rounded")
-        self.set_default_size(400, 480)
+        self.set_default_size(360, 480)
         self.set_keep_above(True)
         self.props.window_position = Gtk.WindowPosition.CENTER
         
@@ -53,13 +52,9 @@ class Clips(Gtk.ApplicationWindow):
         #listbox construct
         global last_row_selected_idx
         last_row_selected_idx = 0
+        listbox_view = Gtk.ListBox()
 
-        clips_listbox = Gtk.ListBox()
-        clips_listbox.set_selection_mode(Gtk.SelectionMode.SINGLE)
-        clips_listbox.set_activate_on_single_click(False)
-
-        #listbox functions
-        #listbox function for styling alternate rows using filters
+        #listbox_view function for styling alternate rows using filters
         def filter_func(row, data, notify_destroy):
             if(row.get_index() % 2 == 0):
                 row.get_style_context().add_class("background")
@@ -68,65 +63,73 @@ class Clips(Gtk.ApplicationWindow):
             #return False if row.data == 'Fail' else True
             return True
 
-        #listbox function for displaying row buttons on row selection
+        #listbox_view function for displaying row buttons on row selection
         def on_row_selected(widget, row):
             global last_row_selected_idx
-
             last_row_idx = last_row_selected_idx
-            last_row = widget.get_row_at_index(last_row_idx)
-            
+            last_row = widget.get_row_at_index(last_row_idx)        
             new_row = row
             new_row_idx = new_row.get_index()     
-
             last_row.hide_buttons()
             new_row.show_buttons()
-            
             last_row_selected_idx = new_row_idx
+            
 
-        #listbox function for triggering actions on row activation
-        def on_row_activated(widget):
+        #listbox_view function for triggering actions on row activation
+        def on_row_activated(widget, row):
             print('nothing')
         
-        #listbox rows construct
-        items = """
-        This is a sorted ListBox Fail
-        This is a sorted ListBox Fail
-        This is a sorted ListBox Fail
-        """.split()
-        for item in items:
-            clips_listbox.add(ClipsListRow(item))
-        
-        clips_listbox.set_filter_func(filter_func, None, False)
-        clips_listbox.connect('row-selected', on_row_selected)
-        clips_listbox.connect_after('activate_cursor_row', on_row_activated)
-        clips_listbox.show()
+        #listbox_view rows construct
+        # items = """
+        # This is a sorted listbox_view Fail
+        # This is a sorted listbox_view Fail
+        # This is a sorted listbox_view Fail
+        # """.split()
+        # for data in items:
+        #     listbox_view.add(ClipsListRow(data))
 
-        #list box scrollwindow
-        clips_scrolledwindow = Gtk.ScrolledWindow()
-        clips_scrolledwindow.set_vexpand(True)
-        clips_scrolledwindow.add(clips_listbox)
-        clips_scrolledwindow.show()
+        welcome_text = "Welcome to Clips"
+        listbox_view.add(ClipsListRow(welcome_text))
         
+        listbox_view.set_filter_func(filter_func, None, False)
+        listbox_view.connect('row-selected', on_row_selected)
+        listbox_view.connect_after('activate_cursor_row', on_row_activated)
+        listbox_view.connect_after('row-activated', on_row_selected)
+        #listbox_view.show()
+        
+        
+        #scrolled window
+        scrolled_window = Gtk.ScrolledWindow()
+        scrolled_window.set_vexpand(True)
+        scrolled_window.add(listbox_view)
+        scrolled_window.show()
+        scrolled_window.set_visible(True)
 
-        #view for no clipboard items
+        #welcome view
         info_view = InfoView("No Clips Found","Start Copying Stuffs", "system-os-installer")
         info_view.show_all()
-
-        stack_view = Gtk.Stack()
         info_view.set_visible(True)
-        clips_scrolledwindow.set_visible(True)
-        stack_view.add_named(clips_scrolledwindow, "listbox")
+
+        #search view
+
+        #settings view
+
+        #stack view
+        stack_view = Gtk.Stack()
+        stack_view.add_named(scrolled_window, "listbox_view")
         stack_view.add_named(info_view, "infoview")
         stack_view.set_visible_child_name("infoview")
-        stack_view.set_visible_child_name("listbox")
+        stack_view.set_visible_child_name("listbox_view")
         stack_view.show()
 
-        #self.add(clips_scrolledwindow)
+        
         self.add(stack_view)
         self.show()
+        self.show_all()
 
-
-
+        #hack to hide toolbar buttons on all rows
+        for row in listbox_view:
+            row.hide_buttons()
 
 app = Clips()
 app.connect("destroy", Gtk.main_quit)

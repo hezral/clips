@@ -29,13 +29,15 @@ class HeaderBar(Gtk.HeaderBar):
         super().__init__()
 
         self.set_show_close_button(True)
+        self.set_has_subtitle(False)
+
 
         #headerbar search field
         search_entry = Gtk.SearchEntry()
         search_entry.props.placeholder_text = "Search Something\u2026"
         search_entry.set_hexpand(True)   
         search_entry.set_halign(Gtk.Align.FILL)
-        search_entry.set_size_request(400,32)
+        search_entry.set_size_request(360,32)
         
         SEARCH_ENTRY_CSS = """
         .large-search-entry {
@@ -47,10 +49,14 @@ class HeaderBar(Gtk.HeaderBar):
         search_entry.get_style_context().add_provider(search_text_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
         search_entry.get_style_context().add_class("large-search-entry")
 
-        #headerbar box to hold widgets
-        box = Gtk.HBox(orientation=Gtk.Orientation.HORIZONTAL)
+        settings_icon = Gtk.Button.new_from_icon_name("open-menu", Gtk.IconSize.LARGE_TOOLBAR)
+
+        box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
         box.add(search_entry)
 
+
+
         #headerbar construct
-        self.add(box)
+        self.set_custom_title(box)
+        self.pack_end(settings_icon)
         self.show_all()

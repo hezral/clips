@@ -21,31 +21,45 @@
 
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, Gdk, Pango
+from gi.repository import Gtk
 
 class ClipsListRow(Gtk.ListBoxRow):
     def __init__(self, data):
         super().__init__()
 
-        # def generate_toolbar_button(self, image, tooltip):
-        #     toolbar_button = Gtk.EventBox()
-        #     toolbar_button.add(image)
-        #     toolbar_button.set_tooltip_text(tooltip)
-        #     toolbar_button.props.margin = 4
-        #     #toolbar_button.props.can_focus = False
-        #     #toolbar_button.props.can_default = True
-        #     return toolbar_button
+        #toolbar button styles
+        TOOLBAR_CSS_DATA = """
+        .toolbar-button {
+            color: #FF00FF;
+            border: none;
+            box-shadow: none;
+            border-radius: 50%;
+            background: none;
+        }
+        .toolbar-button:hover {
+            color: #FF00FF;
+            background-color: rgba(0,0,0,0.2);
+            border: none;
+        }
+        .transition {
+            transition: 200ms;
+            transition-timing-function: ease;
+        }
+        """
+        toolbar_css = Gtk.CssProvider()
+        toolbar_css.load_from_data(bytes(TOOLBAR_CSS_DATA.encode()))
 
-        def generate_toolbar_button2(self, icon, tooltip):
+        #function for toolbar
+        def generate_toolbar(self, icon, tooltip):
             toolbar_button = Gtk.Button().new_from_icon_name(icon, Gtk.IconSize.SMALL_TOOLBAR)
             toolbar_button.set_tooltip_text(tooltip)
             toolbar_button.props.can_focus = False
             toolbar_button.props.can_default = True
             toolbar_button.set_size_request(32, 32)
 
-            toolbar_button.get_style_context().add_provider(button_css, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
-            toolbar_button.get_style_context().add_class("toolbar-button")
+            toolbar_button.get_style_context().add_provider(toolbar_css, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
             toolbar_button.get_style_context().remove_class("button")
+            toolbar_button.get_style_context().add_class("toolbar-button")
             toolbar_button.get_style_context().add_class("transition")
 
             toolbar_hbox = Gtk.HBox()
@@ -56,34 +70,15 @@ class ClipsListRow(Gtk.ListBoxRow):
             toolbar_vbox.set_valign(Gtk.Align.CENTER)
             return toolbar_vbox
 
+        #generate toolbar buttons
+        self.delete_button = generate_toolbar(self, "edit-delete-symbolic", "Delete clip")
+        self.copy_button = generate_toolbar(self, "edit-copy-symbolic", "Copy to clipboard")
+        #self.view_button = generate_toolbar(self, "view-private-symbolic", "View clip")
+
 
         def generate_thumbnail_image(self, image, tooltip):
             thumbnail_image = Gtk.Image()
-            return thumbnail_image
-
-
-        BUTTONS_OVERLAY_CSS = """
-        .toolbar-button {
-            color: #FF00FF;
-            border: none;
-            box-shadow: none;
-            border-radius: 50%;
-            background: none;
-        }
-
-        .toolbar-button:hover {
-            color: #FF00FF;
-            background-color: rgba(0,0,0,0.2);
-            border: none;
-        }
-
-        .transition {
-            transition: 200ms;
-            transition-timing-function: ease;
-        }
-        """
-        button_css = Gtk.CssProvider()
-        button_css.load_from_data(bytes(BUTTONS_OVERLAY_CSS.encode()))
+            return thumbnail
 
 
         thumb_clips_generic = Gtk.Image()
@@ -98,52 +93,38 @@ class ClipsListRow(Gtk.ListBoxRow):
         # image_cover.pixel_size = 32;
         # image_cover.pixbuf = new Gdk.Pixbuf.from_file_at_size (track.cover, 32, 32);
 
-        icon = Gtk.Image.new_from_icon_name("utilities-terminal", Gtk.IconSize.DIALOG)
-        icon.set_pixel_size(64)
+        data_type_icon = Gtk.Image.new_from_icon_name("image-x-generic", Gtk.IconSize.DIALOG)
+        data_type_icon.set_pixel_size(32)
 
-        #delete_image = Gtk.Image.new_from_icon_name("edit-delete-symbolic", Gtk.IconSize.SMALL_TOOLBAR)
-        #copy_image = Gtk.Image.new_from_icon_name("edit-copy-symbolic", Gtk.IconSize.SMALL_TOOLBAR)
-        #view_image = Gtk.Image.new_from_icon_name("view-private-symbolic", Gtk.IconSize.SMALL_TOOLBAR)
-
-        #self.delete_button = generate_toolbar_button(self, delete_image, "Delete clip")
-        #self.copy_button = generate_toolbar_button(self, copy_image, "Copy to clipboard")
-        #self.view_button = generate_toolbar_button(self, view_image, "View clip")
-
-        self.delete_button = generate_toolbar_button2(self, "edit-delete-symbolic", "Delete clip")
-        self.copy_button = generate_toolbar_button2(self, "edit-copy-symbolic", "Copy to clipboard")
-        self.view_button = generate_toolbar_button2(self, "view-private-symbolic", "View clip")
-
-        name_label = Gtk.Label(data)
-
+        data_title = Gtk.Label(data)
+        data_timestamp = Gtk.Label("2 mins ago")
         vertical_box = Gtk.Box(Gtk.Orientation.VERTICAL, 6)
-        vertical_box.add(name_label)
+        vertical_box.add(data_title)
+
 
         row = Gtk.Box(Gtk.Orientation.HORIZONTAL, 12)
         row.props.margin = 12
-        # row.props.margin_top = 12
-        # row.props.margin_bottom = 12
-        # row.props.margin_left = 24
-        # row.props.margin_right = 24       
-        row.add(icon)
+        
+        row.add(data_type_icon)
         row.add(vertical_box)
 
         row.pack_end(self.delete_button, False, False, False)
-        row.pack_end(self.view_button, False, False, False)
+        #row.pack_end(self.view_button, False, False, False)
         row.pack_end(self.copy_button, False, False, False)
         
+        self.add(row)
+        self.data = data
+        self.show_all()
+        #self.delete_button.hide()
+        #self.copy_button.hide()
+        #self.view_button.hide()
 
 
-
-        
-        # grid = Gtk.Grid()
-        # grid.props.column_spacing = 12
-        # grid.props.row_spacing = 3
-        # grid.props.margin = 10
-        # grid.props.margin_bottom = grid.props.margin_top = 10
-
-        # grid.attach(icon, 1, 1, 1, 1)
-        # grid.attach(vertical_box, 2, 1, 1, 1)
-        # grid.attach(self.copy_button, 4, 1, 1, 1)
+        # image_cover = new Gtk.Image ();
+        # image_cover.valign = Gtk.Align.CENTER;
+        # image_cover.halign = Gtk.Align.CENTER;
+        # image_cover.pixel_size = 32;
+        # image_cover.pixbuf = new Gdk.Pixbuf.from_file_at_size (track.cover, 32, 32);
 
         # title_label = new Gtk.Label ("<b>%s</b>".printf (track.title));
         # title_label.ellipsize = Pango.EllipsizeMode.END;
@@ -172,22 +153,17 @@ class ClipsListRow(Gtk.ListBoxRow):
 
         # add (main_grid);
 
-        self.add(row)
-        self.data = data
-        self.show_all()
-        self.delete_button.hide()
-        self.copy_button.hide()
-        self.view_button.hide()
+
 
     def show_buttons(self):
         self.delete_button.show()
         self.copy_button.show()
-        self.view_button.show()
+        #self.view_button.show()
     
     def hide_buttons(self):
         self.delete_button.hide()
         self.copy_button.hide()
-        self.view_button.hide()
+        #self.view_button.hide()
 
 
 
