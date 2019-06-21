@@ -35,12 +35,6 @@ class InfoView(Gtk.Grid):
         icon_image.set_from_icon_name(icon, Gtk.IconSize.DIALOG)
         icon_image.set_pixel_size(96)
 
-        thumb_clips_generic = Gtk.Image()
-        thumb_clips_generic.props.valign = Gtk.Align.CENTER
-        thumb_clips_generic.props.halign = Gtk.Align.CENTER
-        thumb_clips_generic.props.pixel_size = 64
-        #thumb_clips_generic.props.pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_size()
-
         icon_box = Gtk.EventBox()
         icon_box.set_valign(Gtk.Align.START)
         icon_box.add(icon_image)

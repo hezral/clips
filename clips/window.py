@@ -23,9 +23,8 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk, Pango, GdkPixbuf
 from widgets.headerbar import HeaderBar
-from widgets.infoview import InfoView
 from widgets.listboxrow import ClipsListRow
-
+from views.infoview import InfoView
 
 class Clips(Gtk.ApplicationWindow):
     def __init__(self):
@@ -73,31 +72,24 @@ class Clips(Gtk.ApplicationWindow):
             last_row.hide_buttons()
             new_row.show_buttons()
             last_row_selected_idx = new_row_idx
-            
 
         #listbox_view function for triggering actions on row activation
         def on_row_activated(widget, row):
             print('nothing')
-        
-        #listbox_view rows construct
-        # items = """
-        # This is a sorted listbox_view Fail
-        # This is a sorted listbox_view Fail
-        # This is a sorted listbox_view Fail
-        # """.split()
-        # for data in items:
-        #     listbox_view.add(ClipsListRow(data))
 
-        welcome_text = "Welcome to Clips"
-        listbox_view.add(ClipsListRow(welcome_text))
-        
         listbox_view.set_filter_func(filter_func, None, False)
         listbox_view.connect('row-selected', on_row_selected)
         listbox_view.connect_after('activate_cursor_row', on_row_activated)
-        listbox_view.connect_after('row-activated', on_row_selected)
-        #listbox_view.show()
-        
-        
+        listbox_view.connect_after('row-activated', on_row_selected)        
+
+        #initial launch add some rows
+        welcome_text = "Welcome to Clips"
+        listbox_view.add(ClipsListRow(welcome_text))
+
+        welcome_image = Gtk.Image.new_from_icon_name("system-os-installer", Gtk.IconSize.MENU)
+        welcome_image.set_pixel_size(96)
+        listbox_view.add(ClipsListRow(welcome_image))
+
         #scrolled window
         scrolled_window = Gtk.ScrolledWindow()
         scrolled_window.set_vexpand(True)
@@ -107,7 +99,6 @@ class Clips(Gtk.ApplicationWindow):
 
         #welcome view
         info_view = InfoView("No Clips Found","Start Copying Stuffs", "system-os-installer")
-        info_view.show_all()
         info_view.set_visible(True)
 
         #search view
@@ -120,9 +111,7 @@ class Clips(Gtk.ApplicationWindow):
         stack_view.add_named(info_view, "infoview")
         stack_view.set_visible_child_name("infoview")
         stack_view.set_visible_child_name("listbox_view")
-        stack_view.show()
 
-        
         self.add(stack_view)
         self.show()
         self.show_all()
