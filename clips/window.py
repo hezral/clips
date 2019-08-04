@@ -33,7 +33,7 @@ class Clips(Gtk.ApplicationWindow):
         #applicationwindow construct
         self.props.title = "Clips"
         self.props.resizable = False
-        self.props.border_width = 1
+        self.props.border_width = 0
         self.set_icon_name("com.github.hezral.clips")
         self.get_style_context().add_class("rounded")
         self.set_default_size(360, 480)

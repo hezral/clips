@@ -31,7 +31,7 @@ class ClipsListRow(Gtk.ListBoxRow):
         self.data = data
 
         #css styles
-        CLIPSLISTROW_CSS = """
+        LISTROW_CSS = """
         @define-color colorPrimary #F012BE;
         @define-color textColorPrimary #ffffff;
 
@@ -71,8 +71,8 @@ class ClipsListRow(Gtk.ListBoxRow):
         }        
         """
         
-        clipslistrow_css = Gtk.CssProvider()
-        clipslistrow_css.load_from_data(bytes(CLIPSLISTROW_CSS.encode()))
+        listrow_css = Gtk.CssProvider()
+        listrow_css.load_from_data(bytes(LISTROW_CSS.encode()))
 
         #function for toolbar
         def generate_toolbar(self, icon, tooltip):
@@ -82,7 +82,7 @@ class ClipsListRow(Gtk.ListBoxRow):
             toolbar_button.props.can_default = True
             toolbar_button.set_size_request(32, 32)
             
-            toolbar_button.get_style_context().add_provider(clipslistrow_css, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+            toolbar_button.get_style_context().add_provider(listrow_css, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
             toolbar_button.get_style_context().remove_class("button")
             toolbar_button.get_style_context().add_class("toolbar-button")
             toolbar_button.get_style_context().add_class("transition")
@@ -110,19 +110,28 @@ class ClipsListRow(Gtk.ListBoxRow):
         data_type_icon = Gtk.Image.new_from_icon_name(data_type_icon_name, Gtk.IconSize.DIALOG)
         data_type_icon.set_pixel_size(32)
 
-        #content for clips
+        #clips label 
         data_label = Gtk.Label(str(data))
         print(type(data))
-        data_label.get_style_context().add_provider(clipslistrow_css, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+        data_label.get_style_context().add_provider(listrow_css, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
         data_label.get_style_context().add_class("font-bold")
         data_label.props.ellipsize = Pango.EllipsizeMode.END
-        data_label.props.max_width_chars = 45
+        data_label.props.max_width_chars = 25
         data_label.props.halign = Gtk.Align.START
         data_label.props.valign = Gtk.Align.END
+        data_label.set_max_width_chars(25)
+        data_label.set_line_wrap(True)
+        data_label.set_size_request(10, -1)
 
-        #data_image = data
+        #clips content
+        contents = Gtk.Label(str(data))
+        contents.set_hexpand(False)
+        contents.set_line_wrap(True)
+        contents.set_max_width_chars(50)
+        contents.props.halign = Gtk.Align.START
+        contents.props.valign = Gtk.Align.END
 
-        #timestamp for clips
+        #clips timestamp
         created_timestamp = datetime.now()
         timestamp_label = Gtk.Label(self.timestamp(created_timestamp))
         timestamp_label.set_tooltip_text(created_timestamp.strftime('%c'))
@@ -130,20 +139,22 @@ class ClipsListRow(Gtk.ListBoxRow):
         timestamp_label.props.valign = Gtk.Align.START
         timestamp_label.props.max_width_chars = 45
         timestamp_label.props.ellipsize = Pango.EllipsizeMode.END
-        timestamp_label.get_style_context().add_provider(clipslistrow_css, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+        timestamp_label.get_style_context().add_provider(listrow_css, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
         timestamp_label.get_style_context().add_class("clips-timestamp-font")
         
 
         #grid for content and timestamp
         main_grid = Gtk.Grid()
-        main_grid.attach(data_label, 1, 0, 6, 1)
-        main_grid.attach(timestamp_label, 1, 1, 6, 1)
+        main_grid.attach(data_label, 1, 0, 1, 1)
+        main_grid.attach(contents, 1, 1, 1, 1)
+        main_grid.attach(timestamp_label, 1, 2, 1, 1)
+
 
         #construct the row
         row_box = Gtk.Box(Gtk.Orientation.HORIZONTAL, 12)
         row_box.props.margin = 12
         row_box.pack_start(data_type_icon, False, False, False)
-        row_box.pack_start(main_grid, False, True, False)
+        row_box.pack_start(main_grid, False, False, False)
         row_box.pack_end(self.delete_button, False, False, False)
         row_box.pack_end(self.copy_button, False, False, False)
         
@@ -197,9 +208,11 @@ class ClipsListRow(Gtk.ListBoxRow):
         return str(day_diff / 365) + " years ago"
 
     def show_buttons(self):
+        #function to show the toolbar buttons
         self.delete_button.show()
         self.copy_button.show()
     
     def hide_buttons(self):
+        #function to hide the toolbar buttons
         self.delete_button.hide()
         self.copy_button.hide()
