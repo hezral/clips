@@ -21,10 +21,10 @@
 
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk
+from gi.repository import Gtk, Gdk, Pango, GdkPixbuf
 from widgets.headerbar import HeaderBar
 from widgets.listboxrow import ClipsListRow
-from widgets.info import InfoView
+from views.infoview import InfoView
 
 class Clips(Gtk.ApplicationWindow):
     def __init__(self):
@@ -66,9 +66,9 @@ class Clips(Gtk.ApplicationWindow):
         def on_row_selected(widget, row):
             global last_row_selected_idx
             last_row_idx = last_row_selected_idx
-            last_row = widget.get_row_at_index(last_row_idx)
+            last_row = widget.get_row_at_index(last_row_idx)        
             new_row = row
-            new_row_idx = new_row.get_index()
+            new_row_idx = new_row.get_index()     
             last_row.hide_buttons()
             new_row.show_buttons()
             last_row_selected_idx = new_row_idx
@@ -85,7 +85,7 @@ class Clips(Gtk.ApplicationWindow):
         #initial launch add some rows
         welcome_text = "Welcome to Clips"
         listbox_view.add(ClipsListRow(welcome_text))
-        
+
         welcome_image = Gtk.Image.new_from_icon_name("system-os-installer", Gtk.IconSize.MENU)
         welcome_image.set_pixel_size(96)
         listbox_view.add(ClipsListRow(welcome_image))
