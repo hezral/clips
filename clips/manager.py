@@ -37,12 +37,12 @@ class ClipsManager(GObject.GObject):
             
 
             print("Current clipboard offers formats: " + str(self.wait_for_targets()[1]))
-            print(self.wait_for_contents(html_target).get_data())
+            #print(self.wait_for_contents(html_target).get_data())
             return
 
-        def start():
-            self.clipboard.connect("owner-change", clipboard_changed)
-            return
+        # def start():
+        #     self.clipboard.connect("owner-change", clipboard_changed)
+        #     return
         
 
         self.clipboard.connect("owner-change", clipboard_changed)
