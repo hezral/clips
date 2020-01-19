@@ -36,13 +36,19 @@ class ClipsManager(GObject.GObject):
         self.text_target = Gdk.Atom.intern('text/plain', False)
         self.uri_target = Gdk.Atom.intern('x-special/gnome-copied-files', False)
 
-        def clipboard_changed(self, widget):
-            print(type(widget))
-            print(dir(widget))
-            print(datetime.now(tz=None))
-            #print("Current clipboard offers formats: \n" + str(self.wait_for_targets()[1]))
-            #print(self.wait_for_contents(target).get_data().decode("utf-8")) #need to decode from bytes to string for html/text targets
-            
+        def target_check():
+          print('targets checked')
+          return
+
+        def clipboard_changed(self, event):
+          target_check()
+          print(type(event))
+          print(dir(event))
+          print(datetime.now(tz=None))
+          #print("Current clipboard offers formats: \n" + str(self.wait_for_targets()[1]))
+          #print(self.wait_for_contents(target).get_data().decode("utf-8")) #need to decode from bytes to string for html/text targets
+        
+
         self.clipboard.connect("owner-change", clipboard_changed)
 
 clips = ClipsManager()
