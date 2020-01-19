@@ -19,11 +19,11 @@
     along with Clips.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import threading
+import signal
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk, GLib, GObject
-from threading import Thread
+from datetime import datetime
 
 class ClipsManager(GObject.GObject):
     def __init__(self):
@@ -31,42 +31,41 @@ class ClipsManager(GObject.GObject):
         
         self.clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
 
+        self.html_target = Gdk.Atom.intern('text/html', False)
+        self.image_target = Gdk.Atom.intern('image/png', False)
+        self.text_target = Gdk.Atom.intern('text/plain', False)
+        self.uri_target = Gdk.Atom.intern('x-special/gnome-copied-files', False)
+
         def clipboard_changed(self, widget):
-            html_target = Gdk.Atom.intern('text/html', False)
-
+            print(type(widget))
+            print(dir(widget))
+            print(datetime.now(tz=None))
+            #print("Current clipboard offers formats: \n" + str(self.wait_for_targets()[1]))
+            #print(self.wait_for_contents(target).get_data().decode("utf-8")) #need to decode from bytes to string for html/text targets
             
-
-            print("Current clipboard offers formats: " + str(self.wait_for_targets()[1]))
-            #print(self.wait_for_contents(html_target).get_data())
-            return
-
-        # def start():
-        #     self.clipboard.connect("owner-change", clipboard_changed)
-        #     return
-        
-
         self.clipboard.connect("owner-change", clipboard_changed)
 
-    # request_contents
-  	# request_image
-  	# request_rich_text
-  	# request_targets
-  	# request_text
-  	# request_uris
-
-    # wait_for_contents
-  	# wait_for_image
-  	# wait_for_rich_text
-  	# wait_for_targets
-  	# wait_for_text
-  	# wait_for_uris
-
-    # wait_is_image_available
-  	# wait_is_rich_text_available
-  	# wait_is_target_available
-  	# wait_is_text_available
-  	# wait_is_uris_available
-
 clips = ClipsManager()
+# just for debugging at CLI to enable CTRL+C quit
+GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGINT, Gtk.main_quit) 
 Gtk.main()
 
+# request_contents
+# request_image
+# request_rich_text
+# request_targets
+# request_text
+# request_uris
+
+# wait_for_contents
+# wait_for_image
+# wait_for_rich_text
+# wait_for_targets
+# wait_for_text
+# wait_for_uris
+
+# wait_is_image_available
+# wait_is_rich_text_available
+# wait_is_target_available
+# wait_is_text_available
+# wait_is_uris_available

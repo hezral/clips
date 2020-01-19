@@ -1,0 +1,54 @@
+Current clipboard offers formats:
+[Gdk.Atom.intern("TIMESTAMP", False), 
+Gdk.Atom.intern("TARGETS", False), 
+Gdk.Atom.intern("SAVE_TARGETS", False), 
+Gdk.Atom.intern("MULTIPLE", False), 
+Gdk.Atom.intern("STRING", False), 
+Gdk.Atom.intern("UTF8_STRING", False), 
+Gdk.Atom.intern("TEXT", False), 
+Gdk.Atom.intern("chromium/x-web-custom-data", False), 
+Gdk.Atom.intern("text/html", False), 
+Gdk.Atom.intern("text/plain", False)]
+
+Current clipboard offers formats:
+[Gdk.Atom.intern("TIMESTAMP", False), 
+Gdk.Atom.intern("TARGETS", False), 
+Gdk.Atom.intern("MULTIPLE", False), 
+Gdk.Atom.intern("SAVE_TARGETS", False), 
+Gdk.Atom.intern("text/html", False), 
+Gdk.Atom.intern("text/_moz_htmlcontext", False), 
+Gdk.Atom.intern("text/_moz_htmlinfo", False), 
+Gdk.Atom.intern("UTF8_STRING", False), 
+Gdk.Atom.intern("COMPOUND_TEXT", False), 
+Gdk.Atom.intern("TEXT", False), 
+Gdk.Atom.intern("STRING", False), 
+Gdk.Atom.intern("text/plain;charset=utf-8", False), 
+Gdk.Atom.intern("text/plain", False), 
+Gdk.Atom.intern("text/x-moz-url-priv", False)]
+
+Current clipboard offers formats:
+[Gdk.Atom.intern("TIMESTAMP", False), 
+Gdk.Atom.intern("TARGETS", False), 
+Gdk.Atom.intern("MULTIPLE", False), 
+Gdk.Atom.intern("SAVE_TARGETS", False), 
+Gdk.Atom.intern("image/png", False), 
+Gdk.Atom.intern("image/bmp", False), 
+Gdk.Atom.intern("image/x-bmp", False), 
+Gdk.Atom.intern("image/x-MS-bmp", False), 
+Gdk.Atom.intern("image/x-icon", False), 
+Gdk.Atom.intern("image/x-ico", False), 
+Gdk.Atom.intern("image/x-win-bitmap", False), 
+Gdk.Atom.intern("image/vnd.microsoft.icon", False), 
+Gdk.Atom.intern("application/ico", False), 
+Gdk.Atom.intern("image/ico", False), 
+Gdk.Atom.intern("image/icon", False), 
+Gdk.Atom.intern("text/ico", False), 
+Gdk.Atom.intern("image/jpeg", False), 
+Gdk.Atom.intern("image/tiff", False)]
+
+Current clipboard offers formats:
+[Gdk.Atom.intern("TIMESTAMP", False), 
+Gdk.Atom.intern("TARGETS", False), 
+Gdk.Atom.intern("MULTIPLE", False), 
+Gdk.Atom.intern("x-special/gnome-copied-files", False), 
+Gdk.Atom.intern("UTF8_STRING", False)]
