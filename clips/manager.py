@@ -37,17 +37,22 @@ class ClipsManager(GObject.GObject):
         self.uri_target = Gdk.Atom.intern('x-special/gnome-copied-files', False)
 
         def target_check():
-          print('targets checked')
+          #print('targets checked')
+          #print("Current clipboard offers formats: \n" + str(self.clipboard.wait_for_targets()[1]))
+          #self.clipboard.wait_is_image_available()
+          #self.clipboard.wait_is_rich_text_available()
+          print(self.clipboard.wait_is_target_available(self.image_target))
+          #self.clipboard.wait_is_text_available()
+          #self.clipboard.wait_is_uris_available()
           return
 
         def clipboard_changed(self, event):
           target_check()
-          print(type(event))
-          print(dir(event))
-          print(datetime.now(tz=None))
+          #print(type(event))
+          #print(dir(event))
+          #print(datetime.now(tz=None))
           #print("Current clipboard offers formats: \n" + str(self.wait_for_targets()[1]))
           #print(self.wait_for_contents(target).get_data().decode("utf-8")) #need to decode from bytes to string for html/text targets
-        
 
         self.clipboard.connect("owner-change", clipboard_changed)
 
@@ -70,8 +75,3 @@ Gtk.main()
 # wait_for_text
 # wait_for_uris
 
-# wait_is_image_available
-# wait_is_rich_text_available
-# wait_is_target_available
-# wait_is_text_available
-# wait_is_uris_available
