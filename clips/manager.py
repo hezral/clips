@@ -24,6 +24,7 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk, GLib, GObject
 from datetime import datetime
+from urllib.parse import urlparse
 
 class ClipsManager(GObject.GObject):
     def __init__(self):
@@ -33,28 +34,28 @@ class ClipsManager(GObject.GObject):
         self.clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
 
         #for debug only
-        self.label = Gtk.Label("abc")
-        self.image = Gtk.Image.new_from_icon_name("process-stop", Gtk.IconSize.MENU)
-        
+        self.label = Gtk.Label()
+        self.image = Gtk.Image.new_from_icon_name("image-x-generic", Gtk.IconSize.DIALOG)
 
         #setup supported clip types
-        self.html_target = Gdk.Atom.intern('text/html', False)
-        self.image_target = Gdk.Atom.intern('image/png', False)
-        self.text_target = Gdk.Atom.intern('text/plain', False)
-        self.uri_target = Gdk.Atom.intern('x-special/gnome-copied-files', False)
+        html_target = Gdk.Atom.intern('text/html', False)
+        image_target = Gdk.Atom.intern('image/png', False)
+        text_target = Gdk.Atom.intern('text/plain', False)
+        uri_target = Gdk.Atom.intern('x-special/gnome-copied-files', False)
 
         def target_check():
-          if self.clipboard.wait_is_target_available(self.image_target):
-            target_type = self.image_target
+          if self.clipboard.wait_is_target_available(image_target):
             image = self.clipboard.wait_for_image()
             if image is not None:
               self.image.set_from_pixbuf(image)
-          elif self.clipboard.wait_is_target_available(self.uri_target):
-            target_type = self.uri_target
-          elif self.clipboard.wait_is_target_available(self.html_target):
-            target_type = self.html_target
-          elif self.clipboard.wait_is_target_available(self.text_target):
-            target_type = self.text_target
+          elif self.clipboard.wait_is_target_available(uri_target):
+            uri = self.clipboard.wait_for_contents(uri_target)
+            if uri is not None:
+              pass
+          elif self.clipboard.wait_is_target_available(html_target):
+            target_type = html_target
+          elif self.clipboard.wait_is_target_available(text_target):
+            target_type = text_target
             text = self.clipboard.wait_for_text()
             if text is not None:
                 self.label.set_text(text)
@@ -70,8 +71,9 @@ class ClipsManager(GObject.GObject):
           target = target_check()
           print(datetime.now(tz=None))
           print(target)
-          #print(clipboard.wait_for_contents(target).get_data().decode("utf-8")) #need to decode from bytes to string for html/text targets
+          print(clipboard.wait_for_contents(target).get_data().decode("utf-8")) #need to decode from bytes to string for html/text targets
 
+        # run function everytime a clipboard is changed
         self.clipboard.connect("owner-change", clipboard_changed)
 
         self.window = Gtk.Window()
