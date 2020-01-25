@@ -29,8 +29,15 @@ class ClipsManager(GObject.GObject):
     def __init__(self):
         super().__init__()
         
+        #create clipboard
         self.clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
 
+        #for debug only
+        self.label = Gtk.Label("abc")
+        self.image = Gtk.Image.new_from_icon_name("process-stop", Gtk.IconSize.MENU)
+        
+
+        #setup supported clip types
         self.html_target = Gdk.Atom.intern('text/html', False)
         self.image_target = Gdk.Atom.intern('image/png', False)
         self.text_target = Gdk.Atom.intern('text/plain', False)
@@ -47,16 +54,24 @@ class ClipsManager(GObject.GObject):
             target_type = self.text_target
           else:
             pass
-          #print("Current clipboard offers formats: \n" + str(self.clipboard.wait_for_targets()[1]))
+          print("Current clipboard offers formats: \n" + str(self.clipboard.wait_for_targets()[1]))
           return target_type
 
-        def clipboard_changed(self, event):
+        def clipboard_changed(clipboard, event):
           target = target_check()
           print(datetime.now(tz=None))
-          print("Current clipboard offers formats: \n" + str(self.wait_for_targets()[1]))
-          print(self.wait_for_contents(target).get_data().decode("utf-8")) #need to decode from bytes to string for html/text targets
+          print(target)
+          #print(clipboard.wait_for_contents(target).get_data().decode("utf-8")) #need to decode from bytes to string for html/text targets
 
         self.clipboard.connect("owner-change", clipboard_changed)
+
+        self.window = Gtk.Window()
+        self.window.set_border_width(6)
+        #self.window.add(self.label)
+        self.window.add(self.image)
+        self.window.show_all()
+        self.window.connect("destroy", Gtk.main_quit)
+        
 
 clips = ClipsManager()
 # just for debugging at CLI to enable CTRL+C quit
