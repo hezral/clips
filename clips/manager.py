@@ -46,14 +46,23 @@ class ClipsManager(GObject.GObject):
         def target_check():
           if self.clipboard.wait_is_target_available(self.image_target):
             target_type = self.image_target
+            image = self.clipboard.wait_for_image()
+            if image is not None:
+              self.image.set_from_pixbuf(image)
           elif self.clipboard.wait_is_target_available(self.uri_target):
             target_type = self.uri_target
           elif self.clipboard.wait_is_target_available(self.html_target):
             target_type = self.html_target
           elif self.clipboard.wait_is_target_available(self.text_target):
             target_type = self.text_target
+            text = self.clipboard.wait_for_text()
+            if text is not None:
+                self.label.set_text(text)
+            else:
+                print("No text on the clipboard.")
           else:
             pass
+          #for debug only
           print("Current clipboard offers formats: \n" + str(self.clipboard.wait_for_targets()[1]))
           return target_type
 
