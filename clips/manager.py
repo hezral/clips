@@ -30,11 +30,15 @@ class ClipsManager(GObject.GObject):
     def __init__(self):
         super().__init__()
         
+        #debug flag
+        debugflag = True
+
         #create clipboard
         self.clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
 
         #for debug only
         self.label = Gtk.Label()
+        self.label.set_line_wrap(True)
         self.image = Gtk.Image.new_from_icon_name("image-x-generic", Gtk.IconSize.DIALOG)
 
         #setup supported clip types
@@ -43,51 +47,68 @@ class ClipsManager(GObject.GObject):
         text_target = Gdk.Atom.intern('text/plain', False)
         uri_target = Gdk.Atom.intern('x-special/gnome-copied-files', False)
 
-        def target_check():
+        def get_contents():
           if self.clipboard.wait_is_target_available(image_target):
-            image = self.clipboard.wait_for_image()
-            if image is not None:
-              self.image.set_from_pixbuf(image)
+            target_type = image_target 
+            content = self.clipboard.wait_for_image()
           elif self.clipboard.wait_is_target_available(uri_target):
-            uri = self.clipboard.wait_for_contents(uri_target)
-            if uri is not None:
-              pass
+            target_type = uri_target
+            content = self.clipboard.wait_for_contents(uri_target)
           elif self.clipboard.wait_is_target_available(html_target):
             target_type = html_target
+            content = self.clipboard.wait_for_contents(html_target).get_data().decode("utf-8") #need to decode from bytes to string for html/text targets
           elif self.clipboard.wait_is_target_available(text_target):
             target_type = text_target
-            text = self.clipboard.wait_for_text()
-            if text is not None:
-                self.label.set_text(text)
-            else:
-                print("No text on the clipboard.")
+            content = self.clipboard.wait_for_text(text_target).get_data().decode("utf-8") #need to decode from bytes to string for html/text targets
           else:
+            target_type = None
+            content = None
+          return target_type, content
+
+        def debug():
+          # debug window to see contents displayed in Gtk.Window
+          self.window = Gtk.Window(title="Clips Debug Window")
+          self.box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+          self.window.set_border_width(6)
+          self.window.add(self.label)
+          self.window.show_all()
+          self.window.connect("destroy", Gtk.main_quit)
+          # just for debugging at CLI to enable CTRL+C quit
+          GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGINT, Gtk.main_quit) 
+
+        def debug_log(clipboard, target, content):
+          #print(datetime.now(tz=None))
+          #print("Current clipboard offers formats: \n" + str(self.clipboard.wait_for_targets()[1]))
+          if content is not None:
+            if target == image_target:
+              print('1')
+              self.image.set_from_pixbuf(content)
+            elif target == uri_target:
+              print('2')
+              self.label.set_text(urlparse(content))
+            elif target == html_target:
+              print('3')
+              self.label.set_text(content)
+            elif target == text_target:
+              print('4')
+              self.label.set_text(content)
+            else:
+              print('0')
+              pass
+          else:
+            print("No content in the clipboard")
             pass
-          #for debug only
-          print("Current clipboard offers formats: \n" + str(self.clipboard.wait_for_targets()[1]))
-          return target_type
 
         def clipboard_changed(clipboard, event):
-          target = target_check()
-          print(datetime.now(tz=None))
-          print(target)
-          print(clipboard.wait_for_contents(target).get_data().decode("utf-8")) #need to decode from bytes to string for html/text targets
+          target, content = get_contents()
+          if debugflag:
+            debug_log(clipboard, target, content)
 
-        # run function everytime a clipboard is changed
+        if debugflag:
+          debug()
+
+        # run function everytime clipboard is updated
         self.clipboard.connect("owner-change", clipboard_changed)
 
-        self.window = Gtk.Window()
-        self.window.set_border_width(6)
-        #self.window.add(self.label)
-        self.window.add(self.image)
-        self.window.show_all()
-        self.window.connect("destroy", Gtk.main_quit)
-        
-
 clips = ClipsManager()
-# just for debugging at CLI to enable CTRL+C quit
-GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGINT, Gtk.main_quit) 
 Gtk.main()
-
-
-
