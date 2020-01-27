@@ -19,22 +19,41 @@
     along with Clips.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+import os
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk
+from gi.repository import Gtk, GLib
+import configparser
 
-class App:
+class App():
     application_shortname = "clips"
     application_id = "com.github.hezral.clips"
-    application_name = _('Clips')
-    application_description = _('Clipboard Manager')
+    application_name = "Clips"
+    application_description = "Clipboard Manager"
     application_version ="0.1"
     app_years = "2018-2020"
     main_url = "https://github.com/hezral/clips"
-    bug_url = "https://github.com/hezral/clips/issues/labels/bug"
-    help_url = "https://github.com/hezral/clips/wiki"
-    translate_url = "https://github.com/hezral/clips/blob/master/CONTRIBUTING.md"
-    about_authors = "Mirko Brombin <brombinmirko@gmail.com>"
-    about_documenters = None
-    about_comments = application_description
+    #bug_url = "https://github.com/hezral/clips/issues/labels/bug"
+    #help_url = "https://github.com/hezral/clips/wiki"
+    #translate_url = "https://github.com/hezral/clips/blob/master/CONTRIBUTING.md"
+    about_authors = "Adi Hezral <hezral@gmail.com>"
+    #about_documenters = None
+    #about_comments = application_description
     about_license_type = Gtk.License.GPL_3_0
+
+class Config():
+    app = App()
+    confDir =  os.path.join(GLib.get_user_config_dir(), app.application_id)
+    confFile = os.path.join(confDir + "config.ini")
+    config = configparser.ConfigParser()
+
+    if os.path.isfile(confFile):
+        config.read(confFile)
+        some_setting = config.get('Some Section', 'some_setting')
+    else:
+        if not os.path.exists(confDir):
+            os.makedirs(confDir)
+        config.add_section('Some Section')
+        config.set('Some Section', 'some_setting', 'some_value')
+        with open(confFile, 'wb') as confFile:
+            config.write(confFile)

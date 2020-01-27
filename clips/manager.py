@@ -116,6 +116,7 @@ class ClipsManager(GObject.GObject):
           target, content = get_contents()
           if debugflag:
             debug_log(clipboard, target, content)
+          return target, content
 
         if debugflag:
           debug()
