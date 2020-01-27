@@ -22,7 +22,7 @@
 import signal
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, Gdk, GLib, GObject, GdkPixbuf
+from gi.repository import Gtk, Gdk, GLib, GObject, GdkPixbuf, Pango
 from datetime import datetime
 from urllib.parse import urlparse
 #from constants import Config
@@ -73,11 +73,15 @@ class ClipsManager(GObject.GObject):
         def debug():
           self.label = Gtk.Label()
           self.label.set_line_wrap(True)
+          #self.label.props.max_width_chars = 100
+          #self.label.props.ellipsize = Pango.EllipsizeMode.END
           self.image = Gtk.Image.new_from_icon_name("image-x-generic", Gtk.IconSize.DIALOG)
           self.window = Gtk.Window(title="Clips Debug Window") #debug window to see contents displayed in Gtk.Window
           self.box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+          self.box.pack_start(self.image, True, True, 0)
+          self.box.pack_start(self.label, True, True, 0)
           self.window.set_border_width(6)
-          self.window.add(self.image)
+          self.window.add(self.box)
           self.window.show_all()
           self.window.connect("destroy", Gtk.main_quit)
           # just for debugging at CLI to enable CTRL+C quit
