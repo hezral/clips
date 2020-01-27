@@ -22,11 +22,11 @@
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
-from widgets.headerbar import HeaderBar
+from widgets.headerbar import ClipsHeaderBar
 from widgets.listboxrow import ClipsListRow
 from widgets.info import InfoView
 
-class Clips(Gtk.ApplicationWindow):
+class ClipsWindow(Gtk.ApplicationWindow):
     def __init__(self):
         super().__init__()
         
@@ -45,7 +45,7 @@ class Clips(Gtk.ApplicationWindow):
         settings.set_property("gtk-application-prefer-dark-theme", True)
 
         #headerbar construct
-        headerbar = HeaderBar()
+        headerbar = ClipsHeaderBar()
         self.set_titlebar(headerbar)
 
         #listbox construct
@@ -120,6 +120,6 @@ class Clips(Gtk.ApplicationWindow):
         for row in listbox_view:
             row.hide_buttons()
 
-app = Clips()
+app = ClipsWindow()
 app.connect("destroy", Gtk.main_quit)
 Gtk.main()

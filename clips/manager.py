@@ -25,6 +25,7 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk, GLib, GObject, GdkPixbuf
 from datetime import datetime
 from urllib.parse import urlparse
+#from constants import Config
 
 class ClipsManager(GObject.GObject):
     def __init__(self):
@@ -42,7 +43,7 @@ class ClipsManager(GObject.GObject):
         text_target = Gdk.Atom.intern('text/plain', False)
         uri_target = Gdk.Atom.intern('x-special/gnome-copied-files', False)
 
-        def get_contents():
+        def get_clipboard_contents():
           if self.clipboard.wait_is_target_available(image_target):
             target_type = image_target 
             content = self.clipboard.wait_for_image() #original image
@@ -63,22 +64,17 @@ class ClipsManager(GObject.GObject):
             content = None
           return target_type, content
 
-        def set_contents():
-          pass
-
-        def insert_row():
+        def set_clipboard_contents():
           pass
 
         def record_db():
           pass
 
         def debug():
-          #for debug only
           self.label = Gtk.Label()
           self.label.set_line_wrap(True)
           self.image = Gtk.Image.new_from_icon_name("image-x-generic", Gtk.IconSize.DIALOG)
-          # debug window to see contents displayed in Gtk.Window
-          self.window = Gtk.Window(title="Clips Debug Window")
+          self.window = Gtk.Window(title="Clips Debug Window") #debug window to see contents displayed in Gtk.Window
           self.box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
           self.window.set_border_width(6)
           self.window.add(self.image)
@@ -88,32 +84,24 @@ class ClipsManager(GObject.GObject):
           GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGINT, Gtk.main_quit) 
 
         def debug_log(clipboard, target, content):
-          #print(datetime.now(tz=None))
           #print(type(content))
           #print("Current clipboard offers formats: \n" + str(self.clipboard.wait_for_targets()[1]))
           if content is not None:
             if target == image_target:
-              print('1')
               self.image.set_from_pixbuf(content)
             elif target == uri_target:
-              print('2')
               self.label.set_text(urlparse(content))
             elif target == html_target:
-              print('3')
               self.label.set_text(content)
             elif target == text_target:
-              print('4')
               self.label.set_text(content)
             else:
-              print('0')
               print('Unsupported target type')
-              pass
           else:
             print("No content in the clipboard")
-            pass
 
         def clipboard_changed(clipboard, event):
-          target, content = get_contents()
+          target, content = get_clipboard_contents()
           if debugflag:
             debug_log(clipboard, target, content)
           return target, content
