@@ -22,7 +22,7 @@
 import signal
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, Gdk, GLib, GObject
+from gi.repository import Gtk, Gdk, GLib, GObject, GdkPixbuf
 from datetime import datetime
 from urllib.parse import urlparse
 
@@ -36,11 +36,6 @@ class ClipsManager(GObject.GObject):
         #create clipboard
         self.clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
 
-        #for debug only
-        self.label = Gtk.Label()
-        self.label.set_line_wrap(True)
-        self.image = Gtk.Image.new_from_icon_name("image-x-generic", Gtk.IconSize.DIALOG)
-
         #setup supported clip types
         html_target = Gdk.Atom.intern('text/html', False)
         image_target = Gdk.Atom.intern('image/png', False)
@@ -50,7 +45,10 @@ class ClipsManager(GObject.GObject):
         def get_contents():
           if self.clipboard.wait_is_target_available(image_target):
             target_type = image_target 
-            content = self.clipboard.wait_for_image()
+            content = self.clipboard.wait_for_image() #original image
+            content.savev('/home/adi/Downloads/content.png', 'png', [], []) #save file
+            thumbnail = content.scale_simple(content.get_width()//2,content.get_height()//2, GdkPixbuf.InterpType.BILINEAR) #create thumbnail
+            content = thumbnail
           elif self.clipboard.wait_is_target_available(uri_target):
             target_type = uri_target
             content = self.clipboard.wait_for_contents(uri_target)
@@ -65,12 +63,25 @@ class ClipsManager(GObject.GObject):
             content = None
           return target_type, content
 
+        def set_contents():
+          pass
+
+        def insert_row():
+          pass
+
+        def record_db():
+          pass
+
         def debug():
+          #for debug only
+          self.label = Gtk.Label()
+          self.label.set_line_wrap(True)
+          self.image = Gtk.Image.new_from_icon_name("image-x-generic", Gtk.IconSize.DIALOG)
           # debug window to see contents displayed in Gtk.Window
           self.window = Gtk.Window(title="Clips Debug Window")
           self.box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
           self.window.set_border_width(6)
-          self.window.add(self.label)
+          self.window.add(self.image)
           self.window.show_all()
           self.window.connect("destroy", Gtk.main_quit)
           # just for debugging at CLI to enable CTRL+C quit
@@ -78,6 +89,7 @@ class ClipsManager(GObject.GObject):
 
         def debug_log(clipboard, target, content):
           #print(datetime.now(tz=None))
+          #print(type(content))
           #print("Current clipboard offers formats: \n" + str(self.clipboard.wait_for_targets()[1]))
           if content is not None:
             if target == image_target:
@@ -94,6 +106,7 @@ class ClipsManager(GObject.GObject):
               self.label.set_text(content)
             else:
               print('0')
+              print('Unsupported target type')
               pass
           else:
             print("No content in the clipboard")

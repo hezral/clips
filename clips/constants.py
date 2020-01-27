@@ -19,3 +19,22 @@
     along with Clips.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
+
+class App:
+    application_shortname = "clips"
+    application_id = "com.github.hezral.clips"
+    application_name = _('Clips')
+    application_description = _('Clipboard Manager')
+    application_version ="0.1"
+    app_years = "2018-2020"
+    main_url = "https://github.com/hezral/clips"
+    bug_url = "https://github.com/hezral/clips/issues/labels/bug"
+    help_url = "https://github.com/hezral/clips/wiki"
+    translate_url = "https://github.com/hezral/clips/blob/master/CONTRIBUTING.md"
+    about_authors = "Mirko Brombin <brombinmirko@gmail.com>"
+    about_documenters = None
+    about_comments = application_description
+    about_license_type = Gtk.License.GPL_3_0
