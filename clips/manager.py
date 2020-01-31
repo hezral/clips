@@ -27,7 +27,7 @@ from datetime import datetime
 from urllib.parse import urlparse
 #from constants import Config
 
-class ClipsManager(GObject.GObject):
+class ClipsManager():
     def __init__(self):
         super().__init__()
         
