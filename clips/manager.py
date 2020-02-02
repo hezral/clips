@@ -25,7 +25,6 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk, GLib, GObject, GdkPixbuf, Pango
 from datetime import datetime
 from urllib.parse import urlparse
-#from constants import Config
 
 class ClipsManager():
     def __init__(self):
@@ -56,9 +55,10 @@ class ClipsManager():
           elif self.clipboard.wait_is_target_available(html_target):
             target_type = html_target
             content = self.clipboard.wait_for_contents(html_target).get_data().decode("utf-8") #need to decode from bytes to string for html/text targets
+            content = self.clipboard.wait_for_contents(text_target).get_data().decode("utf-8") #need to decode from bytes to string for html/text targets
           elif self.clipboard.wait_is_target_available(text_target):
             target_type = text_target
-            content = self.clipboard.wait_for_text(text_target).get_data().decode("utf-8") #need to decode from bytes to string for html/text targets
+            content = self.clipboard.wait_for_text()
           else:
             target_type = None
             content = None
@@ -72,9 +72,12 @@ class ClipsManager():
 
         def debug():
           self.label = Gtk.Label()
-          self.label.set_line_wrap(True)
-          #self.label.props.max_width_chars = 100
-          #self.label.props.ellipsize = Pango.EllipsizeMode.END
+          self.label.props.max_width_chars = 100
+          self.label.props.wrap = True
+          self.label.props.wrap_mode = Pango.WrapMode.CHAR
+          self.label.props.lines = 3
+          #self.label.props.single_line_mode = True
+          self.label.props.ellipsize = Pango.EllipsizeMode.END
           self.image = Gtk.Image.new_from_icon_name("image-x-generic", Gtk.IconSize.DIALOG)
           self.window = Gtk.Window(title="Clips Debug Window") #debug window to see contents displayed in Gtk.Window
           self.box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)

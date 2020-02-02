@@ -25,7 +25,7 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GLib
 import configparser
 
-class App():
+class ClipsAttributes():
     application_shortname = "clips"
     application_id = "com.github.hezral.clips"
     application_name = "Clips"
@@ -41,8 +41,8 @@ class App():
     #about_comments = application_description
     about_license_type = Gtk.License.GPL_3_0
 
-class Config():
-    app = App()
+class ClipsConfig():
+    attributes = ClipsAttributes()
     confDir =  os.path.join(GLib.get_user_config_dir(), app.application_id)
     confFile = os.path.join(confDir + "config.ini")
     config = configparser.ConfigParser()

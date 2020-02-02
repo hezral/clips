@@ -22,7 +22,13 @@
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
+import sqlite3
+
+database_file = 'ClipsDatabase.db'
 
 class ClipsStore():
     def __init__(self):
         super().__init__()
+
+        def record_db():
+            pass
