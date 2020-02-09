@@ -31,3 +31,6 @@ ENV/
 env.bak/
 venv.bak/
 
+SQLite_Python.db
+ClipsDatabase.db
+ClipsDatabase.db
