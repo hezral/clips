@@ -22,6 +22,7 @@
 import signal
 import gi
 import os.path
+import hashlib
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GLib, GObject
 import sqlite3
@@ -116,7 +117,12 @@ class ClipsStore():
 
 clips = ClipsStore()
 
-data = ('image/png', '/home/adi', '/home/adi/.config/Clips/cache/filename.png', 'testtest', 'abcdefghijklmnkoplkasdf')
+m = hashlib.md5()
+m.update(b"Nobody inspects")
+
+checksum = m.hexdigest()
+
+data = ('image/png', '/home/adi', '/home/adi/.config/Clips/cache/filename.png', 'testtest', checksum)
 
 clips.add_record(data)
 
