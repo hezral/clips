@@ -21,27 +21,25 @@
 
 import signal
 import gi
+import os.path
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GLib, GObject
 import sqlite3
 
 class ClipsStore():
     def __init__(self):
-        super().__init__()
 
         debugflag = True
-        
         db_file = 'ClipsDatabase.db'
 
         try:
-            db_connection, db_cursor = self.open_db(db_file)
-            self.create_table(db_cursor)
-        except sqlite3.Error as error:
-            print("Error while working with SQLite", error)
-        # finally:
-        #     if not (db_connection.in_transaction):
-        #         db_connection.close()
-        #         print("sqlite connection is closed")
+            if (os.path.exists(db_file)):
+                self.db_connection, self.db_cursor = self.open_db(db_file)
+            else:
+                self.db_connection, self.db_cursor = self.open_db(db_file)
+                self.create_table(db_cursor)
+        except (OSError, sqlite3.Error) as error:
+            print("Exception: ", error)
 
         if debugflag:
             self.debug()
@@ -55,20 +53,53 @@ class ClipsStore():
         return connection, cursor
 
     def create_table(self, database_cursor):
-      """Creates a table called notecard_table in the database with the appropriate columns.
-      """
+      # Initializes the database with the ClipsDB table
       database_cursor.execute('''
           CREATE TABLE ClipsDB (
-              id        INTEGER     PRIMARY KEY     NOT NULL,
-              type      INTEGER     NOT NULL,
-              created   TEXT        NOT NULL        DEFAULT (STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW', 'localtime')),
-              accessed  TEXT        NOT NULL        DEFAULT (STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW', 'localtime')),
-              uri       TEXT,
-              data      BLOB,
-              checksum  STRING      NOT NULL        UNIQUE
+                id          INTEGER     PRIMARY KEY     NOT NULL,
+                type        INTEGER     NOT NULL,
+                created     TEXT        NOT NULL        DEFAULT (STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW', 'localtime')),
+                accessed    TEXT        NOT NULL        DEFAULT (STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW', 'localtime')),
+                source_uri  TEXT,
+                cache_uri   TEXT,
+                data        BLOB,
+                checksum    STRING      NOT NULL        UNIQUE
           );
           ''')
-      
+    
+    def add_record(self, data_tuple):
+        database_connection = self.db_connection
+        database_cursor = self.db_cursor
+
+        # insert a clips record
+        sqlite_insert_with_param = '''
+            INSERT INTO 'ClipsDB'
+            ('type', 'source_uri', 'cache_uri', 'data', 'checksum') 
+            VALUES (?, ?, ?, ?, ?);
+            '''
+        data = data_tuple
+
+        try:
+            database_cursor.execute(sqlite_insert_with_param, data)
+            database_connection.commit()
+            print("Developer added successfully \n")
+
+            # # get developer detail
+            # sqlite_select_query = """SELECT name, joiningDate from new_developers where id = ?"""
+            # database_cursor.execute(sqlite_select_query, (1,))
+            # records = database_cursor.fetchall()
+
+            # for row in records:
+            #     developer= row[0]
+            #     joining_Date = row[1]
+            #     print(developer, " joined on", joiningDate)
+            #     print("joining date type is", type(joining_Date))
+
+            database_cursor.close()
+
+        except sqlite3.Error as error:
+            print("Excption sqlite3.Error: ", error)
+
     def debug(self):
         label = Gtk.Label()
         image = Gtk.Image.new_from_icon_name("image-x-generic", Gtk.IconSize.DIALOG)
@@ -84,4 +115,9 @@ class ClipsStore():
         GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGINT, Gtk.main_quit)
 
 clips = ClipsStore()
+
+data = ('image/png', '/home/adi', '/home/adi/.config/Clips/cache/filename.png', 'testtest', 'abcdefghijklmnkoplkasdf')
+
+clips.add_record(data)
+
 Gtk.main()

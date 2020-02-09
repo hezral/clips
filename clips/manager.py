@@ -20,6 +20,7 @@
 '''
 
 import signal
+import hashlib
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk, GLib, GObject, GdkPixbuf, Pango
@@ -65,9 +66,6 @@ class ClipsManager():
           return target_type, content
 
         def set_clipboard_contents():
-          pass
-
-        def record_db():
           pass
 
         def debug():
