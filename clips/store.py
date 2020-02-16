@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
 '''
-   Copyright 2018 Adi Hezral (hezral@gmail.com)
+    Copyright 2018 Adi Hezral (hezral@gmail.com)
 
-   This file is part of Clips.
+    This file is part of Clips.
 
     Clips is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -56,7 +56,7 @@ class ClipsStore():
     def create_table(self, database_cursor):
       # Initializes the database with the ClipsDB table
       database_cursor.execute('''
-          CREATE TABLE ClipsDB (
+            CREATE TABLE ClipsDB (
                 id          INTEGER     PRIMARY KEY     NOT NULL,
                 type        INTEGER     NOT NULL,
                 created     TEXT        NOT NULL        DEFAULT (STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW', 'localtime')),
@@ -65,8 +65,8 @@ class ClipsStore():
                 cache_uri   TEXT,
                 data        BLOB,
                 checksum    STRING      NOT NULL        UNIQUE
-          );
-          ''')
+            );
+            ''')
     
     def add_record(self, data_tuple):
         database_connection = self.db_connection
@@ -101,8 +101,14 @@ class ClipsStore():
         except sqlite3.Error as error:
             print("Excption sqlite3.Error: ", error)
 
+    def get_checksume(self, data):
+        md5sum = hashlib.md5()
+        md5sum.update(data)
+        return md5sum.hexdigest()
+
     def debug(self):
         label = Gtk.Label()
+        label.props.selectable = True
         image = Gtk.Image.new_from_icon_name("image-x-generic", Gtk.IconSize.DIALOG)
         window = Gtk.Window(title="Clips Debug Window") #debug window to see contents displayed in Gtk.Window
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
