@@ -43,7 +43,7 @@ class ClipsAttributes():
 
 class ClipsConfig():
     attributes = ClipsAttributes()
-    confDir =  os.path.join(GLib.get_user_config_dir(), app.application_id)
+    confDir =  os.path.join(GLib.get_user_config_dir(), attributes.application_id)
     confFile = os.path.join(confDir + "config.ini")
     config = configparser.ConfigParser()
 

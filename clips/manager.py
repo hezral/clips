@@ -69,9 +69,6 @@ class ClipsManager():
                 content = None
             return target_type, content
 
-        def set_clipboard_contents():
-            pass
-
         def debug():
             self.label = Gtk.Label()
             self.label.props.max_width_chars = 100
@@ -96,7 +93,7 @@ class ClipsManager():
             #print(type(content))
             #print(type(content.splitlines()))
             #print(content.splitlines())
-            #print("Current clipboard offers formats: \n" + str(self.clipboard.wait_for_targets()[1]))
+            print("Current clipboard offers formats: \n" + str(self.clipboard.wait_for_targets()[1]))
             if content is not None:
                 if target == image_target:
                     self.image.set_from_pixbuf(content)
@@ -123,6 +120,8 @@ class ClipsManager():
         # run function everytime clipboard is updated
         self.clipboard.connect("owner-change", clipboard_changed)
         
+    def set_clipboard_contents():
+        pass
 
 clips = ClipsManager()
 Gtk.main()
