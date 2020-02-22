@@ -23,7 +23,7 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 
-class InfoView(Gtk.Grid):
+class ClipsInfoView(Gtk.Grid):
     def __init__(self, title, description, icon):
         super().__init__()
         
@@ -47,3 +47,4 @@ class InfoView(Gtk.Grid):
         self.attach(icon_box, 1, 1, 1, 1)
         self.attach(title_label, 1, 2, 1, 1)
         self.attach(description_label, 1, 3, 1, 1)
+        self.set_visible(True)
