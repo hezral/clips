@@ -27,4 +27,10 @@ from mainwindow import ClipsWindow
 class Clips(Gtk.Application):
     def __init__(self):
         super().__init__()
+
+        window = ClipsWindow()
+        window.connect("destroy", Gtk.main_quit)
+
+app = Clips()
+Gtk.main()
         

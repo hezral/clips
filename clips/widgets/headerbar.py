@@ -49,7 +49,7 @@ class ClipsHeaderBar(Gtk.HeaderBar):
         search_entry.get_style_context().add_provider(search_text_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
         search_entry.get_style_context().add_class("large-search-entry")
 
-        settings_icon = Gtk.Button.new_from_icon_name("open-menu", Gtk.IconSize.LARGE_TOOLBAR)
+        self.settings_icon = Gtk.Button.new_from_icon_name("open-menu", Gtk.IconSize.LARGE_TOOLBAR)
 
         box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
         box.add(search_entry)
@@ -58,5 +58,5 @@ class ClipsHeaderBar(Gtk.HeaderBar):
 
         #headerbar construct
         self.set_custom_title(box)
-        self.pack_end(settings_icon)
+        self.pack_end(self.settings_icon)
         self.show_all()

@@ -38,7 +38,7 @@ class ClipsStore():
                 self.db_connection, self.db_cursor = self.open_db(db_file)
             else:
                 self.db_connection, self.db_cursor = self.open_db(db_file)
-                self.create_table(db_cursor)
+                self.create_table(self.db_cursor)
         except (OSError, sqlite3.Error) as error:
             print("Exception: ", error)
 
@@ -101,10 +101,11 @@ class ClipsStore():
         except sqlite3.Error as error:
             print("Excption sqlite3.Error: ", error)
 
-    def get_checksume(self, data):
+    def get_checksum(self, data):
         md5sum = hashlib.md5()
         md5sum.update(data)
-        return md5sum.hexdigest()
+        checksum = md5sum.hexdigest()
+        return checksum
 
     def debug(self):
         label = Gtk.Label()

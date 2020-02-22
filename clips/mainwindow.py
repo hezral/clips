@@ -44,10 +44,6 @@ class ClipsWindow(Gtk.ApplicationWindow):
         settings = Gtk.Settings.get_default()
         settings.set_property("gtk-application-prefer-dark-theme", True)
 
-        #headerbar construct
-        headerbar = ClipsHeaderBar()
-        self.set_titlebar(headerbar)
-
         #listbox construct
         global last_row_selected_idx
         last_row_selected_idx = 0
@@ -90,12 +86,23 @@ class ClipsWindow(Gtk.ApplicationWindow):
         welcome_image.set_pixel_size(96)
         listbox_view.add(ClipsListRow(welcome_image))
 
-        #scrolled window
-        scrolled_window = Gtk.ScrolledWindow()
-        scrolled_window.set_vexpand(True)
-        scrolled_window.add(listbox_view)
-        scrolled_window.show()
-        scrolled_window.set_visible(True)
+        # clips_list
+        clips_view = Gtk.Grid()
+        scrolled_view = Gtk.ScrolledWindow()
+        scrolled_view.set_hexpand(True)
+        scrolled_view.set_vexpand(True)
+        scrolled_view.add(listbox_view)
+        scrolled_view.show()
+        scrolled_view.set_visible(True)
+        separator = Gtk.Separator()
+        separator.set_orientation(Gtk.Orientation.HORIZONTAL)
+        status_bar = Gtk.Label()
+        status_bar.props.margin = 1
+        status_bar.props.halign = Gtk.Align.END
+        clips_view.attach(scrolled_view, 0, 0, 1, 1)
+        clips_view.attach(separator, 0, 1, 1, 1)
+        clips_view.attach(status_bar, 0, 2, 1, 1)
+        clips_view.set_visible(True)
 
         #welcome view
         info_view = InfoView("No Clips Found","Start Copying Stuffs", "system-os-installer")
@@ -107,11 +114,22 @@ class ClipsWindow(Gtk.ApplicationWindow):
 
         #stack view
         stack_view = Gtk.Stack()
-        stack_view.add_named(scrolled_window, "listbox_view")
-        stack_view.add_named(info_view, "infoview")
-        stack_view.set_visible_child_name("infoview")
-        stack_view.set_visible_child_name("listbox_view")
+        #stack_view.add_named(scrolled_view, "listbox_view")
+        stack_view.add_named(clips_view, "clips_view")
+        stack_view.add_named(info_view, "info_view")
+        stack_view.set_visible_child_name("clips_view")
 
+        def toggle_stack(self):
+            if stack_view.get_visible_child_name() == 'clips_view':
+                stack_view.set_visible_child_full("info_view",Gtk.StackTransitionType.CROSSFADE)
+            else:
+                stack_view.set_visible_child_full("clips_view",Gtk.StackTransitionType.CROSSFADE)
+
+        #headerbar construct
+        header_bar = ClipsHeaderBar()        
+        header_bar.settings_icon.connect('clicked',toggle_stack)
+
+        self.set_titlebar(header_bar)
         self.add(stack_view)
         self.show()
         self.show_all()
