@@ -18,7 +18,7 @@ install_data = [('share/applications', ['data/com.github.hezral.clips.desktop'])
                     ['clips/locale/it_IT/LC_MESSAGES/clips.po'])]
 
 setup(  name='Clips',
-        version='0.0.1',
+        version='1.0.0',
         author='Adi Hezral',
         description='An app to view your clipboard',
         url='https://github.com/hezral/clips',

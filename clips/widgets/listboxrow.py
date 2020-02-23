@@ -142,7 +142,6 @@ class ClipsListRow(Gtk.ListBoxRow):
         timestamp_label.get_style_context().add_provider(listrow_css, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
         timestamp_label.get_style_context().add_class("clips-timestamp-font")
         
-
         #grid for content and timestamp
         main_grid = Gtk.Grid()
         main_grid.attach(data_label, 1, 0, 1, 1)

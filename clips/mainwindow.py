@@ -27,6 +27,7 @@ from widgets.listboxrow import ClipsListRow
 from widgets.infoview import ClipsInfoView
 from widgets.listbox import ClipsListBox
 from widgets.clipsview import ClipsView
+from manager import ClipsManager
 
 class ClipsWindow(Gtk.ApplicationWindow):
     def __init__(self):
@@ -45,12 +46,6 @@ class ClipsWindow(Gtk.ApplicationWindow):
         #applicationwindow theme
         settings = Gtk.Settings.get_default()
         settings.set_property("gtk-application-prefer-dark-theme", True)
-
-        #headerbar construct
-        header_bar = ClipsHeaderBar()        
-        header_bar.settings_icon.connect('clicked',toggle_stack)
-
-        self.set_titlebar(header_bar)
 
         listbox_view = ClipsListBox()
         #initial launch add some rows
@@ -82,6 +77,12 @@ class ClipsWindow(Gtk.ApplicationWindow):
             else:
                 stack_view.set_visible_child_full("clips_view",Gtk.StackTransitionType.CROSSFADE)
 
+        #headerbar construct
+        header_bar = ClipsHeaderBar()        
+        header_bar.settings_icon.connect('clicked',toggle_stack)
+
+        self.set_titlebar(header_bar)
+
         self.add(stack_view)
         self.show()
         self.show_all()
@@ -89,6 +90,9 @@ class ClipsWindow(Gtk.ApplicationWindow):
         # hide toolbar buttons on all rows by iterating through all the child objects in listbox
         listbox_view.foreach(lambda child, data: child.hide_buttons(), None)
         print(len(listbox_view))
+
+        #manager = ClipsManager()
+        #manager.clipboard.connect('owner-change', manager.clipboard_changed)
 
 app = ClipsWindow()
 app.connect("destroy", Gtk.main_quit)

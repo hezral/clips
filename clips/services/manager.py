@@ -32,7 +32,7 @@ class ClipsManager():
         super().__init__()
         
         #debug flag
-        debugflag = True
+        debugflag = False
         if debugflag:
             self.debug()
 
@@ -45,16 +45,17 @@ class ClipsManager():
         self.text_target = Gdk.Atom.intern('text/plain', False)
         self.uri_target = Gdk.Atom.intern('x-special/gnome-copied-files', False)
 
-        def clipboard_changed(clipboard, event):
-            target, content = self.get_clipboard_contents()
-            if debugflag:
-                self.debug_log(clipboard, target, content)
-            return target, content
-
         # run function everytime clipboard is updated
-        self.clipboard.connect("owner-change", clipboard_changed)
+        #self.clipboard.connect("owner-change", self.clipboard_changed)
 
-    def get_clipboard_contents(self):
+    def clipboard_changed(self, clipboard, event):
+        target, content = self.get_clipboard_contents()
+        print('copy')
+        if debugflag:
+            self.debug_log(clipboard, target, content)
+        return target, content
+
+    def get_clipboard_contents(self, clipboard, event):
         if self.clipboard.wait_is_target_available(self.image_target):
             target_type = self.image_target 
             content = self.clipboard.wait_for_image() #original image
@@ -130,5 +131,5 @@ class ClipsManager():
     def set_clipboard_contents():
         pass
 
-clips = ClipsManager()
-Gtk.main()
+#clips = ClipsManager()
+#Gtk.main()
