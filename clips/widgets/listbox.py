@@ -34,7 +34,7 @@ class ClipsListBox(Gtk.ListBox):
         self.set_filter_func(self.filter_func, None, False)
         self.connect('row-selected', self.on_row_selected)
         self.connect_after('activate_cursor_row', self.on_row_activated)
-        self.connect_after('row-activated', self.on_row_selected)        
+        self.connect_after('row-activated', self.on_row_selected)
 
     #listbox_view function for styling alternate rows using filters
     def filter_func(self, row, data, notify_destroy):
@@ -59,6 +59,9 @@ class ClipsListBox(Gtk.ListBox):
     #listbox_view function for triggering actions on row activation
     def on_row_activated(self, widget, row):
         print('nothing')
+
+    def on_add(self):
+        print(type(self))
 
     #custom add function
     def add_row(self, listboxrow):

@@ -3,7 +3,7 @@
 import glob, os 
 from distutils.core import setup
 
-install_data = [('share/applications', ['data/com.github.hezral.clipsdesktop']),
+install_data = [('share/applications', ['data/com.github.hezral.clips.desktop']),
                 ('share/metainfo', ['data/com.github.hezral.clipsappdata.xml']),
                 ('share/icons/hicolor/128x128/apps',['data/com.github.hezral.clipssvg']),
                 ('bin/clips',['clips/constants.py']),

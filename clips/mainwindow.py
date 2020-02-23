@@ -46,17 +46,21 @@ class ClipsWindow(Gtk.ApplicationWindow):
         settings = Gtk.Settings.get_default()
         settings.set_property("gtk-application-prefer-dark-theme", True)
 
+        #headerbar construct
+        header_bar = ClipsHeaderBar()        
+        header_bar.settings_icon.connect('clicked',toggle_stack)
+
+        self.set_titlebar(header_bar)
+
         listbox_view = ClipsListBox()
         #initial launch add some rows
         welcome_text = "Welcome to Clips"
-        
-        
         welcome_image = Gtk.Image.new_from_icon_name("system-os-installer", Gtk.IconSize.MENU)
         welcome_image.set_pixel_size(96)
         listbox_view.add(ClipsListRow(welcome_image))
-        listbox_view.add_row(ClipsListRow(welcome_text))
-        listbox_view.add_row(ClipsListRow(welcome_image))
-
+        listbox_view.add(ClipsListRow(welcome_text))
+        listbox_view.add(ClipsListRow(welcome_image))
+        
         # clips_view
         clips_view = ClipsView(listbox_view)
 
@@ -78,18 +82,13 @@ class ClipsWindow(Gtk.ApplicationWindow):
             else:
                 stack_view.set_visible_child_full("clips_view",Gtk.StackTransitionType.CROSSFADE)
 
-        #headerbar construct
-        header_bar = ClipsHeaderBar()        
-        header_bar.settings_icon.connect('clicked',toggle_stack)
-
-        self.set_titlebar(header_bar)
         self.add(stack_view)
         self.show()
         self.show_all()
 
-        #hack to hide toolbar buttons on all rows
-        for row in listbox_view:
-            row.hide_buttons()
+        # hide toolbar buttons on all rows by iterating through all the child objects in listbox
+        listbox_view.foreach(lambda child, data: child.hide_buttons(), None)
+        print(len(listbox_view))
 
 app = ClipsWindow()
 app.connect("destroy", Gtk.main_quit)

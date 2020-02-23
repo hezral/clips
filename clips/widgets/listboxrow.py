@@ -163,8 +163,6 @@ class ClipsListRow(Gtk.ListBoxRow):
         self.add(row_box)
         self.show_all()
 
-
-
     def timestamp(self, time=False):
         """
         Get a datetime object or a int() Epoch timestamp and return a
