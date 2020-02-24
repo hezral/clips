@@ -27,7 +27,7 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GLib, GObject
 import sqlite3
 
-class ClipsStore():
+class ClipsDatabase():
     def __init__(self):
 
         debugflag = True

@@ -27,7 +27,7 @@ from widgets.listboxrow import ClipsListRow
 from widgets.infoview import ClipsInfoView
 from widgets.listbox import ClipsListBox
 from widgets.clipsview import ClipsView
-from manager import ClipsManager
+from services.manager import ClipsManager
 
 class ClipsWindow(Gtk.ApplicationWindow):
     def __init__(self):
