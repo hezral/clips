@@ -28,8 +28,6 @@ class ClipsListRow(Gtk.ListBoxRow):
     def __init__(self, data):
         super().__init__()
 
-        self.data = data
-
         #css styles
         LISTROW_CSS = """
         @define-color colorPrimary #F012BE;
@@ -71,33 +69,12 @@ class ClipsListRow(Gtk.ListBoxRow):
         }        
         """
         
-        listrow_css = Gtk.CssProvider()
-        listrow_css.load_from_data(bytes(LISTROW_CSS.encode()))
-
-        #function for toolbar
-        def generate_toolbar(self, icon, tooltip):
-            toolbar_button = Gtk.Button().new_from_icon_name(icon, Gtk.IconSize.SMALL_TOOLBAR)
-            toolbar_button.set_tooltip_text(tooltip)
-            toolbar_button.props.can_focus = False
-            toolbar_button.props.can_default = True
-            toolbar_button.set_size_request(32, 32)
-            
-            toolbar_button.get_style_context().add_provider(listrow_css, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
-            toolbar_button.get_style_context().remove_class("button")
-            toolbar_button.get_style_context().add_class("toolbar-button")
-            toolbar_button.get_style_context().add_class("transition")
-
-            toolbar_hbox = Gtk.HBox()
-            toolbar_hbox.pack_start(toolbar_button, 0, 0, 0)
-
-            toolbar_vbox = Gtk.VBox()
-            toolbar_vbox.pack_start(toolbar_hbox, 0, 0, 0)
-            toolbar_vbox.set_valign(Gtk.Align.CENTER)
-            return toolbar_vbox
+        self.listrow_css = Gtk.CssProvider()
+        self.listrow_css.load_from_data(bytes(LISTROW_CSS.encode()))
 
         #generate toolbar buttons
-        self.delete_button = generate_toolbar(self, "edit-delete-symbolic", "Delete clip")
-        self.copy_button = generate_toolbar(self, "edit-copy-symbolic", "Copy to clipboard")
+        self.delete_button = self.generate_toolbar("edit-delete-symbolic", "Delete clip")
+        self.copy_button = self.generate_toolbar("edit-copy-symbolic", "Copy to clipboard")
 
         #check data type 
         if type(data) == str:
@@ -113,7 +90,7 @@ class ClipsListRow(Gtk.ListBoxRow):
         #clips label 
         data_label = Gtk.Label(str(data))
         print(type(data))
-        data_label.get_style_context().add_provider(listrow_css, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+        data_label.get_style_context().add_provider(self.listrow_css, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
         data_label.get_style_context().add_class("font-bold")
         data_label.props.ellipsize = Pango.EllipsizeMode.END
         data_label.props.max_width_chars = 25
@@ -139,7 +116,7 @@ class ClipsListRow(Gtk.ListBoxRow):
         timestamp_label.props.valign = Gtk.Align.START
         timestamp_label.props.max_width_chars = 45
         timestamp_label.props.ellipsize = Pango.EllipsizeMode.END
-        timestamp_label.get_style_context().add_provider(listrow_css, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+        timestamp_label.get_style_context().add_provider(self.listrow_css, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
         timestamp_label.get_style_context().add_class("clips-timestamp-font")
         
         #grid for content and timestamp
@@ -147,7 +124,6 @@ class ClipsListRow(Gtk.ListBoxRow):
         main_grid.attach(data_label, 1, 0, 1, 1)
         main_grid.attach(contents, 1, 1, 1, 1)
         main_grid.attach(timestamp_label, 1, 2, 1, 1)
-
 
         #construct the row
         row_box = Gtk.Box(Gtk.Orientation.HORIZONTAL, 12)
@@ -161,6 +137,27 @@ class ClipsListRow(Gtk.ListBoxRow):
         #self.get_style_context().add_class("clips-row")
         self.add(row_box)
         self.show_all()
+
+
+    def generate_toolbar(self, icon, tooltip):
+        toolbar_button = Gtk.Button().new_from_icon_name(icon, Gtk.IconSize.SMALL_TOOLBAR)
+        toolbar_button.set_tooltip_text(tooltip)
+        toolbar_button.props.can_focus = False
+        toolbar_button.props.can_default = True
+        toolbar_button.set_size_request(32, 32)
+        
+        toolbar_button.get_style_context().add_provider(self.listrow_css, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+        toolbar_button.get_style_context().remove_class("button")
+        toolbar_button.get_style_context().add_class("toolbar-button")
+        toolbar_button.get_style_context().add_class("transition")
+
+        toolbar_hbox = Gtk.HBox()
+        toolbar_hbox.pack_start(toolbar_button, 0, 0, 0)
+
+        toolbar_vbox = Gtk.VBox()
+        toolbar_vbox.pack_start(toolbar_hbox, 0, 0, 0)
+        toolbar_vbox.set_valign(Gtk.Align.CENTER)
+        return toolbar_vbox
 
     def timestamp(self, time=False):
         """

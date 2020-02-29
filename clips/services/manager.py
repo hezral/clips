@@ -31,11 +31,6 @@ class ClipsManager():
     def __init__(self):
         super().__init__()
         
-        #debug flag
-        debugflag = False
-        if debugflag:
-            self.debug()
-
         #create clipboard
         self.clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
 
@@ -45,13 +40,17 @@ class ClipsManager():
         self.text_target = Gdk.Atom.intern('text/plain', False)
         self.uri_target = Gdk.Atom.intern('x-special/gnome-copied-files', False)
 
-        # run function everytime clipboard is updated
-        #self.clipboard.connect("owner-change", self.clipboard_changed)
+        #debug flag
+        self.debugflag = False
+        if self.debugflag:
+            self.debug()
+            # run function everytime clipboard is updated
+            self.clipboard.connect("owner-change", self.clipboard_changed)
 
     def clipboard_changed(self, clipboard, event):
-        target, content = self.get_clipboard_contents()
+        target, content = self.get_clipboard_contents(clipboard, event)
         print('copy')
-        if debugflag:
+        if self.debugflag:
             self.debug_log(clipboard, target, content)
         return target, content
 
@@ -102,11 +101,11 @@ class ClipsManager():
         GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGINT, Gtk.main_quit) 
 
     def debug_log(self, clipboard, target, content):
-        #print(type(content))
+        print(type(content))
         #print(type(content.splitlines()))
         #print(content.splitlines())
-        self.content_checksum = get_checksum(content)
-        print(self.content_checksum)
+        #self.content_checksum = self.get_checksum(content)
+        #print(self.content_checksum)
         print("Current clipboard offers formats: \n" + str(self.clipboard.wait_for_targets()[1]))
         if content is not None:
             if target == self.image_target:
@@ -130,6 +129,7 @@ class ClipsManager():
         
     def set_clipboard_contents():
         pass
+
 
 #clips = ClipsManager()
 #Gtk.main()

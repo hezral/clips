@@ -27,11 +27,11 @@ from widgets.listboxrow import ClipsListRow
 from widgets.infoview import ClipsInfoView
 from widgets.listbox import ClipsListBox
 from widgets.clipsview import ClipsView
-from services.manager import ClipsManager
+
 
 class ClipsWindow(Gtk.ApplicationWindow):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         
         #applicationwindow construct
         self.props.title = "Clips"
@@ -57,7 +57,7 @@ class ClipsWindow(Gtk.ApplicationWindow):
         listbox_view.add(ClipsListRow(welcome_image))
         
         # clips_view
-        clips_view = ClipsView(listbox_view)
+        self.clips_view = ClipsView(listbox_view)
 
         #welcome_view
         info_view = ClipsInfoView("No Clips Found","Start Copying Stuffs", "system-os-installer")
@@ -67,7 +67,7 @@ class ClipsWindow(Gtk.ApplicationWindow):
 
         #stack_view
         stack_view = Gtk.Stack()
-        stack_view.add_named(clips_view, "clips_view")
+        stack_view.add_named(self.clips_view, "clips_view")
         stack_view.add_named(info_view, "info_view")
         stack_view.set_visible_child_name("clips_view")
 
@@ -89,11 +89,11 @@ class ClipsWindow(Gtk.ApplicationWindow):
 
         # hide toolbar buttons on all rows by iterating through all the child objects in listbox
         listbox_view.foreach(lambda child, data: child.hide_buttons(), None)
-        print(len(listbox_view))
+        #print(len(listbox_view))
 
-        #manager = ClipsManager()
-        #manager.clipboard.connect('owner-change', manager.clipboard_changed)
+    def check(self, widget, event):
+        print(type(self.clips_view))
 
-app = ClipsWindow()
-app.connect("destroy", Gtk.main_quit)
-Gtk.main()
+# app = ClipsWindow()
+# app.connect("destroy", Gtk.main_quit)
+# Gtk.main()

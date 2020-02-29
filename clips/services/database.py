@@ -60,7 +60,6 @@ class ClipsDatabase():
                 id          INTEGER     PRIMARY KEY     NOT NULL,
                 type        INTEGER     NOT NULL,
                 created     TEXT        NOT NULL        DEFAULT (STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW', 'localtime')),
-                accessed    TEXT        NOT NULL        DEFAULT (STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW', 'localtime')),
                 source_uri  TEXT,
                 cache_uri   TEXT,
                 data        BLOB,
@@ -99,7 +98,7 @@ class ClipsDatabase():
             database_cursor.close()
 
         except sqlite3.Error as error:
-            print("Excption sqlite3.Error: ", error)
+            print("Exception sqlite3.Error: ", error)
 
     def get_checksum(self, data):
         md5sum = hashlib.md5()
