@@ -54,7 +54,7 @@ class Clips(Gtk.Application):
             self.window = ClipsWindow(application=self)
 
         self.window.present()
-        self.window.connect('key-press-event', self.window.check)
+        #elf.window.connect('key-press-event', self.window.check)
 
     def do_command_line(self, command_line):
         options = command_line.get_options_dict()
@@ -68,11 +68,11 @@ class Clips(Gtk.Application):
         self.activate()
         return 0
 
-    def get_default_instance(self):
+    def get_default(self):
         if not self.instance:
             self.instance = Clips()
-            return self.instance
+            return instance
 
 if __name__ == "__main__":
-    app = Clips().get_default_instance()
+    app = Clips()
     app.run(sys.argv)

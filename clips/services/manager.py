@@ -45,13 +45,14 @@ class ClipsManager():
         if self.debugflag:
             self.debug()
             # run function everytime clipboard is updated
-            self.clipboard.connect("owner-change", self.clipboard_changed)
+            #self.clipboard.connect("owner-change", self.clipboard_changed)
 
     def clipboard_changed(self, clipboard, event):
         target, content = self.get_clipboard_contents(clipboard, event)
-        print('copy')
-        if self.debugflag:
-            self.debug_log(clipboard, target, content)
+        #print('copy')
+        print(type(content), datetime.now())
+        # if self.debugflag:
+        #     self.debug_log(clipboard, target, content)
         return target, content
 
     def get_clipboard_contents(self, clipboard, event):
