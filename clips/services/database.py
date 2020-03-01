@@ -23,9 +23,9 @@ import signal
 import gi
 import os.path
 import hashlib
+import sqlite3
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GLib, GObject
-import sqlite3
 
 class ClipsDatabase():
     def __init__(self):
@@ -70,33 +70,19 @@ class ClipsDatabase():
     def add_record(self, data_tuple):
         database_connection = self.db_connection
         database_cursor = self.db_cursor
+        data_input = data_tuple
 
         # insert a clips record
         sqlite_insert_with_param = '''
             INSERT INTO 'ClipsDB'
             ('type', 'source_uri', 'cache_uri', 'data', 'checksum') 
-            VALUES (?, ?, ?, ?, ?);
+            VALUES
+            (?, ?, ?, ?, ?);
             '''
-        data = data_tuple
-
         try:
-            database_cursor.execute(sqlite_insert_with_param, data)
+            database_cursor.execute(sqlite_insert_with_param, data_input)
             database_connection.commit()
-            print("Developer added successfully \n")
-
-            # # get developer detail
-            # sqlite_select_query = """SELECT name, joiningDate from new_developers where id = ?"""
-            # database_cursor.execute(sqlite_select_query, (1,))
-            # records = database_cursor.fetchall()
-
-            # for row in records:
-            #     developer= row[0]
-            #     joining_Date = row[1]
-            #     print(developer, " joined on", joiningDate)
-            #     print("joining date type is", type(joining_Date))
-
             database_cursor.close()
-
         except sqlite3.Error as error:
             print("Exception sqlite3.Error: ", error)
 
@@ -121,7 +107,9 @@ class ClipsDatabase():
         # just for debugging at CLI to enable CTRL+C quit
         GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGINT, Gtk.main_quit)
 
-clips = ClipsStore()
+clips = ClipsDatabase()
+
+print(clips.get_checksum(b'testesttest'))
 
 m = hashlib.md5()
 m.update(b"Nobody inspects")
@@ -130,6 +118,41 @@ checksum = m.hexdigest()
 
 data = ('image/png', '/home/adi', '/home/adi/.config/Clips/cache/filename.png', 'testtest', checksum)
 
+print(len(data))
+
+data = data + (checksum,)
+
+print(len(data))
+
 clips.add_record(data)
 
 Gtk.main()
+            # # get developer detail
+            # sqlite_select_query = """SELECT name, joiningDate from new_developers where id = ?"""
+            # database_cursor.execute(sqlite_select_query, (1,))
+            # records = database_cursor.fetchall()
+
+            # for row in records:
+            #     developer= row[0]
+            #     joining_Date = row[1]
+            #     print(developer, " joined on", joiningDate)
+            #     print("joining date type is", type(joining_Date))            # # get developer detail
+            # sqlite_select_query = """SELECT name, joiningDate from new_developers where id = ?"""
+            # database_cursor.execute(sqlite_select_query, (1,))
+            # records = database_cursor.fetchall()
+
+            # for row in records:
+            #     developer= row[0]
+            #     joining_Date = row[1]
+            #     print(developer, " joined on", joiningDate)
+            #     print("joining date type is", type(joining_Date))            # # get developer detail
+            # sqlite_select_query = """SELECT name, joiningDate from new_developers where id = ?"""
+            # database_cursor.execute(sqlite_select_query, (1,))
+            # records = database_cursor.fetchall()
+
+            # for row in records:
+            #     developer= row[0]
+            #     joining_Date = row[1]
+            #     print(developer, " joined on", joiningDate)
+            #     print("joining date type is", type(joining_Date))
+
