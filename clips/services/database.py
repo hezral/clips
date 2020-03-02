@@ -54,8 +54,8 @@ class ClipsDatabase():
         return connection, cursor
 
     def create_table(self, database_cursor):
-      # Initializes the database with the ClipsDB table
-      database_cursor.execute('''
+        # Initializes the database with the ClipsDB table
+        database_cursor.execute('''
             CREATE TABLE ClipsDB (
                 id          INTEGER     PRIMARY KEY     NOT NULL,
                 type        INTEGER     NOT NULL,
@@ -68,6 +68,7 @@ class ClipsDatabase():
             ''')
     
     def add_record(self, data_tuple):
+        # Adds a new record to database
         database_connection = self.db_connection
         database_cursor = self.db_cursor
         data_input = data_tuple
@@ -109,50 +110,59 @@ class ClipsDatabase():
 
 clips = ClipsDatabase()
 
-print(clips.get_checksum(b'testesttest'))
+#print(clips.get_checksum(b'testesttest'))
 
-m = hashlib.md5()
-m.update(b"Nobody inspects")
+#m = hashlib.md5()
+#m.update(b"Nobody inspects")
 
-checksum = m.hexdigest()
+#checksum = m.hexdigest()
 
-data = ('image/png', '/home/adi', '/home/adi/.config/Clips/cache/filename.png', 'testtest', checksum)
+image = Gtk.Image.new_from_icon_name("system-os-installer", Gtk.IconSize.MENU)
 
-print(len(data))
 
-data = data + (checksum,)
+#print(type(image))
 
-print(len(data))
+#print(image)
 
-clips.add_record(data)
+#print(clips.get_checksum(image.get_pixbuf()))
 
-Gtk.main()
-            # # get developer detail
-            # sqlite_select_query = """SELECT name, joiningDate from new_developers where id = ?"""
-            # database_cursor.execute(sqlite_select_query, (1,))
-            # records = database_cursor.fetchall()
+#data = ('image/png', '/home/adi', '/home/adi/.config/Clips/cache/filename.png', 'testtest')
 
-            # for row in records:
-            #     developer= row[0]
-            #     joining_Date = row[1]
-            #     print(developer, " joined on", joiningDate)
-            #     print("joining date type is", type(joining_Date))            # # get developer detail
-            # sqlite_select_query = """SELECT name, joiningDate from new_developers where id = ?"""
-            # database_cursor.execute(sqlite_select_query, (1,))
-            # records = database_cursor.fetchall()
+#print(len(data))
 
-            # for row in records:
-            #     developer= row[0]
-            #     joining_Date = row[1]
-            #     print(developer, " joined on", joiningDate)
-            #     print("joining date type is", type(joining_Date))            # # get developer detail
-            # sqlite_select_query = """SELECT name, joiningDate from new_developers where id = ?"""
-            # database_cursor.execute(sqlite_select_query, (1,))
-            # records = database_cursor.fetchall()
+#data = data + (checksum,)
 
-            # for row in records:
-            #     developer= row[0]
-            #     joining_Date = row[1]
-            #     print(developer, " joined on", joiningDate)
-            #     print("joining date type is", type(joining_Date))
+#print(len(data))
+
+#clips.add_record(data)
+
+#Gtk.main()
+# # get developer detail
+# sqlite_select_query = """SELECT name, joiningDate from new_developers where id = ?"""
+# database_cursor.execute(sqlite_select_query, (1,))
+# records = database_cursor.fetchall()
+
+# for row in records:
+#     developer= row[0]
+#     joining_Date = row[1]
+#     print(developer, " joined on", joiningDate)
+#     print("joining date type is", type(joining_Date))            # # get developer detail
+# sqlite_select_query = """SELECT name, joiningDate from new_developers where id = ?"""
+# database_cursor.execute(sqlite_select_query, (1,))
+# records = database_cursor.fetchall()
+
+# for row in records:
+#     developer= row[0]
+#     joining_Date = row[1]
+#     print(developer, " joined on", joiningDate)
+#     print("joining date type is", type(joining_Date))            # # get developer detail
+# sqlite_select_query = """SELECT name, joiningDate from new_developers where id = ?"""
+# database_cursor.execute(sqlite_select_query, (1,))
+# records = database_cursor.fetchall()
+
+# for row in records:
+#     developer= row[0]
+#     joining_Date = row[1]
+#     print(developer, " joined on", joiningDate)
+#     print("joining date type is", type(joining_Date))
 

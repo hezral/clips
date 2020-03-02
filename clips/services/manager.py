@@ -28,7 +28,7 @@ from datetime import datetime
 from urllib.parse import urlparse
 
 class ClipsManager():
-    def __init__(self):
+    def __init__(self, debugflag):
         super().__init__()
         
         #create clipboard
@@ -38,21 +38,20 @@ class ClipsManager():
         self.html_target = Gdk.Atom.intern('text/html', False)
         self.image_target = Gdk.Atom.intern('image/png', False)
         self.text_target = Gdk.Atom.intern('text/plain', False)
-        self.uri_target = Gdk.Atom.intern('x-special/gnome-copied-files', False)
+        #self.uri_target = Gdk.Atom.intern('x-special/gnome-copied-files', False)
 
         #debug flag
-        self.debugflag = False
+        self.debugflag = debugflag
         if self.debugflag:
             self.debug()
             # run function everytime clipboard is updated
-            #self.clipboard.connect("owner-change", self.clipboard_changed)
+            self.clipboard.connect("owner-change", self.clipboard_changed)
 
     def clipboard_changed(self, clipboard, event):
         target, content = self.get_clipboard_contents(clipboard, event)
-        #print('copy')
         print(type(content), datetime.now())
-        # if self.debugflag:
-        #     self.debug_log(clipboard, target, content)
+        if self.debugflag:
+            self.debug_log(clipboard, target, content)
         return target, content
 
     def get_clipboard_contents(self, clipboard, event):
@@ -102,12 +101,14 @@ class ClipsManager():
         GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGINT, Gtk.main_quit) 
 
     def debug_log(self, clipboard, target, content):
-        print(type(content))
+        #print(type(content))
         #print(type(content.splitlines()))
         #print(content.splitlines())
         #self.content_checksum = self.get_checksum(content)
         #print(self.content_checksum)
-        print("Current clipboard offers formats: \n" + str(self.clipboard.wait_for_targets()[1]))
+        #checksum = self.get_checksum(content)
+        #print(checksum)
+        #print("Current clipboard offers formats: \n" + str(self.clipboard.wait_for_targets()[1]))
         if content is not None:
             if target == self.image_target:
                 self.image.set_from_pixbuf(content)
@@ -132,5 +133,5 @@ class ClipsManager():
         pass
 
 
-#clips = ClipsManager()
-#Gtk.main()
+clips = ClipsManager(debugflag=True)
+Gtk.main()
