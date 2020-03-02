@@ -25,7 +25,7 @@ import os.path
 import hashlib
 import sqlite3
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, GLib, GObject
+from gi.repository import Gtk, GLib, GObject, GdkPixbuf
 
 class ClipsDatabase():
     def __init__(self):
@@ -62,8 +62,7 @@ class ClipsDatabase():
                 created     TEXT        NOT NULL        DEFAULT (STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW', 'localtime')),
                 source_uri  TEXT,
                 cache_uri   TEXT,
-                data        BLOB,
-                checksum    STRING      NOT NULL        UNIQUE
+                data        BLOB
             );
             ''')
     
@@ -76,7 +75,7 @@ class ClipsDatabase():
         # insert a clips record
         sqlite_insert_with_param = '''
             INSERT INTO 'ClipsDB'
-            ('type', 'source_uri', 'cache_uri', 'data', 'checksum') 
+            ('type', 'source_uri', 'cache_uri', 'data') 
             VALUES
             (?, ?, ?, ?, ?);
             '''
@@ -117,10 +116,13 @@ clips = ClipsDatabase()
 
 #checksum = m.hexdigest()
 
-image = Gtk.Image.new_from_icon_name("system-os-installer", Gtk.IconSize.MENU)
+#img = Gtk.Image.new_from_icon_name("system-os-installer", Gtk.IconSize.MENU)
+#img2 = GdkPixbuf.Pixbuf.new_from_resource("system-os-installer")
 
 
-#print(type(image))
+#print(type(img2))
+
+#print(dir(image))
 
 #print(image)
 
