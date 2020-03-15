@@ -25,12 +25,14 @@ import os.path
 import hashlib
 import sqlite3
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, GLib, GObject, GdkPixbuf
+from gi.repository import Gtk, Gdk, GLib, GObject, GdkPixbuf
+
+from manager import ClipsManager
 
 class ClipsDatabase():
-    def __init__(self):
+    def __init__(self, debugflag):
 
-        debugflag = True
+        debugflag = debugflag
         db_file = 'ClipsDatabase.db'
 
         try:
@@ -77,7 +79,7 @@ class ClipsDatabase():
             INSERT INTO 'ClipsDB'
             ('type', 'source_uri', 'cache_uri', 'data') 
             VALUES
-            (?, ?, ?, ?, ?);
+            (?, ?, ?, ?);
             '''
         try:
             database_cursor.execute(sqlite_insert_with_param, data_input)
@@ -85,6 +87,12 @@ class ClipsDatabase():
             database_cursor.close()
         except sqlite3.Error as error:
             print("Exception sqlite3.Error: ", error)
+
+    def select_record(self, data_tuple):
+        pass
+
+    def search_record(self, data_tuple):
+        pass
 
     def get_checksum(self, data):
         md5sum = hashlib.md5()
@@ -107,38 +115,55 @@ class ClipsDatabase():
         # just for debugging at CLI to enable CTRL+C quit
         GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGINT, Gtk.main_quit)
 
-clips = ClipsDatabase()
-
-#print(clips.get_checksum(b'testesttest'))
-
-#m = hashlib.md5()
-#m.update(b"Nobody inspects")
-
-#checksum = m.hexdigest()
-
-#img = Gtk.Image.new_from_icon_name("system-os-installer", Gtk.IconSize.MENU)
-#img2 = GdkPixbuf.Pixbuf.new_from_resource("system-os-installer")
 
 
-#print(type(img2))
 
-#print(dir(image))
+GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGINT, Gtk.main_quit)
 
-#print(image)
+manager = ClipsManager(debugflag=False)
 
-#print(clips.get_checksum(image.get_pixbuf()))
 
-#data = ('image/png', '/home/adi', '/home/adi/.config/Clips/cache/filename.png', 'testtest')
+def new_clip(*args, **kwargs):
+    clipboard = locals().get('args')[0]
+    event = locals().get('args')[1]
+    target, content = manager.clipboard_changed(clipboard, event)
+    
+    print(target, type(content))
+    
+    if content is not None:
+        #print(clips.get_checksum(content))
+        if target == manager.image_target:
+            # content.savev('/home/adi/Downloads/content.png', 'png', [], []) #save file
+            # thumbnail = content.scale_simple(content.get_width()//2,content.get_height()//2, GdkPixbuf.InterpType.BILINEAR) #create thumbnail
+            # content = thumbnail
+            pass
+        elif target == manager.uri_target:
+            # new_content=[]
+            # for i in content.splitlines():
+            #     new_content.append(urlparse(i).path.replace('%20',' '))
+            # content = '\n'.join(new_content)
+            pass
+        elif target == manager.html_target:
+            pass
+        # elif target == manager.text_target:
+            pass
+        else:
+            print('Clips: Unsupported target type')
+        # data = (type, source_uri, cache_uri, content)
+        # clips.add_record(data)
+    else:
+        print("Clips: No content in the clipboard")
 
-#print(len(data))
+# content = self.clipboard.wait_for_contents(self.uri_target).get_data().decode("utf-8") #need to decode from bytes to string
 
-#data = data + (checksum,)
+manager.clipboard.connect("owner-change", new_clip)
+clips = ClipsDatabase(debugflag=False)
 
-#print(len(data))
+Gtk.main()
 
-#clips.add_record(data)
 
-#Gtk.main()
+
+#
 # # get developer detail
 # sqlite_select_query = """SELECT name, joiningDate from new_developers where id = ?"""
 # database_cursor.execute(sqlite_select_query, (1,))
@@ -149,6 +174,7 @@ clips = ClipsDatabase()
 #     joining_Date = row[1]
 #     print(developer, " joined on", joiningDate)
 #     print("joining date type is", type(joining_Date))            # # get developer detail
+
 # sqlite_select_query = """SELECT name, joiningDate from new_developers where id = ?"""
 # database_cursor.execute(sqlite_select_query, (1,))
 # records = database_cursor.fetchall()
@@ -158,6 +184,7 @@ clips = ClipsDatabase()
 #     joining_Date = row[1]
 #     print(developer, " joined on", joiningDate)
 #     print("joining date type is", type(joining_Date))            # # get developer detail
+
 # sqlite_select_query = """SELECT name, joiningDate from new_developers where id = ?"""
 # database_cursor.execute(sqlite_select_query, (1,))
 # records = database_cursor.fetchall()

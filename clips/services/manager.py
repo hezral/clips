@@ -38,7 +38,7 @@ class ClipsManager():
         self.html_target = Gdk.Atom.intern('text/html', False)
         self.image_target = Gdk.Atom.intern('image/png', False)
         self.text_target = Gdk.Atom.intern('text/plain', False)
-        #self.uri_target = Gdk.Atom.intern('x-special/gnome-copied-files', False)
+        self.uri_target = Gdk.Atom.intern('x-special/gnome-copied-files', False)
 
         #debug flag
         self.debugflag = debugflag
@@ -49,7 +49,7 @@ class ClipsManager():
 
     def clipboard_changed(self, clipboard, event):
         target, content = self.get_clipboard_contents(clipboard, event)
-        print(type(content), datetime.now())
+        #print(type(content), datetime.now())
         if self.debugflag:
             self.debug_log(clipboard, target, content)
         return target, content
@@ -58,20 +58,13 @@ class ClipsManager():
         if self.clipboard.wait_is_target_available(self.image_target):
             target_type = self.image_target 
             content = self.clipboard.wait_for_image() #original image
-            content.savev('/home/adi/Downloads/content.png', 'png', [], []) #save file
-            thumbnail = content.scale_simple(content.get_width()//2,content.get_height()//2, GdkPixbuf.InterpType.BILINEAR) #create thumbnail
-            content = thumbnail
         elif self.clipboard.wait_is_target_available(self.uri_target):
             target_type = self.uri_target
-            content = self.clipboard.wait_for_contents(self.uri_target).get_data().decode("utf-8") #need to decode from bytes to string
-            new_content=[]
-            for i in content.splitlines():
-                new_content.append(urlparse(i).path.replace('%20',' '))
-            content = '\n'.join(new_content)
+            content = self.clipboard.wait_for_contents(self.uri_target)
         elif self.clipboard.wait_is_target_available(self.html_target):
             target_type = self.html_target
-            content = self.clipboard.wait_for_contents(self.html_target).get_data().decode("utf-8") #need to decode from bytes to string for html/text targets
-            content = self.clipboard.wait_for_contents(self.text_target).get_data().decode("utf-8") #need to decode from bytes to string for html/text targets
+            # content = self.clipboard.wait_for_contents(self.html_target).get_data().decode("utf-8") #need to decode from bytes to string for html/text targets
+            content = self.clipboard.wait_for_contents(self.text_target)
         elif self.clipboard.wait_is_target_available(self.text_target):
             target_type = self.text_target
             content = self.clipboard.wait_for_text()
@@ -133,5 +126,5 @@ class ClipsManager():
         pass
 
 
-clips = ClipsManager(debugflag=True)
-Gtk.main()
+#clips = ClipsManager(debugflag=True)
+#Gtk.main()

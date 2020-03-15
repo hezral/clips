@@ -38,10 +38,6 @@ class Clips(Gtk.Application):
 
         self.instance = None
         self.window = None
-
-        manager = ClipsManager()
-        manager.clipboard.connect('owner-change', manager.clipboard_changed)
-        
         
     def do_startup(self):
         Gtk.Application.do_startup(self)
@@ -55,6 +51,8 @@ class Clips(Gtk.Application):
 
         self.window.present()
         #elf.window.connect('key-press-event', self.window.check)
+        manager = ClipsManager(debugflag=False)
+        manager.clipboard.connect('owner-change', manager.clipboard_changed)
 
     def do_command_line(self, command_line):
         options = command_line.get_options_dict()
