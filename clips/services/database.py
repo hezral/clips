@@ -20,13 +20,13 @@
 '''
 
 import signal
-import gi
 import os.path
 import hashlib
 import sqlite3
+import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk, GLib, GObject, GdkPixbuf
-
+from urllib.parse import urlparse
 from manager import ClipsManager
 
 class ClipsDatabase():
@@ -77,7 +77,7 @@ class ClipsDatabase():
         # insert a clips record
         sqlite_insert_with_param = '''
             INSERT INTO 'ClipsDB'
-            ('type', 'source_uri', 'cache_uri', 'data') 
+            ('type', 'source', 'cache_uri', 'data') 
             VALUES
             (?, ?, ?, ?);
             '''
@@ -88,16 +88,29 @@ class ClipsDatabase():
         except sqlite3.Error as error:
             print("Exception sqlite3.Error: ", error)
 
+    def store_cache(self, data_tuple):
+        pass
+
     def select_record(self, data_tuple):
+        #
+        # # get developer detail
+        # sqlite_select_query = """SELECT name, joiningDate from new_developers where id = ?"""
+        # database_cursor.execute(sqlite_select_query, (1,))
+        # records = database_cursor.fetchall()
+        # for row in records:
+        #     developer= row[0]
+        #     joining_Date = row[1]
+        #     print(developer, " joined on", joiningDate)
+        #     print("joining date type is", type(joining_Date))            # # get developer detail
         pass
 
     def search_record(self, data_tuple):
         pass
 
     def get_checksum(self, data):
-        md5sum = hashlib.md5()
-        md5sum.update(data)
-        checksum = md5sum.hexdigest()
+        checksum = hashlib.md5(data).hexdigest()
+        #md5sum.update(data)
+        #checksum = md5sum.hexdigest()
         return checksum
 
     def debug(self):
@@ -128,70 +141,52 @@ def new_clip(*args, **kwargs):
     event = locals().get('args')[1]
     target, content = manager.clipboard_changed(clipboard, event)
     
-    print(target, type(content))
     
-    if content is not None:
-        #print(clips.get_checksum(content))
+    
+    if (target is not None) and (content is not None):
+        #print(target, type(content))
+        #print(type(content.get_data()))
+        #print(type(content.get_pixbuf()))
+        #print(clipsdb.get_checksum(content.get_data().decode('utf-8').encode('utf-8')))
         if target == manager.image_target:
-            # content.savev('/home/adi/Downloads/content.png', 'png', [], []) #save file
-            # thumbnail = content.scale_simple(content.get_width()//2,content.get_height()//2, GdkPixbuf.InterpType.BILINEAR) #create thumbnail
-            # content = thumbnail
+            source = 'screenshot'
+            cache_uri = '/home/adi/Downloads/content.png'
+            #save file
+            content.savev(cache_uri, 'png', [], [])
+            print(clipsdb.get_checksum(open('/home/adi/Downloads/content.png', 'rb').read()))
+            #create thumbnail
+            thumbnail = content.scale_simple(content.get_width()//2,content.get_height()//2, GdkPixbuf.InterpType.BILINEAR)
+            #data = content
             pass
         elif target == manager.uri_target:
-            # new_content=[]
-            # for i in content.splitlines():
-            #     new_content.append(urlparse(i).path.replace('%20',' '))
-            # content = '\n'.join(new_content)
+            source = 'file-manager'
+            content = content.get_data().decode("utf-8") 
+            uris=[]
+            for i in content.splitlines():
+                uris.append(urlparse(i).path.replace('%20',' '))
+            uri_list = '\n'.join(uris)
+            data = uri_list
             pass
         elif target == manager.html_target:
+            source = 'selection'
+            content = content.get_data().decode("utf-8") #decode from bytes to string for html/text targets
+            data = content
             pass
-        # elif target == manager.text_target:
+        elif target == manager.text_target:
+            source = 'selection'
+            data = content
             pass
         else:
             print('Clips: Unsupported target type')
-        # data = (type, source_uri, cache_uri, content)
+        # data_tuple = (type, source, cache_uri, data)
         # clips.add_record(data)
+        #print(type(data))
+        #print(data)
     else:
         print("Clips: No content in the clipboard")
 
-# content = self.clipboard.wait_for_contents(self.uri_target).get_data().decode("utf-8") #need to decode from bytes to string
 
 manager.clipboard.connect("owner-change", new_clip)
-clips = ClipsDatabase(debugflag=False)
+clipsdb = ClipsDatabase(debugflag=False)
 
 Gtk.main()
-
-
-
-#
-# # get developer detail
-# sqlite_select_query = """SELECT name, joiningDate from new_developers where id = ?"""
-# database_cursor.execute(sqlite_select_query, (1,))
-# records = database_cursor.fetchall()
-
-# for row in records:
-#     developer= row[0]
-#     joining_Date = row[1]
-#     print(developer, " joined on", joiningDate)
-#     print("joining date type is", type(joining_Date))            # # get developer detail
-
-# sqlite_select_query = """SELECT name, joiningDate from new_developers where id = ?"""
-# database_cursor.execute(sqlite_select_query, (1,))
-# records = database_cursor.fetchall()
-
-# for row in records:
-#     developer= row[0]
-#     joining_Date = row[1]
-#     print(developer, " joined on", joiningDate)
-#     print("joining date type is", type(joining_Date))            # # get developer detail
-
-# sqlite_select_query = """SELECT name, joiningDate from new_developers where id = ?"""
-# database_cursor.execute(sqlite_select_query, (1,))
-# records = database_cursor.fetchall()
-
-# for row in records:
-#     developer= row[0]
-#     joining_Date = row[1]
-#     print(developer, " joined on", joiningDate)
-#     print("joining date type is", type(joining_Date))
-

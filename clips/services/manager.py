@@ -20,12 +20,11 @@
 '''
 
 import signal
-import hashlib
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk, GLib, GObject, GdkPixbuf, Pango
 from datetime import datetime
-from urllib.parse import urlparse
+
 
 class ClipsManager():
     def __init__(self, debugflag):
@@ -57,17 +56,17 @@ class ClipsManager():
     def get_clipboard_contents(self, clipboard, event):
         if self.clipboard.wait_is_target_available(self.image_target):
             target_type = self.image_target 
-            content = self.clipboard.wait_for_image() #original image
+            content = self.clipboard.wait_for_image() #original image in pixbuf
+            #content = self.clipboard.wait_for_contents(self.image_target)
         elif self.clipboard.wait_is_target_available(self.uri_target):
             target_type = self.uri_target
             content = self.clipboard.wait_for_contents(self.uri_target)
         elif self.clipboard.wait_is_target_available(self.html_target):
             target_type = self.html_target
-            # content = self.clipboard.wait_for_contents(self.html_target).get_data().decode("utf-8") #need to decode from bytes to string for html/text targets
-            content = self.clipboard.wait_for_contents(self.text_target)
+            content = self.clipboard.wait_for_contents(self.html_target)
         elif self.clipboard.wait_is_target_available(self.text_target):
             target_type = self.text_target
-            content = self.clipboard.wait_for_text()
+            content = self.clipboard.wait_for_text() #original text
         else:
             target_type = None
             content = None
@@ -94,13 +93,6 @@ class ClipsManager():
         GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGINT, Gtk.main_quit) 
 
     def debug_log(self, clipboard, target, content):
-        #print(type(content))
-        #print(type(content.splitlines()))
-        #print(content.splitlines())
-        #self.content_checksum = self.get_checksum(content)
-        #print(self.content_checksum)
-        #checksum = self.get_checksum(content)
-        #print(checksum)
         #print("Current clipboard offers formats: \n" + str(self.clipboard.wait_for_targets()[1]))
         if content is not None:
             if target == self.image_target:
