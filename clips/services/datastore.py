@@ -29,7 +29,7 @@ from gi.repository import Gtk, Gdk, GLib, GObject, GdkPixbuf
 from urllib.parse import urlparse
 from manager import ClipsManager
 
-class ClipsDatabase():
+class ClipsDatastore():
     def __init__(self, debugflag):
 
         debugflag = debugflag
@@ -109,8 +109,6 @@ class ClipsDatabase():
 
     def get_checksum(self, data):
         checksum = hashlib.md5(data).hexdigest()
-        #md5sum.update(data)
-        #checksum = md5sum.hexdigest()
         return checksum
 
     def debug(self):
@@ -153,10 +151,10 @@ def new_clip(*args, **kwargs):
             cache_uri = '/home/adi/Downloads/content.png'
             #save file
             content.savev(cache_uri, 'png', [], [])
-            print(clipsdb.get_checksum(open('/home/adi/Downloads/content.png', 'rb').read()))
+            print(clipsdb.get_checksum(open(cache_uri, 'rb').read()))
             #create thumbnail
             thumbnail = content.scale_simple(content.get_width()//2,content.get_height()//2, GdkPixbuf.InterpType.BILINEAR)
-            #data = content
+            data = content
             pass
         elif target == manager.uri_target:
             source = 'file-manager'
@@ -187,6 +185,6 @@ def new_clip(*args, **kwargs):
 
 
 manager.clipboard.connect("owner-change", new_clip)
-clipsdb = ClipsDatabase(debugflag=False)
+clipsdb = ClipsDatastore(debugflag=False)
 
 Gtk.main()
