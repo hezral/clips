@@ -19,12 +19,16 @@
     along with Clips.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import signal
+
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk, GLib, GObject, GdkPixbuf, Pango
+gi.require_version("Wnck", "3.0")
+from gi.repository import Wnck
 from datetime import datetime
-
+import signal
+import sys
+import os
 
 class ClipsManager():
     def __init__(self, debugflag):
@@ -47,13 +51,14 @@ class ClipsManager():
             self.clipboard.connect("owner-change", self.clipboard_changed)
 
     def clipboard_changed(self, clipboard, event):
-        target, content = self.get_clipboard_contents(clipboard, event)
+        target, content, app = self.get_clipboard_contents(clipboard, event)
         #print(type(content), datetime.now())
         if self.debugflag:
             self.debug_log(clipboard, target, content)
-        return target, content
+        return target, content, app
 
     def get_clipboard_contents(self, clipboard, event):
+        app = self.get_active_app()
         if self.clipboard.wait_is_target_available(self.image_target):
             target_type = self.image_target 
             content = self.clipboard.wait_for_image() #original image in pixbuf
@@ -70,7 +75,7 @@ class ClipsManager():
         else:
             target_type = None
             content = None
-        return target_type, content
+        return target_type, content, app
 
     def debug(self):
         self.label = Gtk.Label()
@@ -107,6 +112,14 @@ class ClipsManager():
                 print('Unsupported target type')
         else:
             print("No content in the clipboard")
+
+    def get_active_app(self):
+        scr = Wnck.Screen.get_default()
+        scr.force_update()
+        pid = scr.get_active_window().get_pid()
+        if pid != None:
+            return scr.get_active_window().get_class_group_name()
+        return None
 
     def get_checksum(self, data):
         md5sum = hashlib.md5()

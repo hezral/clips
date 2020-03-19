@@ -62,7 +62,8 @@ class ClipsDatastore():
                 id          INTEGER     PRIMARY KEY     NOT NULL,
                 type        INTEGER     NOT NULL,
                 created     TEXT        NOT NULL        DEFAULT (STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW', 'localtime')),
-                source_uri  TEXT,
+                source      TEXT,
+                source_app  TEXT,
                 cache_uri   TEXT,
                 data        BLOB
             );
@@ -77,9 +78,9 @@ class ClipsDatastore():
         # insert a clips record
         sqlite_insert_with_param = '''
             INSERT INTO 'ClipsDB'
-            ('type', 'source', 'cache_uri', 'data') 
+            ('type', 'source', 'source_app', 'cache_uri', 'data') 
             VALUES
-            (?, ?, ?, ?);
+            (?, ?, ?, ?, ?);
             '''
         try:
             database_cursor.execute(sqlite_insert_with_param, data_input)
@@ -137,11 +138,10 @@ manager = ClipsManager(debugflag=False)
 def new_clip(*args, **kwargs):
     clipboard = locals().get('args')[0]
     event = locals().get('args')[1]
-    target, content = manager.clipboard_changed(clipboard, event)
-    
-    
-    
-    if (target is not None) and (content is not None):
+    target, content, app = manager.clipboard_changed(clipboard, event)
+
+    if (target is not None) and (content is not None) and (app is not None):
+        print(app)
         #print(target, type(content))
         #print(type(content.get_data()))
         #print(type(content.get_pixbuf()))
@@ -181,7 +181,8 @@ def new_clip(*args, **kwargs):
         #print(type(data))
         #print(data)
     else:
-        print("Clips: No content in the clipboard")
+        pass
+        #print("Clips: No content in the clipboard")
 
 
 manager.clipboard.connect("owner-change", new_clip)
