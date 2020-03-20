@@ -22,7 +22,7 @@
 
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, Gdk, GLib, GObject, GdkPixbuf, Pango
+from gi.repository import Gtk, Gdk, GdkPixbuf, GLib, GObject, Pango
 gi.require_version("Wnck", "3.0")
 from gi.repository import Wnck
 from datetime import datetime
@@ -51,14 +51,14 @@ class ClipsManager():
             self.clipboard.connect("owner-change", self.clipboard_changed)
 
     def clipboard_changed(self, clipboard, event):
-        target, content, app = self.get_clipboard_contents(clipboard, event)
-        #print(type(content), datetime.now())
+        date_created = datetime.now()
+        target, content = self.get_clipboard_contents(clipboard, event)
+        app_name, app_icon = self.get_active_app()
         if self.debugflag:
             self.debug_log(clipboard, target, content)
-        return target, content, app
+        return target, content, app_name, app_icon, date_created
 
     def get_clipboard_contents(self, clipboard, event):
-        app = self.get_active_app()
         if self.clipboard.wait_is_target_available(self.image_target):
             target_type = self.image_target 
             content = self.clipboard.wait_for_image() #original image in pixbuf
@@ -75,7 +75,25 @@ class ClipsManager():
         else:
             target_type = None
             content = None
-        return target_type, content, app
+        return target_type, content
+
+    def get_active_app(self):
+        scr = Wnck.Screen.get_default()
+        scr.force_update()
+
+        active = scr.get_active_window()
+
+        if active is not None:
+            app_name = scr.get_active_window().get_class_group_name().lower()
+            app_icon = scr.get_active_window().get_icon()
+            app_icon = app_icon.scale_simple(24, 24, GdkPixbuf.InterpType.BILINEAR)
+        else:
+            app_name = scr.get_active_workspace().get_name()
+            app_icon = Gtk.IconTheme.get_default().load_icon('preferences-desktop-wallpaper', 24, 0)
+        return app_name, app_icon
+
+    def set_clipboard_contents():
+        pass
 
     def debug(self):
         self.label = Gtk.Label()
@@ -113,23 +131,5 @@ class ClipsManager():
         else:
             print("No content in the clipboard")
 
-    def get_active_app(self):
-        scr = Wnck.Screen.get_default()
-        scr.force_update()
-        pid = scr.get_active_window().get_pid()
-        if pid != None:
-            return scr.get_active_window().get_class_group_name()
-        return None
-
-    def get_checksum(self, data):
-        md5sum = hashlib.md5()
-        md5sum.update(data)
-        checksum = md5sum.hexdigest()
-        return checksum
-        
-    def set_clipboard_contents():
-        pass
-
-
-#clips = ClipsManager(debugflag=True)
-#Gtk.main()
+# clips = ClipsManager(debugflag=True)
+# Gtk.main()

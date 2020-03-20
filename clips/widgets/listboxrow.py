@@ -25,7 +25,7 @@ from gi.repository import Gtk, Pango
 from datetime import datetime
 
 class ClipsListRow(Gtk.ListBoxRow):
-    def __init__(self, data):
+    def __init__(self, data_tuple):
         super().__init__()
 
         #css styles
@@ -77,9 +77,9 @@ class ClipsListRow(Gtk.ListBoxRow):
         self.copy_button = self.generate_toolbar("edit-copy-symbolic", "Copy to clipboard")
 
         #check data type 
-        if type(data) == str:
+        if type(data_tuple) == str:
             data_type_icon_name = "text-x-generic"
-        elif type(data) == gi.repository.Gtk.Image: 
+        elif type(data_tuple) == gi.repository.Gtk.Image: 
             data_type_icon_name = "image-x-generic"
         else:
             data_type_icon_name = "empty"
@@ -88,8 +88,8 @@ class ClipsListRow(Gtk.ListBoxRow):
         data_type_icon.set_pixel_size(32)
 
         #clips label 
-        data_label = Gtk.Label(str(data))
-        print(type(data))
+        data_label = Gtk.Label(str(data_tuple))
+        print(type(data_tuple))
         data_label.get_style_context().add_provider(self.listrow_css, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
         data_label.get_style_context().add_class("font-bold")
         data_label.props.ellipsize = Pango.EllipsizeMode.END
@@ -101,7 +101,7 @@ class ClipsListRow(Gtk.ListBoxRow):
         data_label.set_size_request(10, -1)
 
         #clips content
-        contents = Gtk.Label(str(data))
+        contents = Gtk.Label(str(data_tuple))
         contents.set_hexpand(False)
         contents.set_line_wrap(True)
         contents.set_max_width_chars(50)
@@ -186,20 +186,20 @@ class ClipsListRow(Gtk.ListBoxRow):
             if second_diff < 120:
                 return "a minute ago"
             if second_diff < 3600:
-                return str(second_diff / 60) + " minutes ago"
+                return str(round(second_diff / 60)) + " minutes ago"
             if second_diff < 7200:
                 return "an hour ago"
             if second_diff < 86400:
-                return str(second_diff / 3600) + " hours ago"
+                return str(round(second_diff / 3600)) + " hours ago"
         if day_diff == 1:
             return "Yesterday"
         if day_diff < 7:
-            return str(day_diff) + " days ago"
+            return str(round(day_diff, 1)) + " days ago"
         if day_diff < 31:
-            return str(day_diff / 7) + " weeks ago"
+            return str(round(day_diff / 7, 1)) + " weeks ago"
         if day_diff < 365:
-            return str(day_diff / 30) + " months ago"
-        return str(day_diff / 365) + " years ago"
+            return str(round(day_diff / 30, 1)) + " months ago"
+        return str(round(day_diff / 365, 1)) + " years ago"
 
     def show_buttons(self):
         #function to show the toolbar buttons

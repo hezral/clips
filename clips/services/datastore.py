@@ -25,7 +25,7 @@ import hashlib
 import sqlite3
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, Gdk, GLib, GObject, GdkPixbuf
+from gi.repository import Gtk, GLib, GdkPixbuf
 from urllib.parse import urlparse
 from manager import ClipsManager
 
@@ -61,9 +61,10 @@ class ClipsDatastore():
             CREATE TABLE ClipsDB (
                 id          INTEGER     PRIMARY KEY     NOT NULL,
                 type        INTEGER     NOT NULL,
-                created     TEXT        NOT NULL        DEFAULT (STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW', 'localtime')),
+                created     TEXT        NOT NULL        DEFAULT (STRFTIME('%Y-%m-%d %H:%M:%S.%f', 'NOW', 'localtime')),
                 source      TEXT,
                 source_app  TEXT,
+                source_icon BLOB,
                 cache_uri   TEXT,
                 data        BLOB
             );
@@ -78,9 +79,9 @@ class ClipsDatastore():
         # insert a clips record
         sqlite_insert_with_param = '''
             INSERT INTO 'ClipsDB'
-            ('type', 'source', 'source_app', 'cache_uri', 'data') 
+            ('type', 'created', 'source', 'source_app', 'source_icon', 'cache_uri', 'data') 
             VALUES
-            (?, ?, ?, ?, ?);
+            (?, ?, ?, ?, ?, ?, ?);
             '''
         try:
             database_cursor.execute(sqlite_insert_with_param, data_input)
@@ -130,22 +131,20 @@ class ClipsDatastore():
 
 
 
-GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGINT, Gtk.main_quit)
-
-manager = ClipsManager(debugflag=False)
 
 
 def new_clip(*args, **kwargs):
     clipboard = locals().get('args')[0]
     event = locals().get('args')[1]
-    target, content, app = manager.clipboard_changed(clipboard, event)
+    target, content, app_name, app_icon, date_created = manager.clipboard_changed(clipboard, event)
 
-    if (target is not None) and (content is not None) and (app is not None):
-        print(app)
-        #print(target, type(content))
-        #print(type(content.get_data()))
-        #print(type(content.get_pixbuf()))
-        #print(clipsdb.get_checksum(content.get_data().decode('utf-8').encode('utf-8')))
+    if (target is not None) and \
+        (content is not None) and \
+        (app_name is not None) and \
+        (app_icon is not None) and \
+        (date_created is not None):
+        print(target, type(content), app_name, type(app_icon), date_created)
+
         if target == manager.image_target:
             source = 'screenshot'
             cache_uri = '/home/adi/Downloads/content.png'
@@ -176,16 +175,20 @@ def new_clip(*args, **kwargs):
             pass
         else:
             print('Clips: Unsupported target type')
-        # data_tuple = (type, source, cache_uri, data)
+
+
+        # data_tuple = (target, source, source_app, source_icon, cache_uri, data)
         # clips.add_record(data)
-        #print(type(data))
-        #print(data)
     else:
         pass
         #print("Clips: No content in the clipboard")
 
 
+
+
+manager = ClipsManager(debugflag=False)
 manager.clipboard.connect("owner-change", new_clip)
 clipsdb = ClipsDatastore(debugflag=False)
 
+GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGINT, Gtk.main_quit)
 Gtk.main()
