@@ -43,6 +43,8 @@ class ClipsManager():
         self.text_target = Gdk.Atom.intern('text/plain', False)
         self.uri_target = Gdk.Atom.intern('x-special/gnome-copied-files', False)
 
+        self.targets = (self.image_target, self.uri_target, self.html_target, self.text_target)
+
         #debug flag
         self.debugflag = debugflag
         if self.debugflag:

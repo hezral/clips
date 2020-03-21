@@ -20,19 +20,19 @@
 '''
 
 import signal
-import os.path
+import os
+#import os.path
 import hashlib
 import sqlite3
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, GLib, GdkPixbuf
+from gi.repository import Gtk, GLib, GdkPixbuf, Gdk
 from urllib.parse import urlparse
 from manager import ClipsManager
 
 class ClipsDatastore():
     def __init__(self, debugflag):
 
-        debugflag = debugflag
         db_file = 'ClipsDatabase.db'
 
         try:
@@ -60,7 +60,7 @@ class ClipsDatastore():
         database_cursor.execute('''
             CREATE TABLE ClipsDB (
                 id          INTEGER     PRIMARY KEY     NOT NULL,
-                type        INTEGER     NOT NULL,
+                target      TEXT        NOT NULL,
                 created     TEXT        NOT NULL        DEFAULT (STRFTIME('%Y-%m-%d %H:%M:%S.%f', 'NOW', 'localtime')),
                 source      TEXT,
                 source_app  TEXT,
@@ -79,10 +79,16 @@ class ClipsDatastore():
         # insert a clips record
         sqlite_insert_with_param = '''
             INSERT INTO 'ClipsDB'
-            ('type', 'created', 'source', 'source_app', 'source_icon', 'cache_uri', 'data') 
+            ('target', 'created', 'source', 'source_app', 'cache_uri') 
             VALUES
-            (?, ?, ?, ?, ?, ?, ?);
+            (?, ?, ?, ?, ?);
             '''
+        # sqlite_insert_with_param = '''
+        #     INSERT INTO 'ClipsDB'
+        #     ('target', 'created', 'source', 'source_app', 'source_icon', 'cache_uri', 'data') 
+        #     VALUES
+        #     (?, ?, ?, ?, ?, ?, ?);
+        #     '''
         try:
             database_cursor.execute(sqlite_insert_with_param, data_input)
             database_connection.commit()
@@ -113,6 +119,8 @@ class ClipsDatastore():
         checksum = hashlib.md5(data).hexdigest()
         return checksum
 
+
+
     def debug(self):
         label = Gtk.Label()
         label.props.selectable = True
@@ -125,37 +133,39 @@ class ClipsDatastore():
         window.add(box)
         window.show_all()
         window.connect("destroy", Gtk.main_quit)
-        # just for debugging at CLI to enable CTRL+C quit
-        GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGINT, Gtk.main_quit)
+        GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGINT, Gtk.main_quit) # just for debugging at CLI to enable CTRL+C quit
 
 
 
 
 
-
-def new_clip(*args, **kwargs):
+def new_clip(*args):
     clipboard = locals().get('args')[0]
     event = locals().get('args')[1]
-    target, content, app_name, app_icon, date_created = manager.clipboard_changed(clipboard, event)
+    target, content, source_app, source_icon, created = manager.clipboard_changed(clipboard, event)
 
-    if (target is not None) and \
-        (content is not None) and \
-        (app_name is not None) and \
-        (app_icon is not None) and \
-        (date_created is not None):
-        print(target, type(content), app_name, type(app_icon), date_created)
+    if not None in (target, content, source_app, source_icon, created):
+        
+        print(target, type(content), source_app, type(source_icon), created)
 
-        if target == manager.image_target:
-            source = 'screenshot'
-            cache_uri = '/home/adi/Downloads/content.png'
-            #save file
-            content.savev(cache_uri, 'png', [], [])
-            print(clipsdb.get_checksum(open(cache_uri, 'rb').read()))
-            #create thumbnail
+        if target == targets[0]: # image/png
+            if 'Workspace' in source_app:
+                source = 'screenshot'
+            else:
+                source = 'application'
+            
+            # save file
+            temp_uri = '/home/adi/Downloads/content.png'
+            content.savev(temp_uri, 'png', [], [])
+            checksum = clipsds.get_checksum(open(temp_uri, 'rb').read())
+            cache_uri = '/home/adi/Downloads/' + checksum + '.png'
+            os.renames(temp_uri, cache_uri)
+            
+            # create thumbnail
             thumbnail = content.scale_simple(content.get_width()//2,content.get_height()//2, GdkPixbuf.InterpType.BILINEAR)
             data = content
             pass
-        elif target == manager.uri_target:
+        elif target == targets[1]: # x-special/gnome-copied-files
             source = 'file-manager'
             content = content.get_data().decode("utf-8") 
             uris=[]
@@ -164,21 +174,21 @@ def new_clip(*args, **kwargs):
             uri_list = '\n'.join(uris)
             data = uri_list
             pass
-        elif target == manager.html_target:
+        elif target == targets[2]: # text/html
             source = 'selection'
-            content = content.get_data().decode("utf-8") #decode from bytes to string for html/text targets
+            content = content.get_data().decode("utf-8") # decode from bytes to string for html/text targets
             data = content
             pass
-        elif target == manager.text_target:
+        elif target == targets[3]: # text/plain
             source = 'selection'
             data = content
             pass
         else:
             print('Clips: Unsupported target type')
 
-
-        # data_tuple = (target, source, source_app, source_icon, cache_uri, data)
-        # clips.add_record(data)
+        # data_tuple = (target, created, source, source_app, source_icon, cache_uri, data)
+        data_tuple = (str(target), created, source, source_app, cache_uri)
+        clipsds.add_record(data_tuple)
     else:
         pass
         #print("Clips: No content in the clipboard")
@@ -186,9 +196,17 @@ def new_clip(*args, **kwargs):
 
 
 
+
 manager = ClipsManager(debugflag=False)
+targets = manager.targets
+
+clipsds = ClipsDatastore(debugflag=False)
+
 manager.clipboard.connect("owner-change", new_clip)
-clipsdb = ClipsDatastore(debugflag=False)
+
+
+
+
 
 GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGINT, Gtk.main_quit)
 Gtk.main()
