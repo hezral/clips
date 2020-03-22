@@ -21,20 +21,20 @@
 
 import signal
 import os
-#import os.path
 import hashlib
 import sqlite3
+import tempfile
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GLib, GdkPixbuf, Gdk
 from urllib.parse import urlparse
-from manager import ClipsManager
+
 
 class ClipsDatastore():
     def __init__(self, debugflag):
 
+        # initiatialize database file
         db_file = 'ClipsDatabase.db'
-
         try:
             if (os.path.exists(db_file)):
                 self.db_connection, self.db_cursor = self.open_db(db_file)
@@ -43,6 +43,17 @@ class ClipsDatastore():
                 self.create_table(self.db_cursor)
         except (OSError, sqlite3.Error) as error:
             print("Exception: ", error)
+
+        # initialize cache directories
+        self.icon_cache = 'icon'
+        self.file_cache = 'cache'
+
+        try:
+            if not os.path.exists(self.icon_cache) or not os.path.exists(self.file_cache):
+                os.makedirs(self.icon_cache)
+                os.makedirs(self.file_cache)
+        except OSError as error:
+            print("Excption: ", error)
 
         if debugflag:
             self.debug()
@@ -64,37 +75,31 @@ class ClipsDatastore():
                 created     TEXT        NOT NULL        DEFAULT (STRFTIME('%Y-%m-%d %H:%M:%S.%f', 'NOW', 'localtime')),
                 source      TEXT,
                 source_app  TEXT,
-                source_icon BLOB,
+                source_icon TEXT,
                 cache_uri   TEXT,
-                data        BLOB
+                data        TEXT
             );
             ''')
     
     def add_record(self, data_tuple):
-        # Adds a new record to database
         database_connection = self.db_connection
         database_cursor = self.db_cursor
         data_input = data_tuple
 
-        # insert a clips record
         sqlite_insert_with_param = '''
             INSERT INTO 'ClipsDB'
-            ('target', 'created', 'source', 'source_app', 'cache_uri') 
+            ('target', 'created', 'source', 'source_app', 'source_icon', 'cache_uri', 'data') 
             VALUES
-            (?, ?, ?, ?, ?);
+            (?, ?, ?, ?, ?, ?, ?);
             '''
-        # sqlite_insert_with_param = '''
-        #     INSERT INTO 'ClipsDB'
-        #     ('target', 'created', 'source', 'source_app', 'source_icon', 'cache_uri', 'data') 
-        #     VALUES
-        #     (?, ?, ?, ?, ?, ?, ?);
-        #     '''
         try:
             database_cursor.execute(sqlite_insert_with_param, data_input)
             database_connection.commit()
-            database_cursor.close()
+            #database_cursor.close()
         except sqlite3.Error as error:
             print("Exception sqlite3.Error: ", error)
+        finally:
+            print("Record added")
 
     def store_cache(self, data_tuple):
         pass
@@ -145,8 +150,13 @@ def new_clip(*args):
     target, content, source_app, source_icon, created = manager.clipboard_changed(clipboard, event)
 
     if not None in (target, content, source_app, source_icon, created):
-        
-        print(target, type(content), source_app, type(source_icon), created)
+
+        # save source_icon file
+        temp_uri = datastore.icon_cache + '/icon-' + tempfile.gettempprefix() + '.png'
+        source_icon.savev(temp_uri, 'png', [], [])
+        checksum = datastore.get_checksum(open(temp_uri, 'rb').read())
+        source_icon = datastore.icon_cache + '/' + checksum + '.png'
+        os.renames(temp_uri, source_icon)
 
         if target == targets[0]: # image/png
             if 'Workspace' in source_app:
@@ -154,53 +164,52 @@ def new_clip(*args):
             else:
                 source = 'application'
             
-            # save file
-            temp_uri = '/home/adi/Downloads/content.png'
+            # save image file
+            temp_uri = datastore.file_cache + '/content-' + tempfile.gettempprefix() + '.png'
             content.savev(temp_uri, 'png', [], [])
-            checksum = clipsds.get_checksum(open(temp_uri, 'rb').read())
-            cache_uri = '/home/adi/Downloads/' + checksum + '.png'
+            checksum = datastore.get_checksum(open(temp_uri, 'rb').read())
+            cache_uri = datastore.file_cache + '/' + checksum + '.png'
             os.renames(temp_uri, cache_uri)
             
             # create thumbnail
-            thumbnail = content.scale_simple(content.get_width()//2,content.get_height()//2, GdkPixbuf.InterpType.BILINEAR)
-            data = content
-            pass
+            # thumbnail = content.scale_simple(content.get_width()//2,content.get_height()//2, GdkPixbuf.InterpType.BILINEAR)
+            data = None
+
         elif target == targets[1]: # x-special/gnome-copied-files
             source = 'file-manager'
-            content = content.get_data().decode("utf-8") 
+            content = content.get_data().decode("utf-8")
             uris=[]
             for i in content.splitlines():
                 uris.append(urlparse(i).path.replace('%20',' '))
             uri_list = '\n'.join(uris)
+            cache_uri = None
             data = uri_list
-            pass
         elif target == targets[2]: # text/html
             source = 'selection'
             content = content.get_data().decode("utf-8") # decode from bytes to string for html/text targets
+            cache_uri = None
             data = content
-            pass
         elif target == targets[3]: # text/plain
             source = 'selection'
+            cache_uri = None
             data = content
-            pass
         else:
             print('Clips: Unsupported target type')
 
-        # data_tuple = (target, created, source, source_app, source_icon, cache_uri, data)
-        data_tuple = (str(target), created, source, source_app, cache_uri)
-        clipsds.add_record(data_tuple)
+        data_tuple = (str(target), created, source, source_app, source_icon, cache_uri, data)
+        datastore.add_record(data_tuple)
     else:
         pass
         #print("Clips: No content in the clipboard")
 
 
 
-
+from manager import ClipsManager
 
 manager = ClipsManager(debugflag=False)
 targets = manager.targets
 
-clipsds = ClipsDatastore(debugflag=False)
+datastore = ClipsDatastore(debugflag=False)
 
 manager.clipboard.connect("owner-change", new_clip)
 

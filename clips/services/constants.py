@@ -22,7 +22,7 @@
 import os
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, GLib
+from gi.repository import Gtk
 import configparser
 
 class ClipsAttributes():
@@ -41,19 +41,19 @@ class ClipsAttributes():
     #about_comments = application_description
     about_license_type = Gtk.License.GPL_3_0
 
-# class ClipsConfig():
-#     attributes = ClipsAttributes()
-#     confDir =  os.path.join(GLib.get_user_config_dir(), attributes.application_id)
-#     confFile = os.path.join(confDir + "config.ini")
-#     config = configparser.ConfigParser()
+class ClipsConfig():
+    attributes = ClipsAttributes()
+    confDir =  os.path.join(GLib.get_user_config_dir(), attributes.application_id)
+    confFile = os.path.join(confDir + "config.ini")
+    config = configparser.ConfigParser()
 
-#     if os.path.isfile(confFile):
-#         config.read(confFile)
-#         some_setting = config.get('Some Section', 'some_setting')
-#     else:
-#         if not os.path.exists(confDir):
-#             os.makedirs(confDir)
-#         config.add_section('Some Section')
-#         config.set('Some Section', 'some_setting', 'some_value')
-#         with open(confFile, 'wb') as confFile:
-#             config.write(confFile)
+    if os.path.isfile(confFile):
+        config.read(confFile)
+        some_setting = config.get('Some Section', 'some_setting')
+    else:
+        if not os.path.exists(confDir):
+            os.makedirs(confDir)
+        config.add_section('Some Section')
+        config.set('Some Section', 'some_setting', 'some_value')
+        with open(confFile, 'wb') as confFile:
+            config.write(confFile)

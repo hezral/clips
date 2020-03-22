@@ -53,11 +53,13 @@ class ClipsManager():
             self.clipboard.connect("owner-change", self.clipboard_changed)
 
     def clipboard_changed(self, clipboard, event):
+        #print(locals())
         date_created = datetime.now()
         target, content = self.get_clipboard_contents(clipboard, event)
         app_name, app_icon = self.get_active_app()
         if self.debugflag:
             self.debug_log(clipboard, target, content)
+        print(str(target), type(content), app_name, type(app_icon), date_created)
         return target, content, app_name, app_icon, date_created
 
     def get_clipboard_contents(self, clipboard, event):

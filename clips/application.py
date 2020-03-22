@@ -23,7 +23,7 @@ import sys
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gio, GLib
-from constants import ClipsAttributes
+#from constants import ClipsAttributes
 from mainwindow import ClipsWindow
 from services.manager import ClipsManager
 
@@ -32,7 +32,7 @@ class Clips(Gtk.Application):
     def __init__(self):
         super().__init__()
 
-        self.props.application_id = ClipsAttributes.application_id
+        self.props.application_id = "com.github.hezral.clips" #ClipsAttributes.application_id
         self.props.flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE
         self.add_main_option("test", ord("t"), GLib.OptionFlags.NONE, GLib.OptionArg.NONE, "Command line test", None)
 
@@ -48,9 +48,9 @@ class Clips(Gtk.Application):
             # Windows are associated with the application 
             # when the last one is closed the application shuts down
             self.window = ClipsWindow(application=self)
-
         self.window.present()
-        #elf.window.connect('key-press-event', self.window.check)
+        self.add_window(self.window)
+        #self.window.connect('key-press-event', self.window.check)
         manager = ClipsManager(debugflag=False)
         manager.clipboard.connect('owner-change', manager.clipboard_changed)
 
@@ -66,10 +66,13 @@ class Clips(Gtk.Application):
         self.activate()
         return 0
 
+    def close_window(self):
+        pass
+
     def get_default(self):
         if not self.instance:
             self.instance = Clips()
-            return instance
+            return self.instance
 
 if __name__ == "__main__":
     app = Clips()
