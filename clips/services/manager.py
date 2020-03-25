@@ -25,6 +25,9 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk, GdkPixbuf, GLib, GObject, Pango
 gi.require_version("Wnck", "3.0")
 from gi.repository import Wnck
+gi.require_version("Bamf", "3")
+from gi.repository import Bamf
+
 from datetime import datetime
 import signal
 import sys
@@ -59,14 +62,12 @@ class ClipsManager():
         app_name, app_icon = self.get_active_app()
         if self.debugflag:
             self.debug_log(clipboard, target, content)
-        print(str(target), type(content), app_name, type(app_icon), date_created)
         return target, content, app_name, app_icon, date_created
 
     def get_clipboard_contents(self, clipboard, event):
         if self.clipboard.wait_is_target_available(self.image_target):
             target_type = self.image_target 
-            content = self.clipboard.wait_for_image() #original image in pixbuf
-            #content = self.clipboard.wait_for_contents(self.image_target)
+            content = self.clipboard.wait_for_image()
         elif self.clipboard.wait_is_target_available(self.uri_target):
             target_type = self.uri_target
             content = self.clipboard.wait_for_contents(self.uri_target)
@@ -75,25 +76,33 @@ class ClipsManager():
             content = self.clipboard.wait_for_contents(self.html_target)
         elif self.clipboard.wait_is_target_available(self.text_target):
             target_type = self.text_target
-            content = self.clipboard.wait_for_text() #original text
+            content = self.clipboard.wait_for_text()
         else:
             target_type = None
             content = None
         return target_type, content
 
     def get_active_app(self):
-        scr = Wnck.Screen.get_default()
-        scr.force_update()
 
-        active = scr.get_active_window()
+        # get scale factor for monitor
+        monitor = Gdk.Display.get_primary_monitor(Gdk.Display.get_default())
+        scale = monitor.get_scale_factor()
+        pixel_size = scale*24
+        pixel_size = 48
 
-        if active is not None:
-            app_name = scr.get_active_window().get_class_group_name().lower()
-            app_icon = scr.get_active_window().get_icon()
-            app_icon = app_icon.scale_simple(24, 24, GdkPixbuf.InterpType.BILINEAR)
+        # using Bamf
+        matcher = Bamf.Matcher()
+        active_win = matcher.get_active_window()
+        active_app = matcher.get_application_for_window(active_win)
+        if active_app is not None:
+            app_name = active_app.get_name()
+            app_icon = active_app.get_icon().split('/')[4][:-4] # get the name only as it returns the full path
         else:
-            app_name = scr.get_active_workspace().get_name()
-            app_icon = Gtk.IconTheme.get_default().load_icon('preferences-desktop-wallpaper', 24, 0)
+            screen = Wnck.Screen.get_default()
+            screen.force_update()
+            app_name = screen.get_active_workspace().get_name()
+            app_icon = 'preferences-desktop-wallpaper' # if no active window, fallback to workspace name
+        # app_icon = Gtk.IconTheme.get_default().load_icon(app_icon_name, pixel_size, 0)
         return app_name, app_icon
 
     def set_clipboard_contents():

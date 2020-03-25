@@ -22,7 +22,7 @@
 import os
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk
+from gi.repository import Gtk, GLib
 import configparser
 
 class ClipsAttributes():
@@ -42,18 +42,29 @@ class ClipsAttributes():
     about_license_type = Gtk.License.GPL_3_0
 
 class ClipsConfig():
-    attributes = ClipsAttributes()
-    confDir =  os.path.join(GLib.get_user_config_dir(), attributes.application_id)
-    confFile = os.path.join(confDir + "config.ini")
-    config = configparser.ConfigParser()
+    def __init__(self):
+        super().__init__()
 
-    if os.path.isfile(confFile):
-        config.read(confFile)
-        some_setting = config.get('Some Section', 'some_setting')
-    else:
-        if not os.path.exists(confDir):
-            os.makedirs(confDir)
-        config.add_section('Some Section')
-        config.set('Some Section', 'some_setting', 'some_value')
-        with open(confFile, 'wb') as confFile:
-            config.write(confFile)
+        attributes = ClipsAttributes()
+
+        self.configDir =  os.path.join(GLib.get_user_config_dir(), attributes.application_id)
+        self.configFile = os.path.join(self.configDir + "/" + "config.ini")
+        self.cacheDir = os.path.join(GLib.get_user_cache_dir(), attributes.application_id)
+
+        if not os.path.exists(self.configDir):
+            os.makedirs(self.configDir)
+
+        if not os.path.exists(self.cacheDir):
+            os.makedirs(self.cacheDir)
+
+        config = configparser.ConfigParser()
+        config['default'] = {}
+        config['default']['first_run'] = 'false'
+        config['default']['cache_retention_days'] = '5'
+        
+        if not os.path.isfile(self.configFile):
+            with open(self.configFile, 'w') as self.configFile:
+                config.write(self.configFile)
+    
+
+

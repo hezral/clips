@@ -94,6 +94,3 @@ class ClipsWindow(Gtk.ApplicationWindow):
     def check(self, widget, event):
         print(type(self.clips_view))
 
-# app = ClipsWindow()
-# app.connect("destroy", Gtk.main_quit)
-# Gtk.main()

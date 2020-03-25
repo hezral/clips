@@ -31,7 +31,7 @@ from urllib.parse import urlparse
 
 
 class ClipsDatastore():
-    def __init__(self, debugflag):
+    def __init__(self, debugflag, configdir, cachedir):
 
         # initiatialize database file
         db_file = 'ClipsDatabase.db'
@@ -44,13 +44,10 @@ class ClipsDatastore():
         except (OSError, sqlite3.Error) as error:
             print("Exception: ", error)
 
-        # initialize cache directories
-        self.icon_cache = 'icon'
+        # initialize cache directorie
         self.file_cache = 'cache'
-
         try:
-            if not os.path.exists(self.icon_cache) or not os.path.exists(self.file_cache):
-                os.makedirs(self.icon_cache)
+            if not os.path.exists(self.file_cache):
                 os.makedirs(self.file_cache)
         except OSError as error:
             print("Excption: ", error)
@@ -98,10 +95,65 @@ class ClipsDatastore():
             #database_cursor.close()
         except sqlite3.Error as error:
             print("Exception sqlite3.Error: ", error)
-        finally:
-            print("Record added")
+        # finally:
+        #     print("Record added")
 
     def store_cache(self, data_tuple):
+        target, content, source_app, source_icon, created = data_tuple
+        if not None in (target, content, source_app, source_icon, created):
+
+            # # save source_icon file
+            # temp_uri = self.icon_cache + '/icon-' + tempfile.gettempprefix() + '.png'
+            # source_icon.savev(temp_uri, 'png', [], [])
+            # checksum = self.get_checksum(open(temp_uri, 'rb').read())
+            # source_icon = self.icon_cache + '/' + checksum + '.png'
+            # if not os.path.exists(source_icon):
+            #     os.renames(temp_uri, source_icon)
+            # else:
+            #     os.remove(temp_uri)
+
+            if target == targets[0]: # image/png
+                if 'Workspace' in source_app:
+                    source = 'screenshot'
+                else:
+                    source = 'application'
+                
+                # save image file
+                temp_uri = self.file_cache + '/content-' + tempfile.gettempprefix() + '.png'
+                content.savev(temp_uri, 'png', [], [])
+                checksum = self.get_checksum(open(temp_uri, 'rb').read())
+                cache_uri = self.file_cache + '/' + checksum + '.png'
+                os.renames(temp_uri, cache_uri)
+                # create thumbnail
+                # thumbnail = content.scale_simple(content.get_width()//2,content.get_height()//2, GdkPixbuf.InterpType.BILINEAR)
+                data = None
+
+            elif target == targets[1]: # x-special/gnome-copied-files
+                source = 'file-manager'
+                content = content.get_data().decode("utf-8")
+                uris=[]
+                for i in content.splitlines():
+                    uris.append(urlparse(i).path.replace('%20',' '))
+                uri_list = '\n'.join(uris)
+                cache_uri = None
+                data = uri_list
+            elif target == targets[2]: # text/html
+                source = 'selection'
+                content = content.get_data().decode("utf-8") # decode from bytes to string for html/text targets
+                cache_uri = None
+                data = content
+            elif target == targets[3]: # text/plain
+                source = 'selection'
+                cache_uri = None
+                data = content
+            else:
+                print('Clips: Unsupported target type')
+
+            record = (str(target), created, source, source_app, source_icon, cache_uri, data)
+            self.add_record(record)
+        else:
+            pass
+            #print("Clips: No content in the clipboard")
         pass
 
     def select_record(self, data_tuple):
@@ -124,8 +176,6 @@ class ClipsDatastore():
         checksum = hashlib.md5(data).hexdigest()
         return checksum
 
-
-
     def debug(self):
         label = Gtk.Label()
         label.props.selectable = True
@@ -147,74 +197,24 @@ class ClipsDatastore():
 def new_clip(*args):
     clipboard = locals().get('args')[0]
     event = locals().get('args')[1]
-    target, content, source_app, source_icon, created = manager.clipboard_changed(clipboard, event)
-
-    if not None in (target, content, source_app, source_icon, created):
-
-        # save source_icon file
-        temp_uri = datastore.icon_cache + '/icon-' + tempfile.gettempprefix() + '.png'
-        source_icon.savev(temp_uri, 'png', [], [])
-        checksum = datastore.get_checksum(open(temp_uri, 'rb').read())
-        source_icon = datastore.icon_cache + '/' + checksum + '.png'
-        os.renames(temp_uri, source_icon)
-
-        if target == targets[0]: # image/png
-            if 'Workspace' in source_app:
-                source = 'screenshot'
-            else:
-                source = 'application'
-            
-            # save image file
-            temp_uri = datastore.file_cache + '/content-' + tempfile.gettempprefix() + '.png'
-            content.savev(temp_uri, 'png', [], [])
-            checksum = datastore.get_checksum(open(temp_uri, 'rb').read())
-            cache_uri = datastore.file_cache + '/' + checksum + '.png'
-            os.renames(temp_uri, cache_uri)
-            
-            # create thumbnail
-            # thumbnail = content.scale_simple(content.get_width()//2,content.get_height()//2, GdkPixbuf.InterpType.BILINEAR)
-            data = None
-
-        elif target == targets[1]: # x-special/gnome-copied-files
-            source = 'file-manager'
-            content = content.get_data().decode("utf-8")
-            uris=[]
-            for i in content.splitlines():
-                uris.append(urlparse(i).path.replace('%20',' '))
-            uri_list = '\n'.join(uris)
-            cache_uri = None
-            data = uri_list
-        elif target == targets[2]: # text/html
-            source = 'selection'
-            content = content.get_data().decode("utf-8") # decode from bytes to string for html/text targets
-            cache_uri = None
-            data = content
-        elif target == targets[3]: # text/plain
-            source = 'selection'
-            cache_uri = None
-            data = content
-        else:
-            print('Clips: Unsupported target type')
-
-        data_tuple = (str(target), created, source, source_app, source_icon, cache_uri, data)
-        datastore.add_record(data_tuple)
-    else:
-        pass
-        #print("Clips: No content in the clipboard")
-
+    # target, content, source_app, source_icon, created = manager.clipboard_changed(clipboard, event)
+    data = manager.clipboard_changed(clipboard, event)
+    datastore.store_cache(data)
 
 
 from manager import ClipsManager
-
 manager = ClipsManager(debugflag=False)
 targets = manager.targets
 
+from constants import ClipsConfig
+config = ClipsConfig()
+
+
 datastore = ClipsDatastore(debugflag=False)
 
-manager.clipboard.connect("owner-change", new_clip)
+datastore.add_record(('a','b','c','d','e','f','g'))
 
-
-
+#manager.clipboard.connect("owner-change", new_clip)
 
 
 GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGINT, Gtk.main_quit)
