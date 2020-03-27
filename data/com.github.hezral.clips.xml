@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Copyright 2017 Allen B -->
 <component type="desktop">
-  <id>com.github.mirkobrombin.elementarypython</id>
+  <id>com.github.hezral.clips</id>
   <metadata_license>CC0</metadata_license>
   <project_license>GPL-3.0+</project_license>
   <name>Elementary Python</name>
@@ -15,9 +15,9 @@
   <description>
     <p>This is just a python template.</p>
   </description>
-  <url type="homepage">https://github.com/mirkobrombin/elementarypython</url>
-  <url type="bugtracker">https://github.com/mirkobrombin/elementarypython/issues/labels/bug</url>
-  <url type="help">https://github.com/mirkobrombin/elementarypython/issues/new</url>
+  <url type="homepage">https://github.com/hezral/clips</url>
+  <url type="bugtracker">https://github.com/hezral/clips/issues/labels/bug</url>
+  <url type="help">https://github.com/hezral/clips/issues/new</url>
   <custom>
      <value key="x-appcenter-color-primary">#645552</value>
      <value key="x-appcenter-color-primary-text">#EEEDEC</value>

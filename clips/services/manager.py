@@ -96,13 +96,16 @@ class ClipsManager():
         active_app = matcher.get_application_for_window(active_win)
         if active_app is not None:
             app_name = active_app.get_name()
-            app_icon = active_app.get_icon().split('/')[4][:-4] # get the name only as it returns the full path
+            if (active_app.get_icon().find('/') != -1): 
+                app_icon = active_app.get_icon().split('/')[4][:-4] # get the name only as it returns the full path
+            else: 
+                app_icon = active_app.get_icon() # returned only icon name
         else:
             screen = Wnck.Screen.get_default()
             screen.force_update()
             app_name = screen.get_active_workspace().get_name()
             app_icon = 'preferences-desktop-wallpaper' # if no active window, fallback to workspace name
-        # app_icon = Gtk.IconTheme.get_default().load_icon(app_icon_name, pixel_size, 0)
+        # app_icon_pixbuf = Gtk.IconTheme.get_default().load_icon(app_icon, pixel_size, 0)
         return app_name, app_icon
 
     def set_clipboard_contents():

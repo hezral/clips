@@ -31,7 +31,7 @@ from urllib.parse import urlparse
 
 
 class ClipsDatastore():
-    def __init__(self, debugflag, configdir, cachedir):
+    def __init__(self, cachedir):
 
         # initiatialize database file
         db_file = 'ClipsDatabase.db'
@@ -44,16 +44,17 @@ class ClipsDatastore():
         except (OSError, sqlite3.Error) as error:
             print("Exception: ", error)
 
-        # initialize cache directorie
-        self.file_cache = 'cache'
+        # initialize cache directory
+        if cachedir: 
+            self.file_cache = cachedir
+        else:
+            self.file_cache = 'cache'
         try:
             if not os.path.exists(self.file_cache):
                 os.makedirs(self.file_cache)
         except OSError as error:
             print("Excption: ", error)
 
-        if debugflag:
-            self.debug()
     
     def open_db(self, database_file):
         connection = sqlite3.connect(database_file) 
@@ -81,7 +82,7 @@ class ClipsDatastore():
     def add_record(self, data_tuple):
         database_connection = self.db_connection
         database_cursor = self.db_cursor
-        data_input = data_tuple
+        data_param = data_tuple
 
         sqlite_insert_with_param = '''
             INSERT INTO 'ClipsDB'
@@ -90,27 +91,18 @@ class ClipsDatastore():
             (?, ?, ?, ?, ?, ?, ?);
             '''
         try:
-            database_cursor.execute(sqlite_insert_with_param, data_input)
+            database_cursor.execute(sqlite_insert_with_param, data_param)
             database_connection.commit()
             #database_cursor.close()
         except sqlite3.Error as error:
             print("Exception sqlite3.Error: ", error)
-        # finally:
-        #     print("Record added")
+        finally:
+            self.select_record(database_cursor.lastrowid)
 
     def store_cache(self, data_tuple):
         target, content, source_app, source_icon, created = data_tuple
-        if not None in (target, content, source_app, source_icon, created):
 
-            # # save source_icon file
-            # temp_uri = self.icon_cache + '/icon-' + tempfile.gettempprefix() + '.png'
-            # source_icon.savev(temp_uri, 'png', [], [])
-            # checksum = self.get_checksum(open(temp_uri, 'rb').read())
-            # source_icon = self.icon_cache + '/' + checksum + '.png'
-            # if not os.path.exists(source_icon):
-            #     os.renames(temp_uri, source_icon)
-            # else:
-            #     os.remove(temp_uri)
+        if not None in (target, content, source_app, source_icon, created):
 
             if target == targets[0]: # image/png
                 if 'Workspace' in source_app:
@@ -154,21 +146,23 @@ class ClipsDatastore():
         else:
             pass
             #print("Clips: No content in the clipboard")
-        pass
+
+
 
     def select_record(self, data_tuple):
-        #
-        # # get developer detail
-        # sqlite_select_query = """SELECT name, joiningDate from new_developers where id = ?"""
-        # database_cursor.execute(sqlite_select_query, (1,))
-        # records = database_cursor.fetchall()
-        # for row in records:
-        #     developer= row[0]
-        #     joining_Date = row[1]
-        #     print(developer, " joined on", joiningDate)
-        #     print("joining date type is", type(joining_Date))            # # get developer detail
-        pass
+        database_cursor = self.db_cursor
+        data_param = str(data_tuple)[0]
 
+        sqlite_select_with_param = '''
+            SELECT * FROM 'ClipsDB'
+            WHERE
+            id = ?
+            '''
+        database_cursor.execute(sqlite_select_with_param, data_param)
+        records = database_cursor.fetchall()
+        for row in records:
+            print(row)
+    
     def search_record(self, data_tuple):
         pass
 
@@ -201,7 +195,6 @@ def new_clip(*args):
     data = manager.clipboard_changed(clipboard, event)
     datastore.store_cache(data)
 
-
 from manager import ClipsManager
 manager = ClipsManager(debugflag=False)
 targets = manager.targets
@@ -210,11 +203,10 @@ from constants import ClipsConfig
 config = ClipsConfig()
 
 
-datastore = ClipsDatastore(debugflag=False)
+datastore = ClipsDatastore(cachedir=None)
 
-datastore.add_record(('a','b','c','d','e','f','g'))
 
-#manager.clipboard.connect("owner-change", new_clip)
+manager.clipboard.connect("owner-change", new_clip)
 
 
 GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGINT, Gtk.main_quit)
