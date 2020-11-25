@@ -1,9 +1,0 @@
-clips /usr/local/bin/
-clips /usr/share/com.github.hezral.clips/clips
-setup.py /usr/share/com.github.hezral.clips
-com.github.hezral.clips /usr/local/bin
-com.github.hezral.clips /usr/share/com.github.hezral.clips
-data /usr/share/com.github.hezral.clips
-data/com.github.hezral.clips.svg /usr/local/share/icons/hicolor/128x128/apps
-data/com.github.hezral.clips.desktop /usr/local/share/applications
-

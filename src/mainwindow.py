@@ -39,7 +39,7 @@ class ClipsWindow(Gtk.ApplicationWindow):
         self.props.border_width = 0
         self.set_icon_name("com.github.hezral.clips")
         self.get_style_context().add_class("rounded")
-        self.set_default_size(360, 480)
+        self.set_default_size(320, 480)
         self.set_keep_above(True)
         self.props.window_position = Gtk.WindowPosition.CENTER
         

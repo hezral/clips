@@ -80,6 +80,7 @@ class ClipsManager():
         else:
             target_type = None
             content = None
+        print(target_type, content)
         return target_type, content
 
     def get_active_app(self):

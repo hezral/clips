@@ -48,7 +48,7 @@ class Clips(Gtk.Application):
             # Windows are associated with the application 
             # when the last one is closed the application shuts down
             self.window = ClipsWindow(application=self)
-        self.window.present()
+        # self.window.present()
         self.add_window(self.window)
         #self.window.connect('key-press-event', self.window.check)
         manager = ClipsManager(debugflag=False)
