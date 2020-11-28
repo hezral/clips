@@ -21,15 +21,17 @@
 
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk
+gi.require_version('Granite', '1.0')
+from gi.repository import Gtk, Granite
 
 
 class ClipsHeaderBar(Gtk.HeaderBar):
     def __init__(self):
         super().__init__()
 
-        self.set_show_close_button(True)
+        self.set_show_close_button(False)
         self.set_has_subtitle(False)
+        self.props.border_width = 0
 
 
         #headerbar search field
@@ -37,11 +39,10 @@ class ClipsHeaderBar(Gtk.HeaderBar):
         search_entry.props.placeholder_text = "Search Something\u2026"
         search_entry.set_hexpand(True)   
         search_entry.set_halign(Gtk.Align.FILL)
-        search_entry.set_size_request(360,32)
         
         SEARCH_ENTRY_CSS = """
         .large-search-entry {
-            font-size: 125%;
+            font-size: 100%;
         }
         """
         search_text_provider = Gtk.CssProvider()
@@ -54,9 +55,20 @@ class ClipsHeaderBar(Gtk.HeaderBar):
         box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
         box.add(search_entry)
 
+        search_entry.get_style_context().add_class("large-search-entry")
+
+        #------ view switch ----#
+        #icon_theme = Gtk.IconTheme.get_default()
+        #icon_theme.prepend_search_path(os.path.join(self.modulepath, "..", "data/icons"))
+        view_switch = Granite.ModeSwitch.from_icon_name("edit-copy", "preferences-system-symbolic")
+        view_switch.props.primary_icon_tooltip_text = "Ghoster"
+        view_switch.props.secondary_icon_tooltip_text = "Settings"
+        view_switch.props.valign = Gtk.Align.CENTER
+        view_switch.props.name = "viewswitch"
+        #view_switch.bind_property("active", settings_view, "visible", GObject.BindingFlags.BIDIRECTIONAL)
 
 
         #headerbar construct
         self.set_custom_title(box)
-        self.pack_end(self.settings_icon)
+        #self.pack_end(view_switch)
         self.show_all()

@@ -23,7 +23,7 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 
-class ClipsInfoView(Gtk.Grid):
+class InfoView(Gtk.Grid):
     def __init__(self, title, description, icon):
         super().__init__()
         
@@ -38,6 +38,8 @@ class ClipsInfoView(Gtk.Grid):
         icon_box = Gtk.EventBox()
         icon_box.set_valign(Gtk.Align.START)
         icon_box.add(icon_image)
+
+        self.props.name = "info-view"
         self.props.column_spacing = 12
         self.props.row_spacing = 6
         self.set_halign(Gtk.Align.CENTER)
@@ -47,4 +49,4 @@ class ClipsInfoView(Gtk.Grid):
         self.attach(icon_box, 1, 1, 1, 1)
         self.attach(title_label, 1, 2, 1, 1)
         self.attach(description_label, 1, 3, 1, 1)
-        self.set_visible(True)
+        #self.set_visible(True)
