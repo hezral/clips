@@ -30,11 +30,11 @@ from gi.repository import Gtk, GLib, GdkPixbuf, Gdk
 from urllib.parse import urlparse
 
 
-class ClipsDatastore():
+class CacheManager():
     def __init__(self, cachedir):
 
         # initiatialize database file
-        db_file = 'ClipsDatabase.db'
+        db_file = 'com.github.hezral.clips.db'
         try:
             if (os.path.exists(db_file)):
                 self.db_connection, self.db_cursor = self.open_db(db_file)
@@ -74,96 +74,125 @@ class ClipsDatastore():
                 source      TEXT,
                 source_app  TEXT,
                 source_icon TEXT,
-                cache_uri   TEXT,
-                data        TEXT
+                cache_uri   TEXT
             );
             ''')
     
     def add_record(self, data_tuple):
-        database_connection = self.db_connection
-        database_cursor = self.db_cursor
-        data_param = data_tuple
 
         sqlite_insert_with_param = '''
             INSERT INTO 'ClipsDB'
-            ('target', 'created', 'source', 'source_app', 'source_icon', 'cache_uri', 'data') 
+            ('target', 'created', 'source', 'source_app', 'source_icon', 'cache_uri') 
             VALUES
-            (?, ?, ?, ?, ?, ?, ?);
+            (?, ?, ?, ?, ?, ?);
             '''
         try:
-            database_cursor.execute(sqlite_insert_with_param, data_param)
-            database_connection.commit()
+            self.db_cursor.execute(sqlite_insert_with_param, data_tuple)
+            self.db_connection.commit()
             #database_cursor.close()
         except sqlite3.Error as error:
             print("Exception sqlite3.Error: ", error)
         finally:
-            self.select_record(database_cursor.lastrowid)
+            print(self.db_cursor.lastrowid)
+            self.select_record(self.db_cursor.lastrowid)
 
     def store_cache(self, data_tuple):
-        target, content, source_app, source_icon, created = data_tuple
 
-        if not None in (target, content, source_app, source_icon, created):
+        if not None in data_tuple:
+            target, content, source_app, source_icon, created = data_tuple
 
-            if target == targets[0]: # image/png
+            temp_filename = 'temp-' + tempfile.gettempprefix()
+
+            if target == targets[0]: # x-special/gnome-copied-files or uri list
+                source = 'file-manager'
+                cache_filetype = '.uri'
+                temp_cache_uri = os.path.join(self.file_cache, temp_filename + cache_filetype)
+
+                # save content to temp file
+                content = content.get_data().decode("utf-8") 
+                uris=[] #for file copy items, don't keep files in cache to avoid storage issues, just get the original uri
+                for i in content.splitlines():
+                    uris.append(urlparse(i).path.replace('%20',' '))
+                uri_list = '\n'.join(uris)
+
+                file = open(temp_cache_uri,"w")
+                file.write(uri_list)
+                file.close()
+
+            elif target == targets[1]: # image/png
                 if 'Workspace' in source_app:
                     source = 'screenshot'
                 else:
                     source = 'application'
-                
-                # save image file
-                temp_uri = self.file_cache + '/content-' + tempfile.gettempprefix() + '.png'
-                content.savev(temp_uri, 'png', [], [])
-                checksum = self.get_checksum(open(temp_uri, 'rb').read())
-                cache_uri = self.file_cache + '/' + checksum + '.png'
-                os.renames(temp_uri, cache_uri)
+                cache_filetype = '.png'
+                temp_cache_uri = os.path.join(self.file_cache, temp_filename + cache_filetype)
+
+                # save content to temp file
+                content.savev(temp_cache_uri, 'png', [], [])
+
                 # create thumbnail
                 # thumbnail = content.scale_simple(content.get_width()//2,content.get_height()//2, GdkPixbuf.InterpType.BILINEAR)
-                data = None
 
-            elif target == targets[1]: # x-special/gnome-copied-files
-                source = 'file-manager'
-                content = content.get_data().decode("utf-8")
-                uris=[]
-                for i in content.splitlines():
-                    uris.append(urlparse(i).path.replace('%20',' '))
-                uri_list = '\n'.join(uris)
-                cache_uri = None
-                data = uri_list
             elif target == targets[2]: # text/html
                 source = 'selection'
+                cache_filetype = '.html'
+                temp_cache_uri = os.path.join(self.file_cache, temp_filename + cache_filetype)
+
                 content = content.get_data().decode("utf-8") # decode from bytes to string for html/text targets
-                cache_uri = None
-                data = content
-            elif target == targets[3]: # text/plain
+                # save content to temp file
+                file = open(temp_cache_uri,"w")
+                file.write(content)
+                file.close()
+
+            elif target == targets[3]: # text/richtext
                 source = 'selection'
-                cache_uri = None
-                data = content
+                cache_filetype = '.rtf'
+                temp_cache_uri = os.path.join(self.file_cache, temp_filename + cache_filetype)
+
+                content = content.get_data() # for rich text, save the bytes to .rtf file directly
+                # save content to temp file
+                file = open(temp_cache_uri,"wb") # need to write in binary
+                file.write(content)
+                file.close()
+            
+            elif target == targets[4]: # text/plain
+                source = 'selection'
+                cache_filetype = '.txt'
+                temp_cache_uri = os.path.join(self.file_cache, temp_filename + cache_filetype)
+
+                # save content to temp file
+                file = open(temp_cache_uri,"w")
+                file.write(content)
+                file.close()
+
             else:
                 print('Clips: Unsupported target type')
 
-            record = (str(target), created, source, source_app, source_icon, cache_uri, data)
+
+            checksum = self.get_checksum(open(temp_cache_uri, 'rb').read())
+            cache_uri = self.file_cache + '/' + checksum + cache_filetype
+            os.renames(temp_cache_uri, cache_uri)
+            record = (str(target), created, source, source_app, source_icon, cache_uri)
             self.add_record(record)
-        else:
-            pass
-            #print("Clips: No content in the clipboard")
 
-
-
-    def select_record(self, data_tuple):
-        database_cursor = self.db_cursor
-        data_param = str(data_tuple)[0]
+    def select_record(self, id):
+        
+        data_param = (str(id),) #pass in a sequence ie list
 
         sqlite_select_with_param = '''
             SELECT * FROM 'ClipsDB'
             WHERE
-            id = ?
+            id = ?;
             '''
-        database_cursor.execute(sqlite_select_with_param, data_param)
-        records = database_cursor.fetchall()
+        self.db_cursor.execute(sqlite_select_with_param, data_param)
+        records = self.db_cursor.fetchall()
         for row in records:
-            print(row)
+            print("db:", row)
     
     def search_record(self, data_tuple):
+        pass
+
+    def save_cache_file(self, data):
         pass
 
     def get_checksum(self, data):
@@ -195,15 +224,15 @@ def new_clip(*args):
     data = manager.clipboard_changed(clipboard, event)
     datastore.store_cache(data)
 
-from manager import ClipsManager
-manager = ClipsManager(debugflag=False)
+from clipboard_manager import ClipboardManager
+manager = ClipboardManager()
 targets = manager.targets
 
 from constants import ClipsConfig
 config = ClipsConfig()
 
 
-datastore = ClipsDatastore(cachedir=None)
+datastore = CacheManager(cachedir=None)
 
 
 manager.clipboard.connect("owner-change", new_clip)

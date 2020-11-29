@@ -25,7 +25,7 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gio, GLib, Gdk
 #from constants import ClipsAttributes
 from main_window import ClipsWindow
-from services.manager import ClipsManager
+from services.clipboard_manager import ClipboardManager
 
 
 class Clips(Gtk.Application):
@@ -35,8 +35,6 @@ class Clips(Gtk.Application):
         self.props.application_id = "com.github.hezral.clips" #ClipsAttributes.application_id
         self.props.flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE
         self.add_main_option("test", ord("t"), GLib.OptionFlags.NONE, GLib.OptionArg.NONE, "Command line test", None)
-
-
 
         self.instance = None
         self.window = None
@@ -78,7 +76,7 @@ class Clips(Gtk.Application):
         # self.window.present()
         self.add_window(self.window)
         #self.window.connect('key-press-event', self.window.check)
-        manager = ClipsManager(debugflag=False)
+        manager = ClipboardManager()
         manager.clipboard.connect('owner-change', manager.clipboard_changed)
 
         import signal

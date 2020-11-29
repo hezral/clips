@@ -95,6 +95,29 @@ class ClipsWindow(Gtk.ApplicationWindow):
         searchentry.connect("focus-out-event", self.on_search_activate, "out")
 
         #------ quicksearchbar ----#
+        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        country_store = Gtk.ListStore(str)
+        countries = [
+            "Austria",
+            "Brazil",
+            "Belgium",
+            "France",
+            "Germany",
+            "Switzerland",
+            "United Kingdom",
+            "United States of America",
+            "Uruguay",
+        ]
+        for country in countries:
+            country_store.append([country])
+
+        country_combo = Gtk.ComboBox.new_with_model(country_store)
+        country_combo.connect("changed", self.on_country_combo_changed)
+        renderer_text = Gtk.CellRendererText()
+        country_combo.pack_start(renderer_text, True)
+        country_combo.add_attribute(renderer_text, "text", 0)
+        vbox.pack_start(country_combo, False, False, True)
+
         quicksearchbar = Gtk.Grid()
         quicksearchbar.props.name = "search-quick"
         quicksearchbar.props.column_spacing = 2
@@ -124,16 +147,24 @@ class ClipsWindow(Gtk.ApplicationWindow):
 
         return searchbar
 
+    def on_country_combo_changed(self, combo):
+        tree_iter = combo.get_active_iter()
+        if tree_iter is not None:
+            model = combo.get_model()
+            country = model[tree_iter][0]
+            print("Selected: country=%s" % country)
+
     def on_delete_text(self, searchentry, int1, int2, type):
-        #searchbar = [child for child in self.get_children() if child.get_name() == "search-bar"][0]
-        #searchentry = utils.get_widget_by_name(widget=searchbar, child_name="search-entry", level=0)
-        #searchentry.set_icon_from_icon_name(Gtk.EntryIconPosition.SECONDARY, "preferences-system-power-symbolic")
-        # searchentry.props.secondary_icon_name = "preferences-system-power-symbolic"
-        # searchentry.props.secondary_icon_activatable = True
-        # searchentry.props.secondary_icon_sensitive = True
-        # #searchentry.props.secondary_icon_storage_type = Gtk.ImageType.ICON_NAME
-        # #print(locals())
+        # searchbar = searchentry.get_parent()
+
+        # revealer = utils.get_widget_by_name(widget=searchbar, child_name="search-revealer", level=0)
+        # if revealer.get_child_revealed():
+        #     revealer.set_reveal_child(False)
+
+        # else:
+        #     revealer.set_reveal_child(True)
         pass
+
 
     def on_quicksearch_activate(self, searchentry, iconposition, eventbutton):
         print(locals())
@@ -166,8 +197,6 @@ class ClipsWindow(Gtk.ApplicationWindow):
         searchbar = [child for child in self.get_children() if child.get_name() == "search-bar"][0]
         searchentry = utils.get_widget_by_name(widget=searchbar, child_name="search-entry", level=0)
 
-
-
         if searchentry.props.text == "":
             searchentry.props.text = button.props.label
         else:
@@ -180,7 +209,7 @@ class ClipsWindow(Gtk.ApplicationWindow):
         searchbar = searchentry.get_parent()
         revealer = utils.get_widget_by_name(widget=searchbar, child_name="search-revealer", level=0)
 
-        if type == "in":
+        if type == "in" and revealer.get_child_revealed() is False:
             searchentry.props.primary_icon_name = "preferences-system-power-symbolic"
             searchentry.props.primary_icon_tooltip_text = "Use quick search tags"
             # searchbar.props.has_tooltip = True
