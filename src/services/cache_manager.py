@@ -26,15 +26,17 @@ import sqlite3
 import tempfile
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, GLib, GdkPixbuf, Gdk
+from gi.repository import Gtk, GLib
 from urllib.parse import urlparse
 
 
 class CacheManager():
-    def __init__(self, cachedir):
+    def __init__(self):
 
         # initiatialize database file
-        db_file = 'com.github.hezral.clips.db'
+        application_id = "com.github.hezral.clips"
+
+        db_file = application_id + ".db"
         try:
             if (os.path.exists(db_file)):
                 self.db_connection, self.db_cursor = self.open_db(db_file)
@@ -45,13 +47,12 @@ class CacheManager():
             print("Exception: ", error)
 
         # initialize cache directory
-        if cachedir: 
-            self.file_cache = cachedir
-        else:
-            self.file_cache = 'cache'
+
+        self.cacheDir = os.path.join(GLib.get_user_cache_dir(), application_id)
+        self.cacheDir = 'cache'
         try:
-            if not os.path.exists(self.file_cache):
-                os.makedirs(self.file_cache)
+            if not os.path.exists(self.cacheDir):
+                os.makedirs(self.cacheDir)
         except OSError as error:
             print("Excption: ", error)
 
@@ -74,7 +75,7 @@ class CacheManager():
                 source      TEXT,
                 source_app  TEXT,
                 source_icon TEXT,
-                cache_uri   TEXT
+                cache_file   TEXT
             );
             ''')
     
@@ -82,7 +83,7 @@ class CacheManager():
 
         sqlite_insert_with_param = '''
             INSERT INTO 'ClipsDB'
-            ('target', 'created', 'source', 'source_app', 'source_icon', 'cache_uri') 
+            ('target', 'created', 'source', 'source_app', 'source_icon', 'cache_file') 
             VALUES
             (?, ?, ?, ?, ?, ?);
             '''
@@ -106,18 +107,13 @@ class CacheManager():
             if target == targets[0]: # x-special/gnome-copied-files or uri list
                 source = 'file-manager'
                 cache_filetype = '.uri'
-                temp_cache_uri = os.path.join(self.file_cache, temp_filename + cache_filetype)
+                temp_cache_uri = os.path.join(self.cacheDir, temp_filename + cache_filetype)
 
-                # save content to temp file
                 content = content.get_data().decode("utf-8") 
                 uris=[] #for file copy items, don't keep files in cache to avoid storage issues, just get the original uri
                 for i in content.splitlines():
                     uris.append(urlparse(i).path.replace('%20',' '))
-                uri_list = '\n'.join(uris)
-
-                file = open(temp_cache_uri,"w")
-                file.write(uri_list)
-                file.close()
+                content = '\n'.join(uris)
 
             elif target == targets[1]: # image/png
                 if 'Workspace' in source_app:
@@ -125,7 +121,7 @@ class CacheManager():
                 else:
                     source = 'application'
                 cache_filetype = '.png'
-                temp_cache_uri = os.path.join(self.file_cache, temp_filename + cache_filetype)
+                temp_cache_uri = os.path.join(self.cacheDir, temp_filename + cache_filetype)
 
                 # save content to temp file
                 content.savev(temp_cache_uri, 'png', [], [])
@@ -136,43 +132,38 @@ class CacheManager():
             elif target == targets[2]: # text/html
                 source = 'selection'
                 cache_filetype = '.html'
-                temp_cache_uri = os.path.join(self.file_cache, temp_filename + cache_filetype)
+                temp_cache_uri = os.path.join(self.cacheDir, temp_filename + cache_filetype)
 
                 content = content.get_data().decode("utf-8") # decode from bytes to string for html/text targets
-                # save content to temp file
-                file = open(temp_cache_uri,"w")
-                file.write(content)
-                file.close()
 
             elif target == targets[3]: # text/richtext
                 source = 'selection'
                 cache_filetype = '.rtf'
-                temp_cache_uri = os.path.join(self.file_cache, temp_filename + cache_filetype)
+                temp_cache_uri = os.path.join(self.cacheDir, temp_filename + cache_filetype)
 
                 content = content.get_data() # for rich text, save the bytes to .rtf file directly
-                # save content to temp file
-                file = open(temp_cache_uri,"wb") # need to write in binary
-                file.write(content)
-                file.close()
             
             elif target == targets[4]: # text/plain
                 source = 'selection'
                 cache_filetype = '.txt'
-                temp_cache_uri = os.path.join(self.file_cache, temp_filename + cache_filetype)
-
-                # save content to temp file
-                file = open(temp_cache_uri,"w")
-                file.write(content)
-                file.close()
+                temp_cache_uri = os.path.join(self.cacheDir, temp_filename + cache_filetype)
 
             else:
                 print('Clips: Unsupported target type')
 
 
+            if target != targets[1]: #except for images
+                # save content to temp file
+                file = open(temp_cache_uri,"w")
+                file.write(content)
+                file.close()
+
             checksum = self.get_checksum(open(temp_cache_uri, 'rb').read())
-            cache_uri = self.file_cache + '/' + checksum + cache_filetype
+            cache_file = checksum + cache_filetype
+            cache_uri = self.cacheDir + '/' + cache_file
             os.renames(temp_cache_uri, cache_uri)
-            record = (str(target), created, source, source_app, source_icon, cache_uri)
+
+            record = (str(target), created, source, source_app, source_icon, cache_file)
             self.add_record(record)
 
     def select_record(self, id):
@@ -199,24 +190,8 @@ class CacheManager():
         checksum = hashlib.md5(data).hexdigest()
         return checksum
 
-    def debug(self):
-        label = Gtk.Label()
-        label.props.selectable = True
-        image = Gtk.Image.new_from_icon_name("image-x-generic", Gtk.IconSize.DIALOG)
-        window = Gtk.Window(title="Clips Debug Window") #debug window to see contents displayed in Gtk.Window
-        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
-        box.pack_start(image, True, True, 0)
-        box.pack_start(label, True, True, 0)
-        window.set_border_width(6)
-        window.add(box)
-        window.show_all()
-        window.connect("destroy", Gtk.main_quit)
-        GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGINT, Gtk.main_quit) # just for debugging at CLI to enable CTRL+C quit
 
-
-
-
-
+# codes below are only for debugging
 def new_clip(*args):
     clipboard = locals().get('args')[0]
     event = locals().get('args')[1]
@@ -226,16 +201,9 @@ def new_clip(*args):
 
 from clipboard_manager import ClipboardManager
 manager = ClipboardManager()
-targets = manager.targets
-
-from constants import ClipsConfig
-config = ClipsConfig()
-
-
-datastore = CacheManager(cachedir=None)
-
-
 manager.clipboard.connect("owner-change", new_clip)
+targets = manager.targets
+datastore = CacheManager()
 
 
 GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGINT, Gtk.main_quit)
