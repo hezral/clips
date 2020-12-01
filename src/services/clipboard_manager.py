@@ -103,8 +103,9 @@ class ClipboardManager():
         
         if active_win is not None:
             active_app = matcher.get_application_for_window(active_win)
-            app_name = active_app.get_name()
-            app_icon = active_app.get_icon()
+            if active_app is not None:
+                app_name = active_app.get_name()
+                app_icon = active_app.get_icon()
         else: 
             screen = Wnck.Screen.get_default()
             screen.force_update()

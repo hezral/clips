@@ -36,7 +36,20 @@ class CacheManager():
         # initiatialize database file
         application_id = "com.github.hezral.clips"
 
+        # initialize cache directory
+
+        self.cacheDir = os.path.join(GLib.get_user_cache_dir(), application_id, "cache")
+        #self.cacheDir = 'cache'
+        try:
+            if not os.path.exists(self.cacheDir):
+                os.makedirs(self.cacheDir)
+        except OSError as error:
+            print("Excption: ", error)
+
+
         db_file = application_id + ".db"
+        #db_file = os.path.join(self.cacheDir, db_file)
+
         try:
             if (os.path.exists(db_file)):
                 self.db_connection, self.db_cursor = self.open_db(db_file)
@@ -45,17 +58,6 @@ class CacheManager():
                 self.create_table(self.db_cursor)
         except (OSError, sqlite3.Error) as error:
             print("Exception: ", error)
-
-        # initialize cache directory
-
-        self.cacheDir = os.path.join(GLib.get_user_cache_dir(), application_id)
-        self.cacheDir = 'cache'
-        try:
-            if not os.path.exists(self.cacheDir):
-                os.makedirs(self.cacheDir)
-        except OSError as error:
-            print("Excption: ", error)
-
     
     def open_db(self, database_file):
         connection = sqlite3.connect(database_file) 
