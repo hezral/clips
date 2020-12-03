@@ -49,6 +49,8 @@ entry#search-entry {
     background-image: none;
     border-style: none;
     padding: 4px;
+    padding-top: 6px;
+    padding-bottom: 6px;
     text-shadow: none;
 }
 

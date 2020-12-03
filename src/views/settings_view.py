@@ -3,7 +3,7 @@
 '''
    Copyright 2020 Adi Hezral (hezral@gmail.com) (https://github.com/hezral)
 
-   This file is part of QuickWord ("Application").
+   This file is part of Clips("Application").
 
     The Application is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@ class SettingsView(Gtk.Grid):
         super().__init__(*args, **kwargs)
 
         #-- object ----#
-        gio_settings = Gio.Settings(schema_id="com.github.hezral.quickword")
+        gio_settings = Gio.Settings(schema_id="com.github.hezral.clips")
         gtk_settings = Gtk.Settings().get_default()
 
         #-- settings --------#

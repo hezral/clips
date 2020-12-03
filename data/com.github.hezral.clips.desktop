@@ -1,8 +1,8 @@
 [Desktop Entry]
 Name=Clips
 GenericName=Clips
-Comment=A clipboard manager for elementary OS
-Categories=Development;
+Comment=Clipboard Manager
+Categories=Utility;
 Exec=com.github.hezral.clips
 Icon=com.github.hezral.clips
 Terminal=false

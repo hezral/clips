@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<schemalist>
+    <schema path="/com/github/hezral/clips/" id="com.github.hezral.clips">
+        <key name="prefer-dark-style" type="b">
+            <default>true</default>
+            <summary>If the dark Gtk stylesheet should be used</summary>
+            <description>If the dark Gtk stylesheet should be used</description>
+        </key>
+        <key type="b" name="first-run">
+            <default>true</default>
+            <summary>Whether this is the first time that Clips has opened</summary>
+            <description>Used to determine whether or not to perform initial install steps</description>
+        </key>
+        <key type="b" name="persistent-mode">
+            <default>false</default>
+            <summary>Enable/Disable this behaviour</summary>
+            <description>Close on focus out of the Clips app window</description>
+        </key>
+        <key type="b" name="sticky-mode">
+            <default>false</default>
+            <summary>Enable/Disable this behaviour</summary>
+            <description>Display Clips app window on all workspaces</description>
+        </key>
+    </schema>
+</schemalist>

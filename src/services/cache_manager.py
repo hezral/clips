@@ -31,25 +31,32 @@ from urllib.parse import urlparse
 
 
 class CacheManager():
-    def __init__(self):
+    def __init__(self, gtk_application=None, clipboard_manager=None):
 
         # initiatialize database file
-        application_id = "com.github.hezral.clips"
+        if gtk_application is not None:
+            application_id = gtk_application.props.application_id
+        else:
+            application_id = "com.github.hezral.clips"
+
+        if clipboard_manager is not None:
+            clipboard_manager.clipboard.connect("owner-change", self.update_cache, clipboard_manager)
+        else:
+            from clipboard_manager import ClipboardManager
+            clipboard_manager = ClipboardManager()
+            clipboard_manager.clipboard.connect("owner-change", self.update_cache, clipboard_manager)
 
         # initialize cache directory
-
-        self.cacheDir = os.path.join(GLib.get_user_cache_dir(), application_id, "cache")
-        #self.cacheDir = 'cache'
+        self.cache_dir = os.path.join(GLib.get_user_cache_dir(), application_id)
+        self.cache_filedir = os.path.join(self.cache_dir, "cache")
         try:
-            if not os.path.exists(self.cacheDir):
-                os.makedirs(self.cacheDir)
+            if not os.path.exists(self.cache_filedir):
+                os.makedirs(self.cache_filedir)
         except OSError as error:
             print("Excption: ", error)
 
-
-        db_file = application_id + ".db"
-        #db_file = os.path.join(self.cacheDir, db_file)
-
+        # initialize db file
+        db_file = os.path.join(self.cache_dir, application_id + ".db")
         try:
             if (os.path.exists(db_file)):
                 self.db_connection, self.db_cursor = self.open_db(db_file)
@@ -94,79 +101,9 @@ class CacheManager():
             self.db_connection.commit()
             #database_cursor.close()
         except sqlite3.Error as error:
-            print("Exception sqlite3.Error: ", error)
+            print("Exception sqlite3.Error: ", error) #add logging
         finally:
-            print(self.db_cursor.lastrowid)
             self.select_record(self.db_cursor.lastrowid)
-
-    def store_cache(self, data_tuple):
-
-        if not None in data_tuple:
-            target, content, source_app, source_icon, created = data_tuple
-
-            temp_filename = 'temp-' + tempfile.gettempprefix()
-
-            if target == targets[0]: # x-special/gnome-copied-files or uri list
-                source = 'file-manager'
-                cache_filetype = '.uri'
-                temp_cache_uri = os.path.join(self.cacheDir, temp_filename + cache_filetype)
-
-                content = content.get_data().decode("utf-8") 
-                uris=[] #for file copy items, don't keep files in cache to avoid storage issues, just get the original uri
-                for i in content.splitlines():
-                    uris.append(urlparse(i).path.replace('%20',' '))
-                content = '\n'.join(uris)
-
-            elif target == targets[1]: # image/png
-                if 'Workspace' in source_app:
-                    source = 'screenshot'
-                else:
-                    source = 'application'
-                cache_filetype = '.png'
-                temp_cache_uri = os.path.join(self.cacheDir, temp_filename + cache_filetype)
-
-                # save content to temp file
-                content.savev(temp_cache_uri, 'png', [], [])
-
-                # create thumbnail
-                # thumbnail = content.scale_simple(content.get_width()//2,content.get_height()//2, GdkPixbuf.InterpType.BILINEAR)
-
-            elif target == targets[2]: # text/html
-                source = 'selection'
-                cache_filetype = '.html'
-                temp_cache_uri = os.path.join(self.cacheDir, temp_filename + cache_filetype)
-
-                content = content.get_data().decode("utf-8") # decode from bytes to string for html/text targets
-
-            elif target == targets[3]: # text/richtext
-                source = 'selection'
-                cache_filetype = '.rtf'
-                temp_cache_uri = os.path.join(self.cacheDir, temp_filename + cache_filetype)
-
-                content = content.get_data() # for rich text, save the bytes to .rtf file directly
-            
-            elif target == targets[4]: # text/plain
-                source = 'selection'
-                cache_filetype = '.txt'
-                temp_cache_uri = os.path.join(self.cacheDir, temp_filename + cache_filetype)
-
-            else:
-                print('Clips: Unsupported target type')
-
-
-            if target != targets[1]: #except for images
-                # save content to temp file
-                file = open(temp_cache_uri,"w")
-                file.write(content)
-                file.close()
-
-            checksum = self.get_checksum(open(temp_cache_uri, 'rb').read())
-            cache_file = checksum + cache_filetype
-            cache_uri = self.cacheDir + '/' + cache_file
-            os.renames(temp_cache_uri, cache_uri)
-
-            record = (str(target), created, source, source_app, source_icon, cache_file)
-            self.add_record(record)
 
     def select_record(self, id):
         
@@ -185,28 +122,97 @@ class CacheManager():
     def search_record(self, data_tuple):
         pass
 
-    def save_cache_file(self, data):
-        pass
-
     def get_checksum(self, data):
         checksum = hashlib.md5(data).hexdigest()
         return checksum
 
+    def update_cache(self, clipboard, event, clipboard_manager):
 
-# codes below are only for debugging
-def new_clip(*args):
-    clipboard = locals().get('args')[0]
-    event = locals().get('args')[1]
-    # target, content, source_app, source_icon, created = manager.clipboard_changed(clipboard, event)
-    data = manager.clipboard_changed(clipboard, event)
-    datastore.store_cache(data)
+        data_tuple = clipboard_manager.clipboard_changed(clipboard, event)
 
-from clipboard_manager import ClipboardManager
-manager = ClipboardManager()
-manager.clipboard.connect("owner-change", new_clip)
-targets = manager.targets
-datastore = CacheManager()
+        if not None in data_tuple:
+            target, content, source_app, source_icon, created = data_tuple
+
+            temp_filename = 'temp-' + tempfile.gettempprefix()
+
+            if target == clipboard_manager.uri_target: # x-special/gnome-copied-files or uri list
+                source = 'file-manager'
+                cache_filetype = '.uri'
+                temp_cache_uri = os.path.join(self.cache_filedir, temp_filename + cache_filetype)
+
+                content = content.get_data().decode("utf-8") 
+                uris=[] #for file copy items, don't keep files in cache to avoid storage issues, just get the original uri
+                for i in content.splitlines():
+                    uris.append(urlparse(i).path.replace('%20',' '))
+                content = '\n'.join(uris)
+
+            elif target == clipboard_manager.image_target: # image/png
+                if 'Workspace' in source_app:
+                    source = 'screenshot'
+                else:
+                    source = 'application'
+                cache_filetype = '.png'
+                temp_cache_uri = os.path.join(self.cache_filedir, temp_filename + cache_filetype)
+
+                # save content to temp file
+                content.savev(temp_cache_uri, 'png', [], [])
+
+                # create thumbnail
+                # thumbnail = content.scale_simple(content.get_width()//2,content.get_height()//2, GdkPixbuf.InterpType.BILINEAR)
+
+            elif target == clipboard_manager.html_target: # text/html
+                source = 'selection'
+                cache_filetype = '.html'
+                temp_cache_uri = os.path.join(self.cache_filedir, temp_filename + cache_filetype)
+
+                content = content.get_data().decode("utf-8") # decode from bytes to string for html/text targets
+
+            elif target == clipboard_manager.richtext_target: # text/richtext
+                source = 'selection'
+                cache_filetype = '.rtf'
+                temp_cache_uri = os.path.join(self.cache_filedir, temp_filename + cache_filetype)
+
+                content = content.get_data() # for rich text, save the bytes to .rtf file directly
+            
+            elif target == clipboard_manager.text_target: # text/plain
+                source = 'selection'
+                cache_filetype = '.txt'
+                temp_cache_uri = os.path.join(self.cache_filedir, temp_filename + cache_filetype)
+
+            else:
+                print('Clips: Unsupported target type')
 
 
-GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGINT, Gtk.main_quit)
-Gtk.main()
+            if target != clipboard_manager.image_target: #except for images
+                # save content to temp file
+                file = open(temp_cache_uri,"w")
+                file.write(content)
+                file.close()
+
+            checksum = self.get_checksum(open(temp_cache_uri, 'rb').read())
+            cache_file = checksum + cache_filetype
+            cache_uri = self.cache_filedir + '/' + cache_file
+            os.renames(temp_cache_uri, cache_uri)
+
+            record = (str(target), created, source, source_app, source_icon, cache_file)
+            self.add_record(record)
+
+
+
+
+# # codes below are only for debugging
+# def new_clip(*args):
+#     clipboard = locals().get('args')[0]
+#     event = locals().get('args')[1]
+#     # target, content, source_app, source_icon, created = manager.clipboard_changed(clipboard, event)
+#     data = clipboard_manager.clipboard_changed(clipboard, event)
+#     datastore.update_cache(data)
+
+# from clipboard_manager import ClipboardManager
+# clipboard_manager = ClipboardManager()
+# clipboard_manager.clipboard.connect("owner-change", new_clip)
+# datastore = CacheManager(clipboard_manager=clipboard_manager)
+
+
+# GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGINT, Gtk.main_quit)
+# Gtk.main()

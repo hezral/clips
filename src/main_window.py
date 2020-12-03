@@ -69,7 +69,7 @@ class ClipsWindow(Gtk.ApplicationWindow):
         self.props.resizable = False
         self.props.border_width = 0
         self.get_style_context().add_class("rounded")
-        self.set_default_size(360, 480)
+        self.set_default_size(400, 480)
         self.set_keep_above(True)
         self.props.window_position = Gtk.WindowPosition.CENTER
         self.show_all()

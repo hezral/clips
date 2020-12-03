@@ -26,18 +26,25 @@ from gi.repository import Gtk, Gio, GLib, Gdk
 #from constants import ClipsAttributes
 from main_window import ClipsWindow
 from services.clipboard_manager import ClipboardManager
+from services.cache_manager import CacheManager
 
 
 class Clips(Gtk.Application):
     def __init__(self):
         super().__init__()
 
-        self.props.application_id = "com.github.hezral.clips" #ClipsAttributes.application_id
+        # construct
+        self.props.application_id = "com.github.hezral.clips"
         self.props.flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE
         self.add_main_option("test", ord("t"), GLib.OptionFlags.NONE, GLib.OptionArg.NONE, "Command line test", None)
 
-        self.instance = None
+        # objects
+        self.clipboard_manager = ClipboardManager()
+        self.cache_manager = CacheManager(gtk_application=self, clipboard_manager=self.clipboard_manager)
+        
+        # re-initialize some objects
         self.window = None
+
         
     def do_startup(self):
         Gtk.Application.do_startup(self)

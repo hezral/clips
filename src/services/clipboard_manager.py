@@ -48,18 +48,11 @@ class ClipboardManager():
 
     targets = (uri_target, image_target, html_target, richtext_target, text_target)
 
+    clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
+
     def __init__(self):
         super().__init__()
-        
-        #create clipboard
-        self.clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
 
-        # #debug flag
-        #self.debugflag = debugflag
-        # if self.debugflag:
-        #     self.debug()
-        #     # run function everytime clipboard is updated
-        #     self.clipboard.connect("owner-change", self.clipboard_changed)
 
     def clipboard_changed(self, clipboard, event):
         date_created = datetime.now()
