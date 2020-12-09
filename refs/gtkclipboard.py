@@ -28,31 +28,71 @@ clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
 #clipboard.request_contents(html_target , dump_clipboard_callback)
 
 
-
+#setup supported clip types
+richtext_target = Gdk.Atom.intern('text/richtext', False)
+html_target = Gdk.Atom.intern('text/html', False)
+image_target = Gdk.Atom.intern('image/png', False)
+text_target = Gdk.Atom.intern('text/plain', False)
+uri_target = Gdk.Atom.intern('x-special/gnome-copied-files', False)
+save_target = Gdk.Atom.intern('SAVE_TARGETS', False)
 #print(clipboard.wait_is_text_available())
 
-def on(clipboard):
-    print("Current clipboard offers formats: " + str(clipboard.wait_for_targets()[1]))
+global event_time
+event_time = 0
+
+def on(clipboard, event, event_time):
+    #print(locals())
+    #print(dir(event))
+    #global event_time
+    # print(event_time)
+    # print(event.time - event_time)
+    # if event.time - event_time != 1:
+        #print(event.time, event.selection_time, event.handler_set)
+    print("Current clipboard offers formats: ")
+    #print(type(clipboard.wait_for_targets()))
+    for target in clipboard.wait_for_targets()[1]:
+        content = clipboard.wait_for_contents(target)
+        bytes = content.get_bytes()
+        print(target, content)
     #print(clipboard.wait_for_contents(html_target).get_data())
+    #content = clipboard.wait_for_contents(image_target)
+        # event_time = event.time
+    # print(event_time)
+    
+    #print(type(content))
 
-#clipboard.connect('owner_change',on)
+    # for target in clipboard.wait_for_targets()[1]:
+    #     contents = clipboard.wait_for_contents(target)
+    #     # if target == image_target:
+    #     #     print("image")
+    #     #     contents.get_pixbuf().savev("/home/adi/Work/clips/refs/file.png", 'png', [], [])
+    #     print(target, type(contents))
+    
+    #content.savev("file.png", 'png', [], [])
+    # pixbuf = contents.get_pixbuf()
+    # f = open('output.png', 'wb')
 
-#Gtk.main()
+    # f.write(pixbuf)
+    # f.close()
+
+clipboard.connect('owner_change',on, event_time)
+
+Gtk.main()
 
 #print("Current clipboard offers formats: " + str(clipboard.wait_for_targets()[1]))
 
-richtext = Gdk.Atom.intern('text/richtext', False)
+# richtext = Gdk.Atom.intern('text/richtext', False)
 
-for target in clipboard.wait_for_targets()[1]:
-    if target == richtext:
-        contents = clipboard.wait_for_contents(target)
-        if contents:
-            print(str(target), type(contents), contents.get_format())
-            pixbuf = contents.get_data()
-            #print(pixbuf)
-            #html = contents.get_data()
+# for target in clipboard.wait_for_targets()[1]:
+#     if target == richtext:
+#         contents = clipboard.wait_for_contents(target)
+#         if contents:
+#             print(str(target), type(contents), contents.get_format())
+#             pixbuf = contents.get_data()
+#             #print(pixbuf)
+#             #html = contents.get_data()
 
-            f = open('output.rtf', 'wb')
+#             f = open('output.rtf', 'wb')
 
-            f.write(pixbuf)
-            f.close()
+#             f.write(pixbuf)
+#             f.close()

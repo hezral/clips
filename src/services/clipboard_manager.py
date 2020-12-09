@@ -22,16 +22,16 @@
 
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, Gdk, GdkPixbuf, GLib, GObject, Pango
 gi.require_version("Wnck", "3.0")
-from gi.repository import Wnck
 gi.require_version("Bamf", "3")
-from gi.repository import Bamf
+from gi.repository import Gtk, Gdk, Bamf, Wnck, Gio
 
 from datetime import datetime
 import signal
 import sys
 import os
+
+
 
 # list of excluded apps by default
 exclude_list = ('Wingpanel',
@@ -41,24 +41,29 @@ class ClipboardManager():
 
     #setup supported clip types
     richtext_target = Gdk.Atom.intern('text/richtext', False)
+    rtf_target = Gdk.Atom.intern('text/rtf', False)
     html_target = Gdk.Atom.intern('text/html', False)
     image_target = Gdk.Atom.intern('image/png', False)
     text_target = Gdk.Atom.intern('text/plain', False)
     uri_target = Gdk.Atom.intern('x-special/gnome-copied-files', False)
+    internet_target = "uri/internet"
+    file_target = "uri/filemanager"
+    hexcolor_target = "color/hex"
 
-    targets = (uri_target, image_target, html_target, richtext_target, text_target)
+    #targets = (uri_target, image_target, html_target, richtext_target, text_target, internet_target, file_target, hexcolor_target)
 
     clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
 
-    def __init__(self):
+    def __init__(self, gtk_application=None):
         super().__init__()
 
+        self.app = gtk_application
 
     def clipboard_changed(self, clipboard, event):
         date_created = datetime.now()
         target, content = self.get_clipboard_contents(clipboard, event)
-        app_name, app_icon = self.get_active_app()
-        return target, content, app_name, app_icon, date_created
+        app_name, app_icon, protected = self.get_active_app()
+        return target, content, app_name, app_icon, date_created, protected
 
     def get_clipboard_contents(self, clipboard, event):
 
@@ -80,11 +85,12 @@ class ClipboardManager():
 
         elif self.clipboard.wait_is_target_available(self.text_target):
             target_type = self.text_target
-            content = self.clipboard.wait_for_text()
+            content = self.clipboard.wait_for_text().strip() #strip any whitespace in start/end of text
 
         else:
             target_type = None
             content = None
+
 
         return target_type, content
 
@@ -99,52 +105,17 @@ class ClipboardManager():
             if active_app is not None:
                 app_name = active_app.get_name()
                 app_icon = active_app.get_icon()
+                desktop_file = active_app.get_desktop_file()
+                #print(app_name, desktop_file)
+
         else: 
             screen = Wnck.Screen.get_default()
             screen.force_update()
             app_name = screen.get_active_workspace().get_name() # if no active window, fallback to workspace name
             app_icon = 'preferences-desktop-wallpaper' 
     
-        return app_name, app_icon
+        protected = "no"
+        return app_name, app_icon, protected
 
-    # def set_clipboard_contents():
-    #     pass
-
-    # def debug(self):
-    #     self.label = Gtk.Label()
-    #     self.label.props.max_width_chars = 100
-    #     self.label.props.wrap = True
-    #     self.label.props.wrap_mode = Pango.WrapMode.CHAR
-    #     self.label.props.lines = 3
-    #     #self.label.props.single_line_mode = True
-    #     self.label.props.ellipsize = Pango.EllipsizeMode.END
-    #     self.image = Gtk.Image.new_from_icon_name("image-x-generic", Gtk.IconSize.DIALOG)
-    #     self.window = Gtk.Window(title="Clips Debug Window") #debug window to see contents displayed in Gtk.Window
-    #     self.box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
-    #     self.box.pack_start(self.image, True, True, 0)
-    #     self.box.pack_start(self.label, True, True, 0)
-    #     self.window.set_border_width(6)
-    #     self.window.add(self.box)
-    #     self.window.show_all()
-    #     self.window.connect("destroy", Gtk.main_quit)
-    #     # just for debugging at CLI to enable CTRL+C quit
-    #     GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGINT, Gtk.main_quit) 
-
-    # def debug_log(self, clipboard, target, content):
-    #     #print("Current clipboard offers formats: \n" + str(self.clipboard.wait_for_targets()[1]))
-    #     if content is not None:
-    #         if target == self.image_target:
-    #             self.image.set_from_pixbuf(content)
-    #         elif target == self.uri_target:
-    #             self.label.set_text(content)
-    #         elif target == self.html_target:
-    #             self.label.set_text(content)
-    #         elif target == self.text_target:
-    #             self.label.set_text(content)
-    #         else:
-    #             print('Unsupported target type')
-    #     else:
-    #         print("No content in the clipboard")
-
-# clips = ClipsManager(debugflag=True)
-# Gtk.main()
+    def clip_to_clipboard(self):
+        pass

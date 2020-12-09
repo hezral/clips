@@ -2,10 +2,11 @@
  
 import sys, gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, Gio, GdkPixbuf
+gi.require_version('WebKit2', '4.0')
+from gi.repository import Gtk, Gio, GdkPixbuf, WebKit2
  
 # 画像が沢山あるディレクトリに書き換えしてください
-PICTURES = '/home/adi/Pictures/Avatars'
+FOLDER = '/home/adi/.cache/com.github.hezral.clips/cache/'
  
 class Win(Gtk.ApplicationWindow):
     '''
@@ -18,15 +19,22 @@ class Win(Gtk.ApplicationWindow):
         flowbox = Gtk.FlowBox()#valign=Gtk.Align.START)
         flowbox.set_homogeneous(False)
         # 指定ディレクトリのファイルを探す
-        d = Gio.file_new_for_path(PICTURES)
+        d = Gio.file_new_for_path(FOLDER)
         enum = d.enumerate_children(Gio.FILE_ATTRIBUTE_STANDARD_CONTENT_TYPE, 0)
         for info in enum:
             content_type = info.get_content_type()
             if content_type == 'image/jpeg' or content_type == 'image/png' or content_type == 'image/gif':
-                fullpath = f'{PICTURES}/{info.get_name()}'
+                fullpath = f'{FOLDER}/{info.get_name()}'
                 pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(fullpath, 100, 100, True)
                 image = Gtk.Image(pixbuf=pixbuf)
                 flowbox.add(image)
+            if content_type == 'text/html':
+                fullpath = f'{FOLDER}/{info.get_name()}'
+                file = open(fullpath, "r")
+                content = file.read()
+                webview = WebKit2.WebView()
+                webview.load_html(content)
+                flowbox.add(webview)
         scroll = Gtk.ScrolledWindow(child=flowbox)
         # self
         self.add(scroll)

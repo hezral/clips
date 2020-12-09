@@ -27,6 +27,10 @@ from gi.repository import Gtk, Gio, GLib, Gdk
 from main_window import ClipsWindow
 from services.clipboard_manager import ClipboardManager
 from services.cache_manager import CacheManager
+import utils
+
+import platform
+from datetime import datetime
 
 
 class Clips(Gtk.Application):
@@ -39,11 +43,14 @@ class Clips(Gtk.Application):
         self.add_main_option("test", ord("t"), GLib.OptionFlags.NONE, GLib.OptionArg.NONE, "Command line test", None)
 
         # objects
-        self.clipboard_manager = ClipboardManager()
+        self.utils = utils
+        self.clipboard_manager = ClipboardManager(gtk_application=self)
         self.cache_manager = CacheManager(gtk_application=self, clipboard_manager=self.clipboard_manager)
         
+
         # re-initialize some objects
-        self.window = None
+        self.main_window = None
+
 
         
     def do_startup(self):
@@ -71,23 +78,41 @@ class Clips(Gtk.Application):
 
         # set CSS provider
         provider = Gtk.CssProvider()
-        provider.load_from_path(os.path.join(os.path.dirname(__file__), "..", "data", "application.css"))
+        print(platform.linux_distribution()[2])
+        if platform.linux_distribution()[2] == "hera":
+            provider.load_from_path(os.path.join(os.path.dirname(__file__), "..", "data", "application.css"))
+
+        if platform.linux_distribution()[2] == "odin":
+            provider.load_from_path(os.path.join(os.path.dirname(__file__), "..", "data", "application.css"))
         Gtk.StyleContext.add_provider_for_screen(Gdk.Screen.get_default(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
 
     def do_activate(self):
         # We only allow a single window and raise any existing ones
-        if not self.window:
+        if not self.main_window:
             # Windows are associated with the application 
             # when the last one is closed the application shuts down
-            self.window = ClipsWindow(application=self)
-        # self.window.present()
-        self.add_window(self.window)
+            self.main_window = ClipsWindow(application=self)
+        # present the window if its hidden
+        self.main_window.present()
+        # add it back to app
+        self.add_window(self.main_window)
         #self.window.connect('key-press-event', self.window.check)
-        manager = ClipboardManager()
-        manager.clipboard.connect('owner-change', manager.clipboard_changed)
 
-        import signal
-        GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGINT, Gtk.main_quit) 
+        # link to cache_manager
+        self.cache_manager.main_window = self.main_window
+
+        print(datetime.now(), "start load_clips")
+        clips_view = self.main_window.utils.get_widget_by_name(widget=self.main_window, child_name="clips-view", level=0)
+        clips_view.cache_manager = self.cache_manager
+        clips_view.clipboard_manager = self.clipboard_manager
+
+        clips = self.cache_manager.load_clips()
+
+        clips_view.load_from_cache()
+        
+        print(datetime.now(), "finish load_clips")
+
+
 
     def do_command_line(self, command_line):
         options = command_line.get_options_dict()
@@ -110,16 +135,16 @@ class Clips(Gtk.Application):
             return self.instance
 
     def on_hide_action(self, action, param):
-        if self.window is not None:
-            self.window.hide()
+        if self.main_window is not None:
+            self.main_window.hide()
 
     def on_show_action(self, action, param):
-        if self.window is not None:
-            self.window.show()
+        if self.main_window is not None:
+            self.main_window.show()
 
     def on_quit_action(self, action, param):
-        if self.window is not None:
-            self.window.destroy()
+        if self.main_window is not None:
+            self.main_window.destroy()
 
 if __name__ == "__main__":
     # just for debugging at CLI to enable CTRL+C quit

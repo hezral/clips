@@ -33,6 +33,8 @@ class ClipsWindow(Gtk.ApplicationWindow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        self.utils = self.props.application.utils
+
         #------ views ----#
         clips_view = ClipsView()
         info_view = InfoView("No Clips Found","Start Copying Stuffs", "system-os-installer")
@@ -49,29 +51,26 @@ class ClipsWindow(Gtk.ApplicationWindow):
         stack.add_named(info_view, info_view.get_name())
 
         #------ headerbar ----#
-        self.set_titlebar(self.generate_searchbar())
-        #self.set_titlebar(self.generate_headerbar())
+        #self.set_titlebar(self.generate_searchbar())
+        self.set_titlebar(self.generate_headerbar())
 
         #------ main_view ----#
         main_view = Gtk.Grid()
         main_view.props.name = "main-view"
         main_view.attach(stack, 0, 0, 1, 1)
         main_view.attach(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL), 0, 1, 1, 1)
-        #main_view.attach(self.generate_statusbar(settings_view_obj=settings_view), 0, 2, 1, 1)
         main_view.attach(self.generate_viewswitch(settings_view_obj=settings_view), 0, 2, 1, 1)
-
-
-        self.add(main_view)
 
         #------ construct ----#
         self.props.title = "Clips"
         self.props.name = "main-window"
-        self.props.resizable = False
+        #self.props.resizable = False
         self.props.border_width = 0
-        self.get_style_context().add_class("rounded")
-        self.set_default_size(400, 480)
-        self.set_keep_above(True)
         self.props.window_position = Gtk.WindowPosition.CENTER
+        self.get_style_context().add_class("rounded")
+        #self.set_size_request(560, 680)
+        self.set_keep_above(True)
+        self.add(main_view)
         self.show_all()
 
        # clips_view.hide_toolbar_buttons()
@@ -147,6 +146,64 @@ class ClipsWindow(Gtk.ApplicationWindow):
 
         return searchbar
 
+    def generate_headerbar(self):
+        #------ searchentry ----#
+        searchentry = Gtk.SearchEntry()
+        searchentry.props.placeholder_text = "Search Clips" #"Search Clips\u2026"
+        searchentry.props.hexpand = True
+        searchentry.props.name = "search-entry"
+        searchentry.props.primary_icon_activatable = True
+        searchentry.props.primary_icon_sensitive = True
+
+        searchentry.connect("focus-in-event", self.on_search_activate, "in")
+        searchentry.connect("focus-out-event", self.on_search_activate, "out")
+        # searchentry.connect_after("delete-text", self.on_delete_text, "delete")
+        # searchentry.connect("icon-press", self.on_quicksearch_activate)
+        
+        searchentry.connect("search-changed", self.on_search_changed)
+
+        quicksearchbar = Gtk.Grid()
+        quicksearchbar.props.name = "search-quick"
+        quicksearchbar.props.column_spacing = 2
+        quicksearchbar.props.margin_top = 3
+        images = Gtk.Button(label="images")
+        images.connect("clicked", self.on_quicksearch)
+        texts = Gtk.Button(label="texts")
+        texts.connect("clicked", self.on_quicksearch)
+
+        quicksearchbar.attach(images, 0, 0, 1, 1)
+        quicksearchbar.attach(texts, 1, 0, 1, 1)
+
+        #------ revealer ----#
+        revealer = Gtk.Revealer()
+        revealer.props.name = "search-revealer"
+        revealer.add(quicksearchbar)
+
+        #------ searchbar ----#
+        searchbar = Gtk.Grid()
+        searchbar.props.name = "search-bar"
+        searchbar.attach(searchentry, 0, 0, 1, 1)
+        searchbar.attach(revealer, 0, 1, 1, 1)
+
+        headerbar = Gtk.HeaderBar()
+        headerbar.props.show_close_button = False
+        headerbar.props.has_subtitle = False
+        headerbar.props.custom_title = searchbar
+        return headerbar
+
+    def generate_viewswitch(self, settings_view_obj):
+        #icon_theme = Gtk.IconTheme.get_default()
+        #icon_theme.prepend_search_path(os.path.join(self.modulepath, "..", "data/icons"))
+        view_switch = Granite.ModeSwitch.from_icon_name("network-wireless-hotspot-symbolic", "preferences-system-symbolic")
+        # view_switch.props.primary_icon_tooltip_text = "Ghoster"
+        # view_switch.props.secondary_icon_tooltip_text = "Settings"
+        view_switch.props.valign = Gtk.Align.CENTER
+        view_switch.props.halign = Gtk.Align.END
+        view_switch.props.margin = 4
+        view_switch.props.name = "view-switch"
+        view_switch.bind_property("active", settings_view_obj, "visible", GObject.BindingFlags.BIDIRECTIONAL)
+        return view_switch
+
     def on_country_combo_changed(self, combo):
         tree_iter = combo.get_active_iter()
         if tree_iter is not None:
@@ -165,14 +222,12 @@ class ClipsWindow(Gtk.ApplicationWindow):
         #     revealer.set_reveal_child(True)
         pass
 
-
     def on_quicksearch_activate(self, searchentry, iconposition, eventbutton):
         print(locals())
         searchbar = searchentry.get_parent()
         revealer = utils.get_widget_by_name(widget=searchbar, child_name="search-revealer", level=0)
         if revealer.get_child_revealed():
             revealer.set_reveal_child(False)
-
         else:
             revealer.set_reveal_child(True)
 
@@ -202,9 +257,7 @@ class ClipsWindow(Gtk.ApplicationWindow):
         else:
             searchentry.props.text = searchentry.props.text + ", " + button.props.label
 
-       
     def on_search_activate(self, searchentry, event, type):
-
 
         searchbar = searchentry.get_parent()
         revealer = utils.get_widget_by_name(widget=searchbar, child_name="search-revealer", level=0)
@@ -212,10 +265,12 @@ class ClipsWindow(Gtk.ApplicationWindow):
         if type == "in" and revealer.get_child_revealed() is False:
             searchentry.props.primary_icon_name = "preferences-system-power-symbolic"
             searchentry.props.primary_icon_tooltip_text = "Use quick search tags"
+            searchentry.props.name = "search-entry-active"
             # searchbar.props.has_tooltip = True
             # searchbar.props.tooltip_text = "Try these quick search tags"
         elif type == "out":
             searchentry.props.primary_icon_name = "system-search-symbolic"
+            searchentry.props.name = "search-entry"
 
         # if revealer.get_child_revealed():
         #     revealer.set_reveal_child(False)
@@ -229,35 +284,9 @@ class ClipsWindow(Gtk.ApplicationWindow):
         #     #searchbar.props.has_tooltip = True
         #     #searchbar.props.tooltip_text = "Try these quick search tags"
 
-    def generate_headerbar(self):
-        searchentry = Gtk.SearchEntry()
-        searchentry.props.placeholder_text = "Search Something\u2026"
-        searchentry.props.hexpand = True   
-        # searchentry.set_halign(Gtk.Align.FILL)
-        searchentry.get_style_context().add_class("search-entry")
-
-        box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
-        box.add(searchentry)
-
-        headerbar = Gtk.HeaderBar()
-        headerbar.props.show_close_button = False
-        headerbar.props.has_subtitle = False
-        headerbar.props.custom_title = box
-        headerbar.props.name = "header"
-        return headerbar
-
-    def generate_viewswitch(self, settings_view_obj):
-        #icon_theme = Gtk.IconTheme.get_default()
-        #icon_theme.prepend_search_path(os.path.join(self.modulepath, "..", "data/icons"))
-        view_switch = Granite.ModeSwitch.from_icon_name("network-wireless-hotspot-symbolic", "preferences-system-symbolic")
-        view_switch.props.primary_icon_tooltip_text = "Ghoster"
-        view_switch.props.secondary_icon_tooltip_text = "Settings"
-        view_switch.props.valign = Gtk.Align.CENTER
-        view_switch.props.halign = Gtk.Align.END
-        view_switch.props.margin = 4
-        view_switch.props.name = "view-switch"
-        view_switch.bind_property("active", settings_view_obj, "visible", GObject.BindingFlags.BIDIRECTIONAL)
-        return view_switch
+    def on_search_changed(self, searchentry):
+        searchentry.props.primary_icon_name = "system-search-symbolic"
+        #print(locals())
 
     def on_view_visible(self, view, gparam=None, runlookup=None, word=None):
         

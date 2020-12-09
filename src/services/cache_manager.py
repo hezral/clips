@@ -31,19 +31,17 @@ from urllib.parse import urlparse
 
 
 class CacheManager():
+
+    main_window = None
+
     def __init__(self, gtk_application=None, clipboard_manager=None):
 
-        # initiatialize database file
+        # initiatialize gtk_application and clipboard_manager
         if gtk_application is not None:
+            self.app = gtk_application
             application_id = gtk_application.props.application_id
-        else:
-            application_id = "com.github.hezral.clips"
 
         if clipboard_manager is not None:
-            clipboard_manager.clipboard.connect("owner-change", self.update_cache, clipboard_manager)
-        else:
-            from clipboard_manager import ClipboardManager
-            clipboard_manager = ClipboardManager()
             clipboard_manager.clipboard.connect("owner-change", self.update_cache, clipboard_manager)
 
         # initialize cache directory
@@ -65,6 +63,7 @@ class CacheManager():
                 self.create_table(self.db_cursor)
         except (OSError, sqlite3.Error) as error:
             print("Exception: ", error)
+
     
     def open_db(self, database_file):
         connection = sqlite3.connect(database_file) 
@@ -84,26 +83,63 @@ class CacheManager():
                 source      TEXT,
                 source_app  TEXT,
                 source_icon TEXT,
-                cache_file   TEXT
+                cache_file  TEXT,
+                type        TEXT,
+                protected   TEXT
             );
             ''')
     
+    def load_clips(self):
+        # get lastrow id
+        last_id = self.db_cursor.execute('SELECT max(id) FROM ClipsDB')
+        last_id = last_id.fetchone()[0]
+
+        data_param = (str(last_id),) #pass in a sequence ie list
+
+        sqlite_select_with_param = '''
+            SELECT * FROM 'ClipsDB'
+            WHERE
+            id <= ?;
+            '''
+        self.db_cursor.execute(sqlite_select_with_param, data_param)
+        records = self.db_cursor.fetchall()
+        # debug line
+        # for row in records:
+        #     print("db:", type(row), row)
+        return records
+
     def add_record(self, data_tuple):
 
         sqlite_insert_with_param = '''
             INSERT INTO 'ClipsDB'
-            ('target', 'created', 'source', 'source_app', 'source_icon', 'cache_file') 
+            ('target', 'created', 'source', 'source_app', 'source_icon', 'cache_file', 'type', 'protected') 
             VALUES
-            (?, ?, ?, ?, ?, ?);
+            (?, ?, ?, ?, ?, ?, ?, ?);
             '''
         try:
             self.db_cursor.execute(sqlite_insert_with_param, data_tuple)
             self.db_connection.commit()
-            #database_cursor.close()
+            # database_cursor.close()
         except sqlite3.Error as error:
             print("Exception sqlite3.Error: ", error) #add logging
         finally:
+            # this is just for debugging
             self.select_record(self.db_cursor.lastrowid)
+
+    def delete_record(self, id, cache_file):
+
+        data_param = (str(id),) #pass in a sequence ie list
+
+        sqlite_select_with_param = '''
+            DELETE FROM 'ClipsDB'
+            WHERE
+            id = ?;
+            '''
+        self.db_cursor.execute(sqlite_select_with_param, data_param)
+        self.db_connection.commit()
+        #confirm deleted
+        self.select_record(id)
+        self.delete_cache_file(cache_file)
 
     def select_record(self, id):
         
@@ -117,7 +153,7 @@ class CacheManager():
         self.db_cursor.execute(sqlite_select_with_param, data_param)
         records = self.db_cursor.fetchall()
         for row in records:
-            print("db:", row)
+            print("db:", type(row), row)
     
     def search_record(self, data_tuple):
         pass
@@ -131,13 +167,15 @@ class CacheManager():
         data_tuple = clipboard_manager.clipboard_changed(clipboard, event)
 
         if not None in data_tuple:
-            target, content, source_app, source_icon, created = data_tuple
+            target, content, source_app, source_icon, created, protected = data_tuple
 
-            temp_filename = 'temp-' + tempfile.gettempprefix()
+            # temp_filename = 'temp-' + tempfile.gettempprefix()
+            temp_filename = next(tempfile._get_candidate_names()) + tempfile.gettempprefix()
 
             if target == clipboard_manager.uri_target: # x-special/gnome-copied-files or uri list
                 source = 'file-manager'
                 cache_filetype = '.uri'
+                type = "files"
                 temp_cache_uri = os.path.join(self.cache_filedir, temp_filename + cache_filetype)
 
                 content = content.get_data().decode("utf-8") 
@@ -152,17 +190,16 @@ class CacheManager():
                 else:
                     source = 'application'
                 cache_filetype = '.png'
+                type = "image"
                 temp_cache_uri = os.path.join(self.cache_filedir, temp_filename + cache_filetype)
 
                 # save content to temp file
                 content.savev(temp_cache_uri, 'png', [], [])
 
-                # create thumbnail
-                # thumbnail = content.scale_simple(content.get_width()//2,content.get_height()//2, GdkPixbuf.InterpType.BILINEAR)
-
             elif target == clipboard_manager.html_target: # text/html
                 source = 'selection'
                 cache_filetype = '.html'
+                type = "html"
                 temp_cache_uri = os.path.join(self.cache_filedir, temp_filename + cache_filetype)
 
                 content = content.get_data().decode("utf-8") # decode from bytes to string for html/text targets
@@ -170,6 +207,7 @@ class CacheManager():
             elif target == clipboard_manager.richtext_target: # text/richtext
                 source = 'selection'
                 cache_filetype = '.rtf'
+                type = "richtext"
                 temp_cache_uri = os.path.join(self.cache_filedir, temp_filename + cache_filetype)
 
                 content = content.get_data() # for rich text, save the bytes to .rtf file directly
@@ -177,13 +215,48 @@ class CacheManager():
             elif target == clipboard_manager.text_target: # text/plain
                 source = 'selection'
                 cache_filetype = '.txt'
+                type = "plaintext"
                 temp_cache_uri = os.path.join(self.cache_filedir, temp_filename + cache_filetype)
+
+                # check for other supported types
+
+
+                # check if hex, rgb, rgba, hsl, hsla color codes, if only a single string contained
+                
+                # add to check if string is certain lenght or something
+                #if len(content.split(" ")) == 1:
+                validate = self.app.utils.isValidColorCode(content)
+
+                #print(validate)
+
+                if self.app.utils.isValidColorCode(content):
+                    type = "color/" + self.app.utils.isValidColorCode(content)[1]
+
+                # check if string is a URL only if there is one long string of URL
+                elif urlparse(content.split(" ")[0]) and len(content.split(" ")) == 1:
+                    cache_filetype = '.desktop'
+                    type = "url"
+                    temp_cache_uri = os.path.join(self.cache_filedir, temp_filename + cache_filetype)
+
+                    _content = "[Desktop Entry]" + "\n"
+                    _content = _content + "Encoding=UTF-8" + "\n"
+                    _content = _content + "Name={domain}".format(domain=urlparse(content).netloc) + "\n"
+                    _content = _content + "Type=Application" + "\n"
+                    _content = _content + "Icon=internet-web-browser" + "\n"
+                    _content = _content + "MimeType=application/x-mswinurl" + "\n"
+                    _content = _content + "Exec=xdg-open {url}".format(url=content) + "\n"
+
+                    content = _content
 
             else:
                 print('Clips: Unsupported target type')
 
 
-            if target != clipboard_manager.image_target: #except for images
+            if target == clipboard_manager.richtext_target: # text/richtext
+                file = open(temp_cache_uri,"wb")
+                file.write(content)
+                file.close()
+            elif target != clipboard_manager.image_target: #except for images
                 # save content to temp file
                 file = open(temp_cache_uri,"w")
                 file.write(content)
@@ -194,25 +267,18 @@ class CacheManager():
             cache_uri = self.cache_filedir + '/' + cache_file
             os.renames(temp_cache_uri, cache_uri)
 
-            record = (str(target), created, source, source_app, source_icon, cache_file)
+            record = (str(target), created, source, source_app, source_icon, cache_file, type, protected)
             self.add_record(record)
 
+            clips_view = self.main_window.utils.get_widget_by_name(widget=self.main_window, child_name="clips-view", level=0)
+            clips_view.new_clip(record)
+
+    def delete_cache_file(self, cache_file):
+        #print(cache_file)
+        try:
+            os.remove(cache_file)
+            return True
+        except OSError:
+            return OSError
 
 
-
-# # codes below are only for debugging
-# def new_clip(*args):
-#     clipboard = locals().get('args')[0]
-#     event = locals().get('args')[1]
-#     # target, content, source_app, source_icon, created = manager.clipboard_changed(clipboard, event)
-#     data = clipboard_manager.clipboard_changed(clipboard, event)
-#     datastore.update_cache(data)
-
-# from clipboard_manager import ClipboardManager
-# clipboard_manager = ClipboardManager()
-# clipboard_manager.clipboard.connect("owner-change", new_clip)
-# datastore = CacheManager(clipboard_manager=clipboard_manager)
-
-
-# GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGINT, Gtk.main_quit)
-# Gtk.main()

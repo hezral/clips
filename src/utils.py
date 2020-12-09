@@ -19,18 +19,15 @@
     along with Clips.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+# Function to find widgets using its parent
+# https://stackoverflow.com/questions/20461464/how-do-i-iterate-through-all-Gtk-children-in-pyGtk-recursively
+# http://cdn.php-Gtk.eu/cdn/farfuture/riUt0TzlozMVQuwGBNNJsaPujRQ4uIYXc8SWdgbgiYY/mtime:1368022411/sites/php-Gtk.eu/files/Gtk-php-get-child-widget-by-name.php__0.txt
+# note get_name() vs Gtk.Buildable.get_name(): https://stackoverflow.com/questions/3489520/python-Gtk-widget-name
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 
-
-def test(widget):
-    print(type(widget))
-
 def get_widget_by_name(widget, child_name, level, doPrint=False):
-    # https://stackoverflow.com/questions/20461464/how-do-i-iterate-through-all-Gtk-children-in-pyGtk-recursively
-    # http://cdn.php-Gtk.eu/cdn/farfuture/riUt0TzlozMVQuwGBNNJsaPujRQ4uIYXc8SWdgbgiYY/mtime:1368022411/sites/php-Gtk.eu/files/Gtk-php-get-child-widget-by-name.php__0.txt
-    # note get_name() vs Gtk.Buildable.get_name(): https://stackoverflow.com/questions/3489520/python-Gtk-widget-name
 
     if widget is not None:
         if doPrint: print("-"*level + str(Gtk.Widget.get_name(widget)) + " :: " + str(type(widget).__name__))
@@ -57,3 +54,123 @@ def get_widget_by_name(widget, child_name, level, doPrint=False):
             if child is not None:
                 found = get_widget_by_name(child, child_name, level+1, doPrint) # //search the child
                 if found: return found
+
+
+import re
+import math
+
+
+
+# function to check valid internet URL
+# https://stackoverflow.com/a/60267538/14741406
+# https://urlregex.com/
+URL = r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+"
+def isInternetURL(str):
+    regex = URL
+    return validateStr(str, regex)
+
+# function to check valid file manager path
+# https://stackoverflow.com/a/38521489/14741406
+UNIXPATH = r"^(\/[\w^ ]+)+\/?([\w.])+[^.]$"
+
+def isUnixPath(str):
+    regex = UNIXPATH
+    return validateStr(str, regex)
+
+# function to check email address
+EMAIL = r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)"
+def isEmaild(str):
+    regex = EMAIL
+    return validateStr(str, regex)
+
+# Regex Pattern for Rgb, Rgba, Hsl, Hsla color coding
+# convert and test regex at https://regex101.com/
+# https://www.regexpal.com/97509 this one is better
+
+HEX = ("hex", r"^#([\da-f]{3}){1,2}")
+RGB = ("rgb", r"^[Rr][Gg][Bb]\(\d{1,3}%?(,\s?\d{1,3}%?){2}\)")
+RGBA = ("rgba", r"^[Rr][Gg][Bb][Aa]\((\d{1,3}%?,\s?){3}(1|0?\.\d+)\)")
+HSL = ("hsl", r"^[Hh][Ss][Ll]\(\d{1,3}%?(,\s?\d{1,3}%?){2}\)")
+HSLA = ("hsla", r"^[Hh][Ss][Ll][Aa]\((\d{1,3}%?,\s?){3}(1|0?\.\d+)\)")
+
+
+color_regex = (HEX, RGB, RGBA, HSL, HSLA)
+
+
+# function to validate string using regex
+def validateStr(str, regex):
+
+    p = re.compile(regex)
+ 
+    # If the string is empty return false
+    if(str == None):
+        return False
+ 
+    # Return if the string matched the ReGex
+    if(re.search(p, str)):
+        return True
+    else:
+        return False
+
+# Function validate hexadecimal color code
+# https://www.geeksforgeeks.org/how-to-validate-hexadecimal-color-code-using-regular-expression/
+def isValidHexaCode(str):
+    regex = HEX
+    return validateStr(str, regex)
+
+# Function validate is any of the HEX, RGB, RGBA, HSL, HSLA color code
+def isValidColorCode(str):
+    #clean whitespaces 
+    #str_ = str.replace(" ", "")
+    for regex in color_regex:
+        # #print(regex)
+        if validateStr(str, regex[1]):
+            return True, regex[0]
+        else:
+            pass
+
+
+# Function to convert HSL to RGB color code
+import colorsys
+def HSLtoRGB(hslcode):
+    h, s, l = hslcode
+    r, g, b = colorsys.hls_to_rgb(h, s, l)
+    rgb = [int(r*255), int(g*255), int(b*255)]
+    return rgb
+
+# Function to convert hexadecimal to RGB color code
+# https://stackoverflow.com/a/29643643/14741406
+def HexToRGB(hexcode):
+    h = hexcode.lstrip('#')
+    rgb = tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
+    return rgb
+
+# Function to determine light or dark color using RGB values
+# https://stackoverflow.com/a/58270890/14741406
+def isLightOrDark(rgb=[0,0,0]):
+    [r,g,b] = rgb
+    hsp = math.sqrt(0.299 * (r * r) + 0.587 * (g * g) + 0.114 * (b * b))
+    if (hsp > 127.5):
+        return 'light'
+    else:
+        return 'dark'
+
+# function to extract background-color from html files
+# https://stackoverflow.com/a/4894134/14741406
+def get_css_background_color(str):
+    regex = r"(?:background-color)\:(.*?)\;"
+    result = re.search(regex, str).group(1).strip()
+
+    for regex in color_regex:
+        if validateStr(result, regex[1]):
+            return result, True
+        else:
+            return "@theme_base_color", False
+
+
+colors = ("hsla(330, 100%, 50%)","hsla(0,100%,50%,0.3)")
+
+for color in colors:
+    print(isValidColorCode(color))
+
+

@@ -24,9 +24,9 @@
 @define-color shaded_base shade(#6A0CAB, 0.98);
 @define-color popup shade(@theme_base_color, 0.98);
 
-*:backdrop {
+/* *:backdrop {
     color: rgba(255, 255, 255, 0.5);
-}
+} */
 
 /* ------------------------------ */
 
@@ -38,25 +38,29 @@
     font-weight: bold;
 }
 
-/* headerbar {
-    padding-left: 8px;
-    padding-right: 12px;
-    padding-top: 4px;
-} */
 
-entry#search-entry {
-    box-shadow: none;
-    background-image: none;
-    border-style: none;
-    padding: 4px;
-    padding-top: 6px;
-    padding-bottom: 6px;
-    text-shadow: none;
-}
+grid#search-bar {
+    padding: 1px;
+    }
+    
+    entry#search-entry {
+        box-shadow: none;
+        background-image: none;
+        border-style: none;
+        padding: 5px;
+        padding-top: 7px;
+        padding-bottom: 7px;
+        text-shadow: none;
+    }
+    
+    entry#search-entry-active {
+        padding: 4px;
+        padding-top: 6px;
+        padding-bottom: 6px;
+        text-shadow: none;
+    }
 
-headerbar, .viewswitch {
-    color: white;
-}
+
 /* ------------------------------ */
 
 grid#main-view {
@@ -85,11 +89,90 @@ stack {
     background-color: @shaded_darker;
 }
 
-.settings-sub-label {
+/* .settings-sub-label {
     font-style: italic;
     font-size: 0.9em;
     color: gray;
-}
+} */
 /* ------------------------------ */
 
 
+grid#clip-container {
+    border-style: solid;
+    border-width: 1px;
+    border-color: rgba(0, 0, 0, 0.2);
+    border-radius: 3px;
+    background-color: transparent;
+}
+
+flowboxchild:selected {
+    box-shadow:
+        0 0 0 1px rgba(0,0,0,0.12),
+        0 2px 5px  rgba(0,0,0,0.16),
+        0 2px 5px  rgba(0,0,0,0.23),
+        0 14px 28px  rgba(0,0,0,0);
+}
+
+flowboxchild:backdrop > grid#clip-container > grid#clip-info, flowboxchild:selected > grid#clip-container > label#clip-id {
+    text-shadow: 0px 1px 2px rgba(0,0,0, 0.2);
+}
+
+flowboxchild:selected > grid#clip-container > grid#clip-info {
+    text-shadow: 0px 1px 2px rgba(0,0,0, 0.5);
+    /* font-weight: bold; */
+}
+
+flowbox {
+    padding: 10px;
+}
+
+label#clip-timestamp, label#clip-content-label {
+    font-size: 80%;
+    opacity: 0.75;
+    font-weight: bold;
+}
+
+box#clip-content {
+    font-size: 85%;
+}
+
+button#clip-action-button {
+    box-shadow: none;
+    border-style: none;
+    padding: 2px;
+
+    color: white;
+}
+    
+button#clip-action-button:hover {
+    border-style: solid;
+    border-width: 1px;
+    border-color: rgba(255,255,255,0.75);
+    border-radius: 15px;
+    background-color: rgba(0,0,0,0.35);
+    opacity: 1;
+}
+    
+button#clip-action-button:active {
+    border-color: rgba(255,255,255,0.5);
+    background-color: rgba(0,0,0,0.7);
+    opacity: 0.55;
+}
+    
+    
+grid#clip-action {
+    background-color: rgba(0,0,0,0.75);
+    color: white;
+    padding: 6px;
+    border-radius: 3px;
+}
+
+label#clip-action-message {
+    background-color: rgba(0,0,0,0.75);
+    color: white;
+    padding: 8px;
+    padding-left: 12px;
+    padding-right: 12px;
+    border-radius: 3px;
+    font-weight: bold;
+}
