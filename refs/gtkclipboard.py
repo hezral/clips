@@ -11,9 +11,11 @@ https://askubuntu.com/questions/427704/how-can-i-edit-the-source-of-html-in-the-
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk
+
+import signal
+from gi.repository import GLib
+GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGINT, Gtk.main_quit) 
 clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
-
-
 #targets = Gdk.Atom.intern('TARGETS', False)
 
 #print(Gdk.Atom.name(targets))
@@ -50,10 +52,16 @@ def on(clipboard, event, event_time):
         #print(event.time, event.selection_time, event.handler_set)
     print("Current clipboard offers formats: ")
     #print(type(clipboard.wait_for_targets()))
+    i = 0
     for target in clipboard.wait_for_targets()[1]:
         content = clipboard.wait_for_contents(target)
-        bytes = content.get_bytes()
-        print(target, content)
+        if content is not None:
+            bytes = content.get_data()
+            file = open("{i}.gif".format(i=i),"wb")
+            file.write(bytes)
+            file.close()
+            i += 1
+        #print(target, content, bytes)
     #print(clipboard.wait_for_contents(html_target).get_data())
     #content = clipboard.wait_for_contents(image_target)
         # event_time = event.time
@@ -96,3 +104,6 @@ Gtk.main()
 
 #             f.write(pixbuf)
 #             f.close()
+
+
+Gtk.main()

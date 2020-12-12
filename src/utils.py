@@ -64,8 +64,8 @@ import math
 # function to check valid internet URL
 # https://stackoverflow.com/a/60267538/14741406
 # https://urlregex.com/
-URL = r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+"
-def isInternetURL(str):
+URL = r"^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$"
+def isValidURL(str):
     regex = URL
     return validateStr(str, regex)
 
@@ -73,7 +73,7 @@ def isInternetURL(str):
 # https://stackoverflow.com/a/38521489/14741406
 UNIXPATH = r"^(\/[\w^ ]+)+\/?([\w.])+[^.]$"
 
-def isUnixPath(str):
+def isValidUnixPath(str):
     regex = UNIXPATH
     return validateStr(str, regex)
 
@@ -87,11 +87,11 @@ def isEmaild(str):
 # convert and test regex at https://regex101.com/
 # https://www.regexpal.com/97509 this one is better
 
-HEX = ("hex", r"^#([\da-f]{3}){1,2}")
-RGB = ("rgb", r"^[Rr][Gg][Bb]\(\d{1,3}%?(,\s?\d{1,3}%?){2}\)")
-RGBA = ("rgba", r"^[Rr][Gg][Bb][Aa]\((\d{1,3}%?,\s?){3}(1|0?\.\d+)\)")
-HSL = ("hsl", r"^[Hh][Ss][Ll]\(\d{1,3}%?(,\s?\d{1,3}%?){2}\)")
-HSLA = ("hsla", r"^[Hh][Ss][Ll][Aa]\((\d{1,3}%?,\s?){3}(1|0?\.\d+)\)")
+HEX = ("hex", r"^#([\da-f]{3}|[\dA-F]{3}){1,2};?\s?$")
+RGB = ("rgb", r"^[Rr][Gg][Bb]\(\d{1,3}%?(,\s?\d{1,3}%?){2}\);?\s?$")
+RGBA = ("rgba", r"^[Rr][Gg][Bb][Aa]\((\d{1,3}%?,\s?){3}(1|0?\.\d+)\);?\s?$")
+HSL = ("hsl", r"^[Hh][Ss][Ll]\(\d{1,3}%?(,\s?\d{1,3}%?){2}\);?\s?$")
+HSLA = ("hsla", r"^[Hh][Ss][Ll][Aa]\((\d{1,3}%?,\s?){3}(1|0?\.\d+)\);?\s?$")
 
 
 color_regex = (HEX, RGB, RGBA, HSL, HSLA)
@@ -114,9 +114,7 @@ def validateStr(str, regex):
 
 # Function validate hexadecimal color code
 # https://www.geeksforgeeks.org/how-to-validate-hexadecimal-color-code-using-regular-expression/
-def isValidHexaCode(str):
-    regex = HEX
-    return validateStr(str, regex)
+
 
 # Function validate is any of the HEX, RGB, RGBA, HSL, HSLA color code
 def isValidColorCode(str):
@@ -168,9 +166,46 @@ def get_css_background_color(str):
             return "@theme_base_color", False
 
 
-colors = ("hsla(330, 100%, 50%)","hsla(0,100%,50%,0.3)")
+# print(isValidUnixPath("/home/adi"))
 
-for color in colors:
-    print(isValidColorCode(color))
+# print(isValidURL("http://google.com"))
 
 
+
+
+# colors = (
+# "#111",
+# "#222222",
+# "rgb(3,3,3)",
+# "rgba(4%,4,4%,0.4)",
+# "hsl(5,5,5)",
+# "hsla(6,6,6,0.6)",
+# "#111;",
+# "#222222;",
+# "rgb(3,3,3);",
+# "rgba(4%,4,4%,0.4);",
+# "hsl(5,5,5);",
+# "hsla(6,6,6,0.6);",
+# "#111; ",
+# "#222222; ",
+# "rgb(3,3,3)",
+# "rgba(4%,4,4%,0.4); ",
+# "hsl(5,5,5); ",
+# "hsla(6,6,6,0.6); ",
+# "#111 ",
+# "#222222 ",
+# "rgb(3,3,3) ",
+# "rgba(4%,4,4%,0.4) ",
+# "hsl(5,5,5) ",
+# "hsla(6,6,6,0.6) ",
+# "#111 junk",
+# "#222222 junk",
+# "rgb(3,3,3) junk",
+# "rgba(4%,4,4%,0.4) junk",
+# "hsl(5,5,5) junk",
+# "hsla(6,6,6,0.6) junk",
+# )
+
+# for color in colors:
+#     if isValidColorCode(color) is None:
+#         print(color)

@@ -37,23 +37,25 @@ class ClipsView(Gtk.Grid):
         self.flowbox = Gtk.FlowBox()
         self.flowbox.props.name = "flowbox"
         self.flowbox.props.homogeneous = False
-        self.flowbox.props.expand = True
+        self.flowbox.props.expand = False
         self.flowbox.props.row_spacing = 10
         self.flowbox.props.column_spacing = 10
         self.flowbox.props.min_children_per_line = 2
         self.flowbox.props.valign = Gtk.Align.START
+        self.flowbox.props.halign = Gtk.Align.START
         self.flowbox.connect("child_activated", self.on_child_activated)
 
         #------ scrolled_window ----#
         scrolled_window = Gtk.ScrolledWindow()
         scrolled_window.props.expand = True
+        scrolled_window.props.hscrollbar_policy = Gtk.PolicyType.NEVER
         scrolled_window.add(self.flowbox)
         scrolled_window.connect("edge-reached", self.on_edge_reached)
         
         #------ construct ----#
         self.props.name = "clips-view"
         self.props.expand = True
-        self.set_size_request(462, 420)
+        self.set_size_request(436, 420)
         self.attach(scrolled_window, 0, 0, 1, 1)
 
 
@@ -196,7 +198,7 @@ class ClipsContainer(Gtk.Grid):
             webview.props.zoom_level = 0.8
             webview.load_html(content)
             webview.props.expand = True
-            webview.props.sensitive = False
+            #webview.props.sensitive = False
             eventbox = Gtk.EventBox()
             eventbox.props.above_child = True
             eventbox.add(webview)
@@ -212,9 +214,10 @@ class ClipsContainer(Gtk.Grid):
             content = content.read()
             self.content_label = str(len(content)) + " chars"
             content = Gtk.Label(content)
-            content.props.wrap_mode = Pango.WrapMode.WORD
-            content.props.max_width_chars = 40
+            content.props.wrap_mode = Pango.WrapMode.CHAR
+            content.props.max_width_chars = 30
             content.props.wrap = True
+            content.props.selectable = False
 
         elif self.type == "url":
             content = Gtk.Image().new_from_icon_name("internet-web-browser", Gtk.IconSize.DIALOG)
@@ -223,28 +226,32 @@ class ClipsContainer(Gtk.Grid):
         elif "color" in self.type:
             content = open(self.cache_file, "r")
             content = content.read()
-
-            print(self.id, self.type, content)
+            content = content.strip(" ").strip(";") #strip the ; for processing 
+            _content = content.strip(")") #strip the ) for processing 
+            #print(self.id, self.type, content)
 
             if self.type == "color/hex":
                 rgb = utils.HexToRGB(content)
                 a = 1
 
             elif self.type == "color/rgb":
-                content = content.replace(" ", "")
-                r, g, b = content.split("(")[1].split(",")[0:3] #handles both rgb and rgba codes
-                rgb = [int(r), int(g), int(b.strip(")"))] #handles b code with max 3 digits
+                r, g, b = _content.split("(")[1].split(",")[0:3]
+                r = int(int(r.strip("%"))/100*255) if r.find("%") != -1 else int(r)
+                g = int(int(g.strip("%"))/100*255) if g.find("%") != -1 else int(g)
+                b = int(int(b.strip("%"))/100*255) if b.find("%") != -1 else int(b)
+                rgb = [r, g, b] 
                 a = 1
 
             elif self.type == "color/rgba":
-                content = content.replace(" ", "")
-                r, g, b, a = content.split("(")[1].split(",")
-                rgb = [int(r), int(g), int(b.strip(")"))] #handles b code with max 3 digits
+                r, g, b, a = _content.split("(")[1].split(",")
+                r = int(int(r.strip("%"))/100*255) if r.find("%") != -1 else int(r)
+                g = int(int(g.strip("%"))/100*255) if g.find("%") != -1 else int(g)
+                b = int(int(b.strip("%"))/100*255) if b.find("%") != -1 else int(b)
+                rgb = [r, g, b] 
                 a = float(a.split(")")[0])
 
             elif self.type == "color/hsl":
-                content = content.replace(" ", "")
-                h, s, l = content.split("(")[1].split(",")[0:3] 
+                h, s, l = _content.split("(")[1].split(",")[0:3] 
                 h = int(h) / 360
                 s = int(s.replace("%","")) / 100
                 l = int(l.replace("%)","")) / 100
@@ -252,8 +259,7 @@ class ClipsContainer(Gtk.Grid):
                 rgb = utils.HSLtoRGB((h, s, l))
 
             elif self.type == "color/hsla":
-                content = content.replace(" ", "")
-                h, s, l, a = content.split("(")[1].split(",") 
+                h, s, l, a = _content.split("(")[1].split(",") 
                 h = int(h) / 360
                 s = int(s.replace("%","")) / 100
                 l = int(l.replace("%","")) / 100
@@ -264,27 +270,10 @@ class ClipsContainer(Gtk.Grid):
             
             if utils.isLightOrDark(rgb) == "light":
                 font_color = "rgba(0,0,0,0.85)"
-                # if a < 0.5:
-                #     font_color = "rgba(" + str(rgb[0]) + "," + str(rgb[1]) + "," + str(rgb[2]) + "," + str(1) + ")"
-                #     font_color = "lighter({color})".format(color=font_color)
-
             else:
                 font_color = "rgba(255,255,255,0.85)"
-                # if a < 0.5:
-                #     font_color = "rgba(" + str(rgb[0]) + "," + str(rgb[1]) + "," + str(rgb[2]) + "," + str(1) + ")"
-                #     font_color = "darker({color})".format(color=font_color)
-
-            # if a < 0.5:
-            #         font_color = "rgba(" + str(rgb[0]) + "," + str(rgb[1]) + "," + str(rgb[2]) + "," + str(1) + ")"
-            #         font_color = "lighter({color})".format(color=font_color)
 
             color_content_css = ".color-container {background-color: " + color_code + "; color: " + font_color + ";}"
-
-            # if a < 0.5:
-            #     text_shadow = "text-shadow: 0px 1px 2px rgba(0,0,0, 0.2)"
-            #     color_content_css = ".color-container {background-color: " + color_code + "; color: " + font_color + ";" + text_shadow + ";" + "}"
-
-
             font_css = ".color-content {letter-spacing: 1px; font-weight: bold; font-size: 125%;}"
             css = color_content_css + "\n" + font_css
             provider = Gtk.CssProvider()
@@ -295,7 +284,8 @@ class ClipsContainer(Gtk.Grid):
             content.get_style_context().add_class("color-content")
 
             if str(a) != "1":
-                self.get_style_context().add_class(Granite.STYLE_CLASS_CHECKERBOARD)
+                self.get_style_context().add_class(Granite.STYLE_CLASS_CHECKERBOARD) # if there is alpha below 1
+
             self.get_style_context().add_provider(provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
             self.get_style_context().add_class("color-container")
 
@@ -370,14 +360,18 @@ class ClipsContainer(Gtk.Grid):
                                                                                                             created=self.created_short)
 
         #------ clip_action ----#
-        protect_action = Gtk.Button(image=Gtk.Image().new_from_icon_name("changes-prevent-symbolic", Gtk.IconSize.SMALL_TOOLBAR))
+        icon_theme = Gtk.IconTheme.get_default()
+        print(os.path.join(os.path.dirname(__file__), "..", "..", "..","data", "icons"))
+        icon_theme.prepend_search_path(os.path.join(os.path.dirname(__file__), "..", "..", "data", "icons"))
+
+        protect_action = Gtk.Button(image=Gtk.Image().new_from_icon_name("com.github.hezral.clips-protect-symbolic", Gtk.IconSize.SMALL_TOOLBAR))
         protect_action.props.name = "clip-action-button"
         protect_action.props.has_tooltip = True
         protect_action.props.tooltip_text = "Protect clip"
         protect_action.set_size_request(30, 30)
         protect_action.connect("clicked", self.on_clip_action, "protect")
         
-        view_action = Gtk.Button(image=Gtk.Image().new_from_icon_name("edit-copy-symbolic", Gtk.IconSize.SMALL_TOOLBAR))
+        view_action = Gtk.Button(image=Gtk.Image().new_from_icon_name("com.github.hezral.clips-view-symbolic", Gtk.IconSize.SMALL_TOOLBAR))
         view_action.props.name = "clip-action-button"
         view_action.props.has_tooltip = True
         view_action.props.tooltip_text = "View clip"
@@ -415,7 +409,7 @@ class ClipsContainer(Gtk.Grid):
         #------ message_action ----#
         message_action = Gtk.Label()
         message_action.props.name = "clip-action-message"
-        #message_action.props.halign = message_action.props.valign = Gtk.Align.CENTER
+        message_action.props.halign = message_action.props.valign = Gtk.Align.CENTER
         message_action_revealer = Gtk.Revealer()
         message_action_revealer.props.name = "clip-action-message-revealer"
         message_action_revealer.props.transition_type = Gtk.RevealerTransitionType.CROSSFADE

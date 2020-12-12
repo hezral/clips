@@ -176,3 +176,8 @@ label#clip-action-message {
     border-radius: 3px;
     font-weight: bold;
 }
+
+.test {
+    color: rgba(4%,4,4%,0.4);
+    color: rgba(10,4, 10, 0.4);
+}

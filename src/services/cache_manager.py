@@ -220,7 +220,6 @@ class CacheManager():
 
                 # check for other supported types
 
-
                 # check if hex, rgb, rgba, hsl, hsla color codes, if only a single string contained
                 
                 # add to check if string is certain lenght or something
