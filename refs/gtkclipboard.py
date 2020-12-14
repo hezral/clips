@@ -16,8 +16,12 @@ import signal
 from gi.repository import GLib
 GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGINT, Gtk.main_quit) 
 clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
-#targets = Gdk.Atom.intern('TARGETS', False)
 
+#targets = Gdk.Atom.intern('TARGETS', False)
+# TIMESTAMP
+# TARGETS
+# MULTIPLE
+# SAVE_TARGETS
 #print(Gdk.Atom.name(targets))
 
 #print(dir(clipboard))
@@ -105,6 +109,3 @@ Gtk.main()
 
 #             f.write(pixbuf)
 #             f.close()
-
-
-Gtk.main()
