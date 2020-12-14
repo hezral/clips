@@ -55,13 +55,14 @@ def on(clipboard, event, event_time):
     i = 0
     for target in clipboard.wait_for_targets()[1]:
         content = clipboard.wait_for_contents(target)
-        if content is not None:
-            bytes = content.get_data()
-            file = open("{i}.gif".format(i=i),"wb")
-            file.write(bytes)
-            file.close()
-            i += 1
-        #print(target, content, bytes)
+        # if content is not None and str(target).find("WPS Drawing Shape Format") != -1:
+        #     bytes = content.get_data()
+        #     file = open("file.pptx","wb")
+        #     # file = open("{i}.{ext}".format(i=str(target).split("/")[0], ext=str(target).split("/")[1]),"wb")
+        #     file.write(bytes)
+        #     file.close()
+        #     i += 1
+        print(target, content)
     #print(clipboard.wait_for_contents(html_target).get_data())
     #content = clipboard.wait_for_contents(image_target)
         # event_time = event.time

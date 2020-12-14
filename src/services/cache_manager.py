@@ -28,7 +28,7 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GLib
 from urllib.parse import urlparse
-
+from datetime import datetime
 
 class CacheManager():
 
@@ -77,15 +77,15 @@ class CacheManager():
         # Initializes the database with the ClipsDB table
         database_cursor.execute('''
             CREATE TABLE ClipsDB (
-                id          INTEGER     PRIMARY KEY     NOT NULL,
-                target      TEXT        NOT NULL,
-                created     TEXT        NOT NULL        DEFAULT (STRFTIME('%Y-%m-%d %H:%M:%S.%f', 'NOW', 'localtime')),
-                source      TEXT,
-                source_app  TEXT,
-                source_icon TEXT,
-                cache_file  TEXT,
-                type        TEXT,
-                protected   TEXT
+                id              INTEGER     PRIMARY KEY     NOT NULL,
+                target          TEXT        NOT NULL,
+                created         TEXT        NOT NULL        DEFAULT (STRFTIME('%Y-%m-%d %H:%M:%S.%f', 'NOW', 'localtime')),
+                source          TEXT,
+                source_app      TEXT,
+                source_icon     TEXT,
+                cache_file      TEXT,
+                type            TEXT,
+                protected       TEXT
             );
             ''')
     
@@ -96,20 +96,16 @@ class CacheManager():
 
         data_param = (str(last_id),) #pass in a sequence ie list
 
-        sqlite_select_with_param = '''
+        sqlite_with_param = '''
             SELECT * FROM 'ClipsDB'
             WHERE
             id <= ?;
             '''
-        self.db_cursor.execute(sqlite_select_with_param, data_param)
+        self.db_cursor.execute(sqlite_with_param, data_param)
         records = self.db_cursor.fetchall()
-        # debug line
-        # for row in records:
-        #     print("db:", type(row), row)
         return records
 
     def add_record(self, data_tuple):
-
         sqlite_insert_with_param = '''
             INSERT INTO 'ClipsDB'
             ('target', 'created', 'source', 'source_app', 'source_icon', 'cache_file', 'type', 'protected') 
@@ -123,40 +119,79 @@ class CacheManager():
         except sqlite3.Error as error:
             print("Exception sqlite3.Error: ", error) #add logging
         finally:
-            # this is just for debugging
-            self.select_record(self.db_cursor.lastrowid)
+            pass
+    
+    def update_record(self, checksum):
+        data_param = (str(checksum + "%"),) #pass in a sequence ie list
+        sqlite_with_param = '''
+            SELECT created, cache_file FROM 'ClipsDB'
+            WHERE
+            cache_file LIKE ?;
+            '''
+        self.db_cursor.execute(sqlite_with_param, data_param)
+        records = self.db_cursor.fetchall()
+
+        created_original = datetime.strptime(records[0][0], '%Y-%m-%d %H:%M:%S.%f')
+        cache_file = records[0][1]
+
+        created_updated = datetime.now()
+        data_param = (created_updated, cache_file, ) #pass in a sequence ie list
+        sqlite_with_param = '''
+            UPDATE 'ClipsDB'
+            SET created = ?
+            WHERE
+            cache_file = ?;
+            '''
+        self.db_cursor.execute(sqlite_with_param, data_param)
+        self.db_connection.commit()
 
     def delete_record(self, id, cache_file):
-
         data_param = (str(id),) #pass in a sequence ie list
-
-        sqlite_select_with_param = '''
+        sqlite_with_param = '''
             DELETE FROM 'ClipsDB'
             WHERE
             id = ?;
             '''
-        self.db_cursor.execute(sqlite_select_with_param, data_param)
+        self.db_cursor.execute(sqlite_with_param, data_param)
         self.db_connection.commit()
         #confirm deleted
         self.select_record(id)
         self.delete_cache_file(cache_file)
 
     def select_record(self, id):
-        
         data_param = (str(id),) #pass in a sequence ie list
-
-        sqlite_select_with_param = '''
+        sqlite_with_param = '''
             SELECT * FROM 'ClipsDB'
             WHERE
             id = ?;
             '''
-        self.db_cursor.execute(sqlite_select_with_param, data_param)
+        self.db_cursor.execute(sqlite_with_param, data_param)
         records = self.db_cursor.fetchall()
-        for row in records:
-            print("db:", type(row), row)
-    
+        # for row in records:
+        #     print("db:", type(row), row)
+        return records
+
+    def check_duplicate(self, checksum):
+        data_param = (checksum + "%",) #pass in a sequence ie list
+        sqlite_with_param = '''
+            SELECT * FROM 'ClipsDB'
+            WHERE
+            cache_file LIKE ?;
+            '''
+        self.db_cursor.execute(sqlite_with_param, data_param)
+        records = self.db_cursor.fetchall()
+        return records
+
     def search_record(self, data_tuple):
         pass
+
+    def delete_cache_file(self, cache_file):
+        #print(cache_file)
+        try:
+            os.remove(cache_file)
+            return True
+        except OSError:
+            return OSError
 
     def get_checksum(self, data):
         checksum = hashlib.md5(data).hexdigest()
@@ -221,13 +256,6 @@ class CacheManager():
                 # check for other supported types
 
                 # check if hex, rgb, rgba, hsl, hsla color codes, if only a single string contained
-                
-                # add to check if string is certain lenght or something
-                #if len(content.split(" ")) == 1:
-                validate = self.app.utils.isValidColorCode(content)
-
-                #print(validate)
-
                 if self.app.utils.isValidColorCode(content):
                     type = "color/" + self.app.utils.isValidColorCode(content)[1]
 
@@ -267,17 +295,23 @@ class CacheManager():
             os.renames(temp_cache_uri, cache_uri)
 
             record = (str(target), created, source, source_app, source_icon, cache_file, type, protected)
-            self.add_record(record)
 
             clips_view = self.main_window.utils.get_widget_by_name(widget=self.main_window, child_name="clips-view", level=0)
-            clips_view.new_clip(record)
 
-    def delete_cache_file(self, cache_file):
-        #print(cache_file)
-        try:
-            os.remove(cache_file)
-            return True
-        except OSError:
-            return OSError
+            # check duplicates using checksum
+            if len(self.check_duplicate(checksum)) == 0:
+                self.add_record(record) # add to database
+                new_record = self.select_record(self.db_cursor.lastrowid)[0] # prepare record for gui
+                clips_view.new_clip(self.cache_filedir, new_record) # add to gui
+            else:
+                # add action if duplicate is found, either updated created date or something
+                self.update_record(checksum)
+                clips_view.show_all()
+                pass
+
+
+
+
+
 
 

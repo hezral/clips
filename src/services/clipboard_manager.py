@@ -75,13 +75,13 @@ class ClipboardManager():
             target_type = self.image_target 
             content = self.clipboard.wait_for_image()
 
+        elif self.clipboard.wait_is_target_available(self.html_target) or self.clipboard.wait_is_target_available(self.html_target) and self.clipboard.wait_is_target_available(self.image_target):
+            target_type = self.html_target
+            content = self.clipboard.wait_for_contents(self.html_target)
+
         elif self.clipboard.wait_is_target_available(self.richtext_target):
             target_type = self.richtext_target
             content = self.clipboard.wait_for_contents(self.richtext_target)
-
-        elif self.clipboard.wait_is_target_available(self.html_target):
-            target_type = self.html_target
-            content = self.clipboard.wait_for_contents(self.html_target)
 
         elif self.clipboard.wait_is_target_available(self.text_target):
             target_type = self.text_target
@@ -90,7 +90,6 @@ class ClipboardManager():
         else:
             target_type = None
             content = None
-
 
         return target_type, content
 
