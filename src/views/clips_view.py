@@ -40,7 +40,8 @@ class ClipsView(Gtk.Grid):
         #self.flowbox.props.expand = False
         self.flowbox.props.row_spacing = 10
         self.flowbox.props.column_spacing = 10
-        self.flowbox.props.min_children_per_line = 2
+        self.flowbox.props.max_children_per_line = 10
+        self.flowbox.props.min_children_per_line = 3
         self.flowbox.props.valign = Gtk.Align.START
         self.flowbox.props.halign = Gtk.Align.START
         self.flowbox.set_sort_func(self.sort_flowbox)
@@ -56,7 +57,7 @@ class ClipsView(Gtk.Grid):
         #------ construct ----#
         self.props.name = "clips-view"
         self.props.expand = True
-        self.set_size_request(436, 420)
+        self.set_size_request(600, 450)
         self.attach(scrolled_window, 0, 0, 1, 1)
 
     def sort_flowbox(self, child1, child2):
@@ -183,17 +184,17 @@ class ClipsContainer(Gtk.Grid):
 
         elif self.type == "image":
             pixbuf_original = GdkPixbuf.Pixbuf.new_from_file(self.cache_file)
-            if pixbuf_original.props.width < 192:
+            if pixbuf_original.props.width < 160:
                 pixbuf = pixbuf_original
                 #print("< 192", pixbuf_original.props.width)
             else:
-                pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(self.cache_file, 192, -1, True)
+                pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(self.cache_file, 165, -1, True)
                 #print("> 192", pixbuf.props.width, pixbuf.props.height)
             image = Gtk.Image().new_from_pixbuf(pixbuf)
             self.content_label = "{width} x {height} px".format(width=str(pixbuf_original.props.width), height=str(pixbuf_original.props.height))
             self.content = image
-            if pixbuf.get_has_alpha() is False:
-                self.content.get_style_context().add_class(Granite.STYLE_CLASS_CARD)
+            # if pixbuf.get_has_alpha() is False:
+            #     self.content.get_style_context().add_class(Granite.STYLE_CLASS_CARD)
             self.get_style_context().add_class(Granite.STYLE_CLASS_CHECKERBOARD)
 
         elif self.type == "html":
@@ -442,13 +443,12 @@ class ClipsContainer(Gtk.Grid):
         message_action_revealer = Gtk.Revealer()
         message_action_revealer.props.name = "clip-action-message-revealer"
         message_action_revealer.props.transition_type = Gtk.RevealerTransitionType.CROSSFADE
-        #message_action_revealer.props.transition_duration = 750
-        
+       
         message_action_revealer.connect("focus-out-event", self.on_message_action_hide)
         message_action_revealer.add(message_action)
 
         #------ construct ----#
-        self.set_size_request(200, 150)
+        self.set_size_request(178, 150)
         self.props.name = "clip-container"
         self.props.expand = True
         self.props.has_tooltip = True
@@ -463,7 +463,7 @@ class ClipsContainer(Gtk.Grid):
         self.attach(message_action_revealer, 0, 0, 1, 2)
         self.attach(clip_content, 0, 0, 1, 1)
         
-    def on_clip_action(self, button, action):
+    def on_clip_action(self, button=None, action=None):
         print(datetime.now(), action)
         main_window = self.get_toplevel()
         app = main_window.props.application
@@ -486,19 +486,20 @@ class ClipsContainer(Gtk.Grid):
             utils.view_clips(self.cache_file)
 
         elif action == "copy":
-            print(action)
-            print(self.cache_file)
+            print(action, self.cache_file)
 
         elif action == "delete":
             flowboxchild.destroy()
             app.cache_manager.delete_record(self.id, self.cache_file)
+
+        # elif action == "updated":
+        #     message_action_revealer.grab_focus()
 
         else:
             pass
 
 
     def on_message_action_hide(self, revealer, event):
-        revealer.props.can_focus = True
         revealer.set_reveal_child(False)
 
     def friendly_timestamp(self, time=False):

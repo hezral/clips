@@ -149,6 +149,8 @@ class CacheManager():
         self.db_cursor.execute(sqlite_with_param, data_param)
         self.db_connection.commit()
 
+        return created_updated
+
     def delete_record(self, id, cache_file):
         data_param = (str(id),) #pass in a sequence ie list
         sqlite_with_param = '''
@@ -325,20 +327,22 @@ class CacheManager():
                 new_record = self.select_record(self.db_cursor.lastrowid)[0] # prepare record for gui
                 clips_view.new_clip(self.cache_filedir, new_record) # add to gui
             else:
-                # add action if duplicate is found, either updated created date or something
-                self.update_record(checksum)
-                duplicate_record_id = self.check_duplicate(checksum)[0][0]
-                # clips_view.flowbox.invalidate_sort()
-                # clips_view.show_all()
-
+                # update db with new timestamp and get the timestamp
+                created_updated = self.update_record(checksum)
                 
+                # get the id for the clip that was updated
+                duplicate_record_id = self.check_duplicate(checksum)[0][0]
+
+                # get the flowboxchild
                 flowboxchild_updated = [child for child in clips_view.flowbox.get_children() if child.get_children()[0].id == duplicate_record_id][0]
 
-                print(flowboxchild_updated)
-                #clips_view.flowbox.invalidate_sort()
+                # update the timestamp
+                flowboxchild_updated.get_children()[0].created = created_updated
+
+                flowboxchild_updated.get_children()[0].on_clip_action(action="updated")
                 
-                flowboxchild_updated.changed()
-                clips_view.flowbox.get_child_at_index(0).changed()
+                clips_view.flowbox.invalidate_sort()
+                
                 
 
 
