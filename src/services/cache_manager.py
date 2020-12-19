@@ -327,8 +327,19 @@ class CacheManager():
             else:
                 # add action if duplicate is found, either updated created date or something
                 self.update_record(checksum)
+                duplicate_record_id = self.check_duplicate(checksum)[0][0]
                 # clips_view.flowbox.invalidate_sort()
                 # clips_view.show_all()
+
+                
+                flowboxchild_updated = [child for child in clips_view.flowbox.get_children() if child.get_children()[0].id == duplicate_record_id][0]
+
+                print(flowboxchild_updated)
+                #clips_view.flowbox.invalidate_sort()
+                
+                flowboxchild_updated.changed()
+                clips_view.flowbox.get_child_at_index(0).changed()
+                
 
 
 
