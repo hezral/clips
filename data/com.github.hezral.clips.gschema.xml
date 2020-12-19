@@ -22,5 +22,10 @@
             <summary>Enable/Disable this behaviour</summary>
             <description>Display Clips app window on all workspaces</description>
         </key>
+        <key type="as" name="blacklist-apps">
+            <default>[]</default>
+            <summary>Blacklisted apps from Clips</summary>
+            <description>These apps will not be monitored for clipboard events</description>
+        </key>
     </schema>
 </schemalist>

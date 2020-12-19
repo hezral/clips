@@ -66,7 +66,6 @@ class SettingsView(Gtk.Grid):
         frame.get_style_context().add_class("settings-frame")
         frame.add(grid)
 
-
         #-- SettingsView construct--------#
         self.props.name = "settings-view"
         self.get_style_context().add_class(self.props.name)
@@ -75,7 +74,7 @@ class SettingsView(Gtk.Grid):
         self.props.margin_top = 12
         self.props.row_spacing = 6
         self.props.column_spacing = 6
-        self.attach(frame, 0, 1, 1, 1)
+        self.attach(frame, 0, 1, 1, 1)       
 
     def generate_separator(self):
         separator = Gtk.Separator()

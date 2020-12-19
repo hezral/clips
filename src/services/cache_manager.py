@@ -26,7 +26,7 @@ import sqlite3
 import tempfile
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, GLib
+from gi.repository import Gtk, GLib, GdkPixbuf
 from urllib.parse import urlparse
 from datetime import datetime
 
@@ -47,9 +47,13 @@ class CacheManager():
         # initialize cache directory
         self.cache_dir = os.path.join(GLib.get_user_cache_dir(), application_id)
         self.cache_filedir = os.path.join(self.cache_dir, "cache")
+        self.icon_cache_filedir = os.path.join(self.cache_dir, "icon")
+
         try:
             if not os.path.exists(self.cache_filedir):
                 os.makedirs(self.cache_filedir)
+            if not os.path.exists(self.icon_cache_filedir):
+                os.makedirs(self.icon_cache_filedir)
         except OSError as error:
             print("Excption: ", error)
 
@@ -204,6 +208,8 @@ class CacheManager():
         if not None in data_tuple:
             target, content, source_app, source_icon, created, protected = data_tuple
 
+
+
             # temp_filename = 'temp-' + tempfile.gettempprefix()
             temp_filename = next(tempfile._get_candidate_names()) + tempfile.gettempprefix()
 
@@ -294,7 +300,22 @@ class CacheManager():
             cache_uri = self.cache_filedir + '/' + cache_file
             os.renames(temp_cache_uri, cache_uri)
 
+            # fallback for source_icon
+            # save a copy of the icon in case the app is uninstalled and no icon to use
+            icon_theme = Gtk.IconTheme.get_default()
+            try:
+                if source_icon.find("/") != -1:
+                    pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(source_icon, 48, 48, True) # load from path for non-theme icons
+                else:
+                    pixbuf = icon_theme.load_icon(source_icon, 48, Gtk.IconLookupFlags.USE_BUILTIN)
+            except:
+                pixbuf = icon_theme.load_icon("image-missing", 48, Gtk.IconLookupFlags.USE_BUILTIN)
+
+            source_icon_cache = os.path.join(self.icon_cache_filedir, source_app.replace(" ",".").lower() + ".png")
+            pixbuf.savev(source_icon_cache, 'png', [], []) # save to icon cache folder
+
             record = (str(target), created, source, source_app, source_icon, cache_file, type, protected)
+            #record = (str(target), created, source, source_app, source_icon, checksum, cache_filetype, type, protected)
 
             clips_view = self.main_window.utils.get_widget_by_name(widget=self.main_window, child_name="clips-view", level=0)
 
@@ -306,8 +327,9 @@ class CacheManager():
             else:
                 # add action if duplicate is found, either updated created date or something
                 self.update_record(checksum)
-                clips_view.show_all()
-                pass
+                # clips_view.flowbox.invalidate_sort()
+                # clips_view.show_all()
+
 
 
 

@@ -42,6 +42,10 @@ class Clips(Gtk.Application):
         self.props.flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE
         self.add_main_option("test", ord("t"), GLib.OptionFlags.NONE, GLib.OptionArg.NONE, "Command line test", None)
 
+        #-- settings ----#
+        self.gio_settings = Gio.Settings(schema_id="com.github.hezral.clips")
+        self.gtk_settings = Gtk.Settings().get_default()
+
         # objects
         self.utils = utils
         self.clipboard_manager = ClipboardManager(gtk_application=self)

@@ -141,7 +141,7 @@ label#clip-timestamp, label#clip-content-label {
     font-weight: bold;
 }
 
-box#clip-content {
+box#clip-content-box {
     font-size: 85%;
 }
 
@@ -189,4 +189,27 @@ label#clip-action-message {
 .test {
     color: rgba(4%,4,4%,0.4);
     color: rgba(10,4, 10, 0.4);
+}
+
+
+button#clips-action-enable, button#clips-action-protect {
+    border-style: none;
+    box-shadow: none;
+    padding: 2px;
+}
+
+.clips-action-enabled {
+    opacity: 1;
+}
+
+.clips-action-disabled {
+    opacity: 0.35;
+}
+
+button#clips-action-enable:hover, button#clips-action-protect:hover {
+    opacity: 0.75;
+}
+
+button#clips-action-enable:active, button#clips-action-protect:active {
+    opacity: 1;
 }

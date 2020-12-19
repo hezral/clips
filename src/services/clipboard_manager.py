@@ -58,12 +58,13 @@ class ClipboardManager():
         super().__init__()
 
         self.app = gtk_application
+        self.blacklist_apps = self.app.gio_settings.get_value("blacklist-apps").get_strv()
 
     def clipboard_changed(self, clipboard, event):
         date_created = datetime.now()
         target, content = self.get_clipboard_contents(clipboard, event)
-        app_name, app_icon, protected = self.get_active_app()
-        return target, content, app_name, app_icon, date_created, protected
+        source_app, source_icon, protected = self.get_active_app()
+        return target, content, source_app, source_icon, date_created, protected
 
     def get_clipboard_contents(self, clipboard, event):
 
@@ -98,23 +99,25 @@ class ClipboardManager():
         # using Bamf
         matcher = Bamf.Matcher()
         active_win = matcher.get_active_window()
-        
+        screen = Wnck.Screen.get_default()
+        screen.force_update()
+
         if active_win is not None:
             active_app = matcher.get_application_for_window(active_win)
             if active_app is not None:
-                app_name = active_app.get_name()
-                app_icon = active_app.get_icon()
-                desktop_file = active_app.get_desktop_file()
-                #print(app_name, desktop_file)
+                source_app = active_app.get_name().split(" – ")[-1] #some app's name are shown with current document name so we split it and get the last part only
+                source_icon = active_app.get_icon()
 
         else: 
-            screen = Wnck.Screen.get_default()
-            screen.force_update()
-            app_name = screen.get_active_workspace().get_name() # if no active window, fallback to workspace name
-            app_icon = 'preferences-desktop-wallpaper' 
+            source_app = screen.get_active_workspace().get_name() # if no active window, fallback to workspace name
+            source_icon = 'preferences-desktop-wallpaper' 
     
         protected = "no"
-        return app_name, app_icon, protected
+
+        
+        print(__file__.split("/")[-1], "blacklist_apps", self.blacklist_apps)
+
+        return source_app, source_icon, protected
 
     def clip_to_clipboard(self):
         pass

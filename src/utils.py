@@ -55,11 +55,11 @@ def get_widget_by_name(widget, child_name, level, doPrint=False):
                 found = get_widget_by_name(child, child_name, level+1, doPrint) # //search the child
                 if found: return found
 
+###################################################################################################################
+# Color Validation Functions
 
 import re
 import math
-
-
 
 # function to check valid internet URL
 # https://stackoverflow.com/a/60267538/14741406
@@ -92,10 +92,7 @@ RGB = ("rgb", r"^[Rr][Gg][Bb]\(\d{1,3}%?(,\s?\d{1,3}%?){2}\);?\s?$")
 RGBA = ("rgba", r"^[Rr][Gg][Bb][Aa]\((\d{1,3}%?,\s?){3}(1|0?\.\d+)\);?\s?$")
 HSL = ("hsl", r"^[Hh][Ss][Ll]\(\d{1,3}%?(,\s?\d{1,3}%?){2}\);?\s?$")
 HSLA = ("hsla", r"^[Hh][Ss][Ll][Aa]\((\d{1,3}%?,\s?){3}(1|0?\.\d+)\);?\s?$")
-
-
 color_regex = (HEX, RGB, RGBA, HSL, HSLA)
-
 
 # function to validate string using regex
 def validateStr(str, regex):
@@ -115,7 +112,6 @@ def validateStr(str, regex):
 # Function validate hexadecimal color code
 # https://www.geeksforgeeks.org/how-to-validate-hexadecimal-color-code-using-regular-expression/
 
-
 # Function validate is any of the HEX, RGB, RGBA, HSL, HSLA color code
 def isValidColorCode(str):
     #clean whitespaces 
@@ -126,7 +122,6 @@ def isValidColorCode(str):
             return True, regex[0]
         else:
             pass
-
 
 # Function to convert HSL to RGB color code
 import colorsys
@@ -164,6 +159,17 @@ def get_css_background_color(str):
             return result, True
         else:
             return "@theme_base_color", False
+
+###################################################################################################################
+
+# Subprocess
+import subprocess
+import psutil
+
+def view_clips(file):
+    subprocess.Popen(['xdg-open', file])
+
+
 
 
 # print(isValidUnixPath("/home/adi"))

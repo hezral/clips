@@ -62,7 +62,10 @@ class ClipsView(Gtk.Grid):
     def sort_flowbox(self, child1, child2):
         id1 = child1.get_children()[0].id
         id2 = child2.get_children()[0].id
-        return id1 < id2
+        date1 = child1.get_children()[0].created
+        date2 = child2.get_children()[0].created
+        # return id1 < id2
+        return date1 < date2
 
     def update_flowbox(self, clips):
 
@@ -122,7 +125,9 @@ class ClipsView(Gtk.Grid):
 
         self.flowbox.add(ClipsContainer(clip, cache_filedir, app.utils))
 
+        
         self.flowbox.show_all()
+        
 
         for child in self.flowbox.get_children():
             child.connect("focus-out-event", self.on_child_focus_out, child)
@@ -164,36 +169,37 @@ class ClipsContainer(Gtk.Grid):
         self.type = clip[7]
         self.protected = clip[8]
 
+
         # initialize cachce file with full path        
         self.cache_file = os.path.join(cache_filedir, self.cache_file)
 
         # initialize empty variable
-        content = None
+        self.content = None
 
         if self.type == "files":
-            content = open(self.cache_file, "r")
-            self.content_label = str(len(content.read())) + "chars"
-            content = Gtk.Label(content.read())
+            self.content = open(self.cache_file, "r")
+            self.content_label = str(len(self.content.read())) + "chars"
+            self.content = Gtk.Label(self.content.read())
 
         elif self.type == "image":
             pixbuf_original = GdkPixbuf.Pixbuf.new_from_file(self.cache_file)
             if pixbuf_original.props.width < 192:
                 pixbuf = pixbuf_original
-                print("< 192", pixbuf_original.props.width)
+                #print("< 192", pixbuf_original.props.width)
             else:
                 pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(self.cache_file, 192, -1, True)
-                print("> 192", pixbuf.props.width, pixbuf.props.height)
+                #print("> 192", pixbuf.props.width, pixbuf.props.height)
             image = Gtk.Image().new_from_pixbuf(pixbuf)
             self.content_label = "{width} x {height} px".format(width=str(pixbuf_original.props.width), height=str(pixbuf_original.props.height))
-            content = image
+            self.content = image
             if pixbuf.get_has_alpha() is False:
-                content.get_style_context().add_class(Granite.STYLE_CLASS_CARD)
+                self.content.get_style_context().add_class(Granite.STYLE_CLASS_CARD)
             self.get_style_context().add_class(Granite.STYLE_CLASS_CHECKERBOARD)
 
         elif self.type == "html":
-            content = open(self.cache_file, "r")
-            content = content.read()
-            self.content_label = str(len(content)) + " chars"
+            self.content = open(self.cache_file, "r")
+            self.content = self.content.read()
+            self.content_label = str(len(self.content)) + " chars"
 
             # background_color, valid = utils.get_css_background_color(content)
 
@@ -220,42 +226,42 @@ class ClipsContainer(Gtk.Grid):
 
             #     webview.set_background_color(Gdk.RGBA(r,g,b,1))
             webview.props.zoom_level = 0.8
-            webview.load_html(content)
+            webview.load_html(self.content)
             webview.props.expand = True
             #webview.props.sensitive = False
             eventbox = Gtk.EventBox()
             eventbox.props.above_child = True
             eventbox.add(webview)
-            content = eventbox
+            self.content = eventbox
 
         elif self.type == "richtext":
-            content = open(self.cache_file, "r")
-            self.content_label = str(len(content.read())) + " chars"
-            content = Gtk.Label(content.read())
+            self.content = open(self.cache_file, "r")
+            self.content_label = str(len(self.content.read())) + " chars"
+            self.content = Gtk.Label(self.content.read())
 
         elif self.type == "plaintext":
-            content = open(self.cache_file, "r")
-            content = content.read()
-            self.content_label = str(len(content)) + " chars"
-            content = Gtk.Label(content)
-            content.props.wrap_mode = Pango.WrapMode.CHAR
-            content.props.max_width_chars = 30
-            content.props.wrap = True
-            content.props.selectable = False
+            self.content = open(self.cache_file, "r")
+            self.content = self.content.read()
+            self.content_label = str(len(self.content)) + " chars"
+            self.content = Gtk.Label(self.content)
+            self.content.props.wrap_mode = Pango.WrapMode.CHAR
+            self.content.props.max_width_chars = 30
+            self.content.props.wrap = True
+            self.content.props.selectable = False
 
         elif self.type == "url":
-            content = Gtk.Image().new_from_icon_name("internet-web-browser", Gtk.IconSize.DIALOG)
+            self.content = Gtk.Image().new_from_icon_name("internet-web-browser", Gtk.IconSize.DIALOG)
             self.content_label = "Internet URL"
 
         elif "color" in self.type:
-            content = open(self.cache_file, "r")
-            content = content.read()
-            content = content.strip(" ").strip(";") #strip the ; for processing 
-            _content = content.strip(")") #strip the ) for processing 
+            self.content = open(self.cache_file, "r")
+            self.content = self.content.read()
+            self.content = self.content.strip(" ").strip(";") #strip the ; for processing 
+            _content = self.content.strip(")") #strip the ) for processing 
             #print(self.id, self.type, content)
 
             if self.type == "color/hex":
-                rgb = utils.HexToRGB(content)
+                rgb = utils.HexToRGB(_content)
                 a = 1
 
             elif self.type == "color/rgb":
@@ -303,9 +309,9 @@ class ClipsContainer(Gtk.Grid):
             provider = Gtk.CssProvider()
             provider.load_from_data(bytes(css.encode()))
 
-            content = Gtk.Label(content)
-            content.get_style_context().add_provider(provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
-            content.get_style_context().add_class("color-content")
+            self.content = Gtk.Label(self.content)
+            self.content.get_style_context().add_provider(provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+            self.content.get_style_context().add_class("color-content")
 
             if str(a) != "1":
                 self.get_style_context().add_class(Granite.STYLE_CLASS_CHECKERBOARD) # if there is alpha below 1
@@ -317,19 +323,20 @@ class ClipsContainer(Gtk.Grid):
 
         else:
             self.content_label = "title"
-            content = Gtk.Label("CONTENT")
+            self.content = Gtk.Label("CONTENT")
 
         #------ clip_content ----#
-        content.props.expand = True
-        content.props.margin = 6
+        self.content.props.expand = True
+        self.content.props.name = "clip-contents"
+        self.content.props.margin = 6
         clip_content = Gtk.Box()
-        clip_content.props.name = "clip-content"
+        clip_content.props.name = "clip-content-box"
         clip_content.props.halign = Gtk.Align.FILL
         clip_content.props.valign = Gtk.Align.END
         clip_content.props.expand = True
         #clip_content.props.margin = 10
         clip_content.set_size_request(-1, 118)
-        clip_content.add(content)
+        clip_content.add(self.content)
 
         #------ content label ----#
         self.content_label = Gtk.Label(self.content_label)
@@ -340,6 +347,11 @@ class ClipsContainer(Gtk.Grid):
         self.content_label.props.expand = True
 
         #------ source_icon / application icon ----#
+        try:
+            pass
+        except:
+            pass
+
         if self.source_icon.find("/") != -1:
             source_icon = Gtk.Image().new_from_file(self.source_icon)
             try:
@@ -412,7 +424,8 @@ class ClipsContainer(Gtk.Grid):
         clip_action.props.name = "clip-action"
         clip_action.props.halign = clip_action.props.valign = Gtk.Align.CENTER
         clip_action.props.column_spacing = 8
-        clip_action.attach(protect_action, 0, 0, 1, 1)
+        if self.protected == "yes": # add if clip is protected
+            clip_action.attach(protect_action, 0, 0, 1, 1)
         clip_action.attach(view_action, 1, 0, 1, 1)
         clip_action.attach(copy_action, 2, 0, 1, 1)
         clip_action.attach(delete_action, 3, 0, 1, 1)
@@ -466,34 +479,27 @@ class ClipsContainer(Gtk.Grid):
         message_action_revealer.props.can_focus = True
         message_action_revealer.grab_focus()
 
-        if action == "delete":
-            flowboxchild.destroy()
-            app.cache_manager.delete_record(self.id, self.cache_file)
+        if action == "protect":
+            pass
+
+        elif action == "view":
+            utils.view_clips(self.cache_file)
+
         elif action == "copy":
             print(action)
             print(self.cache_file)
-        elif action == "view":
-            print(action)
+
+        elif action == "delete":
+            flowboxchild.destroy()
+            app.cache_manager.delete_record(self.id, self.cache_file)
+
+        else:
+            pass
+
 
     def on_message_action_hide(self, revealer, event):
         revealer.props.can_focus = True
         revealer.set_reveal_child(False)
-
-    # def on_resize(self, clipscontainer, cairocontext):
-    #     #print(locals())
-        
-    #     #print(self.get_parent())
-    #     flowbox = self.get_parent().get_parent()
-    #     print(flowbox)
-    #     base_size = flowbox.get_allocated_width() + 20
-    #     print(base_size)
-    #     width = height = base_size / 3.2
-    #     print(width)
-
-    #     self.set_size_request(width, height)
-
-    #     print(self.get_allocated_width())
-    #     pass
 
     def friendly_timestamp(self, time=False):
         """
@@ -539,9 +545,21 @@ class ClipsContainer(Gtk.Grid):
         return str(round(day_diff / 365, 1)) + " years ago (wow!)"
 
 
+    # def on_resize(self, clipscontainer, cairocontext):
+    #     #print(locals())
+        
+    #     #print(self.get_parent())
+    #     flowbox = self.get_parent().get_parent()
+    #     print(flowbox)
+    #     base_size = flowbox.get_allocated_width() + 20
+    #     print(base_size)
+    #     width = height = base_size / 3.2
+    #     print(width)
 
+    #     self.set_size_request(width, height)
 
-
+    #     print(self.get_allocated_width())
+    #     pass
 
 
 

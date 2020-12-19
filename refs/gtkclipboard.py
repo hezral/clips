@@ -31,81 +31,101 @@ clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
 #def dump_clipboard_callback(clipboard, selection_data, data=None):
 #   print(selection_data.data)
 
-#clipboard.request_contents(html_target , dump_clipboard_callback)
+#clipboard.request_contents(html_target , dump_clipboard_callback)the 
+
+# excluded_targets = (Gdk.Atom.intern('TIMESTAMP', False), 
+#                     Gdk.Atom.intern('TARGETS', False), 
+#                     Gdk.Atom.intern('MULTIPLE', False), 
+#                     Gdk.Atom.intern('SAVE_TARGETS', False), 
+#                     Gdk.Atom.intern('STRING', False), 
+#                     Gdk.Atom.intern('UTF8_STRING', False), 
+#                     Gdk.Atom.intern('TEXT', False), )
 
 
-#setup supported clip types
-richtext_target = Gdk.Atom.intern('text/richtext', False)
-html_target = Gdk.Atom.intern('text/html', False)
-image_target = Gdk.Atom.intern('image/png', False)
-text_target = Gdk.Atom.intern('text/plain', False)
-uri_target = Gdk.Atom.intern('x-special/gnome-copied-files', False)
-save_target = Gdk.Atom.intern('SAVE_TARGETS', False)
-#print(clipboard.wait_is_text_available())
+# #setup supported clip types
+# richtext_target = Gdk.Atom.intern('text/richtext', False)
+# html_target = Gdk.Atom.intern('text/html', False)
+# image_target = Gdk.Atom.intern('image/png', False)
+# text_target = Gdk.Atom.intern('text/plain', False)
+# uri_target = Gdk.Atom.intern('x-special/gnome-copied-files', False)
+# save_target = Gdk.Atom.intern('SAVE_TARGETS', False)
+# #print(clipboard.wait_is_text_available())
 
-global event_time
-event_time = 0
+# global event_time
+# event_time = 0
 
-def on(clipboard, event, event_time):
-    #print(locals())
-    #print(dir(event))
-    #global event_time
-    # print(event_time)
-    # print(event.time - event_time)
-    # if event.time - event_time != 1:
-        #print(event.time, event.selection_time, event.handler_set)
-    print("Current clipboard offers formats: ")
-    #print(type(clipboard.wait_for_targets()))
-    i = 0
-    for target in clipboard.wait_for_targets()[1]:
-        content = clipboard.wait_for_contents(target)
-        # if content is not None and str(target).find("WPS Drawing Shape Format") != -1:
-        #     bytes = content.get_data()
-        #     file = open("file.pptx","wb")
-        #     # file = open("{i}.{ext}".format(i=str(target).split("/")[0], ext=str(target).split("/")[1]),"wb")
-        #     file.write(bytes)
-        #     file.close()
-        #     i += 1
-        print(target, content)
-    #print(clipboard.wait_for_contents(html_target).get_data())
-    #content = clipboard.wait_for_contents(image_target)
-        # event_time = event.time
-    # print(event_time)
+import clips_supported
+
+print(clips_supported.excluded_targets)
+
+def on(clipboard, event):
+
+    targets = clipboard.wait_for_targets()[1]
+    for i in range(0, len(targets)): 
+        targets[i] = str(targets[i])
+
+    #print(targets)
+
+    libreoffice = [i for i in targets if "application/x-openoffice-embed-source-xml" in i]
+    libreoffice_xlsx = [i for i in targets if "LibreOffice 7.0 Spreadsheet" in i]
+    image_png = [i for i in targets if "image/png" in i]
     
-    #print(type(content))
+    if len(libreoffice) == 1 and len(libreoffice_xlsx) == 1 and len(image_png) == 1:
+        print(libreoffice, "\n", libreoffice_xlsx, "\n", image_png)
 
+    inkscape_svg = [i for i in targets if "image/x-inkscape-svg" in i]
+    image_png = [i for i in targets if "image/png" in i]
+    
+    print(inkscape_svg, image_png)
+
+    if len(inkscape_svg) > 0 and len(image_png) == 1:
+#        print(inkscape_svg, "\n", image_png)
+
+        content = clipboard.wait_for_contents(Gdk.Atom.intern(inkscape_svg[0], False))
+        bytes = content.get_data()
+        file = open("file.svg","wb")
+        file.write(bytes)
+        file.close()
+
+        content = clipboard.wait_for_contents(Gdk.Atom.intern(image_png[0], False))
+        bytes = content.get_data()
+        file = open("file.png","wb")
+        file.write(bytes)
+        file.close()
+
+
+    print("\nCurrent clipboard offers formats: ", len(clipboard.wait_for_targets()[1]))
+
+    # i = 0
     # for target in clipboard.wait_for_targets()[1]:
-    #     contents = clipboard.wait_for_contents(target)
-    #     # if target == image_target:
-    #     #     print("image")
-    #     #     contents.get_pixbuf().savev("/home/adi/Work/clips/refs/file.png", 'png', [], [])
-    #     print(target, type(contents))
-    
-    #content.savev("file.png", 'png', [], [])
-    # pixbuf = contents.get_pixbuf()
-    # f = open('output.png', 'wb')
+    #     if target not in excluded_targets:
+    #         content = clipboard.wait_for_contents(target)
 
-    # f.write(pixbuf)
-    # f.close()
+    #         if content is not None:
 
-clipboard.connect('owner_change',on, event_time)
+    #             if str(target).find("WPS Drawing Shape Format") != -1:
+    #                 bytes = content.get_data()
+    #                 file = open("file.pptx","wb")
+    #                 # file = open("{i}.{ext}".format(i=str(target).split("/")[0], ext=str(target).split("/")[1]),"wb")
+    #                 file.write(bytes)
+    #                 file.close()
+    #             if str(target).find("application/x-openoffice-embed-source-xml") != -1: #LibreOffice format compatible with Office XLSX, PPTX, DOCX
+    #                 bytes = content.get_data()
+    #                 file = open("file.odp","wb") #change based on string: typename="LibreOffice 7.0 Spreadsheet", typename="LibreOffice 7.0 Presentation", typename="LibreOffice 7.0 Text Document"
+    #                 # file = open("{i}.{ext}".format(i=str(target).split("/")[0], ext=str(target).split("/")[1]),"wb")
+    #                 file.write(bytes)
+    #                 file.close()
+    #             if str(target).find("image/png") != -1:
+    #                 bytes = content.get_data()
+    #                 file = open("file.png","wb")
+    #                 # file = open("{i}.{ext}".format(i=str(target).split("/")[0], ext=str(target).split("/")[1]),"wb")
+    #                 file.write(bytes)
+    #                 file.close()
+    #         print(i, target, content)
+    #         i += 1
+
+
+clipboard.connect('owner_change',on)
 
 Gtk.main()
 
-#print("Current clipboard offers formats: " + str(clipboard.wait_for_targets()[1]))
-
-# richtext = Gdk.Atom.intern('text/richtext', False)
-
-# for target in clipboard.wait_for_targets()[1]:
-#     if target == richtext:
-#         contents = clipboard.wait_for_contents(target)
-#         if contents:
-#             print(str(target), type(contents), contents.get_format())
-#             pixbuf = contents.get_data()
-#             #print(pixbuf)
-#             #html = contents.get_data()
-
-#             f = open('output.rtf', 'wb')
-
-#             f.write(pixbuf)
-#             f.close()

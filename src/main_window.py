@@ -18,7 +18,7 @@
     You should have received a copy of the GNU General Public License
     along with Clips.  If not, see <http://www.gnu.org/licenses/>.
 '''
-
+import os
 import gi
 gi.require_version('Gtk', '3.0')
 gi.require_version('Granite', '1.0')
@@ -59,6 +59,7 @@ class ClipsWindow(Gtk.ApplicationWindow):
         main_view.props.name = "main-view"
         main_view.attach(stack, 0, 0, 1, 1)
         main_view.attach(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL), 0, 1, 1, 1)
+        main_view.attach(self.generate_actionbar(), 0, 2, 1, 1)
         main_view.attach(self.generate_viewswitch(settings_view_obj=settings_view), 0, 2, 1, 1)
 
         #------ construct ----#
@@ -192,10 +193,40 @@ class ClipsWindow(Gtk.ApplicationWindow):
         headerbar.props.custom_title = searchbar
         return headerbar
 
+    def generate_actionbar(self):
+        icon_theme = Gtk.IconTheme.get_default()
+        icon_theme.prepend_search_path(os.path.join(os.path.dirname(__file__), "..", "data", "icons"))
+
+        clipstoggle_action = Gtk.Button(image=Gtk.Image().new_from_icon_name("com.github.hezral.clips-enabled-symbolic", Gtk.IconSize.SMALL_TOOLBAR))
+        clipstoggle_action.props.name = "clips-action-enable"
+        clipstoggle_action.props.has_tooltip = True
+        clipstoggle_action.props.tooltip_text = "Clipboard Monitoring: Enabled"
+        clipstoggle_action.state = "enabled"
+        clipstoggle_action.get_style_context().add_class("clips-action-enabled")
+        clipstoggle_action.connect("clicked", self.on_clips_action, "enable")
+        
+        protecttoggle_action = Gtk.Button(image=Gtk.Image().new_from_icon_name("com.github.hezral.clips-protect-symbolic", Gtk.IconSize.SMALL_TOOLBAR))
+        protecttoggle_action.props.name = "clips-action-protect"
+        protecttoggle_action.props.has_tooltip = True
+        protecttoggle_action.props.tooltip_text = "Password Display/Monitoring: Enabled"
+        protecttoggle_action.state = "enabled"
+        protecttoggle_action.get_style_context().add_class("clips-action-enabled")
+        protecttoggle_action.connect("clicked", self.on_clips_action, "protect")
+
+        actionbar = Gtk.Grid()
+        actionbar.props.name = "clips-actionbar"
+        actionbar.props.halign = Gtk.Align.START
+        actionbar.props.valign = Gtk.Align.CENTER
+        actionbar.props.margin_left = 3
+        actionbar.attach(clipstoggle_action, 0, 0, 1, 1)
+        actionbar.attach(protecttoggle_action, 1, 0, 1, 1)
+        return actionbar
+
+
     def generate_viewswitch(self, settings_view_obj):
-        #icon_theme = Gtk.IconTheme.get_default()
-        #icon_theme.prepend_search_path(os.path.join(self.modulepath, "..", "data/icons"))
-        view_switch = Granite.ModeSwitch.from_icon_name("network-wireless-hotspot-symbolic", "preferences-system-symbolic")
+        icon_theme = Gtk.IconTheme.get_default()
+        icon_theme.prepend_search_path(os.path.join(os.path.dirname(__file__), "..", "data", "icons"))
+        view_switch = Granite.ModeSwitch.from_icon_name("com.github.hezral.clips-symbolic", "preferences-system-symbolic")
         # view_switch.props.primary_icon_tooltip_text = "Ghoster"
         # view_switch.props.secondary_icon_tooltip_text = "Settings"
         view_switch.props.valign = Gtk.Align.CENTER
@@ -323,3 +354,38 @@ class ClipsWindow(Gtk.ApplicationWindow):
         else:
             self.state_flags_changed_count += 1
             # print('state-flags-changed', self.state_flags_changed_count)
+
+    def on_clips_action(self, button, action):
+        
+        app = self.props.application
+        
+        if action == "enable":
+
+            if button.state == "enabled":
+                button.props.tooltip_text = "Clipboard Monitoring: Disabled"
+                app.clipboard_manager.clipboard.disconnect_by_func(app.cache_manager.update_cache)
+            else:
+                button.props.tooltip_text = "Clipboard Monitoring: Enabled"
+                app.clipboard_manager.clipboard.connect("owner-change", app.cache_manager.update_cache, app.clipboard_manager)
+        
+        elif action == "protect":
+
+            if button.state == "enabled":
+                button.props.tooltip_text = "Password Display/Monitoring: Disabled"
+            else:
+                button.props.tooltip_text = "Password Display/Monitoring: Enabled"
+            
+        else:
+            pass
+
+        if button.state == "enabled":
+            button.state = "disabled"
+            button.get_style_context().add_class("clips-action-disabled")
+            button.get_style_context().remove_class("clips-action-enabled")
+
+        else:
+            button.state = "enabled"
+            button.get_style_context().add_class("clips-action-enabled")
+            button.get_style_context().remove_class("clips-action-disabled")
+
+        
