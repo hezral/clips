@@ -16,7 +16,10 @@ class Win(Gtk.ApplicationWindow):
     def __init__(self, app):
         Gtk.ApplicationWindow.__init__(self, application=app, title='Py')
         # GtkFlowBox
-        flowbox = Gtk.FlowBox()#valign=Gtk.Align.START)
+        flowbox = Gtk.FlowBox()
+        flowbox.props.valign = flowbox.props.halign = Gtk.Align.START
+        flowbox.props.min_children_per_line = 2
+        flowbox.props.max_children_per_line = 10
         flowbox.set_homogeneous(False)
         # 指定ディレクトリのファイルを探す
         d = Gio.file_new_for_path(FOLDER)
@@ -35,11 +38,11 @@ class Win(Gtk.ApplicationWindow):
                 webview = WebKit2.WebView()
                 webview.load_html(content)
                 flowbox.add(webview)
-        scroll = Gtk.ScrolledWindow(child=flowbox)
+        #scroll = Gtk.ScrolledWindow(child=flowbox)
         # self
-        self.add(scroll)
-        self.set_size_request(600,300)
-        #self.resize(400, 300)
+        self.add(flowbox)
+        #self.set_size_request(600,300)
+        #self.resize(300, 300)
         self.show_all()
  
 class App(Gtk.Application):

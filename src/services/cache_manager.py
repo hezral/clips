@@ -331,15 +331,32 @@ class CacheManager():
                 created_updated = self.update_record(checksum)
                 
                 # get the id for the clip that was updated
-                duplicate_record_id = self.check_duplicate(checksum)[0][0]
+                clip = self.check_duplicate(checksum)[0]
+
+                id = clip[0]
+                target = clip[1]
+                created = clip[2]
+                source = clip[3]
+                source_app = clip[4]
+                source_icon = clip[5]
+                cache_file = clip[6]
+                type = clip[7]
+                protected = clip[8]
+                created_short = created_updated.strftime('%a, %b %d %Y, %H:%M:%S')
 
                 # get the flowboxchild
-                flowboxchild_updated = [child for child in clips_view.flowbox.get_children() if child.get_children()[0].id == duplicate_record_id][0]
+                flowboxchild_updated = [child for child in clips_view.flowbox.get_children() if child.get_children()[0].id == id][0]
 
                 # update the timestamp
                 flowboxchild_updated.get_children()[0].created = created_updated
-
-                flowboxchild_updated.get_children()[0].on_clip_action(action="updated")
+                flowboxchild_updated.get_children()[0].created_short = created_updated.strftime('%a, %b %d %Y, %H:%M:%S')
+                flowboxchild_updated.get_children()[0].props.tooltip_text = "id: {id}\ntype: {type}\nsource: {source_app}\ncreated: {created}".format(
+                                                                                                                                                    id=id, 
+                                                                                                                                                    type=type,
+                                                                                                                                                    source=source, 
+                                                                                                                                                    source_app=source_app, 
+                                                                                                                                                    created=created_short)
+                #flowboxchild_updated.get_children()[0].on_clip_action(action="updated")
                 
                 clips_view.flowbox.invalidate_sort()
                 

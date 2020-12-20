@@ -37,35 +37,31 @@ class ClipsView(Gtk.Grid):
         self.flowbox = Gtk.FlowBox()
         self.flowbox.props.name = "flowbox"
         self.flowbox.props.homogeneous = False
-        #self.flowbox.props.expand = False
         self.flowbox.props.row_spacing = 10
         self.flowbox.props.column_spacing = 10
-        self.flowbox.props.max_children_per_line = 10
+        self.flowbox.props.max_children_per_line = 9
         self.flowbox.props.min_children_per_line = 3
         self.flowbox.props.valign = Gtk.Align.START
-        self.flowbox.props.halign = Gtk.Align.START
+        self.flowbox.props.halign = Gtk.Align.FILL
         self.flowbox.set_sort_func(self.sort_flowbox)
         self.flowbox.connect("child_activated", self.on_child_activated)
 
-        #------ scrolled_window ----#
-        scrolled_window = Gtk.ScrolledWindow()
-        scrolled_window.props.expand = True
-        scrolled_window.props.hscrollbar_policy = Gtk.PolicyType.NEVER
-        scrolled_window.add(self.flowbox)
-        scrolled_window.connect("edge-reached", self.on_edge_reached)
+        #------ self.scrolled_window ----#
+        self.scrolled_window = Gtk.ScrolledWindow()
+        self.scrolled_window.props.expand = True
+        self.scrolled_window.props.hscrollbar_policy = Gtk.PolicyType.NEVER
+        self.scrolled_window.add(self.flowbox)
+        self.scrolled_window.connect("edge-reached", self.on_edge_reached)
         
         #------ construct ----#
         self.props.name = "clips-view"
         self.props.expand = True
-        self.set_size_request(600, 450)
-        self.attach(scrolled_window, 0, 0, 1, 1)
+        #self.set_size_request(650, 250)
+        self.attach(self.scrolled_window, 0, 0, 1, 1)
 
     def sort_flowbox(self, child1, child2):
-        id1 = child1.get_children()[0].id
-        id2 = child2.get_children()[0].id
         date1 = child1.get_children()[0].created
         date2 = child2.get_children()[0].created
-        # return id1 < id2
         return date1 < date2
 
     def update_flowbox(self, clips):
@@ -183,19 +179,28 @@ class ClipsContainer(Gtk.Grid):
             self.content = Gtk.Label(self.content.read())
 
         elif self.type == "image":
+            image_size = 200
+            #margin = 0
             pixbuf_original = GdkPixbuf.Pixbuf.new_from_file(self.cache_file)
-            if pixbuf_original.props.width < 160:
+            # dest_pixbuf = GdkPixbuf.Pixbuf.new(pixbuf_original.get_colorspace(), pixbuf_original.get_has_alpha(), pixbuf_original.get_bits_per_sample(), 168, 118)
+            # pixbuf_original.copy_area(0, 0, 181, 174, dest_pixbuf, 0, 0)
+            # print(dest_pixbuf)
+            #pixbuf = dest_pixbuf
+
+            if pixbuf_original.props.width < image_size:
                 pixbuf = pixbuf_original
-                #print("< 192", pixbuf_original.props.width)
+
             else:
-                pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(self.cache_file, 165, -1, True)
-                #print("> 192", pixbuf.props.width, pixbuf.props.height)
+                pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(self.cache_file, image_size, -1, True)
+
             image = Gtk.Image().new_from_pixbuf(pixbuf)
+
             self.content_label = "{width} x {height} px".format(width=str(pixbuf_original.props.width), height=str(pixbuf_original.props.height))
             self.content = image
-            # if pixbuf.get_has_alpha() is False:
-            #     self.content.get_style_context().add_class(Granite.STYLE_CLASS_CARD)
-            self.get_style_context().add_class(Granite.STYLE_CLASS_CHECKERBOARD)
+            if pixbuf.get_has_alpha():
+                self.get_style_context().add_class(Granite.STYLE_CLASS_CHECKERBOARD)
+            else:
+                self.content.get_style_context().add_class(Granite.STYLE_CLASS_CARD)
 
         elif self.type == "html":
             self.content = open(self.cache_file, "r")
@@ -327,15 +332,15 @@ class ClipsContainer(Gtk.Grid):
             self.content = Gtk.Label("CONTENT")
 
         #------ clip_content ----#
-        self.content.props.expand = True
+        #self.content.props.expand = True
+        self.content.props.valign = self.content.props.halign = Gtk.Align.CENTER
         self.content.props.name = "clip-contents"
         self.content.props.margin = 6
         clip_content = Gtk.Box()
         clip_content.props.name = "clip-content-box"
-        clip_content.props.halign = Gtk.Align.FILL
+        clip_content.props.halign = Gtk.Align.CENTER
         clip_content.props.valign = Gtk.Align.END
         clip_content.props.expand = True
-        #clip_content.props.margin = 10
         clip_content.set_size_request(-1, 118)
         clip_content.add(self.content)
 
@@ -400,7 +405,11 @@ class ClipsContainer(Gtk.Grid):
         protect_action.set_size_request(30, 30)
         protect_action.connect("clicked", self.on_clip_action, "protect")
         
-        view_action = Gtk.Button(image=Gtk.Image().new_from_icon_name("com.github.hezral.clips-view-symbolic", Gtk.IconSize.SMALL_TOOLBAR))
+        view_action = Gtk.Button().new_with_mnemonic(label="_view")
+        view_action.props.image = Gtk.Image().new_from_icon_name("com.github.hezral.clips-view-symbolic", Gtk.IconSize.SMALL_TOOLBAR)
+        view_action.props.always_show_image = True
+        view_action.props.use_underline = True
+        #view_action = Gtk.Button(image=Gtk.Image().new_from_icon_name("com.github.hezral.clips-view-symbolic", Gtk.IconSize.SMALL_TOOLBAR))
         view_action.props.name = "clip-action-button"
         view_action.props.has_tooltip = True
         view_action.props.tooltip_text = "View clip"
@@ -425,6 +434,7 @@ class ClipsContainer(Gtk.Grid):
         clip_action.props.name = "clip-action"
         clip_action.props.halign = clip_action.props.valign = Gtk.Align.CENTER
         clip_action.props.column_spacing = 8
+        clip_action.props.can_focus = True
         if self.protected == "yes": # add if clip is protected
             clip_action.attach(protect_action, 0, 0, 1, 1)
         clip_action.attach(view_action, 1, 0, 1, 1)
@@ -448,7 +458,7 @@ class ClipsContainer(Gtk.Grid):
         message_action_revealer.add(message_action)
 
         #------ construct ----#
-        self.set_size_request(178, 150)
+        self.set_size_request(190, 150)
         self.props.name = "clip-container"
         self.props.expand = True
         self.props.has_tooltip = True

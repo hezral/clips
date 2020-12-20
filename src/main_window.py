@@ -36,7 +36,7 @@ class ClipsWindow(Gtk.ApplicationWindow):
         self.utils = self.props.application.utils
 
         #------ views ----#
-        clips_view = ClipsView()
+        self.clips_view = ClipsView()
         info_view = InfoView("No Clips Found","Start Copying Stuffs", "system-os-installer")
         settings_view = SettingsView()
         settings_view.connect("notify::visible", self.on_view_visible)
@@ -46,7 +46,7 @@ class ClipsWindow(Gtk.ApplicationWindow):
         stack.props.name = "main-stack"
         stack.props.transition_type = Gtk.StackTransitionType.CROSSFADE
         stack.props.transition_duration = 150
-        stack.add_named(clips_view, clips_view.get_name())
+        stack.add_named(self.clips_view, self.clips_view.get_name())
         stack.add_named(settings_view, settings_view.get_name())
         stack.add_named(info_view, info_view.get_name())
 
@@ -65,20 +65,27 @@ class ClipsWindow(Gtk.ApplicationWindow):
         #------ construct ----#
         self.props.title = "Clips"
         self.props.name = "main-window"
-        #self.props.resizable = False
         self.props.border_width = 0
         self.props.window_position = Gtk.WindowPosition.CENTER
         self.get_style_context().add_class("rounded")
-        # self.set_default_size(400, 452)
-        #self.set_size_request(600, 652)
+        #self.set_default_size(958, 450)
+        self.set_size_request(958, 450)
+        self.resize(958, 450)
         geometry = Gdk.Geometry()
-        setattr(geometry, 'min_height', 452)
-        setattr(geometry, 'min_width', 400)
+        # setattr(geometry, 'base_height', 450)
+        # setattr(geometry, 'base_width', 800)
+        # self.set_geometry_hints(None, geometry, Gdk.WindowHints.BASE_SIZE)
+        setattr(geometry, 'min_height', 450)
+        setattr(geometry, 'min_width', 958)
         self.set_geometry_hints(None, geometry, Gdk.WindowHints.MIN_SIZE)
-        setattr(geometry, 'max_height', 1080)
-        setattr(geometry, 'max_width', 1888)
-        self.set_geometry_hints(None, geometry, Gdk.WindowHints.MAX_SIZE)
-
+        # setattr(geometry, 'max_height', 1080)
+        # setattr(geometry, 'max_width', 1888)
+        # self.set_geometry_hints(None, geometry, Gdk.WindowHints.MAX_SIZE)
+        # setattr(geometry, 'height_inc', 100)
+        # setattr(geometry, 'width_inc', 100)
+        # self.set_geometry_hints(None, geometry, Gdk.WindowHints.RESIZE_INC)
+        #self.connect("window-state-event", self.on_maximized)
+        #self.connect("notify::is-maximized", self.on_max)
 
         self.set_keep_above(True)
         self.add(main_view)
@@ -87,6 +94,38 @@ class ClipsWindow(Gtk.ApplicationWindow):
         # this is for tracking window state flags for persistent mode
         self.state_flags_changed_count = 0
         self.active_state_flags = ['GTK_STATE_FLAG_NORMAL', 'GTK_STATE_FLAG_DIR_LTR']
+
+    def on_max(self, window, bool):
+        if window.is_maximized():
+            print("max")
+        else:
+            print("normal")
+            # rectangle1 = Gdk.Rectangle()
+            # setattr(rectangle1, 'height', 20)
+            # setattr(rectangle1, 'width', 20)
+            # self.clips_view.flowbox.size_allocate(rectangle1)
+            # rectangle2 = Gdk.Rectangle()
+            # setattr(rectangle2, 'height', 32)
+            # setattr(rectangle2, 'width', 37)
+            # self.size_allocate(rectangle2)
+            # print(self.clips_view.flowbox.get_allocation())
+            # self.clips_view.scrolled_window.set_size_request(1, 1)
+            # self.clips_view.flowbox.set_size_request(580, -1)
+            # self.clips_view.set_size_request(1, 1)
+            # self.resize(900, 600)
+            # self.resize(100,100)
+            # for size in self.get_preferred_size():
+            #     print(size.width, size.height)
+            # self.clips_view.flowbox.set_size_request(648, 500)
+            # self.clips_
+            self.resize(800, 450)
+
+    def on_maximized(self, window, eventwindowstate):
+        
+        if "GDK_WINDOW_STATE_MAXIMIZED" in eventwindowstate.changed_mask.value_names and len(eventwindowstate.changed_mask.value_names) == 1:
+            print(eventwindowstate.changed_mask.value_names)
+            self.resize(1, 1)
+
 
     def generate_searchbar(self):
         #------ searchentry ----#
@@ -228,7 +267,6 @@ class ClipsWindow(Gtk.ApplicationWindow):
         actionbar.attach(clipstoggle_action, 0, 0, 1, 1)
         actionbar.attach(protecttoggle_action, 1, 0, 1, 1)
         return actionbar
-
 
     def generate_viewswitch(self, settings_view_obj):
         icon_theme = Gtk.IconTheme.get_default()

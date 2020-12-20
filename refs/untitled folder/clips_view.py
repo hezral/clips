@@ -186,7 +186,7 @@ class ListRow(Gtk.ListBoxRow):
         data_label.props.valign = Gtk.Align.END
         data_label.set_max_width_chars(25)
         data_label.set_line_wrap(True)
-        data_label.set_size_request(10, -1)
+        #data_label.set_size_request(10, -1)
 
         #clips content
         contents = Gtk.Label(str(data_tuple))
@@ -232,8 +232,8 @@ class ListRow(Gtk.ListBoxRow):
         toolbar_button.set_tooltip_text(tooltip)
         toolbar_button.props.can_focus = False
         toolbar_button.props.can_default = True
-        #toolbar_button.props.no_show_all = True
-        toolbar_button.set_size_request(32, 32)
+        toolbar_button.props.no_show_all = True
+        #toolbar_button.set_size_request(32, 32)
         
         toolbar_button.get_style_context().add_provider(self.listrow_css, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
         toolbar_button.get_style_context().remove_class("button")

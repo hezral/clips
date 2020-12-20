@@ -133,7 +133,10 @@ flowboxchild:selected > grid#clip-container > grid#clip-info {
 
 flowbox {
     padding: 10px;
-    /* transition: all 150ms ease-in-out; */
+}
+
+flowboxchild {
+    transition: all 150ms ease-in-out;
 }
 
 label#clip-timestamp, label#clip-content-label {
