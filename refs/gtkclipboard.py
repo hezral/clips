@@ -96,33 +96,33 @@ def on(clipboard, event):
 
     print("\nCurrent clipboard offers formats: ", len(clipboard.wait_for_targets()[1]))
 
-    # i = 0
-    # for target in clipboard.wait_for_targets()[1]:
-    #     if target not in excluded_targets:
-    #         content = clipboard.wait_for_contents(target)
+    i = 0
+    for target in clipboard.wait_for_targets()[1]:
+        if target not in clips_supported.excluded_targets:
+            content = clipboard.wait_for_contents(target)
 
-    #         if content is not None:
+            # if content is not None:
 
-    #             if str(target).find("WPS Drawing Shape Format") != -1:
-    #                 bytes = content.get_data()
-    #                 file = open("file.pptx","wb")
-    #                 # file = open("{i}.{ext}".format(i=str(target).split("/")[0], ext=str(target).split("/")[1]),"wb")
-    #                 file.write(bytes)
-    #                 file.close()
-    #             if str(target).find("application/x-openoffice-embed-source-xml") != -1: #LibreOffice format compatible with Office XLSX, PPTX, DOCX
-    #                 bytes = content.get_data()
-    #                 file = open("file.odp","wb") #change based on string: typename="LibreOffice 7.0 Spreadsheet", typename="LibreOffice 7.0 Presentation", typename="LibreOffice 7.0 Text Document"
-    #                 # file = open("{i}.{ext}".format(i=str(target).split("/")[0], ext=str(target).split("/")[1]),"wb")
-    #                 file.write(bytes)
-    #                 file.close()
-    #             if str(target).find("image/png") != -1:
-    #                 bytes = content.get_data()
-    #                 file = open("file.png","wb")
-    #                 # file = open("{i}.{ext}".format(i=str(target).split("/")[0], ext=str(target).split("/")[1]),"wb")
-    #                 file.write(bytes)
-    #                 file.close()
-    #         print(i, target, content)
-    #         i += 1
+            #     if str(target).find("WPS Drawing Shape Format") != -1:
+            #         bytes = content.get_data()
+            #         file = open("file.pptx","wb")
+            #         # file = open("{i}.{ext}".format(i=str(target).split("/")[0], ext=str(target).split("/")[1]),"wb")
+            #         file.write(bytes)
+            #         file.close()
+            #     if str(target).find("application/x-openoffice-embed-source-xml") != -1: #LibreOffice format compatible with Office XLSX, PPTX, DOCX
+            #         bytes = content.get_data()
+            #         file = open("file.odp","wb") #change based on string: typename="LibreOffice 7.0 Spreadsheet", typename="LibreOffice 7.0 Presentation", typename="LibreOffice 7.0 Text Document"
+            #         # file = open("{i}.{ext}".format(i=str(target).split("/")[0], ext=str(target).split("/")[1]),"wb")
+            #         file.write(bytes)
+            #         file.close()
+            #     if str(target).find("image/png") != -1:
+            #         bytes = content.get_data()
+            #         file = open("file.png","wb")
+            #         # file = open("{i}.{ext}".format(i=str(target).split("/")[0], ext=str(target).split("/")[1]),"wb")
+            #         file.write(bytes)
+            #         file.close()
+            print(i, target, content)
+            i += 1
 
 
 clipboard.connect('owner_change',on)

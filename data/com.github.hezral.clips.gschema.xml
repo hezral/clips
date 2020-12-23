@@ -22,6 +22,16 @@
             <summary>Enable/Disable this behaviour</summary>
             <description>Display Clips app window on all workspaces</description>
         </key>
+        <key type="b" name="hide-on-startup">
+            <default>false</default>
+            <summary>Enable/Disable this behaviour</summary>
+            <description>Hides Clips app window on startup</description>
+        </key>
+        <key type="i" name="retention-period">
+            <default>0</default>
+            <summary>Enable/Disable this behaviour</summary>
+            <description>Set number of days to retain clips before house keeping and deletion</description>
+        </key>
         <key type="as" name="blacklist-apps">
             <default>[]</default>
             <summary>Blacklisted apps from Clips</summary>

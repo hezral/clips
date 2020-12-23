@@ -26,8 +26,6 @@ from gi.repository import Gtk, Granite, GObject, Gdk
 from views.info_view import InfoView
 from views.clips_view import ClipsView
 from views.settings_view import SettingsView
-import utils
-
 
 class ClipsWindow(Gtk.ApplicationWindow):
     def __init__(self, *args, **kwargs):
@@ -37,9 +35,9 @@ class ClipsWindow(Gtk.ApplicationWindow):
 
         #------ views ----#
         self.clips_view = ClipsView()
-        info_view = InfoView("No Clips Found","Start Copying Stuffs", "system-os-installer")
-        settings_view = SettingsView()
-        settings_view.connect("notify::visible", self.on_view_visible)
+        self.info_view = InfoView("No Clips Found","Start Copying Stuffs", "system-os-installer")
+        self.settings_view = SettingsView()
+        self.settings_view.connect("notify::visible", self.on_view_visible)
 
         #------ stack ----#
         stack = Gtk.Stack()
@@ -47,11 +45,10 @@ class ClipsWindow(Gtk.ApplicationWindow):
         stack.props.transition_type = Gtk.StackTransitionType.CROSSFADE
         stack.props.transition_duration = 150
         stack.add_named(self.clips_view, self.clips_view.get_name())
-        stack.add_named(settings_view, settings_view.get_name())
-        stack.add_named(info_view, info_view.get_name())
+        stack.add_named(self.settings_view, self.settings_view.get_name())
+        stack.add_named(self.info_view, self.info_view.get_name())
 
         #------ headerbar ----#
-        #self.set_titlebar(self.generate_searchbar())
         self.set_titlebar(self.generate_headerbar())
 
         #------ main_view ----#
@@ -59,8 +56,9 @@ class ClipsWindow(Gtk.ApplicationWindow):
         main_view.props.name = "main-view"
         main_view.attach(stack, 0, 0, 1, 1)
         main_view.attach(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL), 0, 1, 1, 1)
-        main_view.attach(self.generate_actionbar(), 0, 2, 1, 1)
-        main_view.attach(self.generate_viewswitch(settings_view_obj=settings_view), 0, 2, 1, 1)
+        # main_view.attach(self.generate_actionbar(), 0, 2, 1, 1)
+        main_view.attach(self.generate_statusbar(), 0, 2, 1, 1)
+        main_view.attach(self.generate_viewswitch(settings_view_obj=self.settings_view), 0, 2, 1, 1)
 
         #------ construct ----#
         self.props.title = "Clips"
@@ -69,14 +67,14 @@ class ClipsWindow(Gtk.ApplicationWindow):
         self.props.window_position = Gtk.WindowPosition.CENTER
         self.get_style_context().add_class("rounded")
         #self.set_default_size(958, 450)
-        self.set_size_request(958, 450)
+        self.set_size_request(880, 450)
         self.resize(958, 450)
         geometry = Gdk.Geometry()
         # setattr(geometry, 'base_height', 450)
         # setattr(geometry, 'base_width', 800)
         # self.set_geometry_hints(None, geometry, Gdk.WindowHints.BASE_SIZE)
         setattr(geometry, 'min_height', 450)
-        setattr(geometry, 'min_width', 958)
+        setattr(geometry, 'min_width', 880)
         self.set_geometry_hints(None, geometry, Gdk.WindowHints.MIN_SIZE)
         # setattr(geometry, 'max_height', 1080)
         # setattr(geometry, 'max_width', 1888)
@@ -126,20 +124,19 @@ class ClipsWindow(Gtk.ApplicationWindow):
             print(eventwindowstate.changed_mask.value_names)
             self.resize(1, 1)
 
-
     def generate_searchbar(self):
-        #------ searchentry ----#
-        searchentry = Gtk.SearchEntry()
-        searchentry.props.placeholder_text = "Search Clips" #"Search Clips\u2026"
-        searchentry.props.hexpand = True
-        searchentry.props.name = "search-entry"
-        searchentry.props.primary_icon_activatable = True
-        searchentry.props.primary_icon_sensitive = True
+        #------ self.searchentry ----#
+        self.searchentry = Gtk.SearchEntry()
+        self.searchentry.props.placeholder_text = "Search Clips" #"Search Clips\u2026"
+        self.searchentry.props.hexpand = True
+        self.searchentry.props.name = "search-entry"
+        self.searchentry.props.primary_icon_activatable = True
+        self.searchentry.props.primary_icon_sensitive = True
 
-        searchentry.connect("focus-in-event", self.on_search_activate, "in")
-        searchentry.connect_after("delete-text", self.on_delete_text, "delete")
-        searchentry.connect("icon-press", self.on_quicksearch_activate)
-        searchentry.connect("focus-out-event", self.on_search_activate, "out")
+        self.searchentry.connect("focus-in-event", self.on_search_activate, "in")
+        self.searchentry.connect_after("delete-text", self.on_delete_text, "delete")
+        self.searchentry.connect("icon-press", self.on_quicksearch_activate)
+        self.searchentry.connect("focus-out-event", self.on_search_activate, "out")
 
         #------ quicksearchbar ----#
         vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
@@ -189,26 +186,26 @@ class ClipsWindow(Gtk.ApplicationWindow):
         #------ searchbar ----#
         searchbar = Gtk.Grid()
         searchbar.props.name = "search-bar"
-        searchbar.attach(searchentry, 0, 0, 1, 1)
+        searchbar.attach(self.searchentry, 0, 0, 1, 1)
         searchbar.attach(revealer, 0, 1, 1, 1)
 
         return searchbar
 
     def generate_headerbar(self):
-        #------ searchentry ----#
-        searchentry = Gtk.SearchEntry()
-        searchentry.props.placeholder_text = "Search Clips" #"Search Clips\u2026"
-        searchentry.props.hexpand = True
-        searchentry.props.name = "search-entry"
-        searchentry.props.primary_icon_activatable = True
-        searchentry.props.primary_icon_sensitive = True
+        #------ self.searchentry ----#
+        self.searchentry = Gtk.SearchEntry()
+        self.searchentry.props.placeholder_text = "Search Clips" #"Search Clips\u2026"
+        self.searchentry.props.hexpand = True
+        self.searchentry.props.name = "search-entry"
+        self.searchentry.props.primary_icon_activatable = True
+        self.searchentry.props.primary_icon_sensitive = True
 
-        searchentry.connect("focus-in-event", self.on_search_activate, "in")
-        searchentry.connect("focus-out-event", self.on_search_activate, "out")
-        # searchentry.connect_after("delete-text", self.on_delete_text, "delete")
-        # searchentry.connect("icon-press", self.on_quicksearch_activate)
+        self.searchentry.connect("focus-in-event", self.on_search_activate, "in")
+        self.searchentry.connect("focus-out-event", self.on_search_activate, "out")
+        # self.searchentry.connect_after("delete-text", self.on_delete_text, "delete")
+        self.searchentry.connect("icon-press", self.on_quicksearch_activate)
         
-        searchentry.connect("search-changed", self.on_search_changed)
+        self.searchentry.connect("search-changed", self.on_search_changed)
 
         quicksearchbar = Gtk.Grid()
         quicksearchbar.props.name = "search-quick"
@@ -221,8 +218,6 @@ class ClipsWindow(Gtk.ApplicationWindow):
 
         quicksearchbar.attach(images, 0, 0, 1, 1)
         quicksearchbar.attach(texts, 1, 0, 1, 1)
-
-        #------ revealer ----#
         revealer = Gtk.Revealer()
         revealer.props.name = "search-revealer"
         revealer.add(quicksearchbar)
@@ -230,7 +225,7 @@ class ClipsWindow(Gtk.ApplicationWindow):
         #------ searchbar ----#
         searchbar = Gtk.Grid()
         searchbar.props.name = "search-bar"
-        searchbar.attach(searchentry, 0, 0, 1, 1)
+        searchbar.attach(self.searchentry, 0, 0, 1, 1)
         searchbar.attach(revealer, 0, 1, 1, 1)
 
         headerbar = Gtk.HeaderBar()
@@ -238,6 +233,18 @@ class ClipsWindow(Gtk.ApplicationWindow):
         headerbar.props.has_subtitle = False
         headerbar.props.custom_title = searchbar
         return headerbar
+
+    def generate_statusbar(self):
+
+        self.total_clips_label = Gtk.Label("Clips: {total}".format(total=self.props.application.total_clips))
+
+        infobar = Gtk.Grid()
+        infobar.props.name = "clips-statusbar"
+        infobar.props.halign = Gtk.Align.START
+        infobar.props.valign = Gtk.Align.CENTER
+        infobar.props.margin_left = 3
+        infobar.attach(self.total_clips_label, 0, 0, 1, 1)
+        return infobar
 
     def generate_actionbar(self):
         icon_theme = Gtk.IconTheme.get_default()
@@ -289,7 +296,7 @@ class ClipsWindow(Gtk.ApplicationWindow):
             print("Selected: country=%s" % country)
 
     def on_delete_text(self, searchentry, int1, int2, type):
-        # searchbar = searchentry.get_parent()
+        # searchbar = self.searchentry.get_parent()
 
         # revealer = utils.get_widget_by_name(widget=searchbar, child_name="search-revealer", level=0)
         # if revealer.get_child_revealed():
@@ -301,8 +308,8 @@ class ClipsWindow(Gtk.ApplicationWindow):
 
     def on_quicksearch_activate(self, searchentry, iconposition, eventbutton):
         print(locals())
-        searchbar = searchentry.get_parent()
-        revealer = utils.get_widget_by_name(widget=searchbar, child_name="search-revealer", level=0)
+        searchbar = self.searchentry.get_parent()
+        revealer = self.utils.get_widget_by_name(widget=searchbar, child_name="search-revealer", level=0)
         if revealer.get_child_revealed():
             revealer.set_reveal_child(False)
         else:
@@ -327,27 +334,27 @@ class ClipsWindow(Gtk.ApplicationWindow):
     def on_quicksearch(self, button):
         
         searchbar = [child for child in self.get_children() if child.get_name() == "search-bar"][0]
-        searchentry = utils.get_widget_by_name(widget=searchbar, child_name="search-entry", level=0)
+        self.searchentry = self.utils.get_widget_by_name(widget=searchbar, child_name="search-entry", level=0)
 
-        if searchentry.props.text == "":
-            searchentry.props.text = button.props.label
+        if self.searchentry.props.text == "":
+            self.searchentry.props.text = button.props.label
         else:
-            searchentry.props.text = searchentry.props.text + ", " + button.props.label
+            self.searchentry.props.text = self.searchentry.props.text + ", " + button.props.label
 
     def on_search_activate(self, searchentry, event, type):
 
-        searchbar = searchentry.get_parent()
-        revealer = utils.get_widget_by_name(widget=searchbar, child_name="search-revealer", level=0)
+        searchbar = self.searchentry.get_parent()
+        revealer = self.utils.get_widget_by_name(widget=searchbar, child_name="search-revealer", level=0)
 
         if type == "in" and revealer.get_child_revealed() is False:
-            searchentry.props.primary_icon_name = "preferences-system-power-symbolic"
-            searchentry.props.primary_icon_tooltip_text = "Use quick search tags"
-            searchentry.props.name = "search-entry-active"
+            self.searchentry.props.primary_icon_name = "preferences-system-power-symbolic"
+            self.searchentry.props.primary_icon_tooltip_text = "Use quick search tags"
+            self.searchentry.props.name = "search-entry-active"
             # searchbar.props.has_tooltip = True
             # searchbar.props.tooltip_text = "Try these quick search tags"
         elif type == "out":
-            searchentry.props.primary_icon_name = "system-search-symbolic"
-            searchentry.props.name = "search-entry"
+            self.searchentry.props.primary_icon_name = "system-search-symbolic"
+            self.searchentry.props.name = "search-entry"
 
         # if revealer.get_child_revealed():
         #     revealer.set_reveal_child(False)
@@ -362,13 +369,13 @@ class ClipsWindow(Gtk.ApplicationWindow):
         #     #searchbar.props.tooltip_text = "Try these quick search tags"
 
     def on_search_changed(self, searchentry):
-        searchentry.props.primary_icon_name = "system-search-symbolic"
+        self.searchentry.props.primary_icon_name = "system-search-symbolic"
         #print(locals())
 
     def on_view_visible(self, view, gparam=None, runlookup=None, word=None):
         
-        stack = utils.get_widget_by_name(widget=self, child_name="main-stack", level=0)
-        main_view = utils.get_widget_by_name(widget=self, child_name="main-view", level=0)
+        stack = self.utils.get_widget_by_name(widget=self, child_name="main-stack", level=0)
+        main_view = self.utils.get_widget_by_name(widget=self, child_name="main-view", level=0)
 
         if view.is_visible():
             self.current_view = "settings-view"
@@ -433,4 +440,11 @@ class ClipsWindow(Gtk.ApplicationWindow):
             button.get_style_context().add_class("clips-action-enabled")
             button.get_style_context().remove_class("clips-action-disabled")
 
+    def update_total_clips_label(self, event):
+        total_clips = int(self.total_clips_label.props.label.split(": ")[1])
+        if event == "add":
+            total_clips = total_clips + 1
+        elif event == "delete":
+            total_clips = total_clips - 1
+        self.total_clips_label.props.label = "Clips: {total}".format(total=total_clips)
         

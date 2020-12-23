@@ -112,8 +112,13 @@ grid#clip-container {
     border-color: rgba(0, 0, 0, 0.2);
     border-radius: 3px;
     background-color: transparent;
-    animation: crossfader 1s ease-in-out forwards;
+    animation: crossfader 0.5s ease-in-out forwards;
 }
+
+.clip-container-animated {
+    animation: crossfader 0.5s ease-in-out forwards;
+}
+
 
 flowboxchild:selected {
     box-shadow:
@@ -129,14 +134,22 @@ flowboxchild:backdrop > grid#clip-container > grid#clip-info {
 
 flowboxchild:selected > grid#clip-container > grid#clip-info {
     text-shadow: 0px 1px 2px rgba(0,0,0, 0.5);
+    background-color: rgba(255,255,255,0.2);
 }
 
 flowbox {
     padding: 10px;
 }
 
-flowboxchild {
+/* flowboxchild {
     transition: all 150ms ease-in-out;
+} */
+
+grid#clip-info {
+    background-color: rgba(255,255,255,0.5);
+    border-bottom-left-radius: 2px;
+    border-bottom-right-radius: 2px;
+    border-style: none;
 }
 
 label#clip-timestamp, label#clip-content-label {
@@ -152,32 +165,50 @@ box#clip-content-box {
 button#clip-action-button {
     box-shadow: none;
     border-style: none;
-    padding: 2px;
-
+    padding: 4px;
+    /* padding-left: 8px;
+    padding-right: 8px; */
     color: white;
+    opacity: 0.8;
 }
-    
+
+button#clip-action-button > widget > box > label {
+    padding-left: 2px;
+}
+
 button#clip-action-button:hover {
-    border-style: solid;
+    /* border-style: solid;
     border-width: 1px;
-    border-color: rgba(255,255,255,0.75);
-    border-radius: 15px;
+    border-color: rgba(255,255,255,0.75); */
+    border-radius: 3px;
     background-color: rgba(0,0,0,0.35);
     opacity: 1;
+   
 }
     
 button#clip-action-button:active {
     border-color: rgba(255,255,255,0.5);
     background-color: rgba(0,0,0,0.7);
     opacity: 0.55;
+   
+}
+
+button#clip-action-button:disabled {
+    text-shadow: none;
 }
     
     
 grid#clip-action {
     background-color: rgba(0,0,0,0.75);
     color: white;
-    padding: 6px;
-    border-radius: 3px;
+    padding: 8px;
+    border-radius: 4px;
+}
+
+grid#clips-statusbar {
+    padding: 4px;
+    font-size: 90%;
+    opacity: 0.75;
 }
 
 label#clip-action-message {
@@ -217,3 +248,4 @@ button#clips-action-enable:hover, button#clips-action-protect:hover {
 button#clips-action-enable:active, button#clips-action-protect:active {
     opacity: 1;
 }
+

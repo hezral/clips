@@ -23,12 +23,12 @@ gi.require_version('Gtk', '3.0')
 gi.require_version('Granite', '1.0')
 gi.require_version('WebKit2', '4.0')
 from gi.repository import Gtk, WebKit2, Granite, GdkPixbuf, GLib, Pango, Gdk
-from datetime import datetime
 
 import os
+from datetime import datetime
 
 class ClipsView(Gtk.Grid):
-
+    
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -46,18 +46,21 @@ class ClipsView(Gtk.Grid):
         self.flowbox.set_sort_func(self.sort_flowbox)
         self.flowbox.connect("child_activated", self.on_child_activated)
 
-        #------ self.scrolled_window ----#
-        self.scrolled_window = Gtk.ScrolledWindow()
-        self.scrolled_window.props.expand = True
-        self.scrolled_window.props.hscrollbar_policy = Gtk.PolicyType.NEVER
-        self.scrolled_window.add(self.flowbox)
-        self.scrolled_window.connect("edge-reached", self.on_edge_reached)
+        #------ scrolled_window ----#
+        scrolled_window = Gtk.ScrolledWindow()
+        scrolled_window.props.expand = True
+        scrolled_window.props.hscrollbar_policy = Gtk.PolicyType.NEVER
+        scrolled_window.add(self.flowbox)
+        scrolled_window.connect("edge-reached", self.on_edge_reached)
         
         #------ construct ----#
         self.props.name = "clips-view"
         self.props.expand = True
         #self.set_size_request(650, 250)
-        self.attach(self.scrolled_window, 0, 0, 1, 1)
+        self.attach(scrolled_window, 0, 0, 1, 1)
+
+    def filter_flowbox(self, *args):
+        print(locals())
 
     def sort_flowbox(self, child1, child2):
         date1 = child1.get_children()[0].created
@@ -86,6 +89,10 @@ class ClipsView(Gtk.Grid):
         for child in self.flowbox.get_children():
             child.connect("focus-out-event", self.on_child_focus_out, child)
 
+        first_child = self.flowbox.get_child_at_index(0)
+        #self.flowbox.select_child(first_child)
+        first_child.grab_focus()
+
     def load_from_cache(self):
         print("load_clips")
         
@@ -109,25 +116,31 @@ class ClipsView(Gtk.Grid):
         # print(datetime.now(), "show_all")
         # self.show_all()
 
-    def new_clip(self, cache_filedir, clip):
+    def new_clip(self, cache_filedir, clip, app_startup=False):
         app = self.get_toplevel().props.application
+        main_window = self.get_toplevel()
+        id = clip[0]
         cache_file = os.path.join(cache_filedir, clip[6])
-        
-        #print(cache_file)
-        if os.path.exists(cache_file):
-            print("exist")
-        # clean-up and delete from db
-        else:
+        new_flowboxchild = [child for child in self.flowbox.get_children() if child.get_children()[0].id == id]
+
+        # add the new clip if cache_file exists
+        if os.path.exists(cache_file) and len(new_flowboxchild) == 0:
+            self.flowbox.add(ClipsContainer(clip, cache_filedir, app.utils))
+            new_flowboxchild = [child for child in self.flowbox.get_children() if child.get_children()[0].id == id][0]
+            new_flowboxchild.connect("focus-out-event", self.on_child_focus_out, new_flowboxchild)
+
+            if app_startup is False:
+                # total_clips = int(main_window.total_clips_label.props.label.split(": ")[1])
+                # total_clips = total_clips + 1
+                # main_window.total_clips_label.props.label = "Clips: {total}".format(total=total_clips)
+                main_window.update_total_clips_label("add")
+
+            self.flowbox.show_all()
+
+        # clean-up and delete from db since cache_file doesn't exist
+        elif os.path.exists(cache_file) is False:
             print("don't exist")
-
-        self.flowbox.add(ClipsContainer(clip, cache_filedir, app.utils))
-
-        
-        self.flowbox.show_all()
-        
-
-        for child in self.flowbox.get_children():
-            child.connect("focus-out-event", self.on_child_focus_out, child)
+            app.cache_manager.delete_record(id, cache_file)
 
     def on_edge_reached(self, scrolledwindow, position):
         if position.value_name == "GTK_POS_BOTTOM":
@@ -287,10 +300,11 @@ class ClipsContainer(Gtk.Grid):
                 a = float(a.split(")")[0])
 
             elif self.type == "color/hsl":
-                h, s, l = _content.split("(")[1].split(",")[0:3] 
+                h, s, l = _content.split("(")[1].split(",")[0:3]
+                print(h, s, l)
                 h = int(h) / 360
                 s = int(s.replace("%","")) / 100
-                l = int(l.replace("%)","")) / 100
+                l = int(l.replace("%","")) / 100
                 a = 1
                 rgb = utils.HSLtoRGB((h, s, l))
 
@@ -398,14 +412,22 @@ class ClipsContainer(Gtk.Grid):
         icon_theme = Gtk.IconTheme.get_default()
         icon_theme.prepend_search_path(os.path.join(os.path.dirname(__file__), "..", "..", "data", "icons"))
 
-        protect_action = Gtk.Button(image=Gtk.Image().new_from_icon_name("com.github.hezral.clips-protect-symbolic", Gtk.IconSize.SMALL_TOOLBAR))
+        protect_action = Gtk.Button().new_with_mnemonic(label="_Protect")
+        protect_action.props.image = Gtk.Image().new_from_icon_name("com.github.hezral.clips-protect-symbolic", Gtk.IconSize.SMALL_TOOLBAR)
+        protect_action.props.always_show_image = True
+        protect_action.props.use_underline = True
+        # protect_action = Gtk.Button(image=Gtk.Image().new_from_icon_name("com.github.hezral.clips-protect-symbolic", Gtk.IconSize.SMALL_TOOLBAR))
         protect_action.props.name = "clip-action-button"
         protect_action.props.has_tooltip = True
         protect_action.props.tooltip_text = "Protect clip"
+        protect_action.props.sensitive = False
         protect_action.set_size_request(30, 30)
         protect_action.connect("clicked", self.on_clip_action, "protect")
+        # if "color" in self.type:
+        #     protect_action.props.sensitive = False
+        #     protect_action.props.has_tooltip = False
         
-        view_action = Gtk.Button().new_with_mnemonic(label="_view")
+        view_action = Gtk.Button().new_with_mnemonic(label="_View")
         view_action.props.image = Gtk.Image().new_from_icon_name("com.github.hezral.clips-view-symbolic", Gtk.IconSize.SMALL_TOOLBAR)
         view_action.props.always_show_image = True
         view_action.props.use_underline = True
@@ -413,33 +435,50 @@ class ClipsContainer(Gtk.Grid):
         view_action.props.name = "clip-action-button"
         view_action.props.has_tooltip = True
         view_action.props.tooltip_text = "View clip"
-        view_action.set_size_request(30, 30)
+        view_action.set_size_request(30, 32)
         view_action.connect("clicked", self.on_clip_action, "view")
+        if "color" in self.type:
+            view_action.props.sensitive = False
+            view_action.props.has_tooltip = False
 
-        copy_action = Gtk.Button(image=Gtk.Image().new_from_icon_name("edit-copy-symbolic", Gtk.IconSize.SMALL_TOOLBAR))
+        copy_action = Gtk.Button().new_with_mnemonic(label="_Copy")
+        copy_action.props.image = Gtk.Image().new_from_icon_name("edit-copy-symbolic", Gtk.IconSize.SMALL_TOOLBAR)
+        copy_action.props.always_show_image = True
+        copy_action.props.use_underline = True
+        # copy_action = Gtk.Button(image=Gtk.Image().new_from_icon_name("edit-copy-symbolic", Gtk.IconSize.SMALL_TOOLBAR))
         copy_action.props.name = "clip-action-button"
         copy_action.props.has_tooltip = True
         copy_action.props.tooltip_text = "Copy to clipboard"
         copy_action.set_size_request(30, 30)
         copy_action.connect("clicked", self.on_clip_action, "copy")
         
-        delete_action = Gtk.Button(image=Gtk.Image().new_from_icon_name("edit-delete-symbolic", Gtk.IconSize.SMALL_TOOLBAR))
+        delete_action = Gtk.Button().new_with_mnemonic(label="_Delete")
+        delete_action.props.image = Gtk.Image().new_from_icon_name("edit-delete-symbolic", Gtk.IconSize.SMALL_TOOLBAR)
+        delete_action.props.always_show_image = True
+        delete_action.props.use_underline = True
+        # delete_action = Gtk.Button(image=Gtk.Image().new_from_icon_name("edit-delete-symbolic", Gtk.IconSize.SMALL_TOOLBAR))
         delete_action.props.name = "clip-action-button"
         delete_action.props.has_tooltip = True
         delete_action.props.tooltip_text = "Delete clip"
+        #delete_action.props.halign = Gtk.Align.START
         delete_action.set_size_request(30, 30)
         delete_action.connect("clicked", self.on_clip_action, "delete")
         
         clip_action = Gtk.Grid()
         clip_action.props.name = "clip-action"
         clip_action.props.halign = clip_action.props.valign = Gtk.Align.CENTER
-        clip_action.props.column_spacing = 8
-        clip_action.props.can_focus = True
-        if self.protected == "yes": # add if clip is protected
-            clip_action.attach(protect_action, 0, 0, 1, 1)
+        clip_action.props.row_spacing = clip_action.props.column_spacing = 4
+        # if self.protected == "yes": # add if clip is protected
+        #     protect_action.props.
+        clip_action.attach(protect_action, 0, 0, 1, 1)
         clip_action.attach(view_action, 1, 0, 1, 1)
-        clip_action.attach(copy_action, 2, 0, 1, 1)
-        clip_action.attach(delete_action, 3, 0, 1, 1)
+        clip_action.attach(copy_action, 0, 1, 1, 1)
+        clip_action.attach(delete_action, 1, 1, 1, 1)
+        # if self.protected == "yes": # add if clip is protected
+        #     clip_action.attach(protect_action, 0, 0, 1, 1)
+        # clip_action.attach(view_action, 1, 0, 1, 1)
+        # clip_action.attach(copy_action, 2, 0, 1, 1)
+        # clip_action.attach(delete_action, 3, 0, 1, 1)
 
         clip_action_revealer = Gtk.Revealer()
         clip_action_revealer.props.name = "clip-action-revealer"
@@ -472,6 +511,12 @@ class ClipsContainer(Gtk.Grid):
         self.attach(clip_action_revealer, 0, 0, 1, 2)
         self.attach(message_action_revealer, 0, 0, 1, 2)
         self.attach(clip_content, 0, 0, 1, 1)
+
+        #self.connect("draw", self.draw)
+
+    def draw(self, clips_container, cairo_context):
+        #print(locals())
+        print(clips_container.get_allocated_width(), clips_container.get_allocated_height())
         
     def on_clip_action(self, button=None, action=None):
         print(datetime.now(), action)
@@ -501,6 +546,7 @@ class ClipsContainer(Gtk.Grid):
         elif action == "delete":
             flowboxchild.destroy()
             app.cache_manager.delete_record(self.id, self.cache_file)
+            main_window.update_total_clips_label("delete")
 
         # elif action == "updated":
         #     message_action_revealer.grab_focus()
@@ -509,8 +555,9 @@ class ClipsContainer(Gtk.Grid):
             pass
 
 
-    def on_message_action_hide(self, revealer, event):
-        revealer.set_reveal_child(False)
+    def on_message_action_hide(self, message_action_revealer, event):
+        message_action_revealer.set_reveal_child(False)
+        message_action_revealer.props.can_focus = False
 
     def friendly_timestamp(self, time=False):
         """

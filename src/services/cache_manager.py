@@ -210,8 +210,6 @@ class CacheManager():
         if not None in data_tuple:
             target, content, source_app, source_icon, created, protected = data_tuple
 
-
-
             # temp_filename = 'temp-' + tempfile.gettempprefix()
             temp_filename = next(tempfile._get_candidate_names()) + tempfile.gettempprefix()
 
@@ -319,7 +317,7 @@ class CacheManager():
             record = (str(target), created, source, source_app, source_icon, cache_file, type, protected)
             #record = (str(target), created, source, source_app, source_icon, checksum, cache_filetype, type, protected)
 
-            clips_view = self.main_window.utils.get_widget_by_name(widget=self.main_window, child_name="clips-view", level=0)
+            clips_view = self.main_window.clips_view
 
             # check duplicates using checksum
             if len(self.check_duplicate(checksum)) == 0:
