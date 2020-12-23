@@ -93,115 +93,15 @@ class ClipsWindow(Gtk.ApplicationWindow):
         self.state_flags_changed_count = 0
         self.active_state_flags = ['GTK_STATE_FLAG_NORMAL', 'GTK_STATE_FLAG_DIR_LTR']
 
-    def on_max(self, window, bool):
-        if window.is_maximized():
-            print("max")
-        else:
-            print("normal")
-            # rectangle1 = Gdk.Rectangle()
-            # setattr(rectangle1, 'height', 20)
-            # setattr(rectangle1, 'width', 20)
-            # self.clips_view.flowbox.size_allocate(rectangle1)
-            # rectangle2 = Gdk.Rectangle()
-            # setattr(rectangle2, 'height', 32)
-            # setattr(rectangle2, 'width', 37)
-            # self.size_allocate(rectangle2)
-            # print(self.clips_view.flowbox.get_allocation())
-            # self.clips_view.scrolled_window.set_size_request(1, 1)
-            # self.clips_view.flowbox.set_size_request(580, -1)
-            # self.clips_view.set_size_request(1, 1)
-            # self.resize(900, 600)
-            # self.resize(100,100)
-            # for size in self.get_preferred_size():
-            #     print(size.width, size.height)
-            # self.clips_view.flowbox.set_size_request(648, 500)
-            # self.clips_
-            self.resize(800, 450)
-
-    def on_maximized(self, window, eventwindowstate):
-        
-        if "GDK_WINDOW_STATE_MAXIMIZED" in eventwindowstate.changed_mask.value_names and len(eventwindowstate.changed_mask.value_names) == 1:
-            print(eventwindowstate.changed_mask.value_names)
-            self.resize(1, 1)
-
-    def generate_searchbar(self):
-        #------ self.searchentry ----#
-        self.searchentry = Gtk.SearchEntry()
-        self.searchentry.props.placeholder_text = "Search Clips" #"Search Clips\u2026"
-        self.searchentry.props.hexpand = True
-        self.searchentry.props.name = "search-entry"
-        self.searchentry.props.primary_icon_activatable = True
-        self.searchentry.props.primary_icon_sensitive = True
-
-        self.searchentry.connect("focus-in-event", self.on_search_activate, "in")
-        self.searchentry.connect_after("delete-text", self.on_delete_text, "delete")
-        self.searchentry.connect("icon-press", self.on_quicksearch_activate)
-        self.searchentry.connect("focus-out-event", self.on_search_activate, "out")
-
-        #------ quicksearchbar ----#
-        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
-        country_store = Gtk.ListStore(str)
-        countries = [
-            "Austria",
-            "Brazil",
-            "Belgium",
-            "France",
-            "Germany",
-            "Switzerland",
-            "United Kingdom",
-            "United States of America",
-            "Uruguay",
-        ]
-        for country in countries:
-            country_store.append([country])
-
-        country_combo = Gtk.ComboBox.new_with_model(country_store)
-        country_combo.connect("changed", self.on_country_combo_changed)
-        renderer_text = Gtk.CellRendererText()
-        country_combo.pack_start(renderer_text, True)
-        country_combo.add_attribute(renderer_text, "text", 0)
-        vbox.pack_start(country_combo, False, False, True)
-
-        quicksearchbar = Gtk.Grid()
-        quicksearchbar.props.name = "search-quick"
-        quicksearchbar.props.column_spacing = 2
-        quicksearchbar.props.margin_top = 3
-        images = Gtk.Button(label="images")
-        images.connect("clicked", self.on_quicksearch)
-        texts = Gtk.Button(label="texts")
-        texts.connect("clicked", self.on_quicksearch)
-
-        calendar_btn = Gtk.Button(label="Date")
-        calendar_btn.connect("clicked", self.on_date_select)
-
-        quicksearchbar.attach(images, 0, 0, 1, 1)
-        quicksearchbar.attach(texts, 1, 0, 1, 1)
-        # quicksearchbar.attach(calendar_btn, 2, 0, 1, 1)
-
-        #------ revealer ----#
-        revealer = Gtk.Revealer()
-        revealer.props.name = "search-revealer"
-        revealer.add(quicksearchbar)
-
-        #------ searchbar ----#
-        searchbar = Gtk.Grid()
-        searchbar.props.name = "search-bar"
-        searchbar.attach(self.searchentry, 0, 0, 1, 1)
-        searchbar.attach(revealer, 0, 1, 1, 1)
-
-        return searchbar
-
     def generate_headerbar(self):
         #------ self.searchentry ----#
         self.searchentry = Gtk.SearchEntry()
         self.searchentry.props.placeholder_text = "Search Clips" #"Search Clips\u2026"
         self.searchentry.props.hexpand = True
         self.searchentry.props.name = "search-entry"
-        self.searchentry.props.primary_icon_activatable = True
-        self.searchentry.props.primary_icon_sensitive = True
 
-        self.searchentry.connect("focus-in-event", self.on_search_activate, "in")
-        self.searchentry.connect("focus-out-event", self.on_search_activate, "out")
+        self.searchentry.connect("focus-in-event", self.on_searchbar_activate, "in")
+        self.searchentry.connect("focus-out-event", self.on_searchbar_activate, "out")
         # self.searchentry.connect_after("delete-text", self.on_delete_text, "delete")
         self.searchentry.connect("icon-press", self.on_quicksearch_activate)
         
@@ -209,15 +109,20 @@ class ClipsWindow(Gtk.ApplicationWindow):
 
         quicksearchbar = Gtk.Grid()
         quicksearchbar.props.name = "search-quick"
+        quicksearchbar.props.margin_top = 8
         quicksearchbar.props.column_spacing = 2
-        quicksearchbar.props.margin_top = 3
+        quicksearchbar.props.row_spacing = 2
+        quicksearchbar.props.hexpand = True
+
         images = Gtk.Button(label="images")
         images.connect("clicked", self.on_quicksearch)
         texts = Gtk.Button(label="texts")
         texts.connect("clicked", self.on_quicksearch)
 
-        quicksearchbar.attach(images, 0, 0, 1, 1)
-        quicksearchbar.attach(texts, 1, 0, 1, 1)
+        quicksearchbar.attach(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL), 0, 0, 1, 1)
+        quicksearchbar.attach(images, 0, 1, 1, 1)
+        quicksearchbar.attach(texts, 1, 1, 1, 1)
+
         revealer = Gtk.Revealer()
         revealer.props.name = "search-revealer"
         revealer.add(quicksearchbar)
@@ -226,12 +131,14 @@ class ClipsWindow(Gtk.ApplicationWindow):
         searchbar = Gtk.Grid()
         searchbar.props.name = "search-bar"
         searchbar.attach(self.searchentry, 0, 0, 1, 1)
+        # searchbar.attach(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL), 0, 1, 1, 1)
         searchbar.attach(revealer, 0, 1, 1, 1)
 
         headerbar = Gtk.HeaderBar()
         headerbar.props.show_close_button = False
         headerbar.props.has_subtitle = False
         headerbar.props.custom_title = searchbar
+        #headerbar.add(searchbar)
         return headerbar
 
     def generate_statusbar(self):
@@ -341,7 +248,7 @@ class ClipsWindow(Gtk.ApplicationWindow):
         else:
             self.searchentry.props.text = self.searchentry.props.text + ", " + button.props.label
 
-    def on_search_activate(self, searchentry, event, type):
+    def on_searchbar_activate(self, searchentry, event, type):
 
         searchbar = self.searchentry.get_parent()
         revealer = self.utils.get_widget_by_name(widget=searchbar, child_name="search-revealer", level=0)
@@ -350,6 +257,8 @@ class ClipsWindow(Gtk.ApplicationWindow):
             self.searchentry.props.primary_icon_name = "preferences-system-power-symbolic"
             self.searchentry.props.primary_icon_tooltip_text = "Use quick search tags"
             self.searchentry.props.name = "search-entry-active"
+            self.searchentry.props.primary_icon_activatable = True
+            self.searchentry.props.primary_icon_sensitive = True
             # searchbar.props.has_tooltip = True
             # searchbar.props.tooltip_text = "Try these quick search tags"
         elif type == "out":
@@ -448,3 +357,105 @@ class ClipsWindow(Gtk.ApplicationWindow):
             total_clips = total_clips - 1
         self.total_clips_label.props.label = "Clips: {total}".format(total=total_clips)
         
+
+
+
+
+
+    def on_max(self, window, bool):
+        if window.is_maximized():
+            print("max")
+        else:
+            print("normal")
+            # rectangle1 = Gdk.Rectangle()
+            # setattr(rectangle1, 'height', 20)
+            # setattr(rectangle1, 'width', 20)
+            # self.clips_view.flowbox.size_allocate(rectangle1)
+            # rectangle2 = Gdk.Rectangle()
+            # setattr(rectangle2, 'height', 32)
+            # setattr(rectangle2, 'width', 37)
+            # self.size_allocate(rectangle2)
+            # print(self.clips_view.flowbox.get_allocation())
+            # self.clips_view.scrolled_window.set_size_request(1, 1)
+            # self.clips_view.flowbox.set_size_request(580, -1)
+            # self.clips_view.set_size_request(1, 1)
+            # self.resize(900, 600)
+            # self.resize(100,100)
+            # for size in self.get_preferred_size():
+            #     print(size.width, size.height)
+            # self.clips_view.flowbox.set_size_request(648, 500)
+            # self.clips_
+            self.resize(800, 450)
+
+    def on_maximized(self, window, eventwindowstate):
+        
+        if "GDK_WINDOW_STATE_MAXIMIZED" in eventwindowstate.changed_mask.value_names and len(eventwindowstate.changed_mask.value_names) == 1:
+            print(eventwindowstate.changed_mask.value_names)
+            self.resize(1, 1)
+
+    def generate_searchbar(self):
+        #------ self.searchentry ----#
+        self.searchentry = Gtk.SearchEntry()
+        self.searchentry.props.placeholder_text = "Search Clips" #"Search Clips\u2026"
+        self.searchentry.props.hexpand = True
+        self.searchentry.props.name = "search-entry"
+        self.searchentry.props.primary_icon_activatable = True
+        self.searchentry.props.primary_icon_sensitive = True
+
+        self.searchentry.connect("focus-in-event", self.on_searchbar_activate, "in")
+        self.searchentry.connect_after("delete-text", self.on_delete_text, "delete")
+        self.searchentry.connect("icon-press", self.on_quicksearch_activate)
+        self.searchentry.connect("focus-out-event", self.on_searchbar_activate, "out")
+
+        #------ quicksearchbar ----#
+        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        country_store = Gtk.ListStore(str)
+        countries = [
+            "Austria",
+            "Brazil",
+            "Belgium",
+            "France",
+            "Germany",
+            "Switzerland",
+            "United Kingdom",
+            "United States of America",
+            "Uruguay",
+        ]
+        for country in countries:
+            country_store.append([country])
+
+        country_combo = Gtk.ComboBox.new_with_model(country_store)
+        country_combo.connect("changed", self.on_country_combo_changed)
+        renderer_text = Gtk.CellRendererText()
+        country_combo.pack_start(renderer_text, True)
+        country_combo.add_attribute(renderer_text, "text", 0)
+        vbox.pack_start(country_combo, False, False, True)
+
+        quicksearchbar = Gtk.Grid()
+        quicksearchbar.props.name = "search-quick"
+        quicksearchbar.props.column_spacing = 2
+        quicksearchbar.props.margin_top = 3
+        images = Gtk.Button(label="images")
+        images.connect("clicked", self.on_quicksearch)
+        texts = Gtk.Button(label="texts")
+        texts.connect("clicked", self.on_quicksearch)
+
+        calendar_btn = Gtk.Button(label="Date")
+        calendar_btn.connect("clicked", self.on_date_select)
+
+        quicksearchbar.attach(images, 0, 0, 1, 1)
+        quicksearchbar.attach(texts, 1, 0, 1, 1)
+        # quicksearchbar.attach(calendar_btn, 2, 0, 1, 1)
+
+        #------ revealer ----#
+        revealer = Gtk.Revealer()
+        revealer.props.name = "search-revealer"
+        revealer.add(quicksearchbar)
+
+        #------ searchbar ----#
+        searchbar = Gtk.Grid()
+        searchbar.props.name = "search-bar"
+        searchbar.attach(self.searchentry, 0, 0, 1, 1)
+        searchbar.attach(revealer, 0, 1, 1, 1)
+
+        return searchbar

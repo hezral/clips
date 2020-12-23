@@ -131,7 +131,7 @@ class Clips(Gtk.Application):
             GLib.idle_add(clips_view.new_clip, cache_filedir, clip, app_startup)
             time.sleep(0.15)
             #print(clip[0])
-        
+        #if focus:
         clips_view.flowbox.get_child_at_index(0).grab_focus()
 
         for clip in reversed(clips[-20:-10]):

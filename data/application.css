@@ -19,7 +19,7 @@
 
 /* -- colors -- */
 /* ------------------------------ */
-@define-color shaded_dark shade(@theme_base_color, 0.8);
+@define-color shaded_dark shade(@theme_base_color, 0.85);
 @define-color shaded_darker shade(@theme_base_color, 0.85);
 @define-color shaded_base shade(#6A0CAB, 0.98);
 @define-color popup shade(@theme_base_color, 0.98);
@@ -84,16 +84,21 @@ stack {
     background-color: @shaded_dark;
 }
 
+label#settings-group-label {
+    font-weight: bold;
+    opacity: 0.75;
+}
+
 .settings-frame {
     border-radius: 4px;
     background-color: @shaded_darker;
 }
 
-/* .settings-sub-label {
+.settings-sub-label {
     font-style: italic;
     font-size: 0.9em;
     color: gray;
-} */
+}
 /* ------------------------------ */
 
 @keyframes crossfader {
