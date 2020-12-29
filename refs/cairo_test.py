@@ -8,6 +8,10 @@ gi.require_version('Granite', '1.0')
 gi.require_version('GdkPixbuf', '2.0')
 from gi.repository import GdkPixbuf, Gtk, Gdk, Granite
 
+
+from math import pi
+
+
 WORKSPACE_WIDTH = 384
 WORKSPACE_HEIGHT = 250
 WORKSPACE_RADIUS = 4
@@ -21,7 +25,7 @@ PANEL_HEIGHT = 8
 OVERLAY_COLOR = Gdk.RGBA(red=0 / 255.0, green=0 / 255.0, blue=0 / 255.0, alpha=0.35)
 WORKSPACE_COLOR = Gdk.RGBA(red=33 / 255.0, green=33 / 255.0, blue=33 / 255.0, alpha=1)
 
-file = "/home/adi/.cache/com.github.hezral.clips/cache/4c6dc1c30c998ea530a246d6b028c2d3.png"
+file = "/home/adi/Downloads/photos/1.png"
 width = 190
 height = 118
 
@@ -49,7 +53,7 @@ class ClipsContainer(Gtk.Grid):
         # drawing_area.set_size_request(190, 118)
         drawing_area.props.expand = True
         #drawing_area.props.halign = self.props.valign = Gtk.Align.FILL
-        drawing_area.connect("draw", self.draw, dest_pixbuf)
+        drawing_area.connect("draw", self.draw, pixbuf_original)
  
         self.props.halign = self.props.valign = Gtk.Align.FILL
         self.props.name = "clip-container"
@@ -58,26 +62,29 @@ class ClipsContainer(Gtk.Grid):
         self.props.expand = True
         self.props.margin = 20
 
-        box = Gtk.Box()
-        box.set_size_request(-1, 32)
-
-        self.attach(drawing_area, 0, 0, 1, 1)
-        #self.attach(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL), 0, 1, 1, 1)
-        #self.attach(box, 0, 2, 1, 1)
+        self.attach(drawing_area, 0, 0, 1, 2)
         
+
     def draw(self, drawing_area, cairo_context, pixbuf):
 
         #print(drawing_area)
         height_allocated = drawing_area.get_parent().get_allocated_height()
         width_allocated = drawing_area.get_parent().get_allocated_width()
 
-        print(self.draw.__name__, width_allocated, height_allocated)
+        print("draw", "allocation:", width_allocated, height_allocated, "pixbuf", pixbuf.props.width, pixbuf.props.height)
 
+        pixbuf_scaled = pixbuf.scale_simple(width_allocated, height_allocated, GdkPixbuf.InterpType.BILINEAR)
+
+        dest_pixbuf = GdkPixbuf.Pixbuf.new(pixbuf.get_colorspace(), pixbuf.get_has_alpha(), pixbuf.get_bits_per_sample(), width, height)
+        
+        #pixbuf_scaled.copy_area(10, 10, width, height, dest_pixbuf, 0, 0)
+
+        
         # clip mask
-        Granite.DrawingUtilities.cairo_rounded_rectangle(cairo_context, 0, 0, width_allocated, height_allocated, WORKSPACE_RADIUS)
+        Granite.DrawingUtilities.cairo_rounded_rectangle(cairo_context, 0, 0, width_allocated, height_allocated, 4)
         cairo_context.clip()
 
-        cairo_surface = Gdk.cairo_surface_create_from_pixbuf(pixbuf, 1, None)
+        cairo_surface = Gdk.cairo_surface_create_from_pixbuf(pixbuf_scaled, 1, None)
         cairo_context.set_source_surface(cairo_surface, 0, 0)
         cairo_context.paint()
 
@@ -113,12 +120,11 @@ class MainWindow(Gtk.Window):
         #self.set_border_width(20)
 
         self.set_title("TEST")
-        self.resize(250, 250)
+        #self.resize(250, 250)
         self.set_position(Gtk.WindowPosition.CENTER)
         self.connect("delete-event", Gtk.main_quit)
         self.show_all()
 
-        
 class Example(Gtk.Window):
 
     def __init__(self):
@@ -136,6 +142,8 @@ class Example(Gtk.Window):
 
         self.set_title("Image")
         self.resize(300, 170)
+        #self.set_size_request(-1, 150)
+        self.set_border_width(10)
         self.set_position(Gtk.WindowPosition.CENTER)
         self.connect("delete-event", Gtk.main_quit)
         self.show_all()
@@ -147,19 +155,70 @@ class Example(Gtk.Window):
 
         pixbuf = GdkPixbuf.Pixbuf.new_from_file(file)
         
-        cairo_surface = Gdk.cairo_surface_create_from_pixbuf(pixbuf, 1, None)
-        self.ims = cairo_surface
+        #cairo_surface = Gdk.cairo_surface_create_from_pixbuf(pixbuf, 1, None)
+        self.ims = pixbuf
             
     def on_draw(self, wid, cr):
+        
+        scale = self.get_scale_factor()
+        width = 190 * scale
+        height = 120 * scale
+        # width = self.get_allocated_width () * scale
+        # height = self.get_allocated_height () * scale
+        radius = 5 * scale
 
-        cr.set_source_surface(self.ims, 0, 0)
-        cr.paint()
+        pixbuf_original = GdkPixbuf.Pixbuf.new_from_file(file)
+
+        full_ratio = pixbuf_original.props.height / pixbuf_original.props.width
+        
+        pixbuf_fitted = GdkPixbuf.Pixbuf.new(pixbuf_original.get_colorspace(), pixbuf_original.get_has_alpha(), pixbuf_original.get_bits_per_sample(), width, height)
+        
+        
+        # pixbuf_scaled = GdkPixbuf.Pixbuf.new_from_file_at_scale(file, width + 20, -1, True)
+
+
+        # pixbuf_scaled.copy_area(10, 10, width, height, dest_pixbuf, 0, 0)
+
+        print(full_ratio)
+
+        if int(width * full_ratio) < height:
+            scaled_pixbuf = pixbuf_original.scale_simple(int(width * (1 / full_ratio)), height, GdkPixbuf.InterpType.BILINEAR)
+        else:
+            scaled_pixbuf = pixbuf_original.scale_simple(width, int(width * full_ratio), GdkPixbuf.InterpType.BILINEAR)
+
+        # Find the offset we need to center the source pixbuf on the destination
+        y = abs((height - scaled_pixbuf.props.height) / 2)
+        x = abs((width - scaled_pixbuf.props.width) / 2)
+
+        print(x, y)
+
+        scaled_pixbuf.copy_area (x, y, width, height, pixbuf_fitted, 0, 0)
+
+        print(pixbuf_fitted.props.width, pixbuf_fitted.props.height)
+
+
+        cr.save()
+        cr.scale (1.0 / scale, 1.0 / scale)
+        cr.new_sub_path()
+        cr.arc (width - radius, radius, radius, 0-pi/2, 0)
+        cr.line_to (width, height)
+        cr.line_to (0, height)
+
+        cr.arc (radius, radius, radius, pi, pi + pi/2)
+        cr.close_path ()
+        Gdk.cairo_set_source_pixbuf (cr, pixbuf_fitted, 0, 0)
+        cr.clip ()
+        cr.paint ()
+        cr.restore ()
+
+        # cr.set_source_surface(self.ims, 0, 0)
+        # cr.paint()
         
     
 def main():
     
-    #app = Example()
-    app = MainWindow()
+    app = Example()
+    #app = MainWindow()
     Gtk.main()
         
         
