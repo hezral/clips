@@ -75,13 +75,16 @@ class Clips(Gtk.Application):
 
         # set CSS provider
         provider = Gtk.CssProvider()
-        print(platform.linux_distribution()[2])
-        if platform.linux_distribution()[2] == "hera":
-            provider.load_from_path(os.path.join(os.path.dirname(__file__), "..", "data", "application.css"))
+        #print(platform.linux_distribution()[2])
+        #if platform.linux_distribution()[2] == "hera":
+        #    provider.load_from_path(os.path.join(os.path.dirname(__file__), "..", "data", "application.css"))
 
-        if platform.linux_distribution()[2] == "odin":
-            provider.load_from_path(os.path.join(os.path.dirname(__file__), "..", "data", "application.css"))
+        #if platform.linux_distribution()[2] == "odin":
+        #    provider.load_from_path(os.path.join(os.path.dirname(__file__), "..", "data", "application.css"))
         
+        provider.load_from_path(os.path.join(os.path.dirname(__file__), "..", "data", "application.css"))
+        
+        print(provider)
         Gtk.StyleContext.add_provider_for_screen(Gdk.Screen.get_default(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
 
     def do_activate(self):
@@ -116,7 +119,7 @@ class Clips(Gtk.Application):
             self.main_window.total_clips_label.props.label = "Clips: {total}".format(total=len(clips))
             
             if len(clips) != 0:
-                thread = threading.Thread(target=self.load_clips_fromdb, args=(clips, self.main_window.clips_view, self.cache_manager.cache_filedir))
+                thread = threading.Thread(target=self.load_clips_fromdb, args=(clips, self.main_window.clips_view, ))
                 thread.daemon = True
                 thread.start()
 
@@ -124,28 +127,28 @@ class Clips(Gtk.Application):
 
 
     # def load_clips_fromdb(self, focus, clip_pos_start, clip_pos_end, clips, clips_view, cache_filedir):
-    def load_clips_fromdb(self, clips, clips_view, cache_filedir):
+    def load_clips_fromdb(self, clips, clips_view):
         app_startup = True
         # initially load last 20 clips 
         for clip in reversed(clips[-10:]):
-            GLib.idle_add(clips_view.new_clip, cache_filedir, clip, app_startup)
+            GLib.idle_add(clips_view.new_clip, clip, app_startup)
             time.sleep(0.15)
             #print(clip[0])
         #if focus:
         clips_view.flowbox.get_child_at_index(0).grab_focus()
 
         for clip in reversed(clips[-20:-10]):
-            GLib.idle_add(clips_view.new_clip, cache_filedir, clip, app_startup)
+            GLib.idle_add(clips_view.new_clip, clip, app_startup)
             time.sleep(0.05)
             #print(clip[0])
 
         for clip in reversed(clips[-30:-20]):
-            GLib.idle_add(clips_view.new_clip, cache_filedir, clip, app_startup)
+            GLib.idle_add(clips_view.new_clip, clip, app_startup)
             time.sleep(0.05)
             #print(clip[0])
 
         for clip in reversed(clips[:-30]):
-            GLib.idle_add(clips_view.new_clip, cache_filedir, clip, app_startup)
+            GLib.idle_add(clips_view.new_clip, clip, app_startup)
             time.sleep(0.05)
             #print(clip[0])
 

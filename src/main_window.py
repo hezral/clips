@@ -85,7 +85,7 @@ class ClipsWindow(Gtk.ApplicationWindow):
         #self.connect("window-state-event", self.on_maximized)
         #self.connect("notify::is-maximized", self.on_max)
 
-        self.set_keep_above(True)
+        #self.set_keep_above(True)
         self.add(main_view)
         self.show_all()
 
@@ -193,6 +193,12 @@ class ClipsWindow(Gtk.ApplicationWindow):
         view_switch.props.margin = 4
         view_switch.props.name = "view-switch"
         view_switch.bind_property("active", settings_view_obj, "visible", GObject.BindingFlags.BIDIRECTIONAL)
+
+        
+        # switch = [child for child in view_switch.get_children() if isinstance(child, Gtk.Switch)][0]
+        # print("mode-switch", switch)
+        # switch.set_size_request(-1, 32)
+        # print(switch.get_allocated_height(), switch.get_allocated_width())
         return view_switch
 
     def on_country_combo_changed(self, combo):
