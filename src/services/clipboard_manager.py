@@ -98,10 +98,15 @@ class ClipboardManager():
 
         # using Bamf
         matcher = Bamf.Matcher()
-        active_win = matcher.get_active_window()
         screen = Wnck.Screen.get_default()
         screen.force_update()
 
+        # if matcher.get_active_window() is None:
+        #     active_win = screen.get_active_window()
+        # else:
+        #     active_win = matcher.get_active_window()
+
+        active_win = matcher.get_active_window()
         if active_win is not None:
             active_app = matcher.get_application_for_window(active_win)
             if active_app is not None:

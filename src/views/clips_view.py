@@ -67,65 +67,66 @@ class ClipsView(Gtk.Grid):
         date2 = child2.get_children()[0].created
         return date1 < date2
 
-    def update_flowbox(self, clips):
+    # def update_flowbox(self, clips):
 
-        app = self.get_toplevel().props.application
+    #     app = self.get_toplevel().props.application
         
-        for clip in clips:
+    #     for clip in clips:
             
-            # initialize cachce file with full path        
-            cache_file = os.path.join(app.cache_manager.cache_filedir, clip[6])
-            # load
-            if os.path.exists(cache_file):
-                self.flowbox.add(ClipsContainer(clip, app.cache_manager.cache_filedir, app.utils))
-            # clean-up and delete from db
-            else:
-                app.cache_manager.delete_record(clip[0], cache_file)
+    #         # initialize cachce file with full path        
+    #         cache_file = os.path.join(app.cache_manager.cache_filedir, clip[6])
+    #         # load
+    #         if os.path.exists(cache_file):
+    #             self.flowbox.add(ClipsContainer(clip, app.cache_manager.cache_filedir, app.utils))
+    #         # clean-up and delete from db
+    #         else:
+    #             app.cache_manager.delete_record(clip[0], cache_file)
 
-        self.flowbox.show_all()
-        #yield False
-        print(datetime.now(), "show_all")
+    #     self.flowbox.show_all()
+    #     #yield False
+    #     print(datetime.now(), "show_all")
 
-        for child in self.flowbox.get_children():
-            child.connect("focus-out-event", self.on_child_focus_out, child)
+    #     for child in self.flowbox.get_children():
+    #         child.connect("focus-out-event", self.on_child_focus_out, child)
 
-        first_child = self.flowbox.get_child_at_index(0)
-        #self.flowbox.select_child(first_child)
-        first_child.grab_focus()
+    #     first_child = self.flowbox.get_child_at_index(0)
+    #     #self.flowbox.select_child(first_child)
+    #     first_child.grab_focus()
 
-    def load_from_cache(self):
-        print("load_clips")
+    # def load_from_cache(self):
+    #     print("load_clips")
         
-        app = self.get_toplevel().props.application
+    #     app = self.get_toplevel().props.application
         
-        # print(datetime.now(), "start load_clips")
-        clips = app.cache_manager.load_clips()
-        # print(datetime.now(), "finish load_clips")
+    #     # print(datetime.now(), "start load_clips")
+    #     clips = app.cache_manager.load_clips()
+    #     # print(datetime.now(), "finish load_clips")
         
-        # print(datetime.now(), "loop through clips")
-        # for clip in clips:
-        #     GLib.idle_add(self.update_flowbox, clip, cache_manager)
+    #     # print(datetime.now(), "loop through clips")
+    #     # for clip in clips:
+    #     #     GLib.idle_add(self.update_flowbox, clip, cache_manager)
 
-        print(datetime.now(), "idle_add")
-        GLib.idle_add(self.update_flowbox, clips)
+    #     print(datetime.now(), "idle_add")
+    #     GLib.idle_add(self.update_flowbox, clips)
         
-        # print(datetime.now(), "loop through clips")
-        # for clip in clips:
-        #     self.flowbox.add(ClipsContainer(clip, cache_manager.cache_filedir))
+    #     # print(datetime.now(), "loop through clips")
+    #     # for clip in clips:
+    #     #     self.flowbox.add(ClipsContainer(clip, cache_manager.cache_filedir))
         
-        # print(datetime.now(), "show_all")
-        # self.show_all()
+    #     # print(datetime.now(), "show_all")
+    #     # self.show_all()
 
-    def new_clip(self, cache_filedir, clip, app_startup=False):
+    def new_clip(self, clip, app_startup=False):
         app = self.get_toplevel().props.application
         main_window = self.get_toplevel()
         id = clip[0]
-        cache_file = os.path.join(cache_filedir, clip[6])
+        cache_file = os.path.join(app.cache_manager.cache_filedir, clip[6])
+        # cache_file = os.path.join(cache_filedir, clip[6])
         new_flowboxchild = [child for child in self.flowbox.get_children() if child.get_children()[0].id == id]
 
         # add the new clip if cache_file exists
         if os.path.exists(cache_file) and len(new_flowboxchild) == 0:
-            self.flowbox.add(ClipsContainer(clip, cache_filedir, app.utils))
+            self.flowbox.add(ClipsContainer(clip, app.cache_manager.cache_filedir, app.utils))
             new_flowboxchild = [child for child in self.flowbox.get_children() if child.get_children()[0].id == id][0]
             new_flowboxchild.connect("focus-out-event", self.on_child_focus_out, new_flowboxchild)
 
@@ -168,6 +169,8 @@ class ClipsView(Gtk.Grid):
 class ClipsContainer(Gtk.Grid):
     def __init__(self, clip, cache_filedir, utils, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        scale = self.get_scale_factor()
 
         self.id = clip[0]
         self.target = clip[1]
@@ -372,6 +375,16 @@ class ClipsContainer(Gtk.Grid):
         except:
             pass
 
+        source_icon_cache = os.path.join(cache_filedir.replace("cache","icon"), self.source_app.replace(" ",".").lower() + ".png")
+        print(source_icon_cache)
+
+        
+
+        if os.path.exists(source_icon_cache):
+            pass
+        else:
+            pass
+
         if self.source_icon.find("/") != -1:
             source_icon = Gtk.Image().new_from_file(self.source_icon)
             try:
@@ -381,6 +394,7 @@ class ClipsContainer(Gtk.Grid):
                 source_icon = Gtk.Image().new_from_icon_name("image-missing", Gtk.IconSize.LARGE_TOOLBAR)
         else:
             source_icon = Gtk.Image().new_from_icon_name(self.source_icon, Gtk.IconSize.LARGE_TOOLBAR)
+        source_icon.set_pixel_size(24)
         source_icon.props.halign = Gtk.Align.START
         source_icon.props.valign = Gtk.Align.END
         source_icon.props.margin = 4
