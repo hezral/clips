@@ -323,7 +323,7 @@ class CacheManager():
             if len(self.check_duplicate(checksum)) == 0:
                 self.add_record(record) # add to database
                 new_record = self.select_record(self.db_cursor.lastrowid)[0] # prepare record for gui
-                clips_view.new_clip(self.cache_filedir, new_record) # add to gui
+                clips_view.new_clip(new_record) # add to gui
             else:
                 # update db with new timestamp and get the timestamp
                 created_updated = self.update_record(checksum)

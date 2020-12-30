@@ -4,7 +4,7 @@ def draw_rounded(cr, area, radius):
     a,b,c,d=area
     cr.arc(a + radius, c + radius, radius, 2*(pi/2), 3*(pi/2))
     cr.arc(b - radius, c + radius, radius, 3*(pi/2), 4*(pi/2))
-    cr.arc(b - radius, d - radius, radius, 0*(pi/2), 1*(pi/2))  # ;o)
+    cr.arc(b - radius, d - radius, radius, 0*(pi/2), 1*(pi/2))
     cr.arc(a + radius, d - radius, radius, 1*(pi/2), 2*(pi/2))
     cr.close_path()
     cr.stroke()
@@ -29,7 +29,7 @@ cr.set_source_rgb(1,1,1)
 
 draw_rounded(cr, inside_area, 150)
 
-file = "/home/adi/.cache/com.github.hezral.clips/cache/4c6dc1c30c998ea530a246d6b028c2d3.png"
+file = "/home/adi/.cache/com.github.hezral.clips/cache/e81da130ebf8471ba52f7d8ef8c351f6.png"
 
 im = Image.frombuffer("RGBA",
                        fig_size,

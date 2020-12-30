@@ -70,8 +70,8 @@ class Clips(Gtk.Application):
         self.setup_action("search", self.on_search_action, "<Ctrl>F")
 
         # #applicationwindow theme
-        # settings = Gtk.Settings.get_default()
-        # settings.set_property("gtk-application-prefer-dark-theme", True)
+        settings = Gtk.Settings.get_default()
+        settings.set_property("gtk-application-prefer-dark-theme", False)
 
         # set CSS provider
         provider = Gtk.CssProvider()

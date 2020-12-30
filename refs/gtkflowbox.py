@@ -10,8 +10,7 @@ from math import pi
 
 # 画像が沢山あるディレクトリに書き換えしてください
 FOLDER = '/home/adi/.cache/com.github.hezral.clips/cache/'
-FOLDER = '/home/adi/Downloads/photos'
-
+#FOLDER = '/home/adi/Downloads/photos'
 
 CSS = """
 grid#clip-container {
@@ -36,7 +35,6 @@ class ClipsContainer(Gtk.Grid):
         self.set_size_request(190, 150)
 
         imgcontainer = ImageContainer(filepath, filename)
-
         self.attach(imgcontainer, 0, 0, 1, 1)
 
 
@@ -44,21 +42,18 @@ class ImageContainer(Gtk.Grid):
     def __init__(self, filepath, filename, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.set_size_request(190, 150)
-        
-        # scale = self.get_scale_factor()
-        # # width = 190 * scale
-        # # height = 118 * scale
-        # width = self.get_allocated_width () * scale
-        # height = self.get_allocated_height () * scale
-        # radius = 5 * scale
+        width = 190
+        height = 150
+
+        self.set_size_request(width, height)
 
         pixbuf_original = GdkPixbuf.Pixbuf.new_from_file(filepath)
-        # pixbuf_fitted = GdkPixbuf.Pixbuf.new(pixbuf_original.get_colorspace(), pixbuf_original.get_has_alpha(), pixbuf_original.get_bits_per_sample(), width, height)
+        pixbuf_fitted = GdkPixbuf.Pixbuf.new(pixbuf_original.get_colorspace(), pixbuf_original.get_has_alpha(), pixbuf_original.get_bits_per_sample(), width, height)
 
-        # full_ratio = pixbuf_original.props.height / pixbuf_original.props.width
+        ratio_h_w = pixbuf_original.props.height / pixbuf_original.props.width
+        ratio_w_h = float(pixbuf_original.props.width / pixbuf_original.props.height)
         
-        # print(pixbuf_original.props.height, pixbuf_original.props.width)
+        #print("width", pixbuf_original.props.width, "height", pixbuf_original.props.height, "ratio_w_h", ratio_w_h, "ratio_h_w", ratio_h_w)
 
         # if int(width * full_ratio) < height:
         #     scaled_pixbuf = pixbuf_original.scale_simple(int(width * (1 / full_ratio)), height, GdkPixbuf.InterpType.BILINEAR)
@@ -100,7 +95,7 @@ class ImageContainer(Gtk.Grid):
         
         pixbuf_fitted = GdkPixbuf.Pixbuf.new(pixbuf_original.get_colorspace(), pixbuf_original.get_has_alpha(), pixbuf_original.get_bits_per_sample(), width, height)
         
-        print(full_ratio)
+        #print(full_ratio)
 
         if int(width * full_ratio) < height:
             scaled_pixbuf = pixbuf_original.scale_simple(int(width * (1 / full_ratio)), height, GdkPixbuf.InterpType.BILINEAR)
@@ -111,25 +106,38 @@ class ImageContainer(Gtk.Grid):
         y = abs((height - scaled_pixbuf.props.height) / 2)
         x = abs((width - scaled_pixbuf.props.width) / 2)
 
-        print(x, y)
+        #print(x, y)
 
         scaled_pixbuf.copy_area (x, y, width, height, pixbuf_fitted, 0, 0)
 
-        print(pixbuf_fitted.props.width, pixbuf_fitted.props.height)
+        #print(pixbuf_fitted.props.width, pixbuf_fitted.props.height)
 
         cairo_context.save()
-        cairo_context.scale (1.0 / scale, 1.0 / scale)
+        cairo_context.scale(1.0 / scale, 1.0 / scale)
         cairo_context.new_sub_path()
-        cairo_context.arc (width - radius, radius, radius, 0-pi/2, 0)
-        cairo_context.line_to (width, height)
-        cairo_context.line_to (0, height)
 
-        cairo_context.arc (radius, radius, radius, pi, pi + pi/2)
-        cairo_context.close_path ()
-        Gdk.cairo_set_source_pixbuf (cairo_context, pixbuf_fitted, 0, 0)
-        cairo_context.clip ()
-        cairo_context.paint ()
-        cairo_context.restore ()
+        print("start", cairo_context.get_current_point())
+
+        # arc(xc, yc, radius, angle1, angle2)
+        print("arc", width - radius, radius, radius, 0-pi/2, 0)
+        cairo_context.arc(width - radius, radius, radius, 0-pi/2, 0) # top-right-corner
+        print("arc", cairo_context.get_current_point())
+
+        cairo_context.line_to(width, height)
+        print("line_to", cairo_context.get_current_point())
+        #cairo_context.arc(width - radius, radius, radius, 2*pi/2, 0) # bottom-right-corner
+        
+        cairo_context.line_to(0, height)
+        print("line_to", cairo_context.get_current_point())
+        #cairo_context.arc(radius, radius, radius, pi, pi + 3*pi/2) # top-left-corner
+        cairo_context.arc(radius, radius, radius, pi, pi + pi/2) # top-left-corner
+        print("arc", cairo_context.get_current_point())
+
+        cairo_context.close_path()
+        Gdk.cairo_set_source_pixbuf(cairo_context, pixbuf_fitted, 0, 0)
+        cairo_context.clip()
+        cairo_context.paint()
+        cairo_context.restore()
 
 
         # height_allocated = drawing_area.get_parent().get_allocated_height()
@@ -166,7 +174,7 @@ class Win(Gtk.ApplicationWindow):
         flowbox = Gtk.FlowBox()
         flowbox.props.valign = Gtk.Align.START
         flowbox.props.halign = Gtk.Align.FILL
-        flowbox.props.min_children_per_line = 2
+        flowbox.props.min_children_per_line = 4
         flowbox.props.max_children_per_line = 50
         flowbox.props.homogeneous = False
         flowbox.props.row_spacing = 10
@@ -176,26 +184,15 @@ class Win(Gtk.ApplicationWindow):
         d = Gio.file_new_for_path(FOLDER)
         enum = d.enumerate_children(Gio.FILE_ATTRIBUTE_STANDARD_CONTENT_TYPE, 0)
 
-
         for info in enum:
             fillpath = f'{FOLDER}/{info.get_name()}'
-
             flowbox.add(ClipsContainer(fillpath, info.get_name()))
 
-            # if content_type == 'image/jpeg' or content_type == 'image/png' or content_type == 'image/gif':
-            #     fullpath = f'{FOLDER}/{info.get_name()}'
-            #     pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(fullpath, 100, 100, True)
-            #     image = Gtk.Image(pixbuf=pixbuf)
-            #     flowbox.add(image)
-
-            # if content_type == 'text/html':
-            #     fullpath = f'{FOLDER}/{info.get_name()}'
-            #     file = open(fullpath, "r")
-            #     content = file.read()
-            #     webview = WebKit2.WebView()
-            #     webview.load_html(content)
-            #     flowbox.add(webview)
+        # for child in flowbox.get_children():
+        #     child.props.halign = child.props.valign = Gtk.Align.START
+        
         scroll = Gtk.ScrolledWindow(child=flowbox)
+        scroll.props.hscrollbar_policy = Gtk.PolicyType.NEVER
         # self
         self.add(scroll)
         self.set_size_request(600,600)
