@@ -14,7 +14,7 @@ FOLDER = '/home/adi/.cache/com.github.hezral.clips/cache/'
 
 CSS = """
 grid#clip-container {
-border-radius: 4px;
+border-radius: 5px;
 box-shadow:
         0 0 0 1px rgba(0,0,0,0.12),
         0 2px 5px  rgba(0,0,0,0.16),
@@ -22,10 +22,12 @@ box-shadow:
         0 14px 28px  rgba(0,0,0,0);
 }
 
-flowboxchild:selected {
-opacity: 0.5;
-}
+
 """
+
+# flowboxchild:selected {
+# opacity: 0.5;
+# }
 
 class ClipsContainer(Gtk.Grid):
     def __init__(self, filepath, filename, *args, **kwargs):
@@ -38,6 +40,7 @@ class ClipsContainer(Gtk.Grid):
         self.attach(imgcontainer, 0, 0, 1, 1)
 
 
+
 class ImageContainer(Gtk.Grid):
     def __init__(self, filepath, filename, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -46,30 +49,31 @@ class ImageContainer(Gtk.Grid):
         height = 150
 
         self.set_size_request(width, height)
+    
 
         pixbuf_original = GdkPixbuf.Pixbuf.new_from_file(filepath)
         pixbuf_fitted = GdkPixbuf.Pixbuf.new(pixbuf_original.get_colorspace(), pixbuf_original.get_has_alpha(), pixbuf_original.get_bits_per_sample(), width, height)
 
-        ratio_h_w = pixbuf_original.props.height / pixbuf_original.props.width
-        ratio_w_h = float(pixbuf_original.props.width / pixbuf_original.props.height)
+        self.ratio_h_w = pixbuf_original.props.height / pixbuf_original.props.width
+        self.ratio_w_h = pixbuf_original.props.width / pixbuf_original.props.height
+
+        if pixbuf_original.props.height > pixbuf_original.props.width:
+            self.ratio = self.ratio_w_h
+            self.ratio_str = "ratio_w_h"
+        elif pixbuf_original.props.height < pixbuf_original.props.width:
+            self.ratio = self.ratio_h_w
+            self.ratio_str = "ratio_h_w"
+        elif pixbuf_original.props.height == pixbuf_original.props.width:
+            self.ratio = self.ratio_h_w
+            self.ratio_str = "ratio_h_w"
+        else:
+            self.ratio = self.ratio_w_h
+            self.ratio_str = "ratio_w_h"
+
+        self.name = filename
+        self.props.has_tooltip = True
+        self.props.tooltip_text = "file: " + self.name + "\nwidth: " + str(pixbuf_original.props.width) + "\nheight: " + str(pixbuf_original.props.height) + "\nratio_h_w: " + str(self.ratio_h_w) +  "\nratio_w_h: " + str(self.ratio_w_h) + "\nratio: " + self.ratio_str
         
-        #print("width", pixbuf_original.props.width, "height", pixbuf_original.props.height, "ratio_w_h", ratio_w_h, "ratio_h_w", ratio_h_w)
-
-        # if int(width * full_ratio) < height:
-        #     scaled_pixbuf = pixbuf_original.scale_simple(int(width * (1 / full_ratio)), height, GdkPixbuf.InterpType.BILINEAR)
-        # else:
-        #     scaled_pixbuf = pixbuf_original.scale_simple(width, int(width * full_ratio), GdkPixbuf.InterpType.BILINEAR)
-
-        # # Find the offset we need to center the source pixbuf on the destination
-        # y = abs((height - scaled_pixbuf.props.height) / 2)
-        # x = abs((width - scaled_pixbuf.props.width) / 2)
-
-        # #print(x, y)
-
-        # scaled_pixbuf.copy_area (x, y, width, height, pixbuf_fitted, 0, 0)
-
-        # print("full_ratio:", full_ratio, "pixbuf_fitted:", pixbuf_fitted.props.width, pixbuf_fitted.props.height)
-
         drawing_area = Gtk.DrawingArea()
         drawing_area.props.expand = True
         drawing_area.connect("draw", self.draw, pixbuf_original)
@@ -88,57 +92,77 @@ class ImageContainer(Gtk.Grid):
         height = self.get_allocated_height () * scale
         radius = 5 * scale
 
-        #pixbuf_original = GdkPixbuf.Pixbuf.new_from_file(filepath)
         pixbuf_original = pixbuf
 
-        full_ratio = pixbuf_original.props.height / pixbuf_original.props.width
+        full_ratio = self.ratio
         
         pixbuf_fitted = GdkPixbuf.Pixbuf.new(pixbuf_original.get_colorspace(), pixbuf_original.get_has_alpha(), pixbuf_original.get_bits_per_sample(), width, height)
-        
-        #print(full_ratio)
 
-        if int(width * full_ratio) < height:
-            scaled_pixbuf = pixbuf_original.scale_simple(int(width * (1 / full_ratio)), height, GdkPixbuf.InterpType.BILINEAR)
+        # if int(width * full_ratio) < height:
+        #     scaled_pixbuf = pixbuf_original.scale_simple(int(width * (1 / full_ratio)), height, GdkPixbuf.InterpType.BILINEAR)
+        # else:
+        #     scaled_pixbuf = pixbuf_original.scale_simple(width, int(width * full_ratio), GdkPixbuf.InterpType.BILINEAR)
+
+        if int(width * self.ratio_h_w) < height:
+            scaled_pixbuf = pixbuf_original.scale_simple(int(height * self.ratio_w_h), height, GdkPixbuf.InterpType.BILINEAR)
+        # elif int(pixbuf_original.props.width * self.ratio_w_h) < width:
+        #     scaled_pixbuf = pixbuf_original.scale_simple(pixbuf_original.props.width, pixbuf_original.props.height, GdkPixbuf.InterpType.BILINEAR)
+        #     print("here")
         else:
-            scaled_pixbuf = pixbuf_original.scale_simple(width, int(width * full_ratio), GdkPixbuf.InterpType.BILINEAR)
+            scaled_pixbuf = pixbuf_original.scale_simple(width, int(width * self.ratio_h_w), GdkPixbuf.InterpType.BILINEAR)
 
-        # Find the offset we need to center the source pixbuf on the destination
-        y = abs((height - scaled_pixbuf.props.height) / 2)
-        x = abs((width - scaled_pixbuf.props.width) / 2)
+        # print("file:", self.name, 
+        #     "\nratio_h_w:", self.ratio_h_w, pixbuf_original.props.width * self.ratio_h_w, pixbuf_original.props.height * self.ratio_h_w,
+        #     "\nratio_w_h:", self.ratio_w_h, pixbuf_original.props.width * self.ratio_w_h, pixbuf_original.props.height * self.ratio_w_h,
+        #     "\nfull_ration:", full_ratio,
+        #     "\npixbuf width x height:", pixbuf_original.props.width, pixbuf_original.props.height,
+        #     "\nwidget width x height:", width, height, 
+        #     "\nint(width * full_ratio):", int(width * full_ratio), 
+        #     "\nint(width * (1 / full_ratio)):", int(width * (1 / full_ratio)),
+        #     "\nint(width * (1 / ratio_h_w)):", int(width * (1 / self.ratio_h_w)),
+        #     "\nint(width * (1 / ratio_w_h)):", int(width * (1 / self.ratio_w_h)),
+        #     "\nscaled_pixbuf width x height:", scaled_pixbuf.props.width, scaled_pixbuf.props.height,
+        #     "\n------------------------------------------------------------------------------")
 
-        #print(x, y)
 
-        scaled_pixbuf.copy_area (x, y, width, height, pixbuf_fitted, 0, 0)
-
-        #print(pixbuf_fitted.props.width, pixbuf_fitted.props.height)
+        if pixbuf_original.props.width * pixbuf_original.props.height < width * height:
+            # Find the offset we need to center the source pixbuf on the destination since its smaller
+            y = abs((height - pixbuf_original.props.height) / 2)
+            x = abs((width - pixbuf_original.props.width) / 2)
+            final_pixbuf = pixbuf_original
+        else:
+            # Find the offset we need to center the source pixbuf on the destination
+            y = abs((height - scaled_pixbuf.props.height) / 2)
+            x = abs((width - scaled_pixbuf.props.width) / 2)
+            scaled_pixbuf.copy_area(x, y, width, height, pixbuf_fitted, 0, 0)
+            # Set coordinates for cairo surface since this has been fitted, it should be (0, 0) coordinate
+            y = 0
+            x = 0
+            final_pixbuf = pixbuf_fitted
 
         cairo_context.save()
         cairo_context.scale(1.0 / scale, 1.0 / scale)
         cairo_context.new_sub_path()
 
-        print("start", cairo_context.get_current_point())
-
-        # arc(xc, yc, radius, angle1, angle2)
-        print("arc", width - radius, radius, radius, 0-pi/2, 0)
+        # draws top only rounded rectangle
+        # cairo_context.arc(width - radius, radius, radius, 0-pi/2, 0) # top-right-corner
+        # #cairo_context.line_to(width, height)
+        # #cairo_context.line_to(0, height)
+        # cairo_context.arc(radius, radius, radius, pi, pi + pi/2) # top-left-corner
+    
+        # draws rounded rectangle
         cairo_context.arc(width - radius, radius, radius, 0-pi/2, 0) # top-right-corner
-        print("arc", cairo_context.get_current_point())
-
-        cairo_context.line_to(width, height)
-        print("line_to", cairo_context.get_current_point())
-        #cairo_context.arc(width - radius, radius, radius, 2*pi/2, 0) # bottom-right-corner
-        
-        cairo_context.line_to(0, height)
-        print("line_to", cairo_context.get_current_point())
-        #cairo_context.arc(radius, radius, radius, pi, pi + 3*pi/2) # top-left-corner
+        cairo_context.arc(width - radius, height - radius, radius, 0, pi/2) # bottom-right-corner
+        cairo_context.arc(radius, height - radius, radius, pi/2, pi) # bottom-left-corner
         cairo_context.arc(radius, radius, radius, pi, pi + pi/2) # top-left-corner
-        print("arc", cairo_context.get_current_point())
-
+    
         cairo_context.close_path()
-        Gdk.cairo_set_source_pixbuf(cairo_context, pixbuf_fitted, 0, 0)
+
+        Gdk.cairo_set_source_pixbuf(cairo_context, final_pixbuf, x, y)
+
         cairo_context.clip()
         cairo_context.paint()
         cairo_context.restore()
-
 
         # height_allocated = drawing_area.get_parent().get_allocated_height()
         # width_allocated = drawing_area.get_parent().get_allocated_width()
@@ -174,7 +198,7 @@ class Win(Gtk.ApplicationWindow):
         flowbox = Gtk.FlowBox()
         flowbox.props.valign = Gtk.Align.START
         flowbox.props.halign = Gtk.Align.FILL
-        flowbox.props.min_children_per_line = 4
+        flowbox.props.min_children_per_line = 1
         flowbox.props.max_children_per_line = 50
         flowbox.props.homogeneous = False
         flowbox.props.row_spacing = 10
@@ -195,7 +219,7 @@ class Win(Gtk.ApplicationWindow):
         scroll.props.hscrollbar_policy = Gtk.PolicyType.NEVER
         # self
         self.add(scroll)
-        self.set_size_request(600,600)
+        self.set_size_request(300,450)
         #self.resize(300, 300)
         self.show_all()
  
