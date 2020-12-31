@@ -116,7 +116,6 @@ class ClipsView(Gtk.Grid):
         clip_action_revealer = utils.get_widget_by_name(widget=flowbox, child_name="clip-action-revealer", level=0)
         clip_action_revealer.set_reveal_child(False)
 
-# ----------------------------------------------------------------------------------------------------
 
 class ClipsContainer(Gtk.Grid):
     def __init__(self, clip, cache_filedir, utils, *args, **kwargs):
@@ -146,9 +145,31 @@ class ClipsContainer(Gtk.Grid):
             self.content_label = str(len(self.content.read())) + "chars"
             self.content = Gtk.Label(self.content.read())
 
-        elif self.type == "image":            
-            self.content = ImageContainer(self.cache_file)
+        elif self.type == "image":
 
+            #original code
+            image_size = 200
+            #margin = 0
+            pixbuf_original = GdkPixbuf.Pixbuf.new_from_file(self.cache_file)
+            # dest_pixbuf = GdkPixbuf.Pixbuf.new(pixbuf_original.get_colorspace(), pixbuf_original.get_has_alpha(), pixbuf_original.get_bits_per_sample(), 168, 118)
+            # pixbuf_original.copy_area(0, 0, 181, 174, dest_pixbuf, 0, 0)
+            # print(dest_pixbuf)
+            #pixbuf = dest_pixbuf
+
+            if pixbuf_original.props.width < image_size:
+                pixbuf = pixbuf_original
+
+            else:
+                pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(self.cache_file, image_size, -1, True)
+
+            image = Gtk.Image().new_from_pixbuf(pixbuf)
+
+            self.content_label = "{width} x {height} px".format(width=str(pixbuf_original.props.width), height=str(pixbuf_original.props.height))
+            self.content = image
+            if pixbuf.get_has_alpha():
+                self.get_style_context().add_class(Granite.STYLE_CLASS_CHECKERBOARD)
+            else:
+                self.content.get_style_context().add_class(Granite.STYLE_CLASS_CARD)
 
         elif self.type == "html":
             self.content = open(self.cache_file, "r")
@@ -282,19 +303,19 @@ class ClipsContainer(Gtk.Grid):
 
         #------ clip_content ----#
         #self.content.props.expand = True
-        # self.content.props.valign = self.content.props.halign = Gtk.Align.CENTER
-        # self.content.props.name = "clip-contents"
-        # self.content.props.margin = 6
+        self.content.props.valign = self.content.props.halign = Gtk.Align.CENTER
+        self.content.props.name = "clip-contents"
+        self.content.props.margin = 6
         clip_content = Gtk.Box()
         clip_content.props.name = "clip-content-box"
-        # clip_content.props.halign = Gtk.Align.CENTER
-        # clip_content.props.valign = Gtk.Align.END
-        # clip_content.props.expand = True
-        # clip_content.set_size_request(-1, 118)
+        clip_content.props.halign = Gtk.Align.CENTER
+        clip_content.props.valign = Gtk.Align.END
+        clip_content.props.expand = True
+        clip_content.set_size_request(-1, 118)
         clip_content.add(self.content)
 
         #------ content label ----#
-        self.content_label = Gtk.Label(self.content.label)
+        self.content_label = Gtk.Label(self.content_label)
         self.content_label.props.name = "clip-content-label"
         self.content_label.props.halign = Gtk.Align.START
         self.content_label.props.valign = Gtk.Align.END
@@ -443,7 +464,7 @@ class ClipsContainer(Gtk.Grid):
         message_action_revealer.add(message_action)
 
         #------ construct ----#
-        self.set_size_request(200, 160)
+        self.set_size_request(190, 150)
         self.props.name = "clip-container"
         self.props.expand = True
         self.props.has_tooltip = True
@@ -453,11 +474,12 @@ class ClipsContainer(Gtk.Grid):
                                                                                                             source=self.source, 
                                                                                                             source_app=self.source_app, 
                                                                                                             created=self.created_short)
-        # self.attach(clip_info, 0, 0, 1, 1)
-        # self.attach(clip_action_revealer, 0, 0, 1, 2)
-        # self.attach(message_action_revealer, 0, 0, 1, 2)
+        self.attach(clip_info, 0, 1, 1, 1)
+        self.attach(clip_action_revealer, 0, 0, 1, 2)
+        self.attach(message_action_revealer, 0, 0, 1, 2)
         self.attach(clip_content, 0, 0, 1, 1)
 
+        #self.connect("draw", self.draw)
 
     def draw(self, clips_container, cairo_context):
         #print(locals())
@@ -546,13 +568,19 @@ class ClipsContainer(Gtk.Grid):
             return str(round(day_diff / 30, 1)) + " months ago"
         return str(round(day_diff / 365, 1)) + " years ago (wow!)"
 
-# ----------------------------------------------------------------------------------------------------
 
 class ImageContainer(Gtk.Grid):
     def __init__(self, filepath, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        # width = 190
+        # height = 150
+        # self.set_size_request(width, height)
+
         self.pixbuf_original = GdkPixbuf.Pixbuf.new_from_file(filepath)
+
+        self.content_label = "{width} x {height} px".format(width=str(self.pixbuf_original.props.width), height=str(self.pixbuf_original.props.height))
+
         self.ratio_h_w = self.pixbuf_original.props.height / self.pixbuf_original.props.width
         self.ratio_w_h = self.pixbuf_original.props.width / self.pixbuf_original.props.height
     
@@ -569,9 +597,6 @@ class ImageContainer(Gtk.Grid):
 
         if self.pixbuf_original.get_has_alpha():
             self.get_style_context().add_class(Granite.STYLE_CLASS_CHECKERBOARD)
-        
-        self.label = "{width} x {height} px".format(width=str(self.pixbuf_original.props.width), height=str(self.pixbuf_original.props.height))
-
 
     def draw(self, drawing_area, cairo_context):
         # Forked and ported from https://github.com/elementary/greeter/blob/master/src/Widgets/BackgroundImage.vala
@@ -620,12 +645,6 @@ class ImageContainer(Gtk.Grid):
         cairo_context.clip()
         cairo_context.paint()
         cairo_context.restore()
-
-# ----------------------------------------------------------------------------------------------------
-
-class ColorContainer(Gtk.Grid):
-    def __init__(self, filepath, *args, **kwargs):
-        super().__init__(*args, **kwargs)
 
 
     # def on_resize(self, clipscontainer, cairocontext):
