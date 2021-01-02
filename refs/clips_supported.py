@@ -28,6 +28,7 @@ excluded_targets = (Gdk.Atom.intern('TIMESTAMP', False),
                     Gdk.Atom.intern('SAVE_TARGETS', False), 
                     Gdk.Atom.intern('STRING', False), 
                     Gdk.Atom.intern('UTF8_STRING', False), 
+                    Gdk.Atom.intern('COMPOUND_TEXT', False), 
                     Gdk.Atom.intern('TEXT', False), )
 
 

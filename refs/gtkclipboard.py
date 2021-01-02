@@ -56,42 +56,42 @@ clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
 
 import clips_supported
 
-print(clips_supported.excluded_targets)
+#print(clips_supported.excluded_targets)
 
 def on(clipboard, event):
 
-    targets = clipboard.wait_for_targets()[1]
-    for i in range(0, len(targets)): 
-        targets[i] = str(targets[i])
+#     targets = clipboard.wait_for_targets()[1]
+#     for i in range(0, len(targets)): 
+#         targets[i] = str(targets[i])
 
-    #print(targets)
+#     #print(targets)
 
-    libreoffice = [i for i in targets if "application/x-openoffice-embed-source-xml" in i]
-    libreoffice_xlsx = [i for i in targets if "LibreOffice 7.0 Spreadsheet" in i]
-    image_png = [i for i in targets if "image/png" in i]
+#     libreoffice = [i for i in targets if "application/x-openoffice-embed-source-xml" in i]
+#     libreoffice_xlsx = [i for i in targets if "LibreOffice 7.0 Spreadsheet" in i]
+#     image_png = [i for i in targets if "image/png" in i]
     
-    if len(libreoffice) == 1 and len(libreoffice_xlsx) == 1 and len(image_png) == 1:
-        print(libreoffice, "\n", libreoffice_xlsx, "\n", image_png)
+#     if len(libreoffice) == 1 and len(libreoffice_xlsx) == 1 and len(image_png) == 1:
+#         print(libreoffice, "\n", libreoffice_xlsx, "\n", image_png)
 
-    inkscape_svg = [i for i in targets if "image/x-inkscape-svg" in i]
-    image_png = [i for i in targets if "image/png" in i]
+#     inkscape_svg = [i for i in targets if "image/x-inkscape-svg" in i]
+#     image_png = [i for i in targets if "image/png" in i]
     
-    print(inkscape_svg, image_png)
+#     print(inkscape_svg, image_png)
 
-    if len(inkscape_svg) > 0 and len(image_png) == 1:
-#        print(inkscape_svg, "\n", image_png)
+#     if len(inkscape_svg) > 0 and len(image_png) == 1:
+# #        print(inkscape_svg, "\n", image_png)
 
-        content = clipboard.wait_for_contents(Gdk.Atom.intern(inkscape_svg[0], False))
-        bytes = content.get_data()
-        file = open("file.svg","wb")
-        file.write(bytes)
-        file.close()
+#         content = clipboard.wait_for_contents(Gdk.Atom.intern(inkscape_svg[0], False))
+#         bytes = content.get_data()
+#         file = open("file.svg","wb")
+#         file.write(bytes)
+#         file.close()
 
-        content = clipboard.wait_for_contents(Gdk.Atom.intern(image_png[0], False))
-        bytes = content.get_data()
-        file = open("file.png","wb")
-        file.write(bytes)
-        file.close()
+#         content = clipboard.wait_for_contents(Gdk.Atom.intern(image_png[0], False))
+#         bytes = content.get_data()
+#         file = open("file.png","wb")
+#         file.write(bytes)
+#         file.close()
 
 
     print("\nCurrent clipboard offers formats: ", len(clipboard.wait_for_targets()[1]))
@@ -101,7 +101,7 @@ def on(clipboard, event):
         if target not in clips_supported.excluded_targets:
             content = clipboard.wait_for_contents(target)
 
-            # if content is not None:
+            if content is not None:
 
             #     if str(target).find("WPS Drawing Shape Format") != -1:
             #         bytes = content.get_data()
@@ -115,12 +115,14 @@ def on(clipboard, event):
             #         # file = open("{i}.{ext}".format(i=str(target).split("/")[0], ext=str(target).split("/")[1]),"wb")
             #         file.write(bytes)
             #         file.close()
-            #     if str(target).find("image/png") != -1:
-            #         bytes = content.get_data()
-            #         file = open("file.png","wb")
-            #         # file = open("{i}.{ext}".format(i=str(target).split("/")[0], ext=str(target).split("/")[1]),"wb")
-            #         file.write(bytes)
-            #         file.close()
+                # if str(target).find("application/ico") != -1:
+                #     print("application/ico")
+                #     bytes = content.get_data()
+                #     file = open("file.ico","wb")
+                #     # file = open("{i}.{ext}".format(i=str(target).split("/")[0], ext=str(target).split("/")[1]),"wb")
+                #     file.write(bytes)
+                #     file.close()
+
             print(i, target, content)
             i += 1
 

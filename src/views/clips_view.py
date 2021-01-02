@@ -80,7 +80,7 @@ class ClipsView(Gtk.Grid):
             self.flowbox.add(ClipsContainer(clip, app.cache_manager.cache_filedir, app.utils))
             new_flowboxchild = [child for child in self.flowbox.get_children() if child.get_children()[0].id == id][0]
             new_flowboxchild.connect("focus-out-event", self.on_child_focus_out, new_flowboxchild)
-
+            
             if app_startup is False:
                 # total_clips = int(main_window.total_clips_label.props.label.split(": ")[1])
                 # total_clips = total_clips + 1
@@ -146,135 +146,138 @@ class ClipsContainer(Gtk.Grid):
             self.content_label = str(len(self.content.read())) + "chars"
             self.content = Gtk.Label(self.content.read())
 
-        elif self.type == "image":            
+        elif self.type == "image":
             self.content = ImageContainer(self.cache_file)
 
+        # elif self.type == "html":
+        #     self.content = open(self.cache_file, "r")
+        #     self.content = self.content.read()
+        #     self.content_label = str(len(self.content)) + " chars"
 
-        elif self.type == "html":
-            self.content = open(self.cache_file, "r")
-            self.content = self.content.read()
-            self.content_label = str(len(self.content)) + " chars"
+        #     # background_color, valid = utils.get_css_background_color(content)
 
-            # background_color, valid = utils.get_css_background_color(content)
+        #     # if valid:
+        #     #     if utils.isLightOrDark(utils.HexToRGB(background_color)) == "light":
+        #     #         font_color = "black"
+        #     #     else:
+        #     #         font_color = "white"
+        #     # else:
+        #     #     font_color = "@theme_text_color"
 
-            # if valid:
-            #     if utils.isLightOrDark(utils.HexToRGB(background_color)) == "light":
-            #         font_color = "black"
-            #     else:
-            #         font_color = "white"
-            # else:
-            #     font_color = "@theme_text_color"
+        #     # background_css = ".webview-container {background-color: " + background_color + "; color: " + font_color + ";}"
+        #     # provider = Gtk.CssProvider()
+        #     # provider.load_from_data(bytes(background_css.encode()))
 
-            # background_css = ".webview-container {background-color: " + background_color + "; color: " + font_color + ";}"
-            # provider = Gtk.CssProvider()
-            # provider.load_from_data(bytes(background_css.encode()))
+        #     # self.get_style_context().add_provider(provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+        #     # self.get_style_context().add_class("webview-container")
 
-            # self.get_style_context().add_provider(provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
-            # self.get_style_context().add_class("webview-container")
-
-            webview = WebKit2.WebView()
+        #     webview = WebKit2.WebView()
             
-            # if valid: 
-            #     [r,g,b] = utils.HexToRGB(background_color)
-            #     self.props.app_paintable = True
+        #     # if valid: 
+        #     #     [r,g,b] = utils.HexToRGB(background_color)
+        #     #     self.props.app_paintable = True
 
-            #     webview.set_background_color(Gdk.RGBA(r,g,b,1))
-            webview.props.zoom_level = 0.8
-            webview.load_html(self.content)
-            webview.props.expand = True
-            #webview.props.sensitive = False
-            eventbox = Gtk.EventBox()
-            eventbox.props.above_child = True
-            eventbox.add(webview)
-            self.content = eventbox
+        #     #     webview.set_background_color(Gdk.RGBA(r,g,b,1))
+        #     webview.props.zoom_level = 0.8
+        #     webview.load_html(self.content)
+        #     webview.props.expand = True
+        #     #webview.props.sensitive = False
+        #     eventbox = Gtk.EventBox()
+        #     eventbox.props.above_child = True
+        #     eventbox.add(webview)
+        #     self.content = eventbox
 
-        elif self.type == "richtext":
-            self.content = open(self.cache_file, "r")
-            self.content_label = str(len(self.content.read())) + " chars"
-            self.content = Gtk.Label(self.content.read())
+        # elif self.type == "richtext":
+        #     self.content = open(self.cache_file, "r")
+        #     self.content_label = str(len(self.content.read())) + " chars"
+        #     self.content = Gtk.Label(self.content.read())
 
-        elif self.type == "plaintext":
-            self.content = open(self.cache_file, "r")
-            self.content = self.content.read()
-            self.content_label = str(len(self.content)) + " chars"
-            self.content = Gtk.Label(self.content)
-            self.content.props.wrap_mode = Pango.WrapMode.CHAR
-            self.content.props.max_width_chars = 30
-            self.content.props.wrap = True
-            self.content.props.selectable = False
+        # elif self.type == "plaintext":
+        #     self.content = open(self.cache_file, "r")
+        #     self.content = self.content.read()
+        #     self.content_label = str(len(self.content)) + " chars"
+        #     self.content = Gtk.Label(self.content)
+        #     self.content.props.wrap_mode = Pango.WrapMode.CHAR
+        #     self.content.props.max_width_chars = 30
+        #     self.content.props.wrap = True
+        #     self.content.props.selectable = False
 
-        elif self.type == "url":
-            self.content = Gtk.Image().new_from_icon_name("internet-web-browser", Gtk.IconSize.DIALOG)
-            self.content_label = "Internet URL"
+        # elif self.type == "url":
+        #     self.content = Gtk.Image().new_from_icon_name("internet-web-browser", Gtk.IconSize.DIALOG)
+        #     self.content_label = "Internet URL"
 
         elif "color" in self.type:
-            self.content = open(self.cache_file, "r")
-            self.content = self.content.read()
-            self.content = self.content.strip(" ").strip(";") #strip the ; for processing 
-            _content = self.content.strip(")") #strip the ) for processing 
-            #print(self.id, self.type, content)
+            self.content = ColorContainer(self.cache_file, self.type, utils)
 
-            if self.type == "color/hex":
-                rgb = utils.HexToRGB(_content)
-                a = 1
 
-            elif self.type == "color/rgb":
-                r, g, b = _content.split("(")[1].split(",")[0:3]
-                r = int(int(r.strip("%"))/100*255) if r.find("%") != -1 else int(r)
-                g = int(int(g.strip("%"))/100*255) if g.find("%") != -1 else int(g)
-                b = int(int(b.strip("%"))/100*255) if b.find("%") != -1 else int(b)
-                rgb = [r, g, b] 
-                a = 1
 
-            elif self.type == "color/rgba":
-                r, g, b, a = _content.split("(")[1].split(",")
-                r = int(int(r.strip("%"))/100*255) if r.find("%") != -1 else int(r)
-                g = int(int(g.strip("%"))/100*255) if g.find("%") != -1 else int(g)
-                b = int(int(b.strip("%"))/100*255) if b.find("%") != -1 else int(b)
-                rgb = [r, g, b] 
-                a = float(a.split(")")[0])
+            # self.content = open(self.cache_file, "r")
+            # self.content = self.content.read()
+            # self.content = self.content.strip(" ").strip(";") #strip the ; for processing 
+            # _content = self.content.strip(")") #strip the ) for processing 
+            # #print(self.id, self.type, content)
 
-            elif self.type == "color/hsl":
-                h, s, l = _content.split("(")[1].split(",")[0:3]
-                print(h, s, l)
-                h = int(h) / 360
-                s = int(s.replace("%","")) / 100
-                l = int(l.replace("%","")) / 100
-                a = 1
-                rgb = utils.HSLtoRGB((h, s, l))
+            # if self.type == "color/hex":
+            #     rgb = utils.HexToRGB(_content)
+            #     a = 1
 
-            elif self.type == "color/hsla":
-                h, s, l, a = _content.split("(")[1].split(",") 
-                h = int(h) / 360
-                s = int(s.replace("%","")) / 100
-                l = int(l.replace("%","")) / 100
-                a = float(a.split(")")[0])
-                rgb = utils.HSLtoRGB((h, s, l))
+            # elif self.type == "color/rgb":
+            #     r, g, b = _content.split("(")[1].split(",")[0:3]
+            #     r = int(int(r.strip("%"))/100*255) if r.find("%") != -1 else int(r)
+            #     g = int(int(g.strip("%"))/100*255) if g.find("%") != -1 else int(g)
+            #     b = int(int(b.strip("%"))/100*255) if b.find("%") != -1 else int(b)
+            #     rgb = [r, g, b] 
+            #     a = 1
 
-            color_code = "rgba(" + str(rgb[0]) + "," + str(rgb[1]) + "," + str(rgb[2]) + "," + str(1) + ")"
+            # elif self.type == "color/rgba":
+            #     r, g, b, a = _content.split("(")[1].split(",")
+            #     r = int(int(r.strip("%"))/100*255) if r.find("%") != -1 else int(r)
+            #     g = int(int(g.strip("%"))/100*255) if g.find("%") != -1 else int(g)
+            #     b = int(int(b.strip("%"))/100*255) if b.find("%") != -1 else int(b)
+            #     rgb = [r, g, b] 
+            #     a = float(a.split(")")[0])
+
+            # elif self.type == "color/hsl":
+            #     h, s, l = _content.split("(")[1].split(",")[0:3]
+            #     print(h, s, l)
+            #     h = int(h) / 360
+            #     s = int(s.replace("%","")) / 100
+            #     l = int(l.replace("%","")) / 100
+            #     a = 1
+            #     rgb = utils.HSLtoRGB((h, s, l))
+
+            # elif self.type == "color/hsla":
+            #     h, s, l, a = _content.split("(")[1].split(",") 
+            #     h = int(h) / 360
+            #     s = int(s.replace("%","")) / 100
+            #     l = int(l.replace("%","")) / 100
+            #     a = float(a.split(")")[0])
+            #     rgb = utils.HSLtoRGB((h, s, l))
+
+            # color_code = "rgba(" + str(rgb[0]) + "," + str(rgb[1]) + "," + str(rgb[2]) + "," + str(1) + ")"
             
-            if utils.isLightOrDark(rgb) == "light":
-                font_color = "rgba(0,0,0,0.85)"
-            else:
-                font_color = "rgba(255,255,255,0.85)"
+            # if utils.isLightOrDark(rgb) == "light":
+            #     font_color = "rgba(0,0,0,0.85)"
+            # else:
+            #     font_color = "rgba(255,255,255,0.85)"
 
-            color_content_css = ".color-container {background-color: " + color_code + "; color: " + font_color + ";}"
-            font_css = ".color-content {letter-spacing: 1px; font-weight: bold; font-size: 125%;}"
-            css = color_content_css + "\n" + font_css
-            provider = Gtk.CssProvider()
-            provider.load_from_data(bytes(css.encode()))
+            # color_content_css = ".color-container {background-color: " + color_code + "; color: " + font_color + ";}"
+            # font_css = ".color-content {letter-spacing: 1px; font-weight: bold; font-size: 125%;}"
+            # css = color_content_css + "\n" + font_css
+            # provider = Gtk.CssProvider()
+            # provider.load_from_data(bytes(css.encode()))
 
-            self.content = Gtk.Label(self.content)
-            self.content.get_style_context().add_provider(provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
-            self.content.get_style_context().add_class("color-content")
+            # self.content = Gtk.Label(self.content)
+            # self.content.get_style_context().add_provider(provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+            # self.content.get_style_context().add_class("color-content")
 
-            if str(a) != "1":
-                self.get_style_context().add_class(Granite.STYLE_CLASS_CHECKERBOARD) # if there is alpha below 1
+            # if str(a) != "1":
+            #     self.get_style_context().add_class(Granite.STYLE_CLASS_CHECKERBOARD) # if there is alpha below 1
 
-            self.get_style_context().add_provider(provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
-            self.get_style_context().add_class("color-container")
+            # self.get_style_context().add_provider(provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+            # self.get_style_context().add_class("color-container")
 
-            self.content_label = self.type.split("/")[1].upper()
+            # self.content_label = self.type.split("/")[1].upper()
 
         else:
             self.content_label = "title"
@@ -282,19 +285,21 @@ class ClipsContainer(Gtk.Grid):
 
         #------ clip_content ----#
         #self.content.props.expand = True
-        # self.content.props.valign = self.content.props.halign = Gtk.Align.CENTER
+        self.content.props.valign = self.content.props.halign = Gtk.Align.FILL
         # self.content.props.name = "clip-contents"
         # self.content.props.margin = 6
         clip_content = Gtk.Box()
-        clip_content.props.name = "clip-content-box"
+        # clip_content.props.name = "clip-content-box"
         # clip_content.props.halign = Gtk.Align.CENTER
-        # clip_content.props.valign = Gtk.Align.END
+        # clip_content.props.valign = Gtk.Align.CENTER
         # clip_content.props.expand = True
         # clip_content.set_size_request(-1, 118)
         clip_content.add(self.content)
 
         #------ content label ----#
-        self.content_label = Gtk.Label(self.content.label)
+        #if not self.content.label:
+        #    self.content.label = "label"
+        self.content_label = Gtk.Label("self.content.label")
         self.content_label.props.name = "clip-content-label"
         self.content_label.props.halign = Gtk.Align.START
         self.content_label.props.valign = Gtk.Align.END
@@ -302,31 +307,15 @@ class ClipsContainer(Gtk.Grid):
         self.content_label.props.expand = True
 
         #------ source_icon / application icon ----#
-        try:
-            pass
-        except:
-            pass
-
-        source_icon_cache = os.path.join(cache_filedir.replace("cache","icon"), self.source_app.replace(" ",".").lower() + ".png")
-        #print(source_icon_cache)
-
+        source_icon_cache = os.path.join(cache_filedir[:-6],"icon", self.source_app.replace(" ",".").lower() + ".png")
         
-
         if os.path.exists(source_icon_cache):
-            pass
+            pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(source_icon_cache, 24 * scale, 24 * scale, True)
+            source_icon = Gtk.Image().new_from_pixbuf(pixbuf)
         else:
-            pass
+            source_icon = Gtk.Image().new_from_icon_name("image-missing", Gtk.IconSize.LARGE_TOOLBAR)
+            source_icon.set_pixel_size(24 * scale)
 
-        if self.source_icon.find("/") != -1:
-            source_icon = Gtk.Image().new_from_file(self.source_icon)
-            try:
-                new_pixbuf = source_icon.props.pixbuf.scale_simple(24, 24, GdkPixbuf.InterpType.BILINEAR)
-                source_icon.props.pixbuf = new_pixbuf
-            except:
-                source_icon = Gtk.Image().new_from_icon_name("image-missing", Gtk.IconSize.LARGE_TOOLBAR)
-        else:
-            source_icon = Gtk.Image().new_from_icon_name(self.source_icon, Gtk.IconSize.LARGE_TOOLBAR)
-        source_icon.set_pixel_size(24)
         source_icon.props.halign = Gtk.Align.START
         source_icon.props.valign = Gtk.Align.END
         source_icon.props.margin = 4
@@ -426,10 +415,15 @@ class ClipsContainer(Gtk.Grid):
         # clip_action.attach(copy_action, 2, 0, 1, 1)
         # clip_action.attach(delete_action, 3, 0, 1, 1)
 
+        # revealer_grid = Gtk.Grid()
+        # revealer_grid.attach(clip_action, 0, 0, 1, 2)
+        # revealer_grid.attach(clip_info, 0, 1, 1, 1)
+
         clip_action_revealer = Gtk.Revealer()
         clip_action_revealer.props.name = "clip-action-revealer"
         clip_action_revealer.props.transition_type = Gtk.RevealerTransitionType.CROSSFADE
         clip_action_revealer.add(clip_action)
+        
 
         #------ message_action ----#
         message_action = Gtk.Label()
@@ -454,14 +448,10 @@ class ClipsContainer(Gtk.Grid):
                                                                                                             source_app=self.source_app, 
                                                                                                             created=self.created_short)
         # self.attach(clip_info, 0, 0, 1, 1)
-        # self.attach(clip_action_revealer, 0, 0, 1, 2)
-        # self.attach(message_action_revealer, 0, 0, 1, 2)
+        self.attach(clip_action_revealer, 0, 0, 1, 1)
+        self.attach(message_action_revealer, 0, 0, 1, 1)
         self.attach(clip_content, 0, 0, 1, 1)
 
-
-    def draw(self, clips_container, cairo_context):
-        #print(locals())
-        print(clips_container.get_allocated_width(), clips_container.get_allocated_height())
         
     def on_clip_action(self, button=None, action=None):
         print(datetime.now(), action)
@@ -562,16 +552,14 @@ class ImageContainer(Gtk.Grid):
         drawing_area.props.can_focus = False
  
         self.props.halign = self.props.valign = Gtk.Align.FILL
-        self.props.name = "image-container"        
-        self.set_size_request(190, 120)
-        self.props.expand = True
-        self.attach(drawing_area, 0, 0, 1, 2)
+        self.props.name = "image-container"
+        self.attach(drawing_area, 0, 0, 1, 1)
 
         if self.pixbuf_original.get_has_alpha():
-            self.get_style_context().add_class(Granite.STYLE_CLASS_CHECKERBOARD)
+            # self.get_style_context().add_class(Granite.STYLE_CLASS_CHECKERBOARD)
+            self.get_style_context().add_class("checkerboard")
         
         self.label = "{width} x {height} px".format(width=str(self.pixbuf_original.props.width), height=str(self.pixbuf_original.props.height))
-
 
     def draw(self, drawing_area, cairo_context):
         # Forked and ported from https://github.com/elementary/greeter/blob/master/src/Widgets/BackgroundImage.vala
@@ -624,8 +612,87 @@ class ImageContainer(Gtk.Grid):
 # ----------------------------------------------------------------------------------------------------
 
 class ColorContainer(Gtk.Grid):
-    def __init__(self, filepath, *args, **kwargs):
+    def __init__(self, filepath, type, utils, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        self.content = open(filepath, "r")
+        self.content = self.content.read()
+        self.content = self.content.strip(" ").strip(";") #strip the ; for processing 
+        _content = self.content.strip(")") #strip the ) for processing 
+        #print(self.id, self.type, content)
+
+        if type == "color/hex":
+            rgb = utils.HexToRGB(_content)
+            a = 1
+
+        elif type == "color/rgb":
+            r, g, b = _content.split("(")[1].split(",")[0:3]
+            r = int(int(r.strip("%"))/100*255) if r.find("%") != -1 else int(r)
+            g = int(int(g.strip("%"))/100*255) if g.find("%") != -1 else int(g)
+            b = int(int(b.strip("%"))/100*255) if b.find("%") != -1 else int(b)
+            rgb = [r, g, b] 
+            a = 1
+
+        elif type == "color/rgba":
+            r, g, b, a = _content.split("(")[1].split(",")
+            r = int(int(r.strip("%"))/100*255) if r.find("%") != -1 else int(r)
+            g = int(int(g.strip("%"))/100*255) if g.find("%") != -1 else int(g)
+            b = int(int(b.strip("%"))/100*255) if b.find("%") != -1 else int(b)
+            rgb = [r, g, b] 
+            a = float(a.split(")")[0])
+
+        elif type == "color/hsl":
+            h, s, l = _content.split("(")[1].split(",")[0:3]
+            h = float(h) / 360
+            s = float(s.replace("%","")) / 100
+            l = float(l.replace("%","")) / 100
+            a = 1
+            rgb = utils.HSLtoRGB((h, s, l))
+
+        elif type == "color/hsla":
+            h, s, l, a = _content.split("(")[1].split(",") 
+            h = int(h) / 360
+            s = int(s.replace("%","")) / 100
+            l = int(l.replace("%","")) / 100
+            a = float(a.split(")")[0])
+            rgb = utils.HSLtoRGB((h, s, l))
+
+        # color_code = "rgba(" + str(rgb[0]) + "," + str(rgb[1]) + "," + str(rgb[2]) + "," + str(1) + ")"
+        color_code = "rgba(" + str(rgb[0]) + "," + str(rgb[1]) + "," + str(rgb[2]) + "," + str(a) + ")"
+        
+        if utils.isLightOrDark(rgb) == "light":
+            font_color = "rgba(0,0,0,0.85)"
+        else:
+            font_color = "rgba(255,255,255,0.85)"
+
+        color_content_css = ".color-container-bg {background-color: " + color_code + "; color: " + font_color + ";}"
+        font_css = ".color-content {letter-spacing: 1px; font-weight: bold; font-size: 125%;}"
+        css = color_content_css + "\n" + font_css
+        provider = Gtk.CssProvider()
+        provider.load_from_data(bytes(css.encode()))
+
+        self.content = Gtk.Label(self.content)
+        self.content.props.expand = True
+        self.content.get_style_context().add_provider(provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+        self.content.get_style_context().add_class("color-content")
+
+        if str(a) != "1":
+            #self.get_style_context().add_class(Granite.STYLE_CLASS_CHECKERBOARD) # if there is alpha below 1
+            self.get_style_context().add_class("checkerboard")
+
+        self.get_style_context().add_provider(provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+        self.get_style_context().add_class("color-container-bg")
+
+        self.props.halign = self.props.valign = Gtk.Align.FILL
+        self.props.name = "color-container"        
+        self.attach(self.content, 0, 0, 1, 1)
+
+        self.label = type.split("/")[1].upper()
+
+
+# ----------------------------------------------------------------------------------------------------
+
+
 
 
     # def on_resize(self, clipscontainer, cairocontext):

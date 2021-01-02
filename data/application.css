@@ -99,9 +99,9 @@ stack {
 
 /* -- settings-view -- */
 /* ------------------------------ */
-.stack-settings, .headerbar-settings, .main_view-settings {
+/* .stack-settings, .headerbar-settings, .main_view-settings {
     background-color: @shaded_dark;
-}
+} */
 
 label#settings-group-label {
     font-weight: bold;
@@ -139,8 +139,8 @@ grid#clip-container {
     animation: crossfader 0.5s ease-in-out forwards;
 }
 
-grid#image-container {
-    border-radius: 5px;
+grid#image-container, grid#color-container {
+    border-radius: 4px;
     background-color: transparent;
 }
 
@@ -181,8 +181,8 @@ flowbox {
 
 grid#clip-info {
     background-color: rgba(255,255,255,0.2);
-    border-bottom-left-radius: 2px;
-    border-bottom-right-radius: 2px;
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
     border-style: none;
 }
 
@@ -200,10 +200,8 @@ button#clip-action-button {
     box-shadow: none;
     border-style: none;
     padding: 4px;
-    /* padding-left: 8px;
-    padding-right: 8px; */
-    color: white;
-    opacity: 0.5;
+    /* color: white;
+    opacity: 0.5; */
 }
 
 button#clip-action-button > widget > box > label {
@@ -215,7 +213,7 @@ button#clip-action-button:hover {
     border-width: 1px;
     border-color: rgba(255,255,255,0.75); */
     border-radius: 3px;
-    background-color: rgba(0,0,0,0.35);
+    /* background-color: rgba(0,0,0,0.35); */
     opacity: 1;
    
 }
@@ -279,3 +277,12 @@ button#clips-action-enable:active, button#clips-action-protect:active {
     opacity: 1;
 }
 
+.checkerboard {
+    background-image:
+      linear-gradient(45deg, rgba(0,0,0,0.1) 25%, transparent 25%), 
+      linear-gradient(135deg, rgba(0,0,0,0.1) 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, rgba(0,0,0,0.1) 75%),
+      linear-gradient(135deg, transparent 75%, rgba(0,0,0,0.1) 75%);
+    background-size:24px 24px; /* Must be a square */
+    background-position:0 0, 12px 0, 12px -12px, 0px 12px; /* Must be half of one side of the square */
+}

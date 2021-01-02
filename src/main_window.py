@@ -68,6 +68,7 @@ class ClipsWindow(Gtk.ApplicationWindow):
         self.get_style_context().add_class("rounded")
         #self.set_default_size(958, 450)
         self.set_size_request(880, 450)
+        # self.set_size_request(640, 450)
         self.resize(958, 450)
         geometry = Gdk.Geometry()
         # setattr(geometry, 'base_height', 450)
@@ -185,7 +186,7 @@ class ClipsWindow(Gtk.ApplicationWindow):
     def generate_viewswitch(self, settings_view_obj):
         icon_theme = Gtk.IconTheme.get_default()
         icon_theme.prepend_search_path(os.path.join(os.path.dirname(__file__), "..", "data", "icons"))
-        view_switch = Granite.ModeSwitch.from_icon_name("com.github.hezral.clips-symbolic", "preferences-system-symbolic")
+        view_switch = Granite.ModeSwitch.from_icon_name("com.github.hezral.clips-symbolic", "settings")
         # view_switch.props.primary_icon_tooltip_text = "Ghoster"
         # view_switch.props.secondary_icon_tooltip_text = "Settings"
         view_switch.props.valign = Gtk.Align.CENTER
@@ -260,7 +261,9 @@ class ClipsWindow(Gtk.ApplicationWindow):
         revealer = self.utils.get_widget_by_name(widget=searchbar, child_name="search-revealer", level=0)
 
         if type == "in" and revealer.get_child_revealed() is False:
-            self.searchentry.props.primary_icon_name = "preferences-system-power-symbolic"
+            icon_theme = Gtk.IconTheme.get_default()
+            icon_theme.prepend_search_path(os.path.join(os.path.dirname(__file__), "..", "data", "icons"))
+            self.searchentry.props.primary_icon_name = "quick-search"
             self.searchentry.props.primary_icon_tooltip_text = "Use quick search tags"
             self.searchentry.props.name = "search-entry-active"
             self.searchentry.props.primary_icon_activatable = True
