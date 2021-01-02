@@ -127,7 +127,7 @@ def isValidColorCode(str):
 import colorsys
 def HSLtoRGB(hslcode):
     h, s, l = hslcode
-    r, g, b = colorsys.hls_to_rgb(h, s, l)
+    r, g, b = colorsys.hls_to_rgb(h, l, s)
     rgb = [int(r*255), int(g*255), int(b*255)]
     return rgb
 
