@@ -286,7 +286,7 @@ class ClipsContainer(Gtk.Grid):
         icon_theme.prepend_search_path(os.path.join(os.path.dirname(__file__), "..", "..", "data", "icons"))
 
         protect_action = self.generate_action_btn("com.github.hezral.clips-protect-symbolic", "Protect clip", "protect")
-        info_action = self.generate_action_btn("com.github.hezral.clips-protect-symbolic", "Show clip info", "info")
+        info_action = self.generate_action_btn("com.github.hezral.clips-info-symbolic", "Show clip info", "info")
         view_action = self.generate_action_btn("com.github.hezral.clips-view-symbolic", "View clip", "view")
         copy_action = self.generate_action_btn("edit-copy-symbolic", "Copy to clipboard", "copy")
         delete_action = self.generate_action_btn("edit-delete-symbolic", "Delete clip", "delete")
@@ -298,9 +298,10 @@ class ClipsContainer(Gtk.Grid):
         clip_action.props.hexpand = True
         clip_action.props.row_spacing = clip_action.props.column_spacing = 4
         clip_action.attach(protect_action, 0, 0, 1, 1)
-        clip_action.attach(view_action, 1, 0, 1, 1)
-        clip_action.attach(copy_action, 2, 0, 1, 1)
-        clip_action.attach(delete_action, 3, 0, 1, 1)   
+        clip_action.attach(info_action, 1, 0, 1, 1)
+        clip_action.attach(view_action, 2, 0, 1, 1)
+        clip_action.attach(copy_action, 3, 0, 1, 1)
+        clip_action.attach(delete_action, 4, 0, 1, 1)   
 
         clip_action_revealer = Gtk.Revealer()
         clip_action_revealer.props.name = "clip-action-revealer"

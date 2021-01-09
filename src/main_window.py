@@ -186,7 +186,7 @@ class ClipsWindow(Gtk.ApplicationWindow):
     def generate_viewswitch(self, settings_view_obj):
         icon_theme = Gtk.IconTheme.get_default()
         icon_theme.prepend_search_path(os.path.join(os.path.dirname(__file__), "..", "data", "icons"))
-        view_switch = Granite.ModeSwitch.from_icon_name("com.github.hezral.clips-symbolic", "settings")
+        view_switch = Granite.ModeSwitch.from_icon_name("com.github.hezral.clips-symbolic", "com.github.hezral.clips-settings-symbolic")
         # view_switch.props.primary_icon_tooltip_text = "Ghoster"
         # view_switch.props.secondary_icon_tooltip_text = "Settings"
         view_switch.props.valign = Gtk.Align.CENTER
