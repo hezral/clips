@@ -240,6 +240,7 @@ class Win(Gtk.ApplicationWindow):
         flowbox.props.homogeneous = False
         flowbox.props.row_spacing = 10
         flowbox.props.column_spacing = 10
+        flowbox.props.selection_mode = Gtk.SelectionMode.MULTIPLE
         #flowbox.props.margin = 10
         # 指定ディレクトリのファイルを探す
         d = Gio.file_new_for_path(FOLDER)

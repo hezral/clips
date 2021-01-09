@@ -68,6 +68,7 @@ grid#search-bar {
 entry#search-entry {
     box-shadow: none;
     background-image: none;
+    background: transparent;
     border-style: none;
     padding: 5px;
     padding-top: 7px;
@@ -180,7 +181,14 @@ flowbox {
 } */
 
 grid#clip-info {
-    background-color: rgba(255,255,255,0.2);
+    background-color: rgba(255,255,255,0.35);
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+    border-style: none;
+}
+
+grid#clip-action {
+    background-color: rgba(125, 48, 232, 0.65);
     border-bottom-left-radius: 4px;
     border-bottom-right-radius: 4px;
     border-style: none;
@@ -200,25 +208,24 @@ button#clip-action-button {
     box-shadow: none;
     border-style: none;
     padding: 4px;
-    /* color: white;
-    opacity: 0.5; */
+    color: white;
 }
 
-button#clip-action-button > widget > box > label {
+/* button#clip-action-button > widget > box > label {
     padding-left: 2px;
-}
+} */
 
-button#clip-action-button:hover {
-    /* border-style: solid;
+/* button#clip-action-button:hover {
+    border-style: solid;
     border-width: 1px;
-    border-color: rgba(255,255,255,0.75); */
+    border-color: rgba(255,255,255,0.75); 
     border-radius: 3px;
-    /* background-color: rgba(0,0,0,0.35); */
+    background-color: rgba(0,0,0,0.35);
     opacity: 1;
    
-}
+} */
     
-button#clip-action-button:active {
+/* button#clip-action-button:active {
     border-color: rgba(255,255,255,0.5);
     background-color: rgba(0,0,0,0.7);
     opacity: 0.55;
@@ -228,16 +235,7 @@ button#clip-action-button:active {
 button#clip-action-button:disabled {
     text-shadow: none;
 }
-    
-    
-grid#clip-action {
-    background-color: rgba(0,0,0,0.75);
-    color: white;
-    padding: 8px;
-    border-radius: 4px;
-}
-
-
+     */
 
 label#clip-action-message {
     background-color: rgba(0,0,0,0.75);
@@ -248,12 +246,6 @@ label#clip-action-message {
     border-radius: 3px;
     font-weight: bold;
 }
-
-.test {
-    color: rgba(4%,4,4%,0.4);
-    color: rgba(10,4, 10, 0.4);
-}
-
 
 button#clips-action-enable, button#clips-action-protect {
     border-style: none;

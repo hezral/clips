@@ -42,9 +42,10 @@ class ClipsView(Gtk.Grid):
         self.flowbox.props.min_children_per_line = 3
         self.flowbox.props.valign = Gtk.Align.START
         self.flowbox.props.halign = Gtk.Align.FILL
+        #self.flowbox.props.selection_mode = Gtk.SelectionMode.MULTIPLE
         self.flowbox.set_sort_func(self.sort_flowbox)
         self.flowbox.connect("child_activated", self.on_child_activated)
-        self.flowbox.connect("selected_children_changed", self.on_child_activated)
+        # self.flowbox.connect("selected_children_changed", self.on_child_selected)
 
         #------ scrolled_window ----#
         scrolled_window = Gtk.ScrolledWindow()
@@ -56,7 +57,6 @@ class ClipsView(Gtk.Grid):
         #------ construct ----#
         self.props.name = "clips-view"
         self.props.expand = True
-        #self.set_size_request(650, 250)
         self.attach(scrolled_window, 0, 0, 1, 1)
 
     def filter_flowbox(self, *args):
@@ -81,6 +81,7 @@ class ClipsView(Gtk.Grid):
             self.flowbox.add(ClipsContainer(clip, app.cache_manager.cache_filedir, app.utils))
             new_flowboxchild = [child for child in self.flowbox.get_children() if child.get_children()[0].id == id][0]
             new_flowboxchild.connect("focus-out-event", self.on_child_focus_out, new_flowboxchild)
+            # new_flowboxchild.connect("focus", self.on_child_focus)
             
             if app_startup is False:
                 # total_clips = int(main_window.total_clips_label.props.label.split(": ")[1])
@@ -99,10 +100,8 @@ class ClipsView(Gtk.Grid):
         if position.value_name == "GTK_POS_BOTTOM":
             print(datetime.now(), "loading next items")
 
-    def on_child_activated(self, flowbox, flowboxchild=None):
-        if flowboxchild is None:
-            flowboxchild = flowbox.get_selected_children()[0]
-        
+    def on_child_activated(self, flowbox, flowboxchild):
+           
         main_window = self.get_toplevel()
         app = main_window.props.application
         utils = app.utils
@@ -113,14 +112,13 @@ class ClipsView(Gtk.Grid):
             clip_action_revealer.set_reveal_child(False)
         else:
             clip_action_revealer.set_reveal_child(True)
-        
+      
     def on_child_focus_out(self, flowbox, event, flowboxchild):
         main_window = self.get_toplevel()
         app = main_window.props.application
         utils = app.utils
         clip_action_revealer = utils.get_widget_by_name(widget=flowbox, child_name="clip-action-revealer", level=0)
-        clip_action_revealer.set_reveal_child(False)
-        
+        clip_action_revealer.set_reveal_child(False)        
 
 # ----------------------------------------------------------------------------------------------------
 
@@ -217,76 +215,6 @@ class ClipsContainer(Gtk.Grid):
         elif "color" in self.type:
             self.content = ColorContainer(self.cache_file, self.type, utils)
 
-
-
-            # self.content = open(self.cache_file, "r")
-            # self.content = self.content.read()
-            # self.content = self.content.strip(" ").strip(";") #strip the ; for processing 
-            # _content = self.content.strip(")") #strip the ) for processing 
-            # #print(self.id, self.type, content)
-
-            # if self.type == "color/hex":
-            #     rgb = utils.HexToRGB(_content)
-            #     a = 1
-
-            # elif self.type == "color/rgb":
-            #     r, g, b = _content.split("(")[1].split(",")[0:3]
-            #     r = int(int(r.strip("%"))/100*255) if r.find("%") != -1 else int(r)
-            #     g = int(int(g.strip("%"))/100*255) if g.find("%") != -1 else int(g)
-            #     b = int(int(b.strip("%"))/100*255) if b.find("%") != -1 else int(b)
-            #     rgb = [r, g, b] 
-            #     a = 1
-
-            # elif self.type == "color/rgba":
-            #     r, g, b, a = _content.split("(")[1].split(",")
-            #     r = int(int(r.strip("%"))/100*255) if r.find("%") != -1 else int(r)
-            #     g = int(int(g.strip("%"))/100*255) if g.find("%") != -1 else int(g)
-            #     b = int(int(b.strip("%"))/100*255) if b.find("%") != -1 else int(b)
-            #     rgb = [r, g, b] 
-            #     a = float(a.split(")")[0])
-
-            # elif self.type == "color/hsl":
-            #     h, s, l = _content.split("(")[1].split(",")[0:3]
-            #     print(h, s, l)
-            #     h = int(h) / 360
-            #     s = int(s.replace("%","")) / 100
-            #     l = int(l.replace("%","")) / 100
-            #     a = 1
-            #     rgb = utils.HSLtoRGB((h, s, l))
-
-            # elif self.type == "color/hsla":
-            #     h, s, l, a = _content.split("(")[1].split(",") 
-            #     h = int(h) / 360
-            #     s = int(s.replace("%","")) / 100
-            #     l = int(l.replace("%","")) / 100
-            #     a = float(a.split(")")[0])
-            #     rgb = utils.HSLtoRGB((h, s, l))
-
-            # color_code = "rgba(" + str(rgb[0]) + "," + str(rgb[1]) + "," + str(rgb[2]) + "," + str(1) + ")"
-            
-            # if utils.isLightOrDark(rgb) == "light":
-            #     font_color = "rgba(0,0,0,0.85)"
-            # else:
-            #     font_color = "rgba(255,255,255,0.85)"
-
-            # color_content_css = ".color-container {background-color: " + color_code + "; color: " + font_color + ";}"
-            # font_css = ".color-content {letter-spacing: 1px; font-weight: bold; font-size: 125%;}"
-            # css = color_content_css + "\n" + font_css
-            # provider = Gtk.CssProvider()
-            # provider.load_from_data(bytes(css.encode()))
-
-            # self.content = Gtk.Label(self.content)
-            # self.content.get_style_context().add_provider(provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
-            # self.content.get_style_context().add_class("color-content")
-
-            # if str(a) != "1":
-            #     self.get_style_context().add_class(Granite.STYLE_CLASS_CHECKERBOARD) # if there is alpha below 1
-
-            # self.get_style_context().add_provider(provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
-            # self.get_style_context().add_class("color-container")
-
-            # self.content_label = self.type.split("/")[1].upper()
-
         else:
             self.content_label = "title"
             self.content = Gtk.Label("CONTENT")
@@ -304,10 +232,8 @@ class ClipsContainer(Gtk.Grid):
         # clip_content.set_size_request(-1, 118)
         clip_content.add(self.content)
 
-        #------ content label ----#
-        #if not self.content.label:
-        #    self.content.label = "label"
-        self.content_label = Gtk.Label("self.content.label")
+        #------ clip_info ----#
+        self.content_label = Gtk.Label(self.id)
         self.content_label.props.name = "clip-content-label"
         self.content_label.props.halign = Gtk.Align.START
         self.content_label.props.valign = Gtk.Align.END
@@ -340,98 +266,46 @@ class ClipsContainer(Gtk.Grid):
         self.timestamp.props.margin_right = 6
         self.timestamp.props.margin_bottom = 8
 
-        #------ clip_info ----#
         clip_info = Gtk.Grid()
         clip_info.props.name = "clip-info"
         clip_info.props.halign = Gtk.Align.FILL
-        clip_info.props.valign = Gtk.Align.END
+        clip_info.props.valign = Gtk.Align.START
         clip_info.props.expand = True
         clip_info.set_size_request(-1, 32)
         clip_info.attach(source_icon, 0, 0, 1, 1)
         clip_info.attach(self.content_label, 1, 0, 1, 1)
         clip_info.attach(self.timestamp, 3, 0, 1, 1)
 
+        clip_info_revealer = Gtk.Revealer()
+        clip_info_revealer.props.name = "clip-action-revealer"
+        clip_info_revealer.props.transition_type = Gtk.RevealerTransitionType.CROSSFADE
+        #clip_info_revealer.add(clip_info)
+
         #------ clip_action ----#
         icon_theme = Gtk.IconTheme.get_default()
         icon_theme.prepend_search_path(os.path.join(os.path.dirname(__file__), "..", "..", "data", "icons"))
 
-        protect_action = Gtk.Button().new_with_mnemonic(label="_Protect")
-        protect_action.props.image = Gtk.Image().new_from_icon_name("com.github.hezral.clips-protect-symbolic", Gtk.IconSize.SMALL_TOOLBAR)
-        protect_action.props.always_show_image = True
-        protect_action.props.use_underline = True
-        # protect_action = Gtk.Button(image=Gtk.Image().new_from_icon_name("com.github.hezral.clips-protect-symbolic", Gtk.IconSize.SMALL_TOOLBAR))
-        protect_action.props.name = "clip-action-button"
-        protect_action.props.has_tooltip = True
-        protect_action.props.tooltip_text = "Protect clip"
-        protect_action.props.sensitive = False
-        protect_action.set_size_request(30, 30)
-        protect_action.connect("clicked", self.on_clip_action, "protect")
-        # if "color" in self.type:
-        #     protect_action.props.sensitive = False
-        #     protect_action.props.has_tooltip = False
-        
-        view_action = Gtk.Button().new_with_mnemonic(label="_View")
-        view_action.props.image = Gtk.Image().new_from_icon_name("com.github.hezral.clips-view-symbolic", Gtk.IconSize.SMALL_TOOLBAR)
-        view_action.props.always_show_image = True
-        view_action.props.use_underline = True
-        #view_action = Gtk.Button(image=Gtk.Image().new_from_icon_name("com.github.hezral.clips-view-symbolic", Gtk.IconSize.SMALL_TOOLBAR))
-        view_action.props.name = "clip-action-button"
-        view_action.props.has_tooltip = True
-        view_action.props.tooltip_text = "View clip"
-        view_action.set_size_request(30, 32)
-        view_action.connect("clicked", self.on_clip_action, "view")
-        if "color" in self.type:
-            view_action.props.sensitive = False
-            view_action.props.has_tooltip = False
+        protect_action = self.generate_action_btn("com.github.hezral.clips-protect-symbolic", "Protect clip", "protect")
+        info_action = self.generate_action_btn("com.github.hezral.clips-protect-symbolic", "Show clip info", "info")
+        view_action = self.generate_action_btn("com.github.hezral.clips-view-symbolic", "View clip", "view")
+        copy_action = self.generate_action_btn("edit-copy-symbolic", "Copy to clipboard", "copy")
+        delete_action = self.generate_action_btn("edit-delete-symbolic", "Delete clip", "delete")
 
-        copy_action = Gtk.Button().new_with_mnemonic(label="_Copy")
-        copy_action.props.image = Gtk.Image().new_from_icon_name("edit-copy-symbolic", Gtk.IconSize.SMALL_TOOLBAR)
-        copy_action.props.always_show_image = True
-        copy_action.props.use_underline = True
-        # copy_action = Gtk.Button(image=Gtk.Image().new_from_icon_name("edit-copy-symbolic", Gtk.IconSize.SMALL_TOOLBAR))
-        copy_action.props.name = "clip-action-button"
-        copy_action.props.has_tooltip = True
-        copy_action.props.tooltip_text = "Copy to clipboard"
-        copy_action.set_size_request(30, 30)
-        copy_action.connect("clicked", self.on_clip_action, "copy")
-        
-        delete_action = Gtk.Button().new_with_mnemonic(label="_Delete")
-        delete_action.props.image = Gtk.Image().new_from_icon_name("edit-delete-symbolic", Gtk.IconSize.SMALL_TOOLBAR)
-        delete_action.props.always_show_image = True
-        delete_action.props.use_underline = True
-        # delete_action = Gtk.Button(image=Gtk.Image().new_from_icon_name("edit-delete-symbolic", Gtk.IconSize.SMALL_TOOLBAR))
-        delete_action.props.name = "clip-action-button"
-        delete_action.props.has_tooltip = True
-        delete_action.props.tooltip_text = "Delete clip"
-        #delete_action.props.halign = Gtk.Align.START
-        delete_action.set_size_request(30, 30)
-        delete_action.connect("clicked", self.on_clip_action, "delete")
-        
         clip_action = Gtk.Grid()
         clip_action.props.name = "clip-action"
-        clip_action.props.halign = clip_action.props.valign = Gtk.Align.CENTER
+        clip_action.props.halign = Gtk.Align.FILL
+        clip_action.props.valign = Gtk.Align.END
+        clip_action.props.hexpand = True
         clip_action.props.row_spacing = clip_action.props.column_spacing = 4
-        # if self.protected == "yes": # add if clip is protected
-        #     protect_action.props.
         clip_action.attach(protect_action, 0, 0, 1, 1)
         clip_action.attach(view_action, 1, 0, 1, 1)
-        clip_action.attach(copy_action, 0, 1, 1, 1)
-        clip_action.attach(delete_action, 1, 1, 1, 1)
-        # if self.protected == "yes": # add if clip is protected
-        #     clip_action.attach(protect_action, 0, 0, 1, 1)
-        # clip_action.attach(view_action, 1, 0, 1, 1)
-        # clip_action.attach(copy_action, 2, 0, 1, 1)
-        # clip_action.attach(delete_action, 3, 0, 1, 1)
-
-        # revealer_grid = Gtk.Grid()
-        # revealer_grid.attach(clip_action, 0, 0, 1, 2)
-        # revealer_grid.attach(clip_info, 0, 1, 1, 1)
+        clip_action.attach(copy_action, 2, 0, 1, 1)
+        clip_action.attach(delete_action, 3, 0, 1, 1)   
 
         clip_action_revealer = Gtk.Revealer()
         clip_action_revealer.props.name = "clip-action-revealer"
         clip_action_revealer.props.transition_type = Gtk.RevealerTransitionType.CROSSFADE
         clip_action_revealer.add(clip_action)
-        #clip_action_revealer.props.can_focus = False
         
 
         #------ message_action ----#
@@ -441,7 +315,6 @@ class ClipsContainer(Gtk.Grid):
         message_action_revealer = Gtk.Revealer()
         message_action_revealer.props.name = "clip-action-message-revealer"
         message_action_revealer.props.transition_type = Gtk.RevealerTransitionType.CROSSFADE
-       
         message_action_revealer.connect("focus-out-event", self.on_message_action_hide)
         message_action_revealer.add(message_action)
 
@@ -456,11 +329,20 @@ class ClipsContainer(Gtk.Grid):
                                                                                                             source=self.source, 
                                                                                                             source_app=self.source_app, 
                                                                                                             created=self.created_short)
-        # self.attach(clip_info, 0, 0, 1, 1)
+        self.attach(clip_info, 0, 0, 1, 2)
         self.attach(clip_action_revealer, 0, 0, 1, 1)
         self.attach(message_action_revealer, 0, 0, 1, 1)
         self.attach(clip_content, 0, 0, 1, 1)
 
+    def generate_action_btn(self, iconname, tooltiptext, actionname):
+        button = Gtk.Button(image=Gtk.Image().new_from_icon_name(iconname, Gtk.IconSize.SMALL_TOOLBAR))
+        button.props.name = "clip-action-button"
+        button.props.hexpand = True
+        button.props.has_tooltip = True
+        button.props.tooltip_text = tooltiptext
+        button.set_size_request(30, 30)
+        button.connect("clicked", self.on_clip_action, actionname)        
+        return button
         
     def on_clip_action(self, button=None, action=None):
         print(datetime.now(), action)
@@ -473,7 +355,7 @@ class ClipsContainer(Gtk.Grid):
 
         message_action = utils.get_widget_by_name(widget=self, child_name="clip-action-message", level=0)
         message_action.props.label = action
-        
+    
         message_action_revealer.set_reveal_child(True)
         message_action_revealer.props.can_focus = True
         message_action_revealer.grab_focus()
@@ -481,19 +363,42 @@ class ClipsContainer(Gtk.Grid):
         if action == "protect":
             pass
 
+        elif action == "info":
+            print(self.props.tooltip_text)
+
         elif action == "view":
             utils.view_clips(self.cache_file)
 
         elif action == "copy":
             print(action, self.cache_file)
 
-        elif action == "delete":
+        elif action == "force_delete":
             flowboxchild.destroy()
             app.cache_manager.delete_record(self.id, self.cache_file)
             main_window.update_total_clips_label("delete")
 
-        # elif action == "updated":
-        #     message_action_revealer.grab_focus()
+        elif action == "delete":
+            dialog = Gtk.Dialog.new()
+            dialog.props.title="Confirm delete action"
+            dialog.props.transient_for = main_window
+            btn_ok = Gtk.Button(label="OK")
+            btn_ok.get_style_context().add_class("destructive-action")
+            btn_cancel = Gtk.Button(label="Cancel")
+            dialog.add_action_widget(btn_ok, Gtk.ResponseType.OK)
+            dialog.add_action_widget(btn_cancel, Gtk.ResponseType.CANCEL)
+            dialog.set_default_size(150, 100)
+            label = Gtk.Label(label="Delete this clip?\n{details}".format(details=self.props.tooltip_text))
+            box = dialog.get_content_area()
+            box.props.margin = 10
+            box.add(label)
+            dialog.show_all()
+            btn_cancel.grab_focus()
+            response = dialog.run()
+            if response == Gtk.ResponseType.OK:
+                flowboxchild.destroy()
+                app.cache_manager.delete_record(self.id, self.cache_file)
+                main_window.update_total_clips_label("delete")
+            dialog.destroy()
 
         else:
             pass
@@ -546,6 +451,47 @@ class ClipsContainer(Gtk.Grid):
         return str(round(day_diff / 365, 1)) + " years ago (wow!)"
 
 # ----------------------------------------------------------------------------------------------------
+
+class ClipInfo(Gtk.Grid):
+    def __init__(self, cache_filedir, source_app, scale, created, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        #------ source_icon / application icon ----#
+        source_icon_cache = os.path.join(cache_filedir[:-6],"icon", source_app.replace(" ",".").lower() + ".png")
+        
+        if os.path.exists(source_icon_cache):
+            pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(source_icon_cache, 24 * scale, 24 * scale, True)
+            source_icon = Gtk.Image().new_from_pixbuf(pixbuf)
+        else:
+            source_icon = Gtk.Image().new_from_icon_name("image-missing", Gtk.IconSize.LARGE_TOOLBAR)
+            source_icon.set_pixel_size(24 * scale)
+
+        source_icon.props.halign = Gtk.Align.START
+        source_icon.props.valign = Gtk.Align.END
+        source_icon.props.margin = 4
+
+        #------ timestamp ----#
+        self.created_short = datetime.strptime(created, '%Y-%m-%d %H:%M:%S.%f')
+        self.created_short = self.created_short.strftime('%a, %b %d %Y, %H:%M:%S')
+        self.created = datetime.strptime(self.created, '%Y-%m-%d %H:%M:%S.%f')
+        self.timestamp = self.friendly_timestamp(self.created)
+        self.timestamp = Gtk.Label(self.timestamp)
+        self.timestamp.props.name = "clip-timestamp"
+        self.timestamp.props.halign = self.timestamp.props.valign = Gtk.Align.END
+        self.timestamp.props.margin = 4
+        self.timestamp.props.margin_right = 6
+        self.timestamp.props.margin_bottom = 8
+
+        #------ clip_info ----#
+        clip_info = Gtk.Grid()
+        clip_info.props.name = "clip-info"
+        clip_info.props.halign = Gtk.Align.FILL
+        clip_info.props.valign = Gtk.Align.END
+        clip_info.props.expand = True
+        clip_info.set_size_request(-1, 32)
+        clip_info.attach(source_icon, 0, 0, 1, 1)
+        clip_info.attach(self.content_label, 1, 0, 1, 1)
+        clip_info.attach(self.timestamp, 3, 0, 1, 1)
 
 class ImageContainer(Gtk.Grid):
     def __init__(self, filepath, *args, **kwargs):

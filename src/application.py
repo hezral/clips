@@ -65,9 +65,18 @@ class Clips(Gtk.Application):
     def do_startup(self):
         Gtk.Application.do_startup(self)
 
+        # app actions
         self.setup_action("hide", self.on_hide_action, "Escape")
         self.setup_action("quit", self.on_quit_action, "<Ctrl>Q")
         self.setup_action("search", self.on_search_action, "<Ctrl>F")
+
+        # selected clip actions
+        self.setup_action("protect", self.on_clip_actions, "P")
+        self.setup_action("info", self.on_clip_actions, "I")
+        self.setup_action("view", self.on_clip_actions, "V")
+        self.setup_action("copy", self.on_clip_actions, "C")
+        self.setup_action("delete", self.on_clip_actions, "D")
+        self.setup_action("force_delete", self.on_clip_actions, "<Shift>D")
 
         # #applicationwindow theme
         settings = Gtk.Settings.get_default()
@@ -180,6 +189,11 @@ class Clips(Gtk.Application):
         # focus back on first flowboxchild
         else:
             self.main_window.clips_view.flowbox.get_child_at_index(0).grab_focus()
+    
+    def on_clip_actions(self, action, param):
+        if len(self.main_window.clips_view.flowbox.get_selected_children()) != 0:
+            flowboxchild = self.main_window.clips_view.flowbox.get_selected_children()[0].get_children()[0]
+            flowboxchild.on_clip_action(action=action.props.name)
 
     def on_hide_action(self, action, param):
         if self.main_window is not None:

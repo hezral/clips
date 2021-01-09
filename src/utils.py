@@ -55,6 +55,37 @@ def get_widget_by_name(widget, child_name, level, doPrint=False):
                 found = get_widget_by_name(child, child_name, level+1, doPrint) # //search the child
                 if found: return found
 
+def get_widget_by_focus_state(widget, focus_state, level, doPrint=False):
+
+    if widget is not None:
+        if doPrint: print("-"*level + str(Gtk.Widget.get_name(widget)) + " :: " + str(type(widget).__name__) + " :has_focus: " + str(widget.has_focus()))
+    else:
+        if doPrint: print("-"*level + "None")
+        
+        return None
+    
+
+    #/*** If it is what we are looking for ***/
+    if(widget.is_focus() == focus_state):
+        if doPrint: print("###################################################")
+        return widget
+
+    #/*** If this widget has one child only search its child ***/
+    if (hasattr(widget, 'get_child') and callable(getattr(widget, 'get_child'))):
+        child = widget.get_child()
+        if child is not None:
+            return get_widget_by_focus_state(child, focus_state, level+1, doPrint)
+
+    # /*** It might have many children, so search them ***/
+    elif (hasattr(widget, 'get_children') and callable(getattr(widget, 'get_children'))):
+        children = widget.get_children()
+        # /*** For each child ***/
+        found = None
+        for child in children:
+            if child is not None:
+                found = get_widget_by_focus_state(child, focus_state, level+1, doPrint) # //search the child
+                if found: return found
+
 ###################################################################################################################
 # Color Validation Functions
 
