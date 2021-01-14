@@ -82,7 +82,7 @@ class ClipsContainer(Gtk.Grid):
 
         self.imgcontainer = ImageContainer(filepath, filename)
         self.clipinfo = ClipsInfo(filepath, filename)
-        #self.attach(self.clipinfo, 0, 0, 1, 1)
+        self.attach(self.clipinfo, 0, 0, 1, 1)
         self.attach(self.imgcontainer, 0, 0, 1, 1)
 
 
@@ -268,10 +268,10 @@ class Win(Gtk.ApplicationWindow):
 
         print(type)
 
-        # if flowboxchild.get_children()[0].clipinfo.get_child_revealed():
-        #     flowboxchild.get_children()[0].clipinfo.set_reveal_child(False)
-        # else:
-        #     flowboxchild.get_children()[0].clipinfo.set_reveal_child(True)
+        if flowboxchild.get_children()[0].clipinfo.get_child_revealed():
+            flowboxchild.get_children()[0].clipinfo.set_reveal_child(False)
+        else:
+            flowboxchild.get_children()[0].clipinfo.set_reveal_child(True)
  
 class App(Gtk.Application):
     def __init__(self):

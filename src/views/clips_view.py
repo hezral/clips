@@ -112,6 +112,21 @@ class ClipsView(Gtk.Grid):
             clip_action_revealer.set_reveal_child(False)
         else:
             clip_action_revealer.set_reveal_child(True)
+
+    def on_child_selected(self, flowbox):
+        print(locals())
+        main_window = self.get_toplevel()
+        app = main_window.props.application
+        utils = app.utils
+
+        flowboxchild = flowbox.get_selected_children()[0]
+
+        clip_action_revealer = utils.get_widget_by_name(widget=flowboxchild, child_name="clip-action-revealer", level=0)
+
+        if clip_action_revealer.get_child_revealed():
+            clip_action_revealer.set_reveal_child(False)
+        else:
+            clip_action_revealer.set_reveal_child(True)
       
     def on_child_focus_out(self, flowbox, event, flowboxchild):
         main_window = self.get_toplevel()
@@ -271,6 +286,7 @@ class ClipsContainer(Gtk.Grid):
         clip_info.props.halign = Gtk.Align.FILL
         clip_info.props.valign = Gtk.Align.START
         clip_info.props.expand = True
+        clip_info.props.can_focus = False
         clip_info.set_size_request(-1, 32)
         clip_info.attach(source_icon, 0, 0, 1, 1)
         clip_info.attach(self.content_label, 1, 0, 1, 1)
@@ -296,18 +312,22 @@ class ClipsContainer(Gtk.Grid):
         clip_action.props.halign = Gtk.Align.FILL
         clip_action.props.valign = Gtk.Align.END
         clip_action.props.hexpand = True
+        clip_action.props.can_focus = False
         clip_action.props.row_spacing = clip_action.props.column_spacing = 4
         clip_action.attach(protect_action, 0, 0, 1, 1)
         clip_action.attach(info_action, 1, 0, 1, 1)
         clip_action.attach(view_action, 2, 0, 1, 1)
         clip_action.attach(copy_action, 3, 0, 1, 1)
-        clip_action.attach(delete_action, 4, 0, 1, 1)   
+        clip_action.attach(delete_action, 4, 0, 1, 1)
 
         clip_action_revealer = Gtk.Revealer()
         clip_action_revealer.props.name = "clip-action-revealer"
         clip_action_revealer.props.transition_type = Gtk.RevealerTransitionType.CROSSFADE
         clip_action_revealer.add(clip_action)
-        
+
+        clip_bar_revealer = Gtk.Revealer()
+        clip_bar_revealer.props.name = "clip-bar-revealer"
+        clip_bar_revealer.props.transition_type = Gtk.RevealerTransitionType.CROSSFADE
 
         #------ message_action ----#
         message_action = Gtk.Label()
@@ -330,7 +350,7 @@ class ClipsContainer(Gtk.Grid):
                                                                                                             source=self.source, 
                                                                                                             source_app=self.source_app, 
                                                                                                             created=self.created_short)
-        self.attach(clip_info, 0, 0, 1, 2)
+        #self.attach(clip_info, 0, 0, 1, 2)
         self.attach(clip_action_revealer, 0, 0, 1, 1)
         self.attach(message_action_revealer, 0, 0, 1, 1)
         self.attach(clip_content, 0, 0, 1, 1)
