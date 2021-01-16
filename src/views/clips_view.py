@@ -137,7 +137,7 @@ class ClipsView(Gtk.Grid):
 
 # ----------------------------------------------------------------------------------------------------
 
-class ClipsContainer(Gtk.Grid):
+class ClipsContainer(Gtk.EventBox):
     def __init__(self, clip, cache_filedir, utils, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -301,11 +301,11 @@ class ClipsContainer(Gtk.Grid):
         icon_theme = Gtk.IconTheme.get_default()
         icon_theme.prepend_search_path(os.path.join(os.path.dirname(__file__), "..", "..", "data", "icons"))
 
-        protect_action = self.generate_action_btn("com.github.hezral.clips-protect-symbolic", "Protect clip", "protect")
-        info_action = self.generate_action_btn("com.github.hezral.clips-info-symbolic", "Show clip info", "info")
-        view_action = self.generate_action_btn("com.github.hezral.clips-view-symbolic", "View clip", "view")
-        copy_action = self.generate_action_btn("edit-copy-symbolic", "Copy to clipboard", "copy")
-        delete_action = self.generate_action_btn("edit-delete-symbolic", "Delete clip", "delete")
+        protect_action = self.generate_action_btn("com.github.hezral.clips-protect-symbolic", "Protect", "protect")
+        info_action = self.generate_action_btn("com.github.hezral.clips-info-symbolic", "Show Info", "info")
+        view_action = self.generate_action_btn("com.github.hezral.clips-view-symbolic", "View", "view")
+        copy_action = self.generate_action_btn("edit-copy-symbolic", "Copy to Clipboard", "copy")
+        delete_action = self.generate_action_btn("edit-delete-symbolic", "Delete ", "delete")
 
         clip_action = Gtk.Grid()
         clip_action.props.name = "clip-action"
@@ -340,6 +340,7 @@ class ClipsContainer(Gtk.Grid):
         message_action_revealer.add(message_action)
 
         #------ construct ----#
+        
         self.set_size_request(200, 160)
         self.props.name = "clip-container"
         self.props.expand = True
@@ -350,10 +351,18 @@ class ClipsContainer(Gtk.Grid):
                                                                                                             source=self.source, 
                                                                                                             source_app=self.source_app, 
                                                                                                             created=self.created_short)
+        container_grid = Gtk.Grid()
+        container_grid.props.name = "clip-container-grid"
         #self.attach(clip_info, 0, 0, 1, 2)
-        self.attach(clip_action_revealer, 0, 0, 1, 1)
-        self.attach(message_action_revealer, 0, 0, 1, 1)
-        self.attach(clip_content, 0, 0, 1, 1)
+        container_grid.attach(clip_action_revealer, 0, 0, 1, 1)
+        container_grid.attach(message_action_revealer, 0, 0, 1, 1)
+        container_grid.attach(clip_content, 0, 0, 1, 1)
+
+        self.add(container_grid)
+        self.connect("enter-notify-event", self.entering)
+
+    def entering(self, widget, eventcrossing):
+        print(self.cache_file)
 
     def generate_action_btn(self, iconname, tooltiptext, actionname):
         button = Gtk.Button(image=Gtk.Image().new_from_icon_name(iconname, Gtk.IconSize.SMALL_TOOLBAR))
