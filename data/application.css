@@ -150,7 +150,7 @@ grid#image-container, grid#color-container {
 }
 
 
-flowboxchild:selected {
+.hover, flowboxchild:selected {
     border-radius: 5px;
     box-shadow:
         0 0 0 1px rgba(0,0,0,0.12),
@@ -168,7 +168,7 @@ flowboxchild:selected > widget#clip-container > grid#clip-container-grid > grid#
     background-color: rgba(255,255,255,0.2);
 }
 
-flowboxchild:selected > widget#clip-container > grid#clip-container-grid {
+.hover, flowboxchild:selected > widget#clip-container > grid#clip-container-grid {
     border-color: rgba(125, 48, 232, 1);
 }
 

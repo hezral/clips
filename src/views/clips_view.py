@@ -112,6 +112,8 @@ class ClipsView(Gtk.Grid):
             clip_action_revealer.set_reveal_child(False)
         else:
             clip_action_revealer.set_reveal_child(True)
+        
+        
 
     def on_child_selected(self, flowbox):
         print(locals())
@@ -351,18 +353,55 @@ class ClipsContainer(Gtk.EventBox):
                                                                                                             source=self.source, 
                                                                                                             source_app=self.source_app, 
                                                                                                             created=self.created_short)
-        container_grid = Gtk.Grid()
-        container_grid.props.name = "clip-container-grid"
+        self.container_grid = Gtk.Grid()
+        self.container_grid.props.name = "clip-container-grid"
         #self.attach(clip_info, 0, 0, 1, 2)
-        container_grid.attach(clip_action_revealer, 0, 0, 1, 1)
-        container_grid.attach(message_action_revealer, 0, 0, 1, 1)
-        container_grid.attach(clip_content, 0, 0, 1, 1)
+        self.container_grid.attach(clip_action_revealer, 0, 0, 1, 1)
+        self.container_grid.attach(message_action_revealer, 0, 0, 1, 1)
+        self.container_grid.attach(clip_content, 0, 0, 1, 1)
 
-        self.add(container_grid)
+        self.add(self.container_grid)
         self.connect("enter-notify-event", self.entering)
+        self.connect("leave-notify-event", self.leaving)
 
     def entering(self, widget, eventcrossing):
-        print(self.cache_file)
+        # print(self.get_parent(), self.cache_file)
+        #self.get_parent().get_style_context().add_class("hover")
+        #self.container_grid.get_style_context().add_class("hover")
+        flowboxchild = self.get_parent()
+        # flowbox = flowboxchild.get_parent()
+        # view = self.get_toplevel().clips_view
+        # print(flowbox)
+        # view.on_child_activated(flowbox, flowboxchild)
+
+        main_window = self.get_toplevel()
+        app = main_window.props.application
+        utils = app.utils
+
+        clip_action_revealer = utils.get_widget_by_name(widget=flowboxchild, child_name="clip-action-revealer", level=0)
+        clip_action_revealer.set_reveal_child(True)
+
+    def leaving(self, widget, eventcrossing):
+        # #print(self.cache_file)
+        #self.get_parent().get_style_context().remove_class("hover")
+        #self.container_grid.get_style_context().remove_class("hover")
+        flowboxchild = self.get_parent()
+        # flowbox = flowboxchild.get_parent()
+        # view = self.get_toplevel().clips_view
+        # print(flowbox)
+        # view.on_child_activated(flowbox, flowboxchild)
+
+        print("flowboxchild.is_selected()",flowboxchild.is_selected())
+
+        main_window = self.get_toplevel()
+        app = main_window.props.application
+        utils = app.utils
+
+        clip_action_revealer = utils.get_widget_by_name(widget=flowboxchild, child_name="clip-action-revealer", level=0)
+        if not flowboxchild.is_selected():
+            clip_action_revealer.set_reveal_child(False)
+        else: 
+            clip_action_revealer.set_reveal_child(True)
 
     def generate_action_btn(self, iconname, tooltiptext, actionname):
         button = Gtk.Button(image=Gtk.Image().new_from_icon_name(iconname, Gtk.IconSize.SMALL_TOOLBAR))
