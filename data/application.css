@@ -150,10 +150,19 @@ grid#image-container, grid#color-container {
 }
 
 
-.hover, flowboxchild:selected {
+flowboxchild:selected {
     border-radius: 5px;
     box-shadow:
         0 0 0 1px rgba(0,0,0,0.12),
+        0 2px 5px  rgba(0,0,0,0.16),
+        0 2px 5px  rgba(0,0,0,0.23),
+        0 14px 28px  rgba(0,0,0,0);
+}
+
+.hover {
+    border-radius: 5px;
+    box-shadow:
+        0 0 0 1px rgba(125, 48, 232, 1),
         0 2px 5px  rgba(0,0,0,0.16),
         0 2px 5px  rgba(0,0,0,0.23),
         0 14px 28px  rgba(0,0,0,0);
@@ -168,7 +177,11 @@ flowboxchild:selected > widget#clip-container > grid#clip-container-grid > grid#
     background-color: rgba(255,255,255,0.2);
 }
 
-.hover, flowboxchild:selected > widget#clip-container > grid#clip-container-grid {
+flowboxchild:selected > widget#clip-container > grid#clip-container-grid {
+    border-color: rgba(125, 48, 232, 1);
+}
+
+.gridhover {
     border-color: rgba(125, 48, 232, 1);
 }
 

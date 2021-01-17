@@ -307,6 +307,7 @@ class ClipsContainer(Gtk.EventBox):
         info_action = self.generate_action_btn("com.github.hezral.clips-info-symbolic", "Show Info", "info")
         view_action = self.generate_action_btn("com.github.hezral.clips-view-symbolic", "View", "view")
         copy_action = self.generate_action_btn("edit-copy-symbolic", "Copy to Clipboard", "copy")
+        color_action = self.generate_action_btn("com.github.hezral.clips-colorpallete-symbolic", "Change color", "color")
         delete_action = self.generate_action_btn("edit-delete-symbolic", "Delete ", "delete")
 
         clip_action = Gtk.Grid()
@@ -320,7 +321,8 @@ class ClipsContainer(Gtk.EventBox):
         clip_action.attach(info_action, 1, 0, 1, 1)
         clip_action.attach(view_action, 2, 0, 1, 1)
         clip_action.attach(copy_action, 3, 0, 1, 1)
-        clip_action.attach(delete_action, 4, 0, 1, 1)
+        clip_action.attach(color_action, 4, 0, 1, 1)
+        clip_action.attach(delete_action, 5, 0, 1, 1)
 
         clip_action_revealer = Gtk.Revealer()
         clip_action_revealer.props.name = "clip-action-revealer"
@@ -346,13 +348,13 @@ class ClipsContainer(Gtk.EventBox):
         self.set_size_request(200, 160)
         self.props.name = "clip-container"
         self.props.expand = True
-        self.props.has_tooltip = True
-        self.props.tooltip_text = "id: {id}\ntype: {type}\nsource: {source_app}\ncreated: {created}".format(
-                                                                                                            id=self.id, 
-                                                                                                            type=self.type,
-                                                                                                            source=self.source, 
-                                                                                                            source_app=self.source_app, 
-                                                                                                            created=self.created_short)
+        #self.props.has_tooltip = True
+        # self.props.tooltip_text = "id: {id}\ntype: {type}\nsource: {source_app}\ncreated: {created}".format(
+        #                                                                                                     id=self.id, 
+        #                                                                                                     type=self.type,
+        #                                                                                                     source=self.source, 
+        #                                                                                                     source_app=self.source_app, 
+        #                                                                                                     created=self.created_short)
         self.container_grid = Gtk.Grid()
         self.container_grid.props.name = "clip-container-grid"
         #self.attach(clip_info, 0, 0, 1, 2)
@@ -361,19 +363,14 @@ class ClipsContainer(Gtk.EventBox):
         self.container_grid.attach(clip_content, 0, 0, 1, 1)
 
         self.add(self.container_grid)
-        self.connect("enter-notify-event", self.entering)
-        self.connect("leave-notify-event", self.leaving)
+        self.connect("enter-notify-event", self.cursor_entering_clip)
+        self.connect("leave-notify-event", self.cursor_leaving_clip)
 
-    def entering(self, widget, eventcrossing):
-        # print(self.get_parent(), self.cache_file)
-        #self.get_parent().get_style_context().add_class("hover")
-        #self.container_grid.get_style_context().add_class("hover")
+    def cursor_entering_clip(self, widget, eventcrossing):
+        # self.container_grid.get_style_context().add_class("hover")
+        self.get_parent().get_style_context().add_class("hover")
+        
         flowboxchild = self.get_parent()
-        # flowbox = flowboxchild.get_parent()
-        # view = self.get_toplevel().clips_view
-        # print(flowbox)
-        # view.on_child_activated(flowbox, flowboxchild)
-
         main_window = self.get_toplevel()
         app = main_window.props.application
         utils = app.utils
@@ -381,18 +378,11 @@ class ClipsContainer(Gtk.EventBox):
         clip_action_revealer = utils.get_widget_by_name(widget=flowboxchild, child_name="clip-action-revealer", level=0)
         clip_action_revealer.set_reveal_child(True)
 
-    def leaving(self, widget, eventcrossing):
-        # #print(self.cache_file)
-        #self.get_parent().get_style_context().remove_class("hover")
-        #self.container_grid.get_style_context().remove_class("hover")
+    def cursor_leaving_clip(self, widget, eventcrossing):
+        # self.container_grid.get_style_context().remove_class("hover")
+        self.get_parent().get_style_context().remove_class("hover")
+
         flowboxchild = self.get_parent()
-        # flowbox = flowboxchild.get_parent()
-        # view = self.get_toplevel().clips_view
-        # print(flowbox)
-        # view.on_child_activated(flowbox, flowboxchild)
-
-        print("flowboxchild.is_selected()",flowboxchild.is_selected())
-
         main_window = self.get_toplevel()
         app = main_window.props.application
         utils = app.utils
@@ -402,6 +392,8 @@ class ClipsContainer(Gtk.EventBox):
             clip_action_revealer.set_reveal_child(False)
         else: 
             clip_action_revealer.set_reveal_child(True)
+
+        
 
     def generate_action_btn(self, iconname, tooltiptext, actionname):
         button = Gtk.Button(image=Gtk.Image().new_from_icon_name(iconname, Gtk.IconSize.SMALL_TOOLBAR))
@@ -470,6 +462,7 @@ class ClipsContainer(Gtk.EventBox):
             dialog.destroy()
 
         else:
+            print(action)
             pass
 
     def on_message_action_hide(self, message_action_revealer, event):

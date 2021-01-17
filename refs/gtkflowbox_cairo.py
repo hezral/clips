@@ -25,8 +25,6 @@ class Win(Gtk.ApplicationWindow):
                 fullpath = f'{PICTURES}/{info.get_name()}'
                 pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(fullpath, 100, 100, True)
                 image = Gtk.Image(pixbuf=pixbuf)
-
-
                 flowbox.add(Child(image, fullpath))
         scroll = Gtk.ScrolledWindow(child=flowbox)
         # self
@@ -46,7 +44,7 @@ class Child(Gtk.EventBox):
         # box = Gtk.Box()
         # box.add(image)
         self.connect("enter-notify-event", self.entering)
-        self.path = fullpath
+        self.path = fullpath.split("/")[-1]
         self.add(image)
     
     def entering(self, widget, eventcrossing):
