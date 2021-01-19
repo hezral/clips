@@ -92,8 +92,6 @@ class Clips(Gtk.Application):
         #    provider.load_from_path(os.path.join(os.path.dirname(__file__), "..", "data", "application.css"))
         
         provider.load_from_path(os.path.join(os.path.dirname(__file__), "..", "data", "application.css"))
-        
-        print(provider)
         Gtk.StyleContext.add_provider_for_screen(Gdk.Screen.get_default(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
 
     def do_activate(self):
@@ -144,7 +142,7 @@ class Clips(Gtk.Application):
             time.sleep(0.15)
             #print(clip[0])
         #if focus:
-        clips_view.flowbox.get_child_at_index(0).grab_focus()
+        #clips_view.flowbox.get_child_at_index(0).grab_focus()
 
         for clip in reversed(clips[-20:-10]):
             GLib.idle_add(clips_view.new_clip, clip, app_startup)
