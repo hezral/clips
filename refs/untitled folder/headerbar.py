@@ -58,8 +58,6 @@ class ClipsHeaderBar(Gtk.HeaderBar):
         search_entry.get_style_context().add_class("large-search-entry")
 
         #------ view switch ----#
-        #icon_theme = Gtk.IconTheme.get_default()
-        #icon_theme.prepend_search_path(os.path.join(self.modulepath, "..", "data/icons"))
         view_switch = Granite.ModeSwitch.from_icon_name("edit-copy", "preferences-system-symbolic")
         view_switch.props.primary_icon_tooltip_text = "Ghoster"
         view_switch.props.secondary_icon_tooltip_text = "Settings"

@@ -60,6 +60,9 @@ class Clips(Gtk.Application):
         self.main_window = None
         self.total_clips = 0
 
+        # prepend custom path for icon theme
+        icon_theme = Gtk.IconTheme.get_default()
+        icon_theme.prepend_search_path(os.path.join(os.path.dirname(__file__), "..", "data", "icons"))
 
         
     def do_startup(self):

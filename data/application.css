@@ -47,7 +47,7 @@ grid#view-switch {
     padding-right: 4px;
 }
 
-grid#clips-statusbar {
+grid#app-statusbar {
     padding: 4px;
     font-size: 90%;
     opacity: 0.75;
@@ -194,10 +194,11 @@ flowbox {
 } */
 
 grid#clip-info {
-    background-color: rgba(255,255,255,0.35);
-    border-bottom-left-radius: 4px;
-    border-bottom-right-radius: 4px;
+    background-color: rgba(125, 48, 232, 0.65);
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
     border-style: none;
+    color: white;
 }
 
 grid#clip-action {
@@ -205,11 +206,11 @@ grid#clip-action {
     border-bottom-left-radius: 4px;
     border-bottom-right-radius: 4px;
     border-style: none;
+    color: white;
 }
 
 label#clip-timestamp, label#clip-content-label {
     font-size: 80%;
-    opacity: 0.75;
     font-weight: bold;
 }
 
@@ -222,6 +223,10 @@ button#clip-action-button {
     border-style: none;
     padding: 4px;
     color: white;
+}
+
+.clip-action-disabled {
+    opacity: 0.35;
 }
 
 /* button#clip-action-button > widget > box > label {
@@ -260,27 +265,33 @@ label#clip-action-message {
     font-weight: bold;
 }
 
-button#clips-action-enable, button#clips-action-protect {
+button#app-action-enable, button#app-action-protect {
     border-style: none;
     box-shadow: none;
     padding: 2px;
 }
 
-.clips-action-enabled {
+.app-action-enabled {
     opacity: 1;
 }
 
-.clips-action-disabled {
+.app-action-disabled {
     opacity: 0.35;
 }
 
-button#clips-action-enable:hover, button#clips-action-protect:hover {
+button#app-action-enable:hover, button#app-action-protect:hover {
     opacity: 0.75;
 }
 
-button#clips-action-enable:active, button#clips-action-protect:active {
+button#app-action-enable:active, button#app-action-protect:active {
     opacity: 1;
 }
+
+
+
+
+
+/* ------------------------------ */
 
 .checkerboard {
     background-image:
@@ -291,3 +302,14 @@ button#clips-action-enable:active, button#clips-action-protect:active {
     background-size:24px 24px; /* Must be a square */
     background-position:0 0, 12px 0, 12px -12px, 0px 12px; /* Must be half of one side of the square */
 }
+
+.pixelate {
+    background-image:
+      linear-gradient(45deg, rgba(0,0,0,0.75) 25%, transparent 25%), 
+      linear-gradient(135deg, rgba(0,0,0,0.75) 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, rgba(0,0,0,0.75) 75%),
+      linear-gradient(135deg, transparent 75%, rgba(0,0,0,0.75) 75%);
+    background-size:40px 40px; /* Must be a square */
+    background-position:0 0, 20px 0, 20px -20px, 0px 20px; /* Must be half of one side of the square */
+}
+

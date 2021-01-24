@@ -147,7 +147,7 @@ class ClipsWindow(Gtk.ApplicationWindow):
         self.total_clips_label = Gtk.Label("Clips: {total}".format(total=self.props.application.total_clips))
 
         infobar = Gtk.Grid()
-        infobar.props.name = "clips-statusbar"
+        infobar.props.name = "app-statusbar"
         infobar.props.halign = Gtk.Align.START
         infobar.props.valign = Gtk.Align.CENTER
         infobar.props.margin_left = 3
@@ -155,19 +155,16 @@ class ClipsWindow(Gtk.ApplicationWindow):
         return infobar
 
     def generate_actionbar(self):
-        icon_theme = Gtk.IconTheme.get_default()
-        icon_theme.prepend_search_path(os.path.join(os.path.dirname(__file__), "..", "data", "icons"))
-
         clipstoggle_action = Gtk.Button(image=Gtk.Image().new_from_icon_name("com.github.hezral.clips-enabled-symbolic", Gtk.IconSize.SMALL_TOOLBAR))
-        clipstoggle_action.props.name = "clips-action-enable"
+        clipstoggle_action.props.name = "app-action-enable"
         clipstoggle_action.props.has_tooltip = True
         clipstoggle_action.props.tooltip_text = "Clipboard Monitoring: Enabled"
         clipstoggle_action.state = "enabled"
-        clipstoggle_action.get_style_context().add_class("clips-action-enabled")
+        clipstoggle_action.get_style_context().add_class("app-action-enabled")
         clipstoggle_action.connect("clicked", self.on_clips_action, "enable")
         
         protecttoggle_action = Gtk.Button(image=Gtk.Image().new_from_icon_name("com.github.hezral.clips-protect-symbolic", Gtk.IconSize.SMALL_TOOLBAR))
-        protecttoggle_action.props.name = "clips-action-protect"
+        protecttoggle_action.props.name = "app-action-protect"
         protecttoggle_action.props.has_tooltip = True
         protecttoggle_action.props.tooltip_text = "Password Display/Monitoring: Enabled"
         protecttoggle_action.state = "enabled"
@@ -175,7 +172,7 @@ class ClipsWindow(Gtk.ApplicationWindow):
         protecttoggle_action.connect("clicked", self.on_clips_action, "protect")
 
         actionbar = Gtk.Grid()
-        actionbar.props.name = "clips-actionbar"
+        actionbar.props.name = "app-actionbar"
         actionbar.props.halign = Gtk.Align.START
         actionbar.props.valign = Gtk.Align.CENTER
         actionbar.props.margin_left = 3
@@ -184,8 +181,6 @@ class ClipsWindow(Gtk.ApplicationWindow):
         return actionbar
 
     def generate_viewswitch(self, settings_view_obj):
-        icon_theme = Gtk.IconTheme.get_default()
-        icon_theme.prepend_search_path(os.path.join(os.path.dirname(__file__), "..", "data", "icons"))
         view_switch = Granite.ModeSwitch.from_icon_name("com.github.hezral.clips-symbolic", "com.github.hezral.clips-settings-symbolic")
         # view_switch.props.primary_icon_tooltip_text = "Ghoster"
         # view_switch.props.secondary_icon_tooltip_text = "Settings"
@@ -261,8 +256,6 @@ class ClipsWindow(Gtk.ApplicationWindow):
         revealer = self.utils.get_widget_by_name(widget=searchbar, child_name="search-revealer", level=0)
 
         if type == "in" and revealer.get_child_revealed() is False:
-            icon_theme = Gtk.IconTheme.get_default()
-            icon_theme.prepend_search_path(os.path.join(os.path.dirname(__file__), "..", "data", "icons"))
             self.searchentry.props.primary_icon_name = "quick-search"
             self.searchentry.props.primary_icon_tooltip_text = "Use quick search tags"
             self.searchentry.props.name = "search-entry-active"

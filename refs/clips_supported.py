@@ -38,5 +38,4 @@ html_target = Gdk.Atom.intern('text/html', False)
 image_target = Gdk.Atom.intern('image/png', False)
 text_target = Gdk.Atom.intern('text/plain', False)
 uri_target = Gdk.Atom.intern('x-special/gnome-copied-files', False)
-save_target = Gdk.Atom.intern('SAVE_TARGETS', False)
 
