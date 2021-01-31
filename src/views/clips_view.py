@@ -44,8 +44,6 @@ class ClipsView(Gtk.Grid):
         self.flowbox.props.valign = Gtk.Align.START
         self.flowbox.props.halign = Gtk.Align.FILL
         self.flowbox.set_sort_func(self.sort_flowbox)
-        # self.flowbox.connect("child_activated", self.on_child_activated)
-        # self.flowbox.connect("selected_children_changed", self.on_child_selected)
 
         #------ scrolled_window ----#
         scrolled_window = Gtk.ScrolledWindow()
@@ -99,41 +97,6 @@ class ClipsView(Gtk.Grid):
     def on_edge_reached(self, scrolledwindow, position):
         if position.value_name == "GTK_POS_BOTTOM":
             print(datetime.now(), "loading next items")
-
-    def on_child_activated(self, flowbox, flowboxchild):
-           
-        main_window = self.get_toplevel()
-        app = main_window.props.application
-        utils = app.utils
-
-        clip_action_revealer = utils.get_widget_by_name(widget=flowboxchild, child_name="clip-action-revealer", level=0)
-
-        if clip_action_revealer.get_child_revealed():
-            clip_action_revealer.set_reveal_child(False)
-        else:
-            clip_action_revealer.set_reveal_child(True)
-
-    def on_child_selected(self, flowbox):
-        print(locals())
-        main_window = self.get_toplevel()
-        app = main_window.props.application
-        utils = app.utils
-
-        flowboxchild = flowbox.get_selected_children()[0]
-
-        clip_action_revealer = utils.get_widget_by_name(widget=flowboxchild, child_name="clip-action-revealer", level=0)
-
-        if clip_action_revealer.get_child_revealed():
-            clip_action_revealer.set_reveal_child(False)
-        else:
-            clip_action_revealer.set_reveal_child(True)
-      
-    def on_child_focus_out(self, flowbox, event, flowboxchild):
-        main_window = self.get_toplevel()
-        app = main_window.props.application
-        utils = app.utils
-        clip_action_revealer = utils.get_widget_by_name(widget=flowbox, child_name="clip-action-revealer", level=0)
-        clip_action_revealer.set_reveal_child(False)        
 
 # ----------------------------------------------------------------------------------------------------
 
