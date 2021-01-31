@@ -219,7 +219,6 @@ class ClipsContainer(Gtk.EventBox):
         self.content_label.props.margin_bottom = 10
         self.content_label.props.expand = True
 
-
         #------ source_icon / application icon ----#
         source_icon_cache = os.path.join(cache_filedir[:-6],"icon", self.source_app.replace(" ",".").lower() + ".png")
         
@@ -269,9 +268,6 @@ class ClipsContainer(Gtk.EventBox):
         clip_info_revealer.props.valign = Gtk.Align.START
         clip_info_revealer.props.transition_type = Gtk.RevealerTransitionType.CROSSFADE
         clip_info_revealer.add(clip_info)
-        
-
-
 
         #------ message_action ----#
         message_action = Gtk.Label()
@@ -287,10 +283,7 @@ class ClipsContainer(Gtk.EventBox):
         self.set_size_request(200, 160)
         self.props.name = "clip-container"
         self.props.expand = True
-        #self.props.has_tooltip = True
-
-        
-
+    
         self.container_grid = Gtk.Grid()
         self.container_grid.props.name = "clip-container-grid"
         self.container_grid.attach(clip_info_revealer, 0, 0, 1, 1)
@@ -308,12 +301,9 @@ class ClipsContainer(Gtk.EventBox):
 
         self.add(self.container_grid)
         
-
         # handle mouse enter/leave events on the flowboxchild
         self.connect("enter-notify-event", self.cursor_entering_clip)
         self.connect("leave-notify-event", self.cursor_leaving_clip)
-
-
 
     def focus_clip(self, clip_action_revealer, eventfocus, type):
         flowboxchild = self.get_parent()
@@ -530,47 +520,6 @@ class ClipsContainer(Gtk.EventBox):
 
 # ----------------------------------------------------------------------------------------------------
 
-class ClipInfo(Gtk.Grid):
-    def __init__(self, cache_filedir, source_app, scale, created, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        #------ source_icon / application icon ----#
-        source_icon_cache = os.path.join(cache_filedir[:-6],"icon", source_app.replace(" ",".").lower() + ".png")
-        
-        if os.path.exists(source_icon_cache):
-            pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(source_icon_cache, 24 * scale, 24 * scale, True)
-            source_icon = Gtk.Image().new_from_pixbuf(pixbuf)
-        else:
-            source_icon = Gtk.Image().new_from_icon_name("image-missing", Gtk.IconSize.LARGE_TOOLBAR)
-            source_icon.set_pixel_size(24 * scale)
-
-        source_icon.props.halign = Gtk.Align.START
-        source_icon.props.valign = Gtk.Align.END
-        source_icon.props.margin = 4
-
-        #------ timestamp ----#
-        self.created_short = datetime.strptime(created, '%Y-%m-%d %H:%M:%S.%f')
-        self.created_short = self.created_short.strftime('%a, %b %d %Y, %H:%M:%S')
-        self.created = datetime.strptime(self.created, '%Y-%m-%d %H:%M:%S.%f')
-        self.timestamp = self.friendly_timestamp(self.created)
-        self.timestamp = Gtk.Label(self.timestamp)
-        self.timestamp.props.name = "clip-timestamp"
-        self.timestamp.props.halign = self.timestamp.props.valign = Gtk.Align.END
-        self.timestamp.props.margin = 4
-        self.timestamp.props.margin_right = 6
-        self.timestamp.props.margin_bottom = 8
-
-        #------ clip_info ----#
-        clip_info = Gtk.Grid()
-        clip_info.props.name = "clip-info"
-        clip_info.props.halign = Gtk.Align.FILL
-        clip_info.props.valign = Gtk.Align.END
-        clip_info.props.expand = True
-        clip_info.set_size_request(-1, 32)
-        clip_info.attach(source_icon, 0, 0, 1, 1)
-        clip_info.attach(self.content_label, 1, 0, 1, 1)
-        clip_info.attach(self.timestamp, 3, 0, 1, 1)
-
 class ImageContainer(Gtk.Grid):
     def __init__(self, filepath, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -723,61 +672,6 @@ class ColorContainer(Gtk.Grid):
 
         self.label = type.split("/")[1].upper()
 
-
 # ----------------------------------------------------------------------------------------------------
 
 
-
-
-    # def on_resize(self, clipscontainer, cairocontext):
-    #     #print(locals())
-        
-    #     #print(self.get_parent())
-    #     flowbox = self.get_parent().get_parent()
-    #     print(flowbox)
-    #     base_size = flowbox.get_allocated_width() + 20
-    #     print(base_size)
-    #     width = height = base_size / 3.2
-    #     print(width)
-
-    #     self.set_size_request(width, height)
-
-    #     print(self.get_allocated_width())
-    #     pass
-
-    # def update_flowbox(self, clips):
-    #     app = self.get_toplevel().props.application
-    #     for clip in clips:
-    #         # initialize cachce file with full path        
-    #         cache_file = os.path.join(app.cache_manager.cache_filedir, clip[6])
-    #         # load
-    #         if os.path.exists(cache_file):
-    #             self.flowbox.add(ClipsContainer(clip, app.cache_manager.cache_filedir, app.utils))
-    #         # clean-up and delete from db
-    #         else:
-    #             app.cache_manager.delete_record(clip[0], cache_file)    #     self.flowbox.show_all()
-    #     #yield False
-    #     print(datetime.now(), "show_all")
-
-    #     for child in self.flowbox.get_children():
-    #         child.connect("focus-out-event", self.on_child_focus_out, child)
-    #     first_child = self.flowbox.get_child_at_index(0)
-    #     #self.flowbox.select_child(first_child)
-    #     first_child.grab_focus()
-
-    # def load_from_cache(self):
-    #     print("load_clips")
-    #     app = self.get_toplevel().props.application
-    #     # print(datetime.now(), "start load_clips")
-    #     clips = app.cache_manager.load_clips()
-    #     # print(datetime.now(), "finish load_clips")
-    #     # print(datetime.now(), "loop through clips")
-    #     # for clip in clips:
-    #     #     GLib.idle_add(self.update_flowbox, clip, cache_manager)
-    #     print(datetime.now(), "idle_add")
-    #     GLib.idle_add(self.update_flowbox, clips)
-    #     # print(datetime.now(), "loop through clips")
-    #     # for clip in clips:
-    #     #     self.flowbox.add(ClipsContainer(clip, cache_manager.cache_filedir))
-    #     # print(datetime.now(), "show_all")
-    #     # self.show_all()
