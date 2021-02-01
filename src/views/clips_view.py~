@@ -668,33 +668,22 @@ class PlainTextContainer(Gtk.Grid):
     def __init__(self, filepath, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # self.content = open(filepath, "r")
-        # self.content = self.content.read()
-
-        with open(filepath) as f:
-            for i, l in enumerate(f):
-                pass
-        lines = Gtk.Label(str(i+1-10) + " lines more...")
-        lines.props.halign = Gtk.Align.END
-
-        with open(filepath) as myfile:
-            firstNlines=myfile.readlines()[0:10] #put here the interval you want
-        self.content = ''.join(firstNlines)
-
+        self.content = open(filepath, "r")
+        self.content = self.content.read()
         self.content = Gtk.Label(self.content)
         self.content.props.wrap_mode = Pango.WrapMode.CHAR
-        self.content.props.max_width_chars = 23
+        self.content.props.max_width_chars = 25
         self.content.props.wrap = True
         self.content.props.selectable = False
-        self.content.props.expand = True
         self.content.props.ellipsize = Pango.EllipsizeMode.END
-        
+        self.content.props.halign = self.content.props.valign = Gtk.Align.CENTER
+
+        self.label = str(len(self.content.props.label)) + " chars"
+
+        self.props.halign = self.props.valign = Gtk.Align.FILL
         self.props.margin = 10
         self.props.margin_left = self.props.margin_right = 10
         self.props.name = "plaintext-container"
         self.attach(self.content, 0, 0, 1, 1)
-        self.attach(lines, 0, 1, 1, 1)
-
-        self.label = str(len(self.content.props.label)) + " chars"
 
 

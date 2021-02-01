@@ -140,9 +140,13 @@ grid#clip-container-grid {
     animation: crossfader 0.5s ease-in-out forwards;
 }
 
-grid#image-container, grid#color-container {
+grid#image-container, grid#color-container, grid#plaintext-container {
     border-radius: 4px;
     background-color: transparent;
+}
+
+grid#plaintext-container {
+    font-size: 85%;
 }
 
 .clip-container-animated {
@@ -157,6 +161,7 @@ flowboxchild:selected {
         0 2px 5px  rgba(0,0,0,0.16),
         0 2px 5px  rgba(0,0,0,0.23),
         0 14px 28px  rgba(0,0,0,0);
+    background-color: rgba(125, 48, 232, 0.15);
 }
 
 .hover {
