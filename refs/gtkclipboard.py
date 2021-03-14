@@ -10,53 +10,44 @@ https://askubuntu.com/questions/427704/how-can-i-edit-the-source-of-html-in-the-
 
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, Gdk
+gi.require_version("Wnck", "3.0")
+gi.require_version("Bamf", "3")
+from gi.repository import Gtk, Gdk, Bamf, Wnck, Gio
 
 import signal
 from gi.repository import GLib
 GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGINT, Gtk.main_quit) 
-clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
-
-#targets = Gdk.Atom.intern('TARGETS', False)
-# TIMESTAMP
-# TARGETS
-# MULTIPLE
-# SAVE_TARGETS
-#print(Gdk.Atom.name(targets))
-
-#print(dir(clipboard))
-#html_target = Gdk.Atom.intern('text/html', False)
-#clipboard.wait_for_contents(html_target).get_data()
-
-#def dump_clipboard_callback(clipboard, selection_data, data=None):
-#   print(selection_data.data)
-
-#clipboard.request_contents(html_target , dump_clipboard_callback)the 
-
-# excluded_targets = (Gdk.Atom.intern('TIMESTAMP', False), 
-#                     Gdk.Atom.intern('TARGETS', False), 
-#                     Gdk.Atom.intern('MULTIPLE', False), 
-#                     Gdk.Atom.intern('SAVE_TARGETS', False), 
-#                     Gdk.Atom.intern('STRING', False), 
-#                     Gdk.Atom.intern('UTF8_STRING', False), 
-#                     Gdk.Atom.intern('TEXT', False), )
-
-
-# #setup supported clip types
-# richtext_target = Gdk.Atom.intern('text/richtext', False)
-# html_target = Gdk.Atom.intern('text/html', False)
-# image_target = Gdk.Atom.intern('image/png', False)
-# text_target = Gdk.Atom.intern('text/plain', False)
-# uri_target = Gdk.Atom.intern('x-special/gnome-copied-files', False)
-# save_target = Gdk.Atom.intern('SAVE_TARGETS', False)
-# #print(clipboard.wait_is_text_available())
-
-# global event_time
-# event_time = 0
 
 import clips_supported
 
-#print(clips_supported.excluded_targets)
+clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
+
+def get_active_app():
+
+    # using Bamf
+    matcher = Bamf.Matcher()
+    screen = Wnck.Screen.get_default()
+    screen.force_update()
+
+    # if matcher.get_active_window() is None:
+    #     active_win = screen.get_active_window()
+    # else:
+    #     active_win = matcher.get_active_window()
+
+    active_win = matcher.get_active_window()
+    if active_win is not None:
+        active_app = matcher.get_application_for_window(active_win)
+        if active_app is not None:
+            source_app = active_app.get_name().split(" – ")[-1] #some app's name are shown with current document name so we split it and get the last part only
+            source_icon = active_app.get_icon()
+
+    else: 
+        source_app = screen.get_active_workspace().get_name() # if no active window, fallback to workspace name
+        source_icon = 'preferences-desktop-wallpaper' 
+
+    protected = "no"
+
+    return source_app, source_icon, protected
 
 def on(clipboard, event):
 
@@ -97,34 +88,67 @@ def on(clipboard, event):
     print("\nCurrent clipboard offers formats: ", len(clipboard.wait_for_targets()[1]))
 
     i = 0
+
+    print(get_active_app())
+
     for target in clipboard.wait_for_targets()[1]:
         if target not in clips_supported.excluded_targets:
-            content = clipboard.wait_for_contents(target)
 
-            if content is not None:
-
-            #     if str(target).find("WPS Drawing Shape Format") != -1:
-            #         bytes = content.get_data()
-            #         file = open("file.pptx","wb")
-            #         # file = open("{i}.{ext}".format(i=str(target).split("/")[0], ext=str(target).split("/")[1]),"wb")
-            #         file.write(bytes)
-            #         file.close()
-            #     if str(target).find("application/x-openoffice-embed-source-xml") != -1: #LibreOffice format compatible with Office XLSX, PPTX, DOCX
-            #         bytes = content.get_data()
-            #         file = open("file.odp","wb") #change based on string: typename="LibreOffice 7.0 Spreadsheet", typename="LibreOffice 7.0 Presentation", typename="LibreOffice 7.0 Text Document"
-            #         # file = open("{i}.{ext}".format(i=str(target).split("/")[0], ext=str(target).split("/")[1]),"wb")
-            #         file.write(bytes)
-            #         file.close()
-                # if str(target).find("application/ico") != -1:
-                #     print("application/ico")
-                #     bytes = content.get_data()
-                #     file = open("file.ico","wb")
-                #     # file = open("{i}.{ext}".format(i=str(target).split("/")[0], ext=str(target).split("/")[1]),"wb")
-                #     file.write(bytes)
-                #     file.close()
-
-            print(i, target, content)
+            print(i, target)
             i += 1
+
+            # if target in clips_supported.supported_targets:
+            # for supported_target in clips_supported.supported_targets:
+            #     if target == supported_target[0]:
+                    
+            #         # content = clipboard.wait_for_contents(target)
+
+            #         # if content is not None:
+                        
+            #         if supported_target[2].find("Libre") != -1:
+            #             print("libre")
+
+            #         # if i == 0:
+                    
+                    
+                    
+            #         print(i, target)
+                        
+            #         i += 1
+
+                    # if str(target).find("WPS Drawing Shape Format") != -1:
+                    #     bytes = content.get_data()
+                    #     file = open("file.pptx","wb")
+                    #     # file = open("{i}.{ext}".format(i=str(target).split("/")[0], ext=str(target).split("/")[1]),"wb")
+                    #     file.write(bytes)
+                    #     file.close()
+                    # if str(target).find("application/x-openoffice-embed-source-xml") != -1: #LibreOffice format compatible with Office XLSX, PPTX, DOCX
+                    #     bytes = content.get_data()
+                    #     file = open("file.odp","wb") #change based on string: typename="LibreOffice 7.0 Spreadsheet", typename="LibreOffice 7.0 Presentation", typename="LibreOffice 7.0 Text Document"
+                    #     # file = open("{i}.{ext}".format(i=str(target).split("/")[0], ext=str(target).split("/")[1]),"wb")
+                    #     file.write(bytes)
+                    #     file.close()
+                    # if str(target).find("application/ico") != -1:
+                    #     print("application/ico")
+                    #     bytes = content.get_data()
+                    #     file = open("file.ico","wb")
+                    #     # file = open("{i}.{ext}".format(i=str(target).split("/")[0], ext=str(target).split("/")[1]),"wb")
+                    #     file.write(bytes)
+                    #     file.close()
+                    # if str(target).find("text/plain;charset=utf-8") != -1:
+                    #     print(content.get_data().decode("utf-8"))
+                    # if str(target).find("text/html") != -1:
+                    #     bytes = content.get_data()
+                    #     file = open("file.html","wb")
+                    #     file.write(bytes)
+                    #     file.close()
+                    # if str(target).find("text/richtext") != -1:
+                    #     bytes = content.get_data()
+                    #     file = open("file.rtf","wb")
+                    #     file.write(bytes)
+                    #     file.close()
+
+
 
 
 clipboard.connect('owner_change',on)

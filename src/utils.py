@@ -154,20 +154,21 @@ def isValidColorCode(str):
         else:
             pass
 
-# Function to convert HSL to RGB color code
+# Function to convert hsl string to RGB color code
 import colorsys
 def HSLtoRGB(hslcode):
     h, s, l = hslcode
     r, g, b = colorsys.hls_to_rgb(h, l, s)
-    rgb = [int(r*255), int(g*255), int(b*255)]
+    rgb = (int(r*255), int(g*255), int(b*255))
     return rgb
 
-# Function to convert hexadecimal to RGB color code
+# Function to convert hexadecimal string to RGB color code
 # https://stackoverflow.com/a/29643643/14741406
 def HexToRGB(hexcode):
     h = hexcode.lstrip('#')
     rgb = tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
     return rgb
+
 
 # Function to determine light or dark color using RGB values
 # https://stackoverflow.com/a/58270890/14741406
@@ -183,23 +184,70 @@ def isLightOrDark(rgb=[0,0,0]):
 # https://stackoverflow.com/a/4894134/14741406
 def get_css_background_color(str):
     regex = r"(?:background-color)\:(.*?)\;"
-    result = re.search(regex, str).group(1).strip()
+    result = re.search(regex, str)
+    
+    if result is not None:
+        css_background_color = re.search(regex, str).group(1).strip()
 
-    for regex in color_regex:
-        if validateStr(result, regex[1]):
-            return result, True
-        else:
-            return "@theme_base_color", False
+        for regex in color_regex:
+            if validateStr(css_background_color, regex[1]):
+                return css_background_color
+
+
+def ConvertToRGB(color_string):
+    color_string = color_string.strip(" ").strip(";").strip(")") #strip "space ; )" chars    
+    color_string = color_string.replace(" ","") #replace space chars
+
+    color_string = color_string.split("(")
+    
+    if "#" in color_string[0]:
+        a = 1
+        rgb = HexToRGB(color_string[0])
+
+    elif "rgb" in color_string[0]:
+        r, g, b = color_string[1].split(",")[0:3]
+        r = int(int(r.strip("%"))/100*255) if r.find("%") != -1 else int(r)
+        g = int(int(g.strip("%"))/100*255) if g.find("%") != -1 else int(g)
+        b = int(int(b.strip("%"))/100*255) if b.find("%") != -1 else int(b)
+        a = 1
+        rgb = (r, g, b)
+
+    elif "rgba" in color_string[0]:
+        r, g, b, a = color_string[1].split(",")
+        r = int(int(r.strip("%"))/100*255) if r.find("%") != -1 else int(r)
+        g = int(int(g.strip("%"))/100*255) if g.find("%") != -1 else int(g)
+        b = int(int(b.strip("%"))/100*255) if b.find("%") != -1 else int(b)
+        a = float(a.split(")")[0])
+        rgb = (r, g, b)
+
+    elif "hsl" in color_string[0]:
+        h, s, l = color_string[1].split(",")[0:3]
+        h = float(h) / 360
+        s = float(s.replace("%","")) / 100
+        l = float(l.replace("%","")) / 100
+        a = 1
+        rgb = HSLtoRGB((h, s, l))
+
+    elif "hsla" in color_string[0]:
+        h, s, l, a = color_string[1].split(",") 
+        h = int(h) / 360
+        s = int(s.replace("%","")) / 100
+        l = int(l.replace("%","")) / 100
+        a = float(a.split(")")[0])
+        rgb = HSLtoRGB((h, s, l))
+    
+    else:
+        rgb = None
+        a = None
+    
+    return rgb, a
 
 ###################################################################################################################
 
 # Subprocess
-import subprocess
-# import psutil
-
 def view_clips(file):
+    import subprocess
     subprocess.Popen(['xdg-open', file])
-
 
 ###################################################################################################################
 
@@ -229,25 +277,17 @@ def get_distro():
 
     return RELEASE_DATA["NAME"], RELEASE_DATA["VERSION"]
 
-get_distro()
+# get_distro()
 
-
-
-
-
-
-
-
-
-
-
-
-
+# print(ConvertToRGB("rgb(255, 242, 0)")[0][0])
+# print(ConvertToRGB("hsl(133, 100%, 50%)"))
+# print(ConvertToRGB("#ff005d"))
+# print(ConvertToRGB("rgba(25, 0, 255, 0.75)"))
+# print(ConvertToRGB("hsla(124, 100%, 50%, 0.45)"))
 
 # print(isValidUnixPath("/home/adi"))
-
 # print(isValidURL("http://google.com"))
-
+# print(isEmaild("hezral@gmail.com"))
 
 
 

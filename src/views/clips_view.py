@@ -19,6 +19,7 @@
     along with Clips.  If not, see <http://www.gnu.org/licenses/>.
 '''
 import gi
+from utils import ConvertToRGB
 gi.require_version('Gtk', '3.0')
 gi.require_version('Granite', '1.0')
 gi.require_version('WebKit2', '4.0')
@@ -117,6 +118,8 @@ class ClipsContainer(Gtk.EventBox):
         self.type = clip[7]
         self.protected = clip[8]
 
+        # print(self.type)
+
         #------ clip_action ----#
         clip_action_revealer = self.generate_clip_action()
 
@@ -134,43 +137,8 @@ class ClipsContainer(Gtk.EventBox):
         elif self.type == "image":
             self.content = ImageContainer(self.cache_file)
 
-        # elif self.type == "html":
-        #     self.content = open(self.cache_file, "r")
-        #     self.content = self.content.read()
-        #     self.content_label = str(len(self.content)) + " chars"
-
-        #     # background_color, valid = utils.get_css_background_color(content)
-
-        #     # if valid:
-        #     #     if utils.isLightOrDark(utils.HexToRGB(background_color)) == "light":
-        #     #         font_color = "black"
-        #     #     else:
-        #     #         font_color = "white"
-        #     # else:
-        #     #     font_color = "@theme_text_color"
-
-        #     # background_css = ".webview-container {background-color: " + background_color + "; color: " + font_color + ";}"
-        #     # provider = Gtk.CssProvider()
-        #     # provider.load_from_data(bytes(background_css.encode()))
-
-        #     # self.get_style_context().add_provider(provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
-        #     # self.get_style_context().add_class("webview-container")
-
-        #     webview = WebKit2.WebView()
-            
-        #     # if valid: 
-        #     #     [r,g,b] = utils.HexToRGB(background_color)
-        #     #     self.props.app_paintable = True
-
-        #     #     webview.set_background_color(Gdk.RGBA(r,g,b,1))
-        #     webview.props.zoom_level = 0.8
-        #     webview.load_html(self.content)
-        #     webview.props.expand = True
-        #     #webview.props.sensitive = False
-        #     eventbox = Gtk.EventBox()
-        #     eventbox.props.above_child = True
-        #     eventbox.add(webview)
-        #     self.content = eventbox
+        elif self.type == "html":
+            self.content = HtmlContainer(self.cache_file, utils)
 
         # elif self.type == "richtext":
         #     self.content = open(self.cache_file, "r")
@@ -186,7 +154,7 @@ class ClipsContainer(Gtk.EventBox):
 
         elif "color" in self.type:
             self.content = ColorContainer(self.cache_file, self.type, utils)
-
+            
         else:
             self.content_label = "title"
             self.content = Gtk.Label("CONTENT")
@@ -205,7 +173,7 @@ class ClipsContainer(Gtk.EventBox):
         #clip_content.add(self.content)
 
         #------ clip_info ----#
-        self.content_label = Gtk.Label(self.id)
+        self.content_label = Gtk.Label(self.content.label)
         self.content_label.props.name = "clip-content-label"
         self.content_label.props.halign = Gtk.Align.START
         self.content_label.props.valign = Gtk.Align.END
@@ -317,6 +285,11 @@ class ClipsContainer(Gtk.EventBox):
 
         clip_action_revealer = utils.get_widget_by_name(widget=flowboxchild, child_name="clip-action-revealer", level=0)
         clip_action_revealer.set_reveal_child(True)
+
+        # add zoom effect on hovering an image container
+        # content = utils.get_widget_by_name(widget=flowboxchild, child_name="image-container", level=0)
+        # if content is not None:
+        #     content.hover()
 
     def cursor_leaving_clip(self, widget, eventcrossing):
         # remove css class for hover event
@@ -535,13 +508,20 @@ class ImageContainer(Gtk.Grid):
         
         self.label = "{width} x {height} px".format(width=str(self.pixbuf_original.props.width), height=str(self.pixbuf_original.props.height))
 
-    def draw(self, drawing_area, cairo_context):
+        self.name = "content"
+        self.get_style_context().add_class("clip-containers")
+
+    def hover(self, *args):
+        print(locals())
+
+    def draw(self, drawing_area, cairo_context, hover_scale=1):
+        print("draw")
         # Forked and ported from https://github.com/elementary/greeter/blob/master/src/Widgets/BackgroundImage.vala
         from math import pi
 
         scale = self.get_scale_factor()
-        width = self.get_allocated_width () * scale
-        height = self.get_allocated_height () * scale
+        width = self.get_allocated_width () * scale * hover_scale
+        height = self.get_allocated_height () * scale * hover_scale
         radius = 4 * scale #Off-by-one to prevent light bleed
 
         pixbuf_fitted = GdkPixbuf.Pixbuf.new(self.pixbuf_original.get_colorspace(), self.pixbuf_original.get_has_alpha(), self.pixbuf_original.get_bits_per_sample(), width, height)
@@ -591,47 +571,10 @@ class ColorContainer(Gtk.Grid):
 
         self.content = open(filepath, "r")
         self.content = self.content.read()
-        self.content = self.content.strip(" ").strip(";").replace(" ","") #strip space and ; for processing 
-        _content = self.content.strip(")") #strip the ) for processing 
 
-        if type == "color/hex":
-            rgb = utils.HexToRGB(_content)
-            a = 1
+        rgb, a = utils.ConvertToRGB(self.content)
 
-        elif type == "color/rgb":
-            r, g, b = _content.split("(")[1].split(",")[0:3]
-            r = int(int(r.strip("%"))/100*255) if r.find("%") != -1 else int(r)
-            g = int(int(g.strip("%"))/100*255) if g.find("%") != -1 else int(g)
-            b = int(int(b.strip("%"))/100*255) if b.find("%") != -1 else int(b)
-            rgb = [r, g, b] 
-            a = 1
-
-        elif type == "color/rgba":
-            r, g, b, a = _content.split("(")[1].split(",")
-            r = int(int(r.strip("%"))/100*255) if r.find("%") != -1 else int(r)
-            g = int(int(g.strip("%"))/100*255) if g.find("%") != -1 else int(g)
-            b = int(int(b.strip("%"))/100*255) if b.find("%") != -1 else int(b)
-            rgb = [r, g, b] 
-            a = float(a.split(")")[0])
-
-        elif type == "color/hsl":
-            h, s, l = _content.split("(")[1].split(",")[0:3]
-            h = float(h) / 360
-            s = float(s.replace("%","")) / 100
-            l = float(l.replace("%","")) / 100
-            a = 1
-            rgb = utils.HSLtoRGB((h, s, l))
-
-        elif type == "color/hsla":
-            h, s, l, a = _content.split("(")[1].split(",") 
-            h = int(h) / 360
-            s = int(s.replace("%","")) / 100
-            l = int(l.replace("%","")) / 100
-            a = float(a.split(")")[0])
-            rgb = utils.HSLtoRGB((h, s, l))
-
-        # color_code = "rgba(" + str(rgb[0]) + "," + str(rgb[1]) + "," + str(rgb[2]) + "," + str(1) + ")"
-        color_code = "rgba(" + str(rgb[0]) + "," + str(rgb[1]) + "," + str(rgb[2]) + "," + str(a) + ")"
+        color_code = "rgba({red},{green},{blue},{alpha})".format(red=str(rgb[0]),green=str(rgb[1]),blue=str(rgb[2]),alpha=str(a))
         
         if utils.isLightOrDark(rgb) == "light":
             font_color = "rgba(0,0,0,0.85)"
@@ -649,7 +592,7 @@ class ColorContainer(Gtk.Grid):
         self.content.get_style_context().add_provider(provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
         self.content.get_style_context().add_class("color-content")
 
-
+        # add checkerboard background for colors with alpha less than 1
         if str(a) != "1":
             self.get_style_context().add_class("checkerboard")
 
@@ -661,6 +604,8 @@ class ColorContainer(Gtk.Grid):
         self.attach(self.content, 0, 0, 1, 1)
 
         self.label = type.split("/")[1].upper()
+        self.name = "content"
+        self.get_style_context().add_class("clip-containers")
 
 # ----------------------------------------------------------------------------------------------------
 
@@ -668,14 +613,9 @@ class PlainTextContainer(Gtk.Grid):
     def __init__(self, filepath, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # self.content = open(filepath, "r")
-        # self.content = self.content.read()
-
         with open(filepath) as f:
             for i, l in enumerate(f):
                 pass
-        lines = Gtk.Label(str(i+1-10) + " lines more...")
-        lines.props.halign = Gtk.Align.END
 
         with open(filepath) as myfile:
             firstNlines=myfile.readlines()[0:10] #put here the interval you want
@@ -693,8 +633,53 @@ class PlainTextContainer(Gtk.Grid):
         self.props.margin_left = self.props.margin_right = 10
         self.props.name = "plaintext-container"
         self.attach(self.content, 0, 0, 1, 1)
-        self.attach(lines, 0, 1, 1, 1)
+
+        if not i+1 < 10:
+            lines = Gtk.Label(str(i+1-10) + " lines more...")
+            lines.props.halign = Gtk.Align.END
+            self.attach(lines, 0, 1, 1, 1)
 
         self.label = str(len(self.content.props.label)) + " chars"
+        self.name = "content"
+        self.get_style_context().add_class("clip-containers")
 
+# ----------------------------------------------------------------------------------------------------
 
+class HtmlContainer(Gtk.Grid):
+    def __init__(self, filepath, utils, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.content = open(filepath, "r")
+        self.content = self.content.read()
+
+        webview = WebKit2.WebView()
+        webview.props.zoom_level = 0.85
+        webview.load_html(self.content)
+        webview.props.expand = True
+        # webview.props.sensitive = False
+
+        css_bg_color = utils.get_css_background_color(self.content)
+
+        if css_bg_color is not None:
+            rgb, a = utils.ConvertToRGB(css_bg_color)
+            color_code = "rgba({red},{green},{blue},{alpha})".format(red=str(rgb[0]),green=str(rgb[1]),blue=str(rgb[2]),alpha=str(a))
+            webview_bg_color = Gdk.RGBA(red=float(rgb[0] / 255), green=float(rgb[1] / 255), blue=float(rgb[2] / 255), alpha=1)
+            webview.set_background_color(webview_bg_color)
+        else:
+            color_code = "@theme_base_color"
+            webview_bg_color = Gdk.RGBA(red=1.0000, green=1.0000, blue=1.0000, alpha=1.0000)
+            webview.set_background_color(webview_bg_color)
+
+        html_content_css = ".html-container-bg {background-color: " + color_code + ";}"
+        provider = Gtk.CssProvider()
+        provider.load_from_data(bytes(html_content_css.encode()))
+
+        self.get_style_context().add_provider(provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+        self.get_style_context().add_class("html-container-bg")
+
+        self.props.name = "html-container"
+        self.attach(webview, 0, 0, 1, 1)
+
+        self.label = str(len(self.content)) + " chars"
+        self.name = "content"
+        self.get_style_context().add_class("clip-containers")
