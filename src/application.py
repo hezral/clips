@@ -34,6 +34,7 @@ import sys, os
 import threading, time
 
 
+
 class Clips(Gtk.Application):
 
     running = False
@@ -63,8 +64,7 @@ class Clips(Gtk.Application):
         # prepend custom path for icon theme
         icon_theme = Gtk.IconTheme.get_default()
         icon_theme.prepend_search_path(os.path.join(os.path.dirname(__file__), "..", "data", "icons"))
-
-        
+  
     def do_startup(self):
         Gtk.Application.do_startup(self)
 
@@ -129,14 +129,15 @@ class Clips(Gtk.Application):
             self.main_window.total_clips_label.props.label = "Clips: {total}".format(total=len(clips))
             
             if len(clips) != 0:
-                thread = threading.Thread(target=self.load_clips_fromdb, args=(clips, self.main_window.clips_view, ))
-                thread.daemon = True
-                thread.start()
+                # thread = threading.Thread(target=self.load_clips_fromdb, args=(clips, self.main_window.clips_view, ))
+                # thread.daemon = True
+                # thread.start()
+                self.load_clips_fromdb(clips, self.main_window.clips_view)
 
             self.running = True
 
-
     # def load_clips_fromdb(self, focus, clip_pos_start, clip_pos_end, clips, clips_view, cache_filedir):
+    @utils.run_async
     def load_clips_fromdb(self, clips, clips_view):
         app_startup = True
         # initially load last 20 clips 
@@ -163,7 +164,6 @@ class Clips(Gtk.Application):
             #print(clip[0])
 
         print(datetime.now(), "finish load_clips")
-
 
     def do_command_line(self, command_line):
         options = command_line.get_options_dict()
@@ -203,35 +203,6 @@ class Clips(Gtk.Application):
     def on_quit_action(self, action, param):
         if self.main_window is not None:
             self.main_window.destroy()
-
-    def run_async(func):
-        '''
-        https://github.com/learningequality/ka-lite-gtk/blob/341813092ec7a6665cfbfb890aa293602fb0e92f/kalite_gtk/mainwindow.py
-        http://code.activestate.com/recipes/576683-simple-threading-decorator/
-            run_async(func)
-                function decorator, intended to make "func" run in a separate
-                thread (asynchronously).
-                Returns the created Thread object
-                E.g.:
-                @run_async
-                def task1():
-                    do_something
-                @run_async
-                def task2():
-                    do_something_too
-        '''
-        from threading import Thread
-        from functools import wraps
-
-        @wraps(func)
-        def async_func(*args, **kwargs):
-            func_hl = Thread(target=func, args=args, kwargs=kwargs)
-            func_hl.start()
-            # Never return anything, idle_add will think it should re-run the
-            # function because it's a non-False value.
-            return None
-
-        return async_func
 
 # comment out once ready for deployment
 if __name__ == "__main__":

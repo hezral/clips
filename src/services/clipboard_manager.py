@@ -118,11 +118,11 @@ class ClipboardManager():
             source_icon = 'preferences-desktop-wallpaper' 
     
         protected = "no"
-
         
         print(__file__.split("/")[-1], "blacklist_apps", self.blacklist_apps)
 
         return source_app, source_icon, protected
 
-    def clip_to_clipboard(self):
-        pass
+    def clip_to_clipboard(self, file):
+        import subprocess
+        subprocess.Popen(['xclip', file])

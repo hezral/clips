@@ -39,7 +39,7 @@ class CacheManager():
         # initiatialize gtk_application and clipboard_manager
         if gtk_application is not None:
             self.app = gtk_application
-            application_id = gtk_application.props.application_id
+            application_id = self.app.props.application_id
 
         if clipboard_manager is not None:
             clipboard_manager.clipboard.connect("owner-change", self.update_cache, clipboard_manager)

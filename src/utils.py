@@ -19,15 +19,49 @@
     along with Clips.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-# Function to find widgets using its parent
-# https://stackoverflow.com/questions/20461464/how-do-i-iterate-through-all-Gtk-children-in-pyGtk-recursively
-# http://cdn.php-Gtk.eu/cdn/farfuture/riUt0TzlozMVQuwGBNNJsaPujRQ4uIYXc8SWdgbgiYY/mtime:1368022411/sites/php-Gtk.eu/files/Gtk-php-get-child-widget-by-name.php__0.txt
-# note get_name() vs Gtk.Buildable.get_name(): https://stackoverflow.com/questions/3489520/python-Gtk-widget-name
-import gi
-gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk
+###################################################################################################################
+
+def run_async(func):
+    '''
+    https://github.com/learningequality/ka-lite-gtk/blob/341813092ec7a6665cfbfb890aa293602fb0e92f/kalite_gtk/mainwindow.py
+    http://code.activestate.com/recipes/576683-simple-threading-decorator/
+        run_async(func)
+            function decorator, intended to make "func" run in a separate
+            thread (asynchronously).
+            Returns the created Thread object
+            E.g.:
+            @run_async
+            def task1():
+                do_something
+            @run_async
+            def task2():
+                do_something_too
+    '''
+    from threading import Thread
+    from functools import wraps
+
+    @wraps(func)
+    def async_func(*args, **kwargs):
+        func_hl = Thread(target=func, args=args, kwargs=kwargs)
+        func_hl.start()
+        # Never return anything, idle_add will think it should re-run the
+        # function because it's a non-False value.
+        return None
+
+    return async_func
+
+###################################################################################################################
 
 def get_widget_by_name(widget, child_name, level, doPrint=False):
+    '''
+    Function to find widgets using its parent
+    https://stackoverflow.com/questions/20461464/how-do-i-iterate-through-all-Gtk-children-in-pyGtk-recursively
+    http://cdn.php-Gtk.eu/cdn/farfuture/riUt0TzlozMVQuwGBNNJsaPujRQ4uIYXc8SWdgbgiYY/mtime:1368022411/sites/php-Gtk.eu/files/Gtk-php-get-child-widget-by-name.php__0.txt
+    note get_name() vs Gtk.Buildable.get_name(): https://stackoverflow.com/questions/3489520/python-Gtk-widget-name
+    '''
+    import gi
+    gi.require_version('Gtk', '3.0')
+    from gi.repository import Gtk
 
     if widget is not None:
         if doPrint: print("-"*level + str(Gtk.Widget.get_name(widget)) + " :: " + str(type(widget).__name__))
@@ -56,14 +90,17 @@ def get_widget_by_name(widget, child_name, level, doPrint=False):
                 if found: return found
 
 def get_widget_by_focus_state(widget, focus_state, level, doPrint=False):
-
+    '''
+    Function to find widgets using its focus state
+    '''
+    import gi
+    gi.require_version('Gtk', '3.0')
+    from gi.repository import Gtk
     if widget is not None:
         if doPrint: print("-"*level + str(Gtk.Widget.get_name(widget)) + " :: " + str(type(widget).__name__) + " :has_focus: " + str(widget.has_focus()))
     else:
         if doPrint: print("-"*level + "None")
-        
         return None
-    
 
     #/*** If it is what we are looking for ***/
     if(widget.is_focus() == focus_state):

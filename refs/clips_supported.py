@@ -19,6 +19,10 @@
     along with Clips.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+import sys, getopt
+
+import gi
+gi.require_version('Gdk', '3.0')
 from gi.repository import Gdk
 
 # Standard clipboard targets that won't be handled by Clips
@@ -32,141 +36,165 @@ excluded_targets = (Gdk.Atom.intern('TIMESTAMP', False),
                     Gdk.Atom.intern('TEXT', False), )
 
 
-# supported clip types
+# supported clipboard targets
+# definition for clip types in list format following the schema
+# schema: (Gdk.Atom.intern name(str), file_extension(str), additional_desc(str), content_type(str), thumbnail(bool))
+# order the variable definitions by 1st detected
 
 # office types
-word_libreoffice_target = (Gdk.Atom.intern('application/x-openoffice-embed-source-xml;windows_formatname="Star Embed Source (XML)"', False), "odt", "LibreOffice 7.1 Text Document")
-word_wpsoffice_target = (Gdk.Atom.intern("Kingsoft WPS 9.0 Format", False), "docx", "WPS Word")
-spreadsheet_libreoffice_target = (Gdk.Atom.intern('application/x-openoffice-embed-source-xml;windows_formatname="Star Embed Source (XML)"', False), "ods", "LibreOffice 7.1 Spreadsheet")
-spreadsheet_wpsoffice_target = (Gdk.Atom.intern("WPS Spreadsheets 6.0 Format", False), "xlsx", "WPS Spreadsheet")
-slides_libreoffice_target = (Gdk.Atom.intern('application/x-openoffice-embed-source-xml;windows_formatname="Star Embed Source (XML)"', False), "odp", "LibreOffice 7.1 Presentation")
-slides_wpsoffice_target = (Gdk.Atom.intern("WPS Drawing Shape Format", False), "pptx", "WPS Slides")
+word_libreoffice_target = ('application/x-openoffice-embed-source-xml;windows_formatname="Star Embed Source (XML)"', "odt", "LibreOffice Writer", "office", False)
+spreadsheet_libreoffice_target = ('application/x-openoffice-embed-source-xml;windows_formatname="Star Embed Source (XML)', "ods", "LibreOffice Calc", "office", True)
+slides_libreoffice_target = ('application/x-openoffice-drawing;windows_formatname="Drawing Format"', "odp", "LibreOffice Impress", "office", True)
+
+word_wpsoffice_target = ("Kingsoft WPS 9.0 Format", "docx", "WPS Writer", "office", False)
+spreadsheet_wpsoffice_target = ("WPS Spreadsheets 6.0 Format", "xlsx", "WPS Spreadsheets", "office", True)
+slides_wpsoffice_target = ("WPS Drawing Shape Format", "pptx", "WPS Presentation", "office", True)
+slidepage_wpsoffice_target = ("PowerPoint 14.0 Slides Package", "pptx", "WPS Presentation", "office", True)
 
 # html types
-html_target = (Gdk.Atom.intern('text/html', False), "html", "HTML Formt") # chrome, firefox, any app capable of copying html content
-html_webkit_target = (Gdk.Atom.intern('org.webkitgtk.WebKit.custom-pasteboard-data', False), "html", "HTML Format for Epiphany") # epiphany
+html_target = ("text/html", "html", "HTML Formt", "html", False) # chrome, firefox, any app capable of copying html content
+# html_webkit_target = ("org.webkitgtk.WebKit.custom-pasteboard-data", "html", "HTML Format for Epiphany", "html", False) # epiphany
 
 # image types
-image_png_target = (Gdk.Atom.intern('image/png', False), "png", "PNG Format")
-image_svg_target = (Gdk.Atom.intern('image/x-inkscape-svg', False), "svg", "SVG Format")
-
-# text types
-richtext_target = (Gdk.Atom.intern("text/richtext", False),"rtf", "Rich Text Format")
-text_target = (Gdk.Atom.intern('text/plain;charset=utf-8', False), "txt", "Plain Text Format")
+image_png_target = ("image/png", "png", "PNG Format", "image", False)
+image_svg_target = ("image/x-inkscape-svg", "svg", "SVG Format", "image", False)
 
 # file manager types
-uri_files_target = (Gdk.Atom.intern('x-special/gnome-copied-files', False), ".uri", "elementary Files Format")
-uri_dolphin_target = (Gdk.Atom.intern('application/x-kde4-urilist, False), ".uri", "Dolphin Format")
+uri_files_target = ("x-special/gnome-copied-files", ".uri", "elementary Files Format", "files", False)
+uri_dolphin_target = ("application/x-kde4-urilist", ".uri", "Dolphin Format", "files", False)
 
-# # office types
-# richtext_target = Gdk.Atom.intern("text/richtext", False)
-# word_libreoffice_target = Gdk.Atom.intern("application/x-openoffice-embed-source-xml", False)
-# word_wpsoffice_target = Gdk.Atom.intern("Kingsoft WPS 9.0 Format", False)
-# spreadsheet_libreoffice_target = Gdk.Atom.intern("application/x-openoffice-embed-source-xml", False)
-# spreadsheet_wpsoffice_target = Gdk.Atom.intern("WPS Spreadsheets 6.0 Format", False)
-# slides_libreoffice_target = Gdk.Atom.intern("application/x-openoffice-embed-source-xml", False)
-# slides_wpsoffice_target = Gdk.Atom.intern("WPS Drawing Shape Format", False)
-# html_target = Gdk.Atom.intern('text/html', False) # chrome, firefox, any app capable of copying html content
-# html_webkit_target = Gdk.Atom.intern('org.webkitgtk.WebKit.custom-pasteboard-data', False) # epiphany
-# image_target = Gdk.Atom.intern('image/png', False)
-# text_target = Gdk.Atom.intern('text/plain;charset=utf-8', False)
-# uri_target = Gdk.Atom.intern('x-special/gnome-copied-files', False)
+# text types
+richtext_target = ("text/richtext", "rtf", "Rich Text Format", "richtext", False)
+text_target = ("text/plain;charset=utf-8", "txt", "Plain Text Format", "plaintext", False)
 
 
 supported_targets = (word_libreoffice_target,
-                    word_wpsoffice_target,
                     spreadsheet_libreoffice_target,
-                    spreadsheet_wpsoffice_target,
                     slides_libreoffice_target,
-                    slides_wpsoffice_target,
-                    html_target,
-                    html_webkit_target,
+                    word_wpsoffice_target,
+                    spreadsheet_wpsoffice_target,
+                    slides_wpsoffice_target, 
+                    slidepage_wpsoffice_target, 
                     image_png_target,
                     image_svg_target,
+                    html_target,
+                    # html_webkit_target,
                     richtext_target,
                     text_target,
                     uri_files_target, 
                     uri_dolphin_target, )
 
+
+# argumentList = sys.argv[1:]
+ 
+# # Options
+# options = "hd:"
+ 
+# # Long options
+# long_options = ["help","debug"]
+
+# try:
+#     # Parsing argument
+#     arguments, values = getopt.getopt(argumentList, options, long_options)
+     
+#     # checking each argument
+#     for currentArgument, currentValue in arguments:
+ 
+#         if currentArgument in ("-h", "--help"):
+#             print ("For debug run with -d or --debug flag")
+             
+#         elif currentArgument in ("-d", "--debug"):
+#             print ("Displaying file_name:", sys.argv[0])
+             
+# except getopt.error as err:
+#     # output error, and return with an error code
+#     print (str(err))
+
+
+
+
+# Gdk.Atom.intern formats captured for each supported office doc types
+
 # LibreOffice Writer
-# Current clipboard offers formats:  15
-# 0 application/x-openoffice-embed-source-xml;windows_formatname="Star Embed Source (XML)" <Gtk.SelectionData object at 0xffffaa5b49a0 (GtkSelectionData at 0x155ba80)>
-# 1 text/rtf <Gtk.SelectionData object at 0xffffaa5b4d00 (GtkSelectionData at 0x155bac0)>
-# 2 text/richtext <Gtk.SelectionData object at 0xffffaa5b49a0 (GtkSelectionData at 0x155bb00)>
-# 3 text/html <Gtk.SelectionData object at 0xffffaa5b4d00 (GtkSelectionData at 0x155bb40)>
-# 4 text/plain;charset=utf-16 <Gtk.SelectionData object at 0xffffaa5b49a0 (GtkSelectionData at 0x155bb80)>
-# 5 application/x-openoffice-link;windows_formatname="Link" <Gtk.SelectionData object at 0xffffaa5b4d00 (GtkSelectionData at 0x16b1c00)>
-# 6 application/x-openoffice-objectdescriptor-xml;windows_formatname="Star Object Descriptor (XML)";classname="8BC6B165-B1B2-4EDD-aa47-dae2ee689dd6";typename="LibreOffice 7.1 Text Document";viewaspect="1";width="16999";height="2995";posx="0";posy="0" <Gtk.SelectionData object at 0xffffaa5b49a0 (GtkSelectionData at 0x16b1c40)>
-# 7 text/plain;charset=utf-8 <Gtk.SelectionData object at 0xffffaa5b4d00 (GtkSelectionData at 0x16b1c80)>
-# 8 application/x-libreoffice-internal-id-36 <Gtk.SelectionData object at 0xffffaa5b49a0 (GtkSelectionData at 0x16b1cc0)>
+# Current clipboard offers formats: 15
+# 0 application/x-openoffice-embed-source-xml;windows_formatname="Star Embed Source (XML)" 
+# 1 text/rtf 
+# 2 text/richtext 
+# 3 text/html 
+# 4 text/plain;charset=utf-16 
+# 5 application/x-openoffice-link;windows_formatname="Link" 
+# 6 application/x-openoffice-objectdescriptor-xml;windows_formatname="Star Object Descriptor (XML)";classname="8BC6B165-B1B2-4EDD-aa47-dae2ee689dd6";typename="LibreOffice 7.1 Text Document";viewaspect="1";width="16999";height="2995";posx="0";posy="0" 
+# 7 text/plain;charset=utf-8 
+# 8 application/x-libreoffice-internal-id-36 
 
 # WPS Writer
-# Current clipboard offers formats:  18
-# 0 Kingsoft Data Descriptor <Gtk.SelectionData object at 0xffffaa5b4d00 (GtkSelectionData at 0x16b1e00)>
-# 1 Kingsoft WPS 9.0 Format <Gtk.SelectionData object at 0xffffaa5b49a0 (GtkSelectionData at 0x16b1e40)>
-# 2 Embed Source <Gtk.SelectionData object at 0xffffaa5b4d00 (GtkSelectionData at 0x16b1e00)>
-# 3 Object Descriptor <Gtk.SelectionData object at 0xffffaa5b49a0 (GtkSelectionData at 0x16b1dc0)>
-# 4 Kingsoft Image Data <Gtk.SelectionData object at 0xffffaa5b4d00 (GtkSelectionData at 0x16b1d80)>
-# 5 Rich Text Format <Gtk.SelectionData object at 0xffffaa5b49a0 (GtkSelectionData at 0x16b1d40)>
-# 6 text/rtf <Gtk.SelectionData object at 0xffffaa5b4d00 (GtkSelectionData at 0x16b1d00)>
-# 7 text/richtext <Gtk.SelectionData object at 0xffffaa5b49a0 (GtkSelectionData at 0x16b1cc0)>
-# 8 text/plain <Gtk.SelectionData object at 0xffffaa5b4d00 (GtkSelectionData at 0x16b1c80)>
-# 9 text/html <Gtk.SelectionData object at 0xffffaa5b49a0 (GtkSelectionData at 0x16b1c40)>
+# Current clipboard offers formats: 18
+# 0 Kingsoft Data Descriptor 
+# 1 Kingsoft WPS 9.0 Format 
+# 2 Embed Source 
+# 3 Object Descriptor 
+# 4 Kingsoft Image Data 
+# 5 Rich Text Format 
+# 6 text/rtf 
+# 7 text/richtext 
+# 8 text/plain 
+# 9 text/html 
 
 # LibreOffice Calc
-# Current clipboard offers formats:  24
-# 0 application/x-openoffice-embed-source-xml;windows_formatname="Star Embed Source (XML)" <Gtk.SelectionData object at 0xffffaa5b4d00 (GtkSelectionData at 0x16b1c80)>
-# 1 application/x-openoffice-objectdescriptor-xml;windows_formatname="Star Object Descriptor (XML)";classname="47BBB4CB-CE4C-4E80-a591-42d9ae74950f";typename="LibreOffice 7.1 Spreadsheet";viewaspect="1";width="6775";height="4968";posx="0";posy="0" <Gtk.SelectionData object at 0xffffaa5b49a0 (GtkSelectionData at 0x16b1cc0)>
-# 2 application/x-openoffice-gdimetafile;windows_formatname="GDIMetaFile" <Gtk.SelectionData object at 0xffffaa5b4d00 (GtkSelectionData at 0x16b1d00)>
-# 3 application/x-openoffice-emf;windows_formatname="Image EMF" <Gtk.SelectionData object at 0xffffaa5b49a0 (GtkSelectionData at 0x16b1d40)>
-# 4 application/x-openoffice-wmf;windows_formatname="Image WMF" <Gtk.SelectionData object at 0xffffaa5b4d00 (GtkSelectionData at 0x16b1d80)>
-# 5 image/png <Gtk.SelectionData object at 0xffffaa5b49a0 (GtkSelectionData at 0x16b1dc0)>
-# 6 application/x-openoffice-bitmap;windows_formatname="Bitmap" <Gtk.SelectionData object at 0xffffaa5b4d00 (GtkSelectionData at 0x16b1e00)>
-# 7 image/bmp <Gtk.SelectionData object at 0xffffaa5b49a0 (GtkSelectionData at 0x16b1e40)>
-# 8 text/html <Gtk.SelectionData object at 0xffffaa5b4d00 (GtkSelectionData at 0x16b1e00)>
-# 9 application/x-openoffice-sylk;windows_formatname="Sylk" <Gtk.SelectionData object at 0xffffaa5b49a0 (GtkSelectionData at 0x16b1dc0)>
-# 10 application/x-openoffice-link;windows_formatname="Link" <Gtk.SelectionData object at 0xffffaa5b4d00 (GtkSelectionData at 0x16b1d80)>
-# 11 application/x-openoffice-dif;windows_formatname="DIF" <Gtk.SelectionData object at 0xffffaa5b49a0 (GtkSelectionData at 0x16b1d40)>
-# 12 text/plain;charset=utf-16 <Gtk.SelectionData object at 0xffffaa5b4d00 (GtkSelectionData at 0x16b1d00)>
-# 13 application/x-libreoffice-tsvc <Gtk.SelectionData object at 0xffffaa5b49a0 (GtkSelectionData at 0x16b1cc0)>
-# 14 text/rtf <Gtk.SelectionData object at 0xffffaa5b4d00 (GtkSelectionData at 0x16b1c80)>
-# 15 text/richtext <Gtk.SelectionData object at 0xffffaa5b49a0 (GtkSelectionData at 0x16b1c40)>
-# 16 text/plain;charset=utf-8 <Gtk.SelectionData object at 0xffffaa5b4d00 (GtkSelectionData at 0x16b1c00)>
-# 17 application/x-libreoffice-internal-id-36 <Gtk.SelectionData object at 0xffffaa5b49a0 (GtkSelectionData at 0x155bb80)>
+# Current clipboard offers formats: 24
+# 0 application/x-openoffice-embed-source-xml;windows_formatname="Star Embed Source (XML)" 
+# 1 application/x-openoffice-objectdescriptor-xml;windows_formatname="Star Object Descriptor (XML)";classname="47BBB4CB-CE4C-4E80-a591-42d9ae74950f";typename="LibreOffice 7.1 Spreadsheet";viewaspect="1";width="6775";height="4968";posx="0";posy="0" 
+# 2 application/x-openoffice-gdimetafile;windows_formatname="GDIMetaFile" 
+# 3 application/x-openoffice-emf;windows_formatname="Image EMF" 
+# 4 application/x-openoffice-wmf;windows_formatname="Image WMF" 
+# 5 image/png 
+# 6 application/x-openoffice-bitmap;windows_formatname="Bitmap" 
+# 7 image/bmp 
+# 8 text/html 
+# 9 application/x-openoffice-sylk;windows_formatname="Sylk" 
+# 10 application/x-openoffice-link;windows_formatname="Link" 
+# 11 application/x-openoffice-dif;windows_formatname="DIF" 
+# 12 text/plain;charset=utf-16 
+# 13 application/x-libreoffice-tsvc 
+# 14 text/rtf 
+# 15 text/richtext 
+# 16 text/plain;charset=utf-8 
+# 17 application/x-libreoffice-internal-id-36 
 
 # WPS Spreadsheets
-# Current clipboard offers formats:  19
-# 0 image/png <Gtk.SelectionData object at 0xffffaa5b4d00 (GtkSelectionData at 0x16b1d00)>
-# 1 WPS Spreadsheets 6.0 Format <Gtk.SelectionData object at 0xffffaa5b49a0 (GtkSelectionData at 0x16b1d40)>
-# 2 text/html <Gtk.SelectionData object at 0xffffaa5b4d00 (GtkSelectionData at 0x16b1d80)>
-# 3 text/plain <Gtk.SelectionData object at 0xffffaa5b49a0 (GtkSelectionData at 0x16b1dc0)>
-# 4 Rich Text Format <Gtk.SelectionData object at 0xffffaa5b4d00 (GtkSelectionData at 0x16b1e00)>
-# 5 text/richtext <Gtk.SelectionData object at 0xffffaa5b49a0 (GtkSelectionData at 0x16b1e40)>
-# 6 text/rtf <Gtk.SelectionData object at 0xffffaa5b4d00 (GtkSelectionData at 0x16b1e00)>
-# 7 XML Spreadsheet <Gtk.SelectionData object at 0xffffaa5b49a0 (GtkSelectionData at 0x16b1dc0)>
-# 8 Link Source <Gtk.SelectionData object at 0xffffaa5b4d00 (GtkSelectionData at 0x16b1d80)>
-# 9 Link Source Descriptor <Gtk.SelectionData object at 0xffffaa5b49a0 (GtkSelectionData at 0x16b1d40)>
-# 10 Kingsoft Data Descriptor <Gtk.SelectionData object at 0xffffaa5b4d00 (GtkSelectionData at 0x16b1d00)>
+# Current clipboard offers formats: 19
+# 0 image/png 
+# 1 WPS Spreadsheets 6.0 Format 
+# 2 text/html 
+# 3 text/plain 
+# 4 Rich Text Format 
+# 5 text/richtext 
+# 6 text/rtf 
+# 7 XML Spreadsheet 
+# 8 Link Source 
+# 9 Link Source Descriptor 
+# 10 Kingsoft Data Descriptor 
 
 # LibreOffice Impress
-# Current clipboard offers formats:  14
-# 0 application/x-openoffice-objectdescriptor-xml;windows_formatname="Star Object Descriptor (XML)";classname="9176E48A-637A-4D1F-803b-99d9bfac1047";typename="LibreOffice 7.1 Presentation";displayname="file:///home/adi/Downloads/You_Exec_-_Keynote_Presentation_-_Collages.pptx";viewaspect="1";width="55280";height="38100";posx="0";posy="0" <Gtk.SelectionData object at 0xffffaa5b49a0 (GtkSelectionData at 0x16b1cc0)>
-# 1 application/x-openoffice-embed-source-xml;windows_formatname="Star Embed Source (XML)" <Gtk.SelectionData object at 0xffffaa5b4d00 (GtkSelectionData at 0x155bb80)>
-# 2 application/x-openoffice-drawing;windows_formatname="Drawing Format" <Gtk.SelectionData object at 0xffffaa5b49a0 (GtkSelectionData at 0x16b1c80)>
-# 3 application/x-openoffice-gdimetafile;windows_formatname="GDIMetaFile" <Gtk.SelectionData object at 0xffffaa5b4d00 (GtkSelectionData at 0x16b1d00)>
-# 4 application/x-openoffice-emf;windows_formatname="Image EMF" <Gtk.SelectionData object at 0xffffaa5b49a0 (GtkSelectionData at 0x16b1d40)>
-# 5 application/x-openoffice-wmf;windows_formatname="Image WMF" <Gtk.SelectionData object at 0xffffaa5b4d00 (GtkSelectionData at 0x16b1d80)>
-# 6 image/png <Gtk.SelectionData object at 0xffffaa5b49a0 (GtkSelectionData at 0x16b1dc0)>
-# 7 application/x-openoffice-bitmap;windows_formatname="Bitmap" <Gtk.SelectionData object at 0xffffaa5b4d00 (GtkSelectionData at 0x16b1e00)>
-# 8 image/bmp <Gtk.SelectionData object at 0xffffaa5b49a0 (GtkSelectionData at 0x16b1e40)>
-# 9 application/x-libreoffice-internal-id-36 <Gtk.SelectionData object at 0xffffaa5b4d00 (GtkSelectionData at 0x16b1e00)>
+# Current clipboard offers formats: 14
+# 0 application/x-openoffice-objectdescriptor-xml;windows_formatname="Star Object Descriptor (XML)";classname="9176E48A-637A-4D1F-803b-99d9bfac1047";typename="LibreOffice 7.1 Presentation";displayname="file:///home/adi/Downloads/You_Exec_-_Keynote_Presentation_-_Collages.pptx";viewaspect="1";width="55280";height="38100";posx="0";posy="0" 
+# 1 application/x-openoffice-embed-source-xml;windows_formatname="Star Embed Source (XML)" 
+# 2 application/x-openoffice-drawing;windows_formatname="Drawing Format" 
+# 3 application/x-openoffice-gdimetafile;windows_formatname="GDIMetaFile" 
+# 4 application/x-openoffice-emf;windows_formatname="Image EMF" 
+# 5 application/x-openoffice-wmf;windows_formatname="Image WMF" 
+# 6 image/png 
+# 7 application/x-openoffice-bitmap;windows_formatname="Bitmap" 
+# 8 image/bmp 
+# 9 application/x-libreoffice-internal-id-36 
 
 # WPS Slides
-# Current clipboard offers formats:  11
-# 0 Art::GVML ClipFormat <Gtk.SelectionData object at 0xffffaa5b4d00 (GtkSelectionData at 0x16b1c80)>
-# 1 WPS Drawing Shape Format <Gtk.SelectionData object at 0xffffa9a72a00 (GtkSelectionData at 0x155bb80)>
-# 2 image/png <Gtk.SelectionData object at 0xffffaa5b4d00 (GtkSelectionData at 0x16b1cc0)>
-# 3 image/jpeg <Gtk.SelectionData object at 0xffffa9a72a00 (GtkSelectionData at 0x16b1c00)>
-# 4 image/bmp <Gtk.SelectionData object at 0xffffaa5b4d00 (GtkSelectionData at 0x16b1c40)>
-# 5 CF_ENHMETAFILE <Gtk.SelectionData object at 0xffffa9a72a00 (GtkSelectionData at 0x155bac0)>
-# 6 Kingsoft Data Descriptor <Gtk.SelectionData object at 0xffffaa5b4d00 (GtkSelectionData at 0x155bb40)>
+# Current clipboard offers formats: 11
+# 0 Art::GVML ClipFormat 
+# 1 WPS Drawing Shape Format 
+# 2 image/png 
+# 3 image/jpeg 
+# 4 image/bmp 
+# 5 CF_ENHMETAFILE 
+# 6 Kingsoft Data Descriptor
+

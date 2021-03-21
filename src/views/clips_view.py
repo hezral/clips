@@ -118,8 +118,6 @@ class ClipsContainer(Gtk.EventBox):
         self.type = clip[7]
         self.protected = clip[8]
 
-        # print(self.type)
-
         #------ clip_action ----#
         clip_action_revealer = self.generate_clip_action()
 
@@ -156,8 +154,9 @@ class ClipsContainer(Gtk.EventBox):
             self.content = ColorContainer(self.cache_file, self.type, utils)
             
         else:
-            self.content_label = "title"
-            self.content = Gtk.Label("CONTENT")
+            print(self.cache_file, self.type)
+            self.content = DefaultContainer(self.cache_file, self.type, utils)
+
 
         #------ clip_content ----#
         #self.content.props.expand = True
@@ -173,7 +172,10 @@ class ClipsContainer(Gtk.EventBox):
         #clip_content.add(self.content)
 
         #------ clip_info ----#
-        self.content_label = Gtk.Label(self.content.label)
+        if self.content.label is not None:
+            self.content_label = Gtk.Label("Clip")
+        else:
+            self.content_label = Gtk.Label(self.content.label)
         self.content_label.props.name = "clip-content-label"
         self.content_label.props.halign = Gtk.Align.START
         self.content_label.props.valign = Gtk.Align.END
@@ -485,6 +487,29 @@ class ClipsContainer(Gtk.EventBox):
 
 # ----------------------------------------------------------------------------------------------------
 
+class DefaultContainer(Gtk.Grid):
+    def __init__(self, filepath, type, utils, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.content = Gtk.Label(type)
+        self.content.props.wrap_mode = Pango.WrapMode.CHAR
+        self.content.props.max_width_chars = 23
+        self.content.props.wrap = True
+        self.content.props.selectable = False
+        self.content.props.expand = True
+        self.content.props.ellipsize = Pango.EllipsizeMode.END
+        
+        self.props.margin = 10
+        self.props.margin_left = self.props.margin_right = 10
+        self.props.name = "plaintext-container"
+        self.attach(self.content, 0, 0, 1, 1)
+
+        self.label = str(len(type)) + " chars"
+        self.name = "content"
+        self.get_style_context().add_class("clip-containers")
+
+# ----------------------------------------------------------------------------------------------------
+
 class ImageContainer(Gtk.Grid):
     def __init__(self, filepath, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -515,7 +540,7 @@ class ImageContainer(Gtk.Grid):
         print(locals())
 
     def draw(self, drawing_area, cairo_context, hover_scale=1):
-        print("draw")
+        # print("draw")
         # Forked and ported from https://github.com/elementary/greeter/blob/master/src/Widgets/BackgroundImage.vala
         from math import pi
 

@@ -37,5 +37,10 @@
             <summary>Blacklisted apps from Clips</summary>
             <description>These apps will not be monitored for clipboard events</description>
         </key>
+        <key type="as" name="protected-apps">
+            <default>[]</default>
+            <summary>Protected apps from Clips</summary>
+            <description>Clips from these apps will be masked and require password to view</description>
+        </key>
     </schema>
 </schemalist>
