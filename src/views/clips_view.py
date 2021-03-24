@@ -18,9 +18,8 @@
 import gi
 from utils import ConvertToRGB
 gi.require_version('Gtk', '3.0')
-gi.require_version('Granite', '1.0')
 gi.require_version('WebKit2', '4.0')
-from gi.repository import Gtk, WebKit2, Granite, GdkPixbuf, GLib, Pango, Gdk
+from gi.repository import Gtk, WebKit2, GdkPixbuf, Pango, Gdk, Gio
 
 import os
 from datetime import datetime
@@ -125,15 +124,16 @@ class ClipsContainer(Gtk.EventBox):
         self.content = None
 
         if self.type == "files":
-            self.content = open(self.cache_file, "r")
-            self.content_label = str(len(self.content.read())) + "chars"
-            self.content = Gtk.Label(self.content.read())
+            # self.content = open(self.cache_file, "r")
+            # self.content_label = str(len(self.content.read())) + "chars"
+            # self.content = Gtk.Label(self.content.read())
+            self.content = FilesContainer(self.cache_file, self.type, utils)
 
         elif self.type == "image":
-            self.content = ImageContainer(self.cache_file)
+            self.content = ImageContainer(self.cache_file, self.type, utils)
 
         elif self.type == "html":
-            self.content = HtmlContainer(self.cache_file, utils)
+            self.content = HtmlContainer(self.cache_file, self.type, utils)
 
         # elif self.type == "richtext":
         #     self.content = open(self.cache_file, "r")
@@ -141,7 +141,7 @@ class ClipsContainer(Gtk.EventBox):
         #     self.content = Gtk.Label(self.content.read())
 
         elif self.type == "plaintext":
-            self.content = PlainTextContainer(self.cache_file)
+            self.content = PlainTextContainer(self.cache_file, self.type, utils)
 
         # elif self.type == "url":
         #     self.content = Gtk.Image().new_from_icon_name("internet-web-browser", Gtk.IconSize.DIALOG)
@@ -152,7 +152,7 @@ class ClipsContainer(Gtk.EventBox):
             
         else:
             # print(self.cache_file, self.type)
-            self.content = DefaultContainer(self.cache_file, self.type, utils)
+            self.content = FallbackContainer(self.cache_file, self.type, utils)
 
 
         #------ clip_content ----#
@@ -169,14 +169,14 @@ class ClipsContainer(Gtk.EventBox):
         #clip_content.add(self.content)
 
         #------ clip_info ----#
-        if self.content.label is not None:
+        if self.content.label is None:
             self.content_label = Gtk.Label("Clip")
         else:
             self.content_label = Gtk.Label(self.content.label)
         self.content_label.props.name = "clip-content-label"
         self.content_label.props.halign = Gtk.Align.START
         self.content_label.props.valign = Gtk.Align.END
-        self.content_label.props.margin_bottom = 10
+        self.content_label.props.margin_bottom = 9
         self.content_label.props.expand = True
 
         #------ source_icon / application icon ----#
@@ -485,6 +485,17 @@ class ClipsContainer(Gtk.EventBox):
 # ----------------------------------------------------------------------------------------------------
 
 class DefaultContainer(Gtk.Grid):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.props.name = "default-container"
+        self.props.halign = self.props.valign = Gtk.Align.FILL
+        self.props.expand = True
+        self.get_style_context().add_class("clip-containers")
+
+# ----------------------------------------------------------------------------------------------------
+
+class FallbackContainer(DefaultContainer):
     def __init__(self, filepath, type, utils, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -498,17 +509,16 @@ class DefaultContainer(Gtk.Grid):
         
         self.props.margin = 10
         self.props.margin_left = self.props.margin_right = 10
-        self.props.name = "plaintext-container"
+        self.props.name = "default-container"
         self.attach(self.content, 0, 0, 1, 1)
 
         self.label = str(len(type)) + " chars"
-        self.name = "content"
-        self.get_style_context().add_class("clip-containers")
+        # self.name = "content"
 
 # ----------------------------------------------------------------------------------------------------
 
-class ImageContainer(Gtk.Grid):
-    def __init__(self, filepath, *args, **kwargs):
+class ImageContainer(DefaultContainer):
+    def __init__(self, filepath, type, utils, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.pixbuf_original = GdkPixbuf.Pixbuf.new_from_file(filepath)
@@ -520,18 +530,13 @@ class ImageContainer(Gtk.Grid):
         drawing_area.connect("draw", self.draw)
         drawing_area.props.can_focus = False
  
-        self.props.halign = self.props.valign = Gtk.Align.FILL
         self.props.name = "image-container"
         self.attach(drawing_area, 0, 0, 1, 1)
 
         if self.pixbuf_original.get_has_alpha():
-            # self.get_style_context().add_class(Granite.STYLE_CLASS_CHECKERBOARD)
             self.get_style_context().add_class("checkerboard")
         
         self.label = "{width} x {height} px".format(width=str(self.pixbuf_original.props.width), height=str(self.pixbuf_original.props.height))
-
-        self.name = "content"
-        self.get_style_context().add_class("clip-containers")
 
     def hover(self, *args):
         '''
@@ -591,7 +596,7 @@ class ImageContainer(Gtk.Grid):
 
 # ----------------------------------------------------------------------------------------------------
 
-class ColorContainer(Gtk.Grid):
+class ColorContainer(DefaultContainer):
     def __init__(self, filepath, type, utils, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -625,26 +630,19 @@ class ColorContainer(Gtk.Grid):
         self.get_style_context().add_provider(provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
         self.get_style_context().add_class("color-container-bg")
 
-        self.props.halign = self.props.valign = Gtk.Align.FILL
         self.props.name = "color-container"
         self.attach(self.content, 0, 0, 1, 1)
 
         self.label = type.split("/")[1].upper()
-        self.name = "content"
-        self.get_style_context().add_class("clip-containers")
 
 # ----------------------------------------------------------------------------------------------------
 
-class PlainTextContainer(Gtk.Grid):
-    def __init__(self, filepath, *args, **kwargs):
+class PlainTextContainer(DefaultContainer):
+    def __init__(self, filepath, type, utils, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        with open(filepath) as f:
-            for i, l in enumerate(f):
-                pass
-
-        with open(filepath) as myfile:
-            firstNlines=myfile.readlines()[0:10] #put here the interval you want
+        with open(filepath) as file:
+            firstNlines = file.readlines()[0:10] #put here the interval you want
         self.content = ''.join(firstNlines)
 
         self.content = Gtk.Label(self.content)
@@ -660,19 +658,21 @@ class PlainTextContainer(Gtk.Grid):
         self.props.name = "plaintext-container"
         self.attach(self.content, 0, 0, 1, 1)
 
+        with open(filepath) as file:
+            for i, l in enumerate(file):
+                pass
+
         if not i+1 < 10:
             lines = Gtk.Label(str(i+1-10) + " lines more...")
             lines.props.halign = Gtk.Align.END
             self.attach(lines, 0, 1, 1, 1)
 
         self.label = str(len(self.content.props.label)) + " chars"
-        self.name = "content"
-        self.get_style_context().add_class("clip-containers")
 
 # ----------------------------------------------------------------------------------------------------
 
-class HtmlContainer(Gtk.Grid):
-    def __init__(self, filepath, utils, *args, **kwargs):
+class HtmlContainer(DefaultContainer):
+    def __init__(self, filepath, type, utils, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.content = open(filepath, "r")
@@ -707,5 +707,54 @@ class HtmlContainer(Gtk.Grid):
         self.attach(webview, 0, 0, 1, 1)
 
         self.label = str(len(self.content)) + " chars"
-        self.name = "content"
-        self.get_style_context().add_class("clip-containers")
+
+# ----------------------------------------------------------------------------------------------------
+
+class FilesContainer(DefaultContainer):
+    def __init__(self, filepath, type, utils, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        scale = self.get_scale_factor()
+        icon_size = 64 * scale
+        icon_theme = Gtk.IconTheme.get_default()
+        icon = None
+
+        self.content = Gtk.Grid()
+        self.content.props.halign = self.content.props.valign = Gtk.Align.CENTER
+        #self.content.props.expand = True
+
+        with open(filepath) as file:
+            i = 0
+            for line_number, line_content in enumerate(file):
+                line_content = line_content.replace("copy","").replace("file://","").strip()
+                mime_type, val = Gio.content_type_guess(line_content, data=None)
+                icon = Gio.content_type_get_icon(mime_type)
+                for entry in icon.to_string().split():
+                    if entry != "." and entry != "GThemedIcon":
+                        try:
+                            icon_pixbuf = icon_theme.load_icon(entry, icon_size, 0)
+                            icon = Gtk.Image().new_from_pixbuf(icon_pixbuf)   
+                        except:
+                            pass # file not exist for this entry
+                        if icon:
+                            if i == 0:
+                                icon.props.margin_left = 0
+                                icon.props.margin_right = 16
+                            else:
+                                icon.props.margin_left = 64
+                                icon.props.margin_right = 0
+                            self.content.attach(icon, 0, 0, 1, 1)
+                            # i += (icon_size/2)
+                            print("added")
+                            break
+                        
+            file_count = line_number + 1
+
+        self.props.name = "files-container"
+        self.attach(self.content, 0, 0, 1, 1)
+
+        self.label = str(file_count) + " files"
+    
+
+
+# ----------------------------------------------------------------------------------------------------

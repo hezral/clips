@@ -207,78 +207,6 @@ class CacheManager():
 
             temp_filename = next(tempfile._get_candidate_names()) + tempfile.gettempprefix()
 
-            # if target == clipboard_manager.uri_target: # x-special/gnome-copied-files or uri list
-            #     source = 'file-manager'
-            #     cache_filetype = '.uri'
-            #     type = "files"
-            #     temp_cache_uri = os.path.join(self.cache_filedir, temp_filename + cache_filetype)
-
-            #     content = content.get_data().decode("utf-8") 
-            #     uris=[] #for file copy items, don't keep files in cache to avoid storage issues, just get the original uri
-            #     for i in content.splitlines():
-            #         uris.append(urlparse(i).path.replace('%20',' '))
-            #     content = '\n'.join(uris)
-
-            # elif target == clipboard_manager.image_target: # image/png
-            #     if 'Workspace' in source_app:
-            #         source = 'screenshot'
-            #     else:
-            #         source = 'application'
-            #     cache_filetype = '.png'
-            #     type = "image"
-            #     temp_cache_uri = os.path.join(self.cache_filedir, temp_filename + cache_filetype)
-
-            #     # save content to temp file
-            #     content.savev(temp_cache_uri, 'png', [], [])
-
-            # elif target == clipboard_manager.html_target: # text/html
-            #     source = 'selection'
-            #     cache_filetype = '.html'
-            #     type = "html"
-            #     temp_cache_uri = os.path.join(self.cache_filedir, temp_filename + cache_filetype)
-
-            #     content = content.get_data().decode("utf-8") # decode from bytes to string for html/text targets
-
-            # elif target == clipboard_manager.richtext_target: # text/richtext
-            #     source = 'selection'
-            #     cache_filetype = '.rtf'
-            #     type = "richtext"
-            #     temp_cache_uri = os.path.join(self.cache_filedir, temp_filename + cache_filetype)
-
-            #     content = content.get_data() # for rich text, save the bytes to .rtf file directly
-            
-            # elif target == clipboard_manager.text_target: # text/plain
-            #     source = 'selection'
-            #     cache_filetype = '.txt'
-            #     type = "plaintext"
-            #     temp_cache_uri = os.path.join(self.cache_filedir, temp_filename + cache_filetype)
-
-            #     # check for other supported types
-
-            #     # check if hex, rgb, rgba, hsl, hsla color codes, if only a single string contained
-            #     if self.app.utils.isValidColorCode(content):
-            #         type = "color/" + self.app.utils.isValidColorCode(content)[1]
-
-            #     # check if string is a URL only if there is one long string of URL
-            #     elif urlparse(content.split(" ")[0]) and len(content.split(" ")) == 1:
-            #         cache_filetype = '.desktop'
-            #         type = "url"
-            #         temp_cache_uri = os.path.join(self.cache_filedir, temp_filename + cache_filetype)
-
-            #         _content = "[Desktop Entry]" + "\n"
-            #         _content = _content + "Encoding=UTF-8" + "\n"
-            #         _content = _content + "Name={domain}".format(domain=urlparse(content).netloc) + "\n"
-            #         _content = _content + "Type=Application" + "\n"
-            #         _content = _content + "Icon=internet-web-browser" + "\n"
-            #         _content = _content + "MimeType=application/x-mswinurl" + "\n"
-            #         _content = _content + "Exec=xdg-open {url}".format(url=content) + "\n"
-
-            #         content = _content
-
-            # else:
-            #     print('Clips: Unsupported target type')
-
-
             # define type
             type = content_type
 
@@ -317,24 +245,7 @@ class CacheManager():
                 file.close()
                 cache_thumbnail_file = checksum + "-thumb" + ".png"
                 cache_thumbnail_uri = self.cache_filedir + '/' + cache_thumbnail_file
-                os.renames(temp_cache_thumbnail_uri, cache_thumbnail_uri)
-
-            # # save content in temp
-            # if target == clipboard_manager.richtext_target: # text/richtext
-            #     file = open(temp_cache_uri,"wb")
-            #     file.write(content)
-            #     file.close()
-            # elif target != clipboard_manager.image_target: #except for images
-            #     # save content to temp file
-            #     file = open(temp_cache_uri,"w")
-            #     file.write(content)
-            #     file.close()
-
-
-
-
-
-            
+                os.renames(temp_cache_thumbnail_uri, cache_thumbnail_uri)            
 
             # fallback for source_icon
             # save a copy of the icon in case the app is uninstalled and no icon to use
@@ -351,7 +262,6 @@ class CacheManager():
             pixbuf.savev(source_icon_cache, 'png', [], []) # save to icon cache folder
 
             record = (str(target), created, source, source_app, source_icon, cache_file, type, protected)
-            #record = (str(target), created, source, source_app, source_icon, checksum, cache_filetype, type, protected)
 
             clips_view = self.main_window.clips_view
 
@@ -393,13 +303,3 @@ class CacheManager():
                 #flowboxchild_updated.get_children()[0].on_clip_action(action="updated")
                 
                 clips_view.flowbox.invalidate_sort()
-                
-                
-
-
-
-
-
-
-
-

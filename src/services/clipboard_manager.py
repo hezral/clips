@@ -34,21 +34,24 @@ class ClipboardManager():
         super().__init__()
 
         self.app = gtk_application
-        self.blacklist_apps = self.app.gio_settings.get_value("blacklist-apps").get_strv()
-        self.protected_apps = self.app.gio_settings.get_value("protected-apps").get_strv()
-
         self.clips_supported = services.clips_supported
 
-        print(type(self.blacklist_apps), self.blacklist_apps)
-        print(type(self.protected_apps), self.protected_apps)
+    def get_settings(self, gio_settings_keyname):
+        return self.app.gio_settings.get_value(gio_settings_keyname).get_strv()
 
     def clipboard_changed(self, clipboard, event):
-        created = datetime.now()
-        target, content, thumbnail, file_extension, additional_desc, content_type = self.get_clipboard_contents(clipboard, event)
-        source_app, source_icon = self.get_active_app()
-        protected = "no"
-        # print(__file__.split("/")[-1], "blacklist_apps", self.blacklist_apps)
-        return target, content, source_app, source_icon, created, protected, thumbnail, file_extension, content_type
+        
+        if self.get_active_app()[0] not in self.get_settings("blacklist-apps"):
+            created = datetime.now()
+            target, content, thumbnail, file_extension, additional_desc, content_type = self.get_clipboard_contents(clipboard, event)
+            source_app, source_icon = self.get_active_app()
+            if source_app not in self.get_settings("protected-apps"):
+                protected = "no"
+            else:
+                protected = "yes"
+            return target, content, source_app, source_icon, created, protected, thumbnail, file_extension, content_type
+        else:
+            print("ignored due to blacklisted app")
 
     def get_clipboard_contents(self, clipboard, event):
         
@@ -61,6 +64,11 @@ class ClipboardManager():
 
                     content = clipboard.wait_for_contents(target)
                     if content is not None:
+
+                        file_extension = supported_target[1]
+                        additional_desc = supported_target[2]
+                        content_type = supported_target[3]
+                        thumbnail = supported_target[4]
 
                         # only get the right target for these types
                         if "WPS" in self.get_active_app()[0] and not "WPS" in supported_target[2]:
@@ -80,32 +88,25 @@ class ClipboardManager():
 
                         if "text/plain;charset=utf-8" in supported_target[0] and "color" in supported_target[3]:
                             if self.app.utils.isValidColorCode(content.get_text().strip()):
-                                type = "color/" + self.app.utils.isValidColorCode(content.get_text().strip())[1]
+                                content_type = "color/" + self.app.utils.isValidColorCode(content.get_text().strip())[1]
                             else:
                                 proceed = False
 
                         if "text/plain;charset=utf-8" in supported_target[0] and "url" in supported_target[3]:
                             if self.app.utils.isValidURL(content.get_text().strip()):
-                                type = "url/" + content.get_text().split(":")[0]
+                                content_type = "url/" + content.get_text().split(":")[0]
                             else:
                                 proceed = False
 
                         if proceed:
-                            content = clipboard.wait_for_contents(target)
-                            if content is not None:
-                                file_extension = supported_target[1]
-                                additional_desc = supported_target[2]
-                                content_type = supported_target[3]
-                                thumbnail = supported_target[4]
+                            if thumbnail:
+                                thumbnail = clipboard.wait_for_contents(Gdk.Atom.intern('image/png', False))
+                            else:
+                                thumbnail = None
 
-                                if thumbnail:
-                                    thumbnail = clipboard.wait_for_contents(Gdk.Atom.intern('image/png', False))
-                                else:
-                                    thumbnail = None
+                            clip_saved = True
 
-                                clip_saved = True
-
-                                return target, content, thumbnail, file_extension, additional_desc, content_type
+                            return target, content, thumbnail, file_extension, additional_desc, content_type
 
     def get_active_app(self):
         matcher = Bamf.Matcher()

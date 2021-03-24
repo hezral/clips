@@ -58,8 +58,8 @@ class Clips(Gtk.Application):
         self.total_clips = 0
 
         # prepend custom path for icon theme
-        icon_theme = Gtk.IconTheme.get_default()
-        icon_theme.prepend_search_path(os.path.join(os.path.dirname(__file__), "..", "data", "icons"))
+        self.icon_theme = Gtk.IconTheme.get_default()
+        self.icon_theme.prepend_search_path(os.path.join(os.path.dirname(__file__), "..", "data", "icons"))
   
     def do_startup(self):
         Gtk.Application.do_startup(self)
@@ -113,9 +113,10 @@ class Clips(Gtk.Application):
         self.cache_manager.main_window = self.main_window
 
         # clips_view = self.main_window.utils.get_widget_by_name(widget=self.main_window, child_name="clips-view", level=0)
-        #clips_view = self.main_window.clips_view
-        self.main_window.clips_view.cache_manager = self.cache_manager
-        self.main_window.clips_view.clipboard_manager = self.clipboard_manager
+        # clips_view = self.main_window.clips_view
+        # self.main_window.clips_view.cache_manager = self.cache_manager
+        # self.main_window.clips_view.clipboard_manager = self.clipboard_manager
+        # self.main_window.clips_view.icon_theme = self.icon_theme
 
         if self.running is False:
             print(datetime.now(), "start load_clips")
@@ -136,28 +137,29 @@ class Clips(Gtk.Application):
     @utils.run_async
     def load_clips_fromdb(self, clips, clips_view):
         app_startup = True
+        
         # initially load last 20 clips 
         for clip in reversed(clips[-10:]):
             GLib.idle_add(clips_view.new_clip, clip, app_startup)
-            time.sleep(0.15)
+            time.sleep(0.02)
             #print(clip[0])
         #if focus:
         #clips_view.flowbox.get_child_at_index(0).grab_focus()
 
-        for clip in reversed(clips[-20:-10]):
+        for clip in reversed(clips[:-10]):
             GLib.idle_add(clips_view.new_clip, clip, app_startup)
-            time.sleep(0.05)
+            time.sleep(0.01)
             #print(clip[0])
 
-        for clip in reversed(clips[-30:-20]):
-            GLib.idle_add(clips_view.new_clip, clip, app_startup)
-            time.sleep(0.05)
-            #print(clip[0])
+        # for clip in reversed(clips[-30:-20]):
+        #     GLib.idle_add(clips_view.new_clip, clip, app_startup)
+        #     time.sleep(0.05)
+        #     #print(clip[0])
 
-        for clip in reversed(clips[:-30]):
-            GLib.idle_add(clips_view.new_clip, clip, app_startup)
-            time.sleep(0.05)
-            #print(clip[0])
+        # for clip in reversed(clips[:-30]):
+        #     GLib.idle_add(clips_view.new_clip, clip, app_startup)
+        #     time.sleep(0.05)
+        #     #print(clip[0])
 
         print(datetime.now(), "finish load_clips")
 
