@@ -1,23 +1,20 @@
 #!/usr/bin/env python3
 
 '''
-   Copyright 2018 Adi Hezral (hezral@gmail.com)
-
-   This file is part of Clips.
-
-    Clips is free software: you can redistribute it and/or modify
+    Copyright 2018 Adi Hezral (hezral@gmail.com)
+    This file is part of Clips ("Application").
+    The Application is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-
-    Clips is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    The Application is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
     You should have received a copy of the GNU General Public License
-    along with Clips.  If not, see <http://www.gnu.org/licenses/>.
+    along with this Application.  If not, see <http://www.gnu.org/licenses/>.
 '''
+
 import gi
 from utils import ConvertToRGB
 gi.require_version('Gtk', '3.0')
@@ -154,7 +151,7 @@ class ClipsContainer(Gtk.EventBox):
             self.content = ColorContainer(self.cache_file, self.type, utils)
             
         else:
-            print(self.cache_file, self.type)
+            # print(self.cache_file, self.type)
             self.content = DefaultContainer(self.cache_file, self.type, utils)
 
 
@@ -537,16 +534,20 @@ class ImageContainer(Gtk.Grid):
         self.get_style_context().add_class("clip-containers")
 
     def hover(self, *args):
+        '''
+        Function to implement cool hover > zoom image effect
+        '''
         print(locals())
 
     def draw(self, drawing_area, cairo_context, hover_scale=1):
-        # print("draw")
-        # Forked and ported from https://github.com/elementary/greeter/blob/master/src/Widgets/BackgroundImage.vala
+        '''
+        Forked and ported from https://github.com/elementary/greeter/blob/master/src/Widgets/BackgroundImage.vala
+        '''
         from math import pi
 
         scale = self.get_scale_factor()
-        width = self.get_allocated_width () * scale * hover_scale
-        height = self.get_allocated_height () * scale * hover_scale
+        width = self.get_allocated_width() * scale * hover_scale
+        height = self.get_allocated_height() * scale * hover_scale
         radius = 4 * scale #Off-by-one to prevent light bleed
 
         pixbuf_fitted = GdkPixbuf.Pixbuf.new(self.pixbuf_original.get_colorspace(), self.pixbuf_original.get_has_alpha(), self.pixbuf_original.get_bits_per_sample(), width, height)
