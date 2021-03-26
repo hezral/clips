@@ -74,6 +74,8 @@ supported_targets = (spreadsheet_libreoffice_target,
                     slides_wpsoffice_target, 
                     word_wpsoffice_target,
                     slidepage_wpsoffice_target, 
+                    uri_files_target, 
+                    uri_dolphin_target,
                     image_svg_target,
                     image_png_target,
                     html_target,
@@ -81,9 +83,7 @@ supported_targets = (spreadsheet_libreoffice_target,
                     richtext_target,
                     color_target,
                     url_target, 
-                    text_target,
-                    uri_files_target, 
-                    uri_dolphin_target, )
+                    text_target, )
 
 
 thumbnail_target = ("text/plain;charset=utf-8", "txt", "Color Codes", "color", False)
