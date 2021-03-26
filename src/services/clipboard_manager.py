@@ -30,7 +30,7 @@ class ClipboardManager():
 
     clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
 
-    skip_event = False
+    skip_event = 0
 
     def __init__(self, gtk_application=None):
         super().__init__()
@@ -43,17 +43,21 @@ class ClipboardManager():
 
     def clipboard_changed(self, clipboard, event):
 
-        # print("\n")
-        # print("active app:", self.get_active_app()[0])
-        # print("selection owner:", event.owner)
-        # print("reason:", event.reason.value_name)
-        # print("event type:", event.type.value_name)
-        # print("receiving window:", event.window)
-        # print("selection_time:", event.selection_time)
-        # print("timestamp:", event.time)
-        # print("send_event:", event.send_event)
+        print("\n")
+        print("skip_event:", self.skip_event)
+        print("active app:", self.get_active_app()[0])
+        print("selection owner:", event.owner)
+        print("reason:", event.reason.value_name)
+        print("event type:", event.type.value_name)
+        print("receiving window:", event.window)
+        print("selection_time:", event.selection_time)
+        print("timestamp:", event.time)
+        print("send_event:", event.send_event)
 
-        if not self.skip_event and event.owner is not None and event.reason == Gdk.OwnerChange.NEW_OWNER and self.get_active_app()[0] not in self.get_settings("blacklist-apps"):
+        if self.skip_event >= 1:
+            self.skip_event = 0
+
+        if self.skip_event == 0 and event.owner is not None and event.reason == Gdk.OwnerChange.NEW_OWNER and self.get_active_app()[0] not in self.get_settings("blacklist-apps"):
             created = datetime.now()
             clipboard_contents = self.get_clipboard_contents(clipboard, event)
             if clipboard_contents is not None:
@@ -64,12 +68,13 @@ class ClipboardManager():
                 else:
                     protected = "yes"
                 # reset skip_event state to false for next event    
-                self.skip_event = False
+                self.skip_event = 0
                 return target, content, source_app, source_icon, created, protected, thumbnail, file_extension, content_type
         else:
-            print("clipboard event ignored")
             # set skip_event state to true for next event is new_owner_change event when clipboard is taken over by another app
-            self.skip_event = True
+            self.skip_event += 1
+            print("clipboard event ignored:", self.skip_event)
+
 
     def get_clipboard_contents(self, clipboard, event):
         
