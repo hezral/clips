@@ -30,6 +30,8 @@ class ClipboardManager():
 
     clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
 
+    skip_event = False
+
     def __init__(self, gtk_application=None):
         super().__init__()
 
@@ -40,18 +42,34 @@ class ClipboardManager():
         return self.app.gio_settings.get_value(gio_settings_keyname).get_strv()
 
     def clipboard_changed(self, clipboard, event):
-        
-        if self.get_active_app()[0] not in self.get_settings("blacklist-apps"):
+
+        # print("\n")
+        # print("active app:", self.get_active_app()[0])
+        # print("selection owner:", event.owner)
+        # print("reason:", event.reason.value_name)
+        # print("event type:", event.type.value_name)
+        # print("receiving window:", event.window)
+        # print("selection_time:", event.selection_time)
+        # print("timestamp:", event.time)
+        # print("send_event:", event.send_event)
+
+        if not self.skip_event and event.owner is not None and event.reason == Gdk.OwnerChange.NEW_OWNER and self.get_active_app()[0] not in self.get_settings("blacklist-apps"):
             created = datetime.now()
-            target, content, thumbnail, file_extension, additional_desc, content_type = self.get_clipboard_contents(clipboard, event)
-            source_app, source_icon = self.get_active_app()
-            if source_app not in self.get_settings("protected-apps"):
-                protected = "no"
-            else:
-                protected = "yes"
-            return target, content, source_app, source_icon, created, protected, thumbnail, file_extension, content_type
+            clipboard_contents = self.get_clipboard_contents(clipboard, event)
+            if clipboard_contents is not None:
+                target, content, thumbnail, file_extension, additional_desc, content_type = clipboard_contents
+                source_app, source_icon = self.get_active_app()
+                if source_app not in self.get_settings("protected-apps"):
+                    protected = "no"
+                else:
+                    protected = "yes"
+                # reset skip_event state to false for next event    
+                self.skip_event = False
+                return target, content, source_app, source_icon, created, protected, thumbnail, file_extension, content_type
         else:
-            print("ignored due to blacklisted app")
+            print("clipboard event ignored")
+            # set skip_event state to true for next event is new_owner_change event when clipboard is taken over by another app
+            self.skip_event = True
 
     def get_clipboard_contents(self, clipboard, event):
         
@@ -97,6 +115,10 @@ class ClipboardManager():
                                 content_type = "url/" + content.get_text().split(":")[0]
                             else:
                                 proceed = False
+
+                        # if "image/png" in supported_target[0] and "files" in supported_target[3]:
+                        #     if len(content.get_text().split("\n")) > 1:
+                        #         proceed = False
 
                         if proceed:
                             if thumbnail:
