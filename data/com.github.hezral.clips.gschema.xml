@@ -33,7 +33,7 @@
             <description>Set number of days to retain clips before house keeping and deletion</description>
         </key>
         <key type="as" name="blacklist-apps">
-            <default>['Wingpanel','Plank']</default>
+            <default>['Clips','Wingpanel','Plank']</default>
             <summary>Blacklisted apps from Clips</summary>
             <description>These apps will not be monitored for clipboard events</description>
         </key>
@@ -41,6 +41,11 @@
             <default>[]</default>
             <summary>Protected apps from Clips</summary>
             <description>Clips from these apps will be masked and require password to view</description>
+        </key>
+        <key type="i" name="min-column-number">
+            <default>3</default>
+            <summary>Set minimum number of columns</summary>
+            <description>Set minimum number of columns</description>
         </key>
     </schema>
 </schemalist>
