@@ -188,12 +188,14 @@ class CacheManager():
 
     def delete_cache_file(self, cache_file):
         #print(cache_file)
+        thumbnail_file = os.path.splitext(cache_file)[0]+'-thumb.png'
         try:
             os.remove(cache_file)
+            os.remove(thumbnail_file)
             return True
         except OSError:
             return OSError
-
+        
     def get_checksum(self, data):
         checksum = hashlib.md5(data).hexdigest()
         return checksum
