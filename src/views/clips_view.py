@@ -512,7 +512,7 @@ class FallbackContainer(DefaultContainer):
     def __init__(self, filepath, type, utils, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        print(os.path.splitext(filepath)[0]+'-thumb.png')
+        # print(os.path.splitext(filepath)[0]+'-thumb.png')
 
         self.content = Gtk.Label(type)
         self.content.props.wrap_mode = Pango.WrapMode.CHAR
