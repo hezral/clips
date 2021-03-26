@@ -102,8 +102,9 @@ class ClipsContainer(Gtk.EventBox):
         super().__init__(*args, **kwargs)
 
         # get widget scale factor for redraw event
-        scale = self.get_scale_factor()
+        self.scale = self.get_scale_factor()
 
+        self.cache_filedir = cache_filedir
         self.id = clip[0]
         self.target = clip[1]
         self.created = clip[2]
@@ -114,61 +115,99 @@ class ClipsContainer(Gtk.EventBox):
         self.type = clip[7]
         self.protected = clip[8]
 
-        #------ clip_action ----#
-        clip_action_revealer = self.generate_clip_action()
-
         # initialize cache file with full path        
-        self.cache_file = os.path.join(cache_filedir, self.cache_file)
+        self.cache_file = os.path.join(self.cache_filedir, self.cache_file)
 
         # initialize empty variable
         self.content = None
 
-        if self.type == "files":
-            # self.content = open(self.cache_file, "r")
-            # self.content_label = str(len(self.content.read())) + "chars"
-            # self.content = Gtk.Label(self.content.read())
+        #------ container types, refer to clips_supported.py ----#
+        if "office/spreadsheet" in self.type:
+            self.content = SpreadsheetContainer(self.cache_file, self.type, utils)
+        elif "office/presentation" in self.type:
+            self.content = PresentationContainer(self.cache_file, self.type, utils)
+        elif "office/word" in self.type:
+            self.content = FallbackContainer(self.cache_file, self.type, utils)
+        elif "files" in self.type:
             self.content = FilesContainer(self.cache_file, self.type, utils)
-
-        elif self.type == "image":
+        elif "image" in self.type:
             self.content = ImageContainer(self.cache_file, self.type, utils)
-
-        elif self.type == "html":
+        elif "html" in self.type:
             self.content = HtmlContainer(self.cache_file, self.type, utils)
-
-        # elif self.type == "richtext":
-        #     self.content = open(self.cache_file, "r")
-        #     self.content_label = str(len(self.content.read())) + " chars"
-        #     self.content = Gtk.Label(self.content.read())
-
-        elif self.type == "plaintext":
+        elif "richtext" in self.type:
+            self.content = FilesContainer(self.cache_file, self.type, utils)
+        elif "plaintext" in self.type:
             self.content = PlainTextContainer(self.cache_file, self.type, utils)
-
-        # elif self.type == "url":
-        #     self.content = Gtk.Image().new_from_icon_name("internet-web-browser", Gtk.IconSize.DIALOG)
-        #     self.content_label = "Internet URL"
-
         elif "color" in self.type:
             self.content = ColorContainer(self.cache_file, self.type, utils)
-            
+        elif "url" in self.type:
+            self.content = FallbackContainer(self.cache_file, self.type, utils)
         else:
-            # print(self.cache_file, self.type)
+            print(self.cache_file, self.type)
             self.content = FallbackContainer(self.cache_file, self.type, utils)
 
 
-        #------ clip_content ----#
-        #self.content.props.expand = True
-        self.content.props.valign = self.content.props.halign = Gtk.Align.FILL
-        # self.content.props.name = "clip-contents"
-        # self.content.props.margin = 6
-        #clip_content = Gtk.Box()
-        # clip_content.props.name = "clip-content-box"
-        # clip_content.props.halign = Gtk.Align.CENTER
-        # clip_content.props.valign = Gtk.Align.CENTER
-        # clip_content.props.expand = True
-        # clip_content.set_size_request(-1, 118)
-        #clip_content.add(self.content)
+        # print(self.cache_file, self.type)
 
         #------ clip_info ----#
+        clip_info_revealer = self.generate_clip_info()
+
+        #------ clip_action_notify ----#
+        clip_action_notify = self.generate_clip_action_notify()
+        
+        #------ clip_action ----#
+        clip_action_revealer = self.generate_clip_action()
+
+        #------ construct ----#
+        # self.container_grid = Gtk.Grid()
+        # self.container_grid.props.name = "clip-container-grid"
+        # self.container_grid.attach(clip_info_revealer, 0, 0, 1, 1)
+        # self.container_grid.attach(clip_action_revealer, 0, 0, 1, 1)
+        # self.container_grid.attach(clip_action_notify, 0, 0, 1, 1)
+        # self.container_grid.attach(self.content, 0, 0, 1, 1)
+
+        self.container_overlay = Gtk.Overlay()
+        self.container_overlay.props.name = "clip-container-overlay"
+        self.container_overlay.add(self.content)
+        self.container_overlay.add_overlay(clip_action_notify)
+        self.container_overlay.set_overlay_pass_through(clip_action_notify, True)
+        self.container_overlay.add_overlay(clip_action_revealer)
+        self.container_overlay.set_overlay_pass_through(clip_action_revealer, True)
+        self.container_overlay.add_overlay(clip_info_revealer)
+        self.container_overlay.set_overlay_pass_through(clip_info_revealer, True)
+
+        self.container_grid = Gtk.Grid()
+        self.container_grid.props.name = "clip-container-grid"
+        self.container_grid.attach(self.container_overlay, 0, 0, 1, 1)
+
+        self.add(self.container_grid)
+
+        self.set_size_request(200, 160)
+        self.props.name = "clip-container"
+        self.props.expand = True
+        
+        # handle mouse enter/leave events on the flowboxchild
+        self.connect("enter-notify-event", self.on_cursor_entering_clip)
+        self.connect("leave-notify-event", self.on_cursor_leaving_clip)
+
+    def generate_clip_select_button(self):
+        clip_select_button = self.generate_action_button("com.github.hezral.clips-select-symbolic", "Select", "select")
+        clip_select_button.props.halign = clip_select_button.props.valign = Gtk.Align.START
+        clip_select_button.set_size_request(32, 32)
+        return clip_select_button
+
+    def generate_action_button(self, iconname, tooltiptext, actionname):
+        button = Gtk.Button(image=Gtk.Image().new_from_icon_name(iconname, Gtk.IconSize.SMALL_TOOLBAR))
+        button.props.name = "clip-action-button"
+        button.props.hexpand = True
+        button.props.has_tooltip = True
+        button.props.tooltip_text = tooltiptext
+        button.props.can_focus = False
+        button.set_size_request(30, 30)
+        button.connect("clicked", self.on_clip_action, actionname)        
+        return button
+    
+    def generate_clip_info(self):
         if self.content.label is None:
             self.content_label = Gtk.Label("Clip")
         else:
@@ -180,14 +219,17 @@ class ClipsContainer(Gtk.EventBox):
         self.content_label.props.expand = True
 
         #------ source_icon / application icon ----#
-        source_icon_cache = os.path.join(cache_filedir[:-6],"icon", self.source_app.replace(" ",".").lower() + ".png")
+        source_icon_cache = os.path.join(self.cache_filedir[:-6],"icon", self.source_app.replace(" ",".").lower() + ".png")
         
         if os.path.exists(source_icon_cache):
-            pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(source_icon_cache, 24 * scale, 24 * scale, True)
+            pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(source_icon_cache, 24 * self.scale, 24 * self.scale, True)
             source_icon = Gtk.Image().new_from_pixbuf(pixbuf)
+            # if self.scale == 2:
+            #     source_icon.set_pixel_size(48)
+            #     print("scaled")
         else:
             source_icon = Gtk.Image().new_from_icon_name("image-missing", Gtk.IconSize.LARGE_TOOLBAR)
-            source_icon.set_pixel_size(24 * scale)
+            source_icon.set_pixel_size(24 * self.scale)
 
         source_icon.props.halign = Gtk.Align.START
         source_icon.props.valign = Gtk.Align.END
@@ -199,7 +241,7 @@ class ClipsContainer(Gtk.EventBox):
         self.created_short = datetime.strptime(self.created, '%Y-%m-%d %H:%M:%S.%f')
         self.created_short = self.created_short.strftime('%a, %b %d %Y, %H:%M:%S')
         self.created = datetime.strptime(self.created, '%Y-%m-%d %H:%M:%S.%f')
-        self.timestamp = self.friendly_timestamp(self.created)
+        self.timestamp = self.generate_friendly_timestamp(self.created)
         self.timestamp = Gtk.Label(self.timestamp)
         self.timestamp.props.name = "clip-timestamp"
         self.timestamp.props.halign = self.timestamp.props.valign = Gtk.Align.END
@@ -229,110 +271,24 @@ class ClipsContainer(Gtk.EventBox):
         clip_info_revealer.props.transition_type = Gtk.RevealerTransitionType.CROSSFADE
         clip_info_revealer.add(clip_info)
 
-        #------ message_action ----#
-        message_action = Gtk.Label()
-        message_action.props.name = "clip-action-message"
-        message_action.props.halign = message_action.props.valign = Gtk.Align.CENTER
-        message_action_revealer = Gtk.Revealer()
-        message_action_revealer.props.name = "clip-action-message-revealer"
-        message_action_revealer.props.transition_type = Gtk.RevealerTransitionType.CROSSFADE
-        message_action_revealer.add(message_action)
-
-        #------ construct ----#
+        return clip_info_revealer
         
-        self.set_size_request(200, 160)
-        self.props.name = "clip-container"
-        self.props.expand = True
-    
-        self.container_grid = Gtk.Grid()
-        self.container_grid.props.name = "clip-container-grid"
-        self.container_grid.attach(clip_info_revealer, 0, 0, 1, 1)
-        self.container_grid.attach(clip_action_revealer, 0, 0, 1, 1)
-        self.container_grid.attach(message_action_revealer, 0, 0, 1, 1)
-        self.container_grid.attach(self.content, 0, 0, 1, 1)
+    def generate_clip_action_notify(self):
+        self.notify_action = Gtk.Label()
+        self.notify_action.props.name = "clip-action-notify"
+        self.notify_action.props.halign = self.notify_action.props.valign = Gtk.Align.CENTER
+        clip_action_notify = Gtk.Revealer()
+        clip_action_notify.props.name = "clip-action-notify-revealer"
+        clip_action_notify.props.transition_type = Gtk.RevealerTransitionType.CROSSFADE
+        clip_action_notify.add(self.notify_action)
+        return clip_action_notify
 
-        # self.select_clip = self.generate_action_btn("com.github.hezral.clips-select-symbolic", "Select", "select")
-        # self.select_clip.props.halign = self.select_clip.props.valign = Gtk.Align.START
-        # self.select_clip.set_size_request(32, 32)
-
-        # overlay = Gtk.Overlay()
-        # overlay.add(self.container_grid)
-        # overlay.add_overlay(self.select_clip)
-
-        self.add(self.container_grid)
-        
-        # handle mouse enter/leave events on the flowboxchild
-        self.connect("enter-notify-event", self.cursor_entering_clip)
-        self.connect("leave-notify-event", self.cursor_leaving_clip)
-
-    def focus_clip(self, clip_action_revealer, eventfocus, type):
-        flowboxchild = self.get_parent()
-        if type == "out":
-            if not flowboxchild.is_selected():
-                clip_action_revealer.set_reveal_child(False)
-        else:
-            clip_action_revealer.set_reveal_child(True)
-
-    def cursor_entering_clip(self, widget, eventcrossing):
-        # add css class for hover event
-        self.get_parent().get_style_context().add_class("hover")
-        
-        flowboxchild = self.get_parent()
-        main_window = self.get_toplevel()
-        app = main_window.props.application
-        utils = app.utils
-
-        clip_action_revealer = utils.get_widget_by_name(widget=flowboxchild, child_name="clip-action-revealer", level=0)
-        clip_action_revealer.set_reveal_child(True)
-
-        # add zoom effect on hovering an image container
-        # content = utils.get_widget_by_name(widget=flowboxchild, child_name="image-container", level=0)
-        # if content is not None:
-        #     content.hover()
-
-    def cursor_leaving_clip(self, widget, eventcrossing):
-        # remove css class for hover event
-        self.get_parent().get_style_context().remove_class("hover")
-
-        flowboxchild = self.get_parent()
-        main_window = self.get_toplevel()
-        app = main_window.props.application
-        utils = app.utils
-
-        clip_action_revealer = utils.get_widget_by_name(widget=flowboxchild, child_name="clip-action-revealer", level=0)
-        message_action_revealer = utils.get_widget_by_name(widget=flowboxchild, child_name="clip-action-message-revealer", level=0)
-        clip_info_revealer = utils.get_widget_by_name(widget=flowboxchild, child_name="clip-info-revealer", level=0)
-
-        if flowboxchild.is_selected():
-            clip_action_revealer.set_reveal_child(True)
-            clip_action_revealer.grab_focus()
-        else: 
-            clip_action_revealer.set_reveal_child(False)
-        
-        if message_action_revealer.get_child_revealed():
-            message_action_revealer.set_reveal_child(False)
-
-        if clip_info_revealer.get_child_revealed():
-            clip_info_revealer.set_reveal_child(False)
-
-    def generate_action_btn(self, iconname, tooltiptext, actionname):
-        button = Gtk.Button(image=Gtk.Image().new_from_icon_name(iconname, Gtk.IconSize.SMALL_TOOLBAR))
-        button.props.name = "clip-action-button"
-        button.props.hexpand = True
-        button.props.has_tooltip = True
-        button.props.tooltip_text = tooltiptext
-        button.props.can_focus = False
-        button.set_size_request(30, 30)
-        button.connect("clicked", self.on_clip_action, actionname)        
-        return button
-    
     def generate_clip_action(self):
-        protect_action = self.generate_action_btn("com.github.hezral.clips-protect-symbolic", "Protect", "protect")
-        info_action = self.generate_action_btn("com.github.hezral.clips-info-symbolic", "Show Info", "info")
-        view_action = self.generate_action_btn("com.github.hezral.clips-view-symbolic", "View", "view")
-        copy_action = self.generate_action_btn("edit-copy-symbolic", "Copy to Clipboard", "copy")
-        color_action = self.generate_action_btn("com.github.hezral.clips-colorpalette-symbolic", "Change color", "color")
-        delete_action = self.generate_action_btn("edit-delete-symbolic", "Delete ", "delete")
+        protect_action = self.generate_action_button("com.github.hezral.clips-protect-symbolic", "Protect", "protect")
+        info_action = self.generate_action_button("com.github.hezral.clips-info-symbolic", "Show Info", "info")
+        view_action = self.generate_action_button("com.github.hezral.clips-view-symbolic", "View", "view")
+        copy_action = self.generate_action_button("edit-copy-symbolic", "Copy to Clipboard", "copy")
+        delete_action = self.generate_action_button("edit-delete-symbolic", "Delete ", "delete")
 
         clip_action = Gtk.Grid()
         clip_action.props.name = "clip-action"
@@ -342,17 +298,16 @@ class ClipsContainer(Gtk.EventBox):
         clip_action.props.can_focus = False
         clip_action.props.row_spacing = clip_action.props.column_spacing = 4
         
-        if "color" in self.type:
-            protect_action.props.sensitive = False
+        if "color" in self.type or "office" in self.type:
+            # protect_action.props.sensitive = False
             view_action.props.sensitive = False
-            protect_action.get_style_context().add_class("clip-action-disabled")
+            # protect_action.get_style_context().add_class("clip-action-disabled")
             view_action.get_style_context().add_class("clip-action-disabled")
                
         clip_action.attach(protect_action, 0, 0, 1, 1)
         clip_action.attach(info_action, 1, 0, 1, 1)
         clip_action.attach(view_action, 2, 0, 1, 1)
         clip_action.attach(copy_action, 3, 0, 1, 1)
-        # clip_action.attach(color_action, 4, 0, 1, 1)
         clip_action.attach(delete_action, 5, 0, 1, 1)
 
         clip_action_revealer = Gtk.Revealer()
@@ -362,31 +317,89 @@ class ClipsContainer(Gtk.EventBox):
         clip_action_revealer.props.can_focus = True
         
         # handle mouse focus in/out on the clip action bar
-        clip_action_revealer.connect("focus-out-event", self.focus_clip, "out")
-        clip_action_revealer.connect("focus-in-event", self.focus_clip, "in")
+        clip_action_revealer.connect("focus-out-event", self.on_clip_focused, "out")
+        clip_action_revealer.connect("focus-in-event", self.on_clip_focused, "in")
 
         return clip_action_revealer
+
+    def on_clip_focused(self, clip_action_revealer, eventfocus, type):
+        flowboxchild = self.get_parent()
+        if type == "out":
+            if not flowboxchild.is_selected():
+                clip_action_revealer.set_reveal_child(False)
+        else:
+            clip_action_revealer.set_reveal_child(True)
+
+    def on_cursor_entering_clip(self, widget, eventcrossing):
+        # add css class for hover event
+        self.get_parent().get_style_context().add_class("hover")
         
+        flowboxchild = self.get_parent()
+        main_window = self.get_toplevel()
+        app = main_window.props.application
+        utils = app.utils
+        clip_container_overlay = utils.get_widget_by_name(widget=flowboxchild, child_name="clip-container-overlay", level=0)
+        # utils.get_widget_by_name not working for some widget class like Gtk.Overlay
+        clip_action_revealer = [child for child in clip_container_overlay.get_children() if child.props.name == "clip-action-revealer"][0]
+
+        clip_action_revealer.set_reveal_child(True)
+
+        # add zoom effect on hovering an image container
+        # content = utils.get_widget_by_name(widget=flowboxchild, child_name="image-container", level=0)
+        # if content is not None:
+        #     content.hover()
+
+    def on_cursor_leaving_clip(self, widget, eventcrossing):
+        # remove css class for hover event
+        self.get_parent().get_style_context().remove_class("hover")
+
+        flowboxchild = self.get_parent()
+        main_window = self.get_toplevel()
+        app = main_window.props.application
+        utils = app.utils
+        clip_container_overlay = utils.get_widget_by_name(widget=flowboxchild, child_name="clip-container-overlay", level=0)
+        # utils.get_widget_by_name not working for some widget class like Gtk.Overlay
+        clip_action_revealer = [child for child in clip_container_overlay.get_children() if child.props.name == "clip-action-revealer"][0]
+        clip_action_notify = [child for child in clip_container_overlay.get_children() if child.props.name == "clip-action-notify-revealer"][0]
+        clip_info_revealer = [child for child in clip_container_overlay.get_children() if child.props.name == "clip-info-revealer"][0]
+
+        if flowboxchild.is_selected():
+            clip_action_revealer.set_reveal_child(True)
+            clip_action_revealer.grab_focus()
+        else: 
+            clip_action_revealer.set_reveal_child(False)
+        
+        if clip_action_notify.get_child_revealed():
+            clip_action_notify.set_reveal_child(False)
+
+        if clip_info_revealer.get_child_revealed():
+            clip_info_revealer.set_reveal_child(False)
+
     def on_clip_action(self, button=None, action=None):
         print(datetime.now(), action)
         main_window = self.get_toplevel()
         app = main_window.props.application
         utils = app.utils
-        message_action_revealer = utils.get_widget_by_name(widget=self, child_name="clip-action-message-revealer", level=0)
-        clip_info_revealer = utils.get_widget_by_name(widget=self, child_name="clip-info-revealer", level=0)
-
         flowboxchild = self.get_parent()
+        flowbox = flowboxchild.get_parent()
+        clip_container_overlay = utils.get_widget_by_name(widget=flowboxchild, child_name="clip-container-overlay", level=0)
+        # utils.get_widget_by_name not working for some widget class like Gtk.Overlay
+        clip_action_revealer = [child for child in clip_container_overlay.get_children() if child.props.name == "clip-action-revealer"][0]
+        clip_action_notify = [child for child in clip_container_overlay.get_children() if child.props.name == "clip-action-notify-revealer"][0]
+        clip_info_revealer = [child for child in clip_container_overlay.get_children() if child.props.name == "clip-info-revealer"][0]
+
+        
         flowboxchild.do_activate(flowboxchild)
 
-        flowbox = flowboxchild.get_parent()
+        
         flowbox.select_child(flowboxchild)
 
-        message_action = utils.get_widget_by_name(widget=self, child_name="clip-action-message", level=0)
-        message_action.props.label = action
+        notify_action = self.notify_action
+        notify_action.props.label = action
         
 
         if action == "protect":
-            message_action_revealer.set_reveal_child(True)
+            clip_action_notify.set_reveal_child(True)
             pass
 
         elif action == "info":
@@ -397,7 +410,7 @@ class ClipsContainer(Gtk.EventBox):
             utils.view_clips(self.cache_file)
 
         elif action == "copy":
-            message_action_revealer.set_reveal_child(True)
+            clip_action_notify.set_reveal_child(True)
             print(action, self.cache_file)
 
         elif action == "force_delete":
@@ -432,14 +445,14 @@ class ClipsContainer(Gtk.EventBox):
             print(action)
             pass
 
-    def on_message_action_hide(self, message_action_revealer, event):
-        message_action_revealer.set_reveal_child(False)
-        message_action_revealer.props.can_focus = False
+    def on_notify_action_hide(self, clip_action_notify, event):
+        clip_action_notify.set_reveal_child(False)
+        clip_action_notify.props.can_focus = False
 
     def on_revealer_focus_out(self, revealer, event):
         revealer.set_reveal_child(False)
 
-    def friendly_timestamp(self, time=False):
+    def generate_friendly_timestamp(self, time=False):
         """
         Get a datetime object or a int() Epoch self.timestamp and return a
         pretty string like 'an hour ago', 'Yesterday', '3 months ago',
@@ -498,6 +511,8 @@ class DefaultContainer(Gtk.Grid):
 class FallbackContainer(DefaultContainer):
     def __init__(self, filepath, type, utils, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        print(os.path.splitext(filepath)[0]+'-thumb.png')
 
         self.content = Gtk.Label(type)
         self.content.props.wrap_mode = Pango.WrapMode.CHAR
@@ -715,46 +730,93 @@ class FilesContainer(DefaultContainer):
         super().__init__(*args, **kwargs)
 
         scale = self.get_scale_factor()
-        icon_size = 64 * scale
-        icon_theme = Gtk.IconTheme.get_default()
+        self.icon_size = 48 * scale
+        self.icon_theme = Gtk.IconTheme.get_default()
         icon = None
 
-        self.content = Gtk.Grid()
-        self.content.props.halign = self.content.props.valign = Gtk.Align.CENTER
-        #self.content.props.expand = True
+        self.flowbox = Gtk.FlowBox()
+        self.flowbox.props.expand = True
+        self.flowbox.props.homogeneous = True
+        self.flowbox.props.row_spacing = 4
+        self.flowbox.props.column_spacing = 2
+        self.flowbox.props.max_children_per_line = 4
+        self.flowbox.props.min_children_per_line = 2
+        self.flowbox.props.valign = Gtk.Align.CENTER
+        self.flowbox.props.halign = Gtk.Align.CENTER
+
+        with open(filepath) as file:
+            file_content = file.readlines()
 
         with open(filepath) as file:
             i = 0
             for line_number, line_content in enumerate(file):
                 line_content = line_content.replace("copy","").replace("file://","").strip()
-                mime_type, val = Gio.content_type_guess(line_content, data=None)
-                icon = Gio.content_type_get_icon(mime_type)
-                for entry in icon.to_string().split():
-                    if entry != "." and entry != "GThemedIcon":
+                if os.path.isdir(line_content):  
+                    mime_type = "inode/directory"
+                elif os.path.isfile(line_content):  
+                    mime_type, val = Gio.content_type_guess(line_content, data=None)
+                elif not os.path.exists(line_content):
+                    pass
+                else:
+                    print(line_content, ": special file (socket, FIFO, device file)" )
+                    pass
+                                
+                icons = Gio.content_type_get_icon(mime_type)
+                
+                for icon_name in icons.to_string().split():
+                    if icon_name != "." and icon_name != "GThemedIcon":
                         try:
-                            icon_pixbuf = icon_theme.load_icon(entry, icon_size, 0)
-                            icon = Gtk.Image().new_from_pixbuf(icon_pixbuf)   
+                            if i == 7:
+                                more_label = Gtk.Label("+" + str(file_count - 7))
+                                more_label.props.name = "files-container-more-label"
+                                self.flowbox.add(more_label)
+                            elif i > 7 :
+                                pass
+                            else:
+                                icon_pixbuf = self.icon_theme.load_icon(icon_name, self.icon_size, 0)
+                                icon = Gtk.Image().new_from_pixbuf(icon_pixbuf)
+                                # icon.props.has_tooltip = True
+                                # icon.props.tooltip_text = line_content
+                                self.flowbox.add(icon)
+                            i += 1
+                            break
                         except:
                             pass # file not exist for this entry
-                        if icon:
-                            if i == 0:
-                                icon.props.margin_left = 0
-                                icon.props.margin_right = 16
-                            else:
-                                icon.props.margin_left = 64
-                                icon.props.margin_right = 0
-                            self.content.attach(icon, 0, 0, 1, 1)
-                            # i += (icon_size/2)
-                            print("added")
-                            break
+
                         
-            file_count = line_number + 1
+            # file_count = line_number + 1
+            if len(file_content) < 4:
+                self.flowbox.props.max_children_per_line = len(file_content)
+        
+        # disable focus on flowboxchild items
+        for child in self.flowbox.get_children():
+            child.props.can_focus = False
 
         self.props.name = "files-container"
-        self.attach(self.content, 0, 0, 1, 1)
+        self.attach(self.flowbox, 0, 0, 1, 1)
 
-        self.label = str(file_count) + " files"
-    
+        self.label = str(len(file_content)) + " files"
 
+# ----------------------------------------------------------------------------------------------------
+
+class SpreadsheetContainer(ImageContainer):
+    def __init__(self, filepath, type, utils, *args, **kwargs):
+        thumbnail = os.path.splitext(filepath)[0]+'-thumb.png'
+        super().__init__(thumbnail, type, utils)
+
+        self.props.name = "spreadsheet-container"
+
+        self.label = "Spreadsheet"
+
+# ----------------------------------------------------------------------------------------------------
+
+class PresentationContainer(ImageContainer):
+    def __init__(self, filepath, type, utils, *args, **kwargs):
+        thumbnail = os.path.splitext(filepath)[0]+'-thumb.png'
+        super().__init__(thumbnail, type, utils)
+
+        self.props.name = "spreadsheet-container"
+
+        self.label = "Spreadsheet"
 
 # ----------------------------------------------------------------------------------------------------
