@@ -264,7 +264,7 @@ button#clip-action-button:disabled {
 }
      */
 
-label#clip-action-notify {
+grid#clip-action-notify {
     background-color: rgba(0,0,0,0.75);
     color: white;
     padding: 8px;
