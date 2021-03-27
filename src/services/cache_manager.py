@@ -98,7 +98,9 @@ class CacheManager():
         sqlite_with_param = '''
             SELECT * FROM 'ClipsDB'
             WHERE
-            id <= ?;
+            id <= ?
+            ORDER BY
+            created ASC;
             '''
         self.db_cursor.execute(sqlite_with_param, data_param)
         records = self.db_cursor.fetchall()
