@@ -42,7 +42,7 @@ word_libreoffice_target = ('application/x-openoffice-embed-source-xml;windows_fo
 spreadsheet_libreoffice_target = ('application/x-openoffice-sylk;windows_formatname="Sylk"', "ods", "LibreOffice Calc", "office/spreadsheet", True) # use this to differentiate since all libreoffice target using same Gdk.Atom target
 slides_libreoffice_target = ('application/x-openoffice-drawing;windows_formatname="Drawing Format"', "odp", "LibreOffice Impress", "office/presentation", True) # use this to differentiate since all libreoffice target using same Gdk.Atom target
 
-word_wpsoffice_target = ("Kingsoft WPS 9.0 Format", "docx", "WPS Writer", "office/word", False)
+word_wpsoffice_target = ("Kingsoft WPS 9.0 Format", "rtf", "WPS Writer", "office/word", False)
 spreadsheet_wpsoffice_target = ("WPS Spreadsheets 6.0 Format", "xlsx", "WPS Spreadsheets", "office/spreadsheet", True)
 slides_wpsoffice_target = ("WPS Drawing Shape Format", "pptx", "WPS Presentation", "office/presentation", True)
 slidepage_wpsoffice_target = ("PowerPoint 14.0 Slides Package", "pptx", "WPS Presentation", "office/presentation", True)
@@ -127,26 +127,28 @@ def get_active_app():
 
     return source_app, source_icon
 
-def get_clipboard_contents(clipboard, event):
+def get_clipboard_contents(clipboard, event, save_files):
 
     print("Active App:", get_active_app())
     print("Current clipboard offers formats: ", len(clipboard.wait_for_targets()[1]))
     i=0
     for target in clipboard.wait_for_targets()[1]:
         if target not in excluded_targets:
-            # content = clipboard.wait_for_contents(target)
-            # if content is not None:
 
-            #     ext = str(target).split("/")
-            #     if len(ext) == 1:
-            #         ext = ext[0]
-            #     else:
-            #         ext = ext[1]
+            if save_files:
+                content = clipboard.wait_for_contents(target)
+                if content is not None:
 
-            #     data = content.get_data()
-            #     file = open("{filename}.{ext}".format(filename="file-"+str(i), ext=ext),"wb")
-            #     file.write(data)
-            #     file.close()
+                    ext = str(target).split("/")
+                    if len(ext) == 1:
+                        ext = ext[0]
+                    else:
+                        ext = ext[1]
+
+                    data = content.get_data()
+                    file = open("{filename}.{ext}".format(filename="file-"+str(i), ext=ext),"wb")
+                    file.write(data)
+                    file.close()
 
             print(i, target)
             i += 1
@@ -163,7 +165,7 @@ def debug():
     
     # create clipboard and connect to event
     clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
-    clipboard.connect('owner_change', get_clipboard_contents)
+    clipboard.connect('owner_change', get_clipboard_contents, True)
 
     # run
     Gtk.main()
