@@ -204,7 +204,7 @@ class ClipsWindow(Gtk.ApplicationWindow):
     def on_delete_text(self, searchentry, int1, int2, type):
         # searchbar = self.searchentry.get_parent()
 
-        # revealer = utils.get_widget_by_name(widget=searchbar, child_name="search-revealer", level=0)
+        # revealer = utils.GetWidgetByName(widget=searchbar, child_name="search-revealer", level=0)
         # if revealer.get_child_revealed():
         #     revealer.set_reveal_child(False)
 
@@ -215,7 +215,7 @@ class ClipsWindow(Gtk.ApplicationWindow):
     def on_quicksearch_activate(self, searchentry, iconposition, eventbutton):
         print(locals())
         searchbar = self.searchentry.get_parent()
-        revealer = self.utils.get_widget_by_name(widget=searchbar, child_name="search-revealer", level=0)
+        revealer = self.utils.GetWidgetByName(widget=searchbar, child_name="search-revealer", level=0)
         if revealer.get_child_revealed():
             revealer.set_reveal_child(False)
         else:
@@ -223,7 +223,7 @@ class ClipsWindow(Gtk.ApplicationWindow):
 
     def on_date_select(self, button):
         # searchbar = [child for child in self.get_children() if child.get_name() == "search-bar"][0]
-        # calendar_dialog = utils.get_widget_by_name(widget=searchbar, child_name="search-calendar-dialog", level=0)
+        # calendar_dialog = utils.GetWidgetByName(widget=searchbar, child_name="search-calendar-dialog", level=0)
         # print(calendar_dialog)
 
         calendar_dialog = Gtk.Window(type=Gtk.WindowType.POPUP)
@@ -240,7 +240,7 @@ class ClipsWindow(Gtk.ApplicationWindow):
     def on_quicksearch(self, button):
         
         searchbar = [child for child in self.get_children() if child.get_name() == "search-bar"][0]
-        self.searchentry = self.utils.get_widget_by_name(widget=searchbar, child_name="search-entry", level=0)
+        self.searchentry = self.utils.GetWidgetByName(widget=searchbar, child_name="search-entry", level=0)
 
         if self.searchentry.props.text == "":
             self.searchentry.props.text = button.props.label
@@ -250,7 +250,7 @@ class ClipsWindow(Gtk.ApplicationWindow):
     def on_searchbar_activate(self, searchentry, event, type):
 
         searchbar = self.searchentry.get_parent()
-        revealer = self.utils.get_widget_by_name(widget=searchbar, child_name="search-revealer", level=0)
+        revealer = self.utils.GetWidgetByName(widget=searchbar, child_name="search-revealer", level=0)
 
         if type == "in" and revealer.get_child_revealed() is False:
             self.searchentry.props.primary_icon_name = "quick-search"
@@ -282,8 +282,8 @@ class ClipsWindow(Gtk.ApplicationWindow):
 
     def on_view_visible(self, view, gparam=None, runlookup=None, word=None):
         
-        stack = self.utils.get_widget_by_name(widget=self, child_name="main-stack", level=0)
-        main_view = self.utils.get_widget_by_name(widget=self, child_name="main-view", level=0)
+        stack = self.utils.GetWidgetByName(widget=self, child_name="main-stack", level=0)
+        main_view = self.utils.GetWidgetByName(widget=self, child_name="main-view", level=0)
 
         if view.is_visible():
             self.current_view = "settings-view"

@@ -343,14 +343,14 @@ class ClipsContainer(Gtk.EventBox):
         main_window = self.get_toplevel()
         app = main_window.props.application
         utils = app.utils
-        clip_container_overlay = utils.get_widget_by_name(widget=flowboxchild, child_name="clip-container-overlay", level=0)
-        # utils.get_widget_by_name not working for some widget class like Gtk.Overlay
+        clip_container_overlay = utils.GetWidgetByName(widget=flowboxchild, child_name="clip-container-overlay", level=0)
+        # utils.GetWidgetByName not working for some widget class like Gtk.Overlay
         clip_action_revealer = [child for child in clip_container_overlay.get_children() if child.props.name == "clip-action-revealer"][0]
 
         clip_action_revealer.set_reveal_child(True)
 
         # add zoom effect on hovering an image container
-        # content = utils.get_widget_by_name(widget=flowboxchild, child_name="image-container", level=0)
+        # content = utils.GetWidgetByName(widget=flowboxchild, child_name="image-container", level=0)
         # if content is not None:
         #     content.hover()
 
@@ -362,8 +362,8 @@ class ClipsContainer(Gtk.EventBox):
         main_window = self.get_toplevel()
         app = main_window.props.application
         utils = app.utils
-        clip_container_overlay = utils.get_widget_by_name(widget=flowboxchild, child_name="clip-container-overlay", level=0)
-        # utils.get_widget_by_name not working for some widget class like Gtk.Overlay
+        clip_container_overlay = utils.GetWidgetByName(widget=flowboxchild, child_name="clip-container-overlay", level=0)
+        # utils.GetWidgetByName not working for some widget class like Gtk.Overlay
         clip_action_revealer = [child for child in clip_container_overlay.get_children() if child.props.name == "clip-action-revealer"][0]
         clip_action_notify = [child for child in clip_container_overlay.get_children() if child.props.name == "clip-action-notify-revealer"][0]
         clip_info_revealer = [child for child in clip_container_overlay.get_children() if child.props.name == "clip-info-revealer"][0]
@@ -387,8 +387,8 @@ class ClipsContainer(Gtk.EventBox):
         clipboard_manager = app.clipboard_manager
         flowboxchild = self.get_parent()
         flowbox = flowboxchild.get_parent()
-        clip_container_overlay = utils.get_widget_by_name(widget=flowboxchild, child_name="clip-container-overlay", level=0)
-        # utils.get_widget_by_name not working for some widget class like Gtk.Overlay
+        clip_container_overlay = utils.GetWidgetByName(widget=flowboxchild, child_name="clip-container-overlay", level=0)
+        # utils.GetWidgetByName not working for some widget class like Gtk.Overlay
         clip_action_revealer = [child for child in clip_container_overlay.get_children() if child.props.name == "clip-action-revealer"][0]
         clip_action_notify = [child for child in clip_container_overlay.get_children() if child.props.name == "clip-action-notify-revealer"][0]
         clip_info_revealer = [child for child in clip_container_overlay.get_children() if child.props.name == "clip-info-revealer"][0]
@@ -409,18 +409,19 @@ class ClipsContainer(Gtk.EventBox):
         action_notify_box.attach(label, 1, 0, 1, 1)
         action_notify_box.show_all()
 
-        clip_action_notify.set_reveal_child(True)
-
+        
         if action == "protect":
+            clip_action_notify.set_reveal_child(True)
             pass
 
         elif action == "info":
             clip_info_revealer.set_reveal_child(True)
 
         elif action == "view":
-            utils.view_clips(self.cache_file)
+            utils.ViewFile(self.cache_file)
 
         elif action == "copy":
+            clip_action_notify.set_reveal_child(True)
             clipboard_manager.copy_to_clipboard(self.target, self.cache_file)
 
         elif action == "force_delete":
@@ -709,7 +710,7 @@ class HtmlContainer(DefaultContainer):
         webview.props.expand = True
         # webview.props.sensitive = False
 
-        css_bg_color = utils.get_css_background_color(self.content)
+        css_bg_color = utils.GetCssBackgroundColor(self.content)
 
         if css_bg_color is not None:
             rgb, a = utils.ConvertToRGB(css_bg_color)
@@ -830,3 +831,11 @@ class PresentationContainer(ImageContainer):
         self.label = "Spreadsheet"
 
 # ----------------------------------------------------------------------------------------------------
+
+class UrlContainer(DefaultContainer):
+    def __init__(self, filepath, type, utils, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.props.name = "url-container"
+
+        self.label = "Spreadsheet"

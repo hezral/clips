@@ -112,7 +112,7 @@ class Clips(Gtk.Application):
         # link to cache_manager
         self.cache_manager.main_window = self.main_window
 
-        # clips_view = self.main_window.utils.get_widget_by_name(widget=self.main_window, child_name="clips-view", level=0)
+        # clips_view = self.main_window.utils.GetWidgetByName(widget=self.main_window, child_name="clips-view", level=0)
         # clips_view = self.main_window.clips_view
         # self.main_window.clips_view.cache_manager = self.cache_manager
         # self.main_window.clips_view.clipboard_manager = self.clipboard_manager
@@ -134,7 +134,7 @@ class Clips(Gtk.Application):
             self.running = True
 
     # def load_clips_fromdb(self, focus, clip_pos_start, clip_pos_end, clips, clips_view, cache_filedir):
-    @utils.run_async
+    @utils.RunAsync
     def load_clips_fromdb(self, clips, clips_view):
         app_startup = True
         
