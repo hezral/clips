@@ -88,10 +88,10 @@ class ClipboardManager():
                     else:
                         protected = "yes"
 
-                    print("clipboard event captured:", self.events)
+                    print("clipboard event captured:", self.events, self.get_active_app()[0])
                     return target, content, source_app, source_icon, created, protected, thumbnail, file_extension, content_type
             else:
-                print("clipboard event ignored:", self.events)
+                print("clipboard event ignored:", self.events, self.get_active_app()[0])
                 pass
 
 
