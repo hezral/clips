@@ -148,7 +148,7 @@ class CacheManager():
 
         return created_updated
 
-    def delete_record(self, id, cache_file):
+    def delete_record(self, id, cache_file, clip_type):
         data_param = (str(id),) #pass in a sequence ie list
         sqlite_with_param = '''
             DELETE FROM 'ClipsDB'
@@ -159,7 +159,7 @@ class CacheManager():
         self.db_connection.commit()
         #confirm deleted
         self.select_record(id)
-        self.delete_cache_file(cache_file)
+        self.delete_cache_file(cache_file, clip_type)
 
     def select_record(self, id):
         data_param = (str(id),) #pass in a sequence ie list
@@ -188,9 +188,21 @@ class CacheManager():
     def search_record(self, data_tuple):
         pass
 
-    def delete_cache_file(self, cache_file):
-        #print(cache_file)
+    def delete_cache_file(self, cache_file, clip_type):
+
         thumbnail_file = os.path.splitext(cache_file)[0]+'-thumb.png'
+
+        if 'http' in clip_type:
+            with open(cache_file) as file:
+                content  = file.readlines()[0] # returns a list with 1 item
+            favicon_file = self.icon_cache_filedir + '/' + self.app.utils.GetDomain(content) + '.ico'
+            print(favicon_file)
+            try:
+                os.remove(favicon_file)
+                return True
+            except OSError:
+                return OSError
+
         try:
             os.remove(cache_file)
             os.remove(thumbnail_file)
@@ -249,7 +261,10 @@ class CacheManager():
                 file.close()
                 cache_thumbnail_file = checksum + "-thumb" + ".png"
                 cache_thumbnail_uri = self.cache_filedir + '/' + cache_thumbnail_file
-                os.renames(temp_cache_thumbnail_uri, cache_thumbnail_uri)            
+                os.renames(temp_cache_thumbnail_uri, cache_thumbnail_uri)
+            
+            if "http" in type:
+                self.app.utils.GetWebpageFavicon(content.get_text(), self.icon_cache_filedir)
 
             # fallback for source_icon
             # save a copy of the icon in case the app is uninstalled and no icon to use
