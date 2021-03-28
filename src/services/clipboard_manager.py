@@ -30,7 +30,8 @@ class ClipboardManager():
 
     clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
 
-    skip_event = 0
+    events = []
+    proceed = True
 
     def __init__(self, gtk_application=None):
         super().__init__()
@@ -43,37 +44,55 @@ class ClipboardManager():
 
     def clipboard_changed(self, clipboard, event):
 
-        print("\n")
-        print("skip_event:", self.skip_event)
-        print("active app:", self.get_active_app()[0])
-        print("selection owner:", event.owner)
-        print("reason:", event.reason.value_name)
-        print("event type:", event.type.value_name)
-        print("receiving window:", event.window)
-        print("selection_time:", event.selection_time)
-        print("timestamp:", event.time)
-        print("send_event:", event.send_event)
+        # print("active app:", self.get_active_app()[0])
+        # print("selection owner:", event.owner)
+        # print("reason:", event.reason.value_name)
+        # print("event type:", event.type.value_name)
+        
+        if event.reason is Gdk.OwnerChange.NEW_OWNER and event.owner is not None:
+            event_id = 0
 
-        if self.skip_event >= 1:
-            self.skip_event = 0
+        if event.reason is Gdk.OwnerChange.NEW_OWNER and event.owner is None:
+            event_id = 1
 
-        if self.skip_event == 0 and event.owner is not None and event.reason == Gdk.OwnerChange.NEW_OWNER and self.get_active_app()[0] not in self.get_settings("blacklist-apps"):
-            created = datetime.now()
-            clipboard_contents = self.get_clipboard_contents(clipboard, event)
-            if clipboard_contents is not None:
-                target, content, thumbnail, file_extension, additional_desc, content_type = clipboard_contents
-                source_app, source_icon = self.get_active_app()
-                if source_app not in self.get_settings("protected-apps"):
-                    protected = "no"
-                else:
-                    protected = "yes"
-                # reset skip_event state to false for next event    
-                self.skip_event = 0
-                return target, content, source_app, source_icon, created, protected, thumbnail, file_extension, content_type
-        else:
-            # set skip_event state to true for next event is new_owner_change event when clipboard is taken over by another app
-            self.skip_event += 1
-            print("clipboard event ignored:", self.skip_event)
+        if event.reason is Gdk.OwnerChange.DESTROY and event.owner is None:
+            event_id = 1
+
+        if event.reason is Gdk.OwnerChange.CLOSE and event.owner is None:
+            event_id = 1
+
+        # print((self.get_active_app()[0], event.reason.value_name, event.owner, event_id))
+
+        if len(self.events) == 0 and event_id == 0:
+            self.events.append(event_id)
+            self.proceed = True
+        elif len(self.events) == 1 and self.events[0] == 0 and event_id == 1:
+            self.events.append(event_id)
+            self.proceed = False
+        elif len(self.events) == 2 and self.events[0] == 0 and self.events[1] == 1 and event_id == 1:
+            self.events.append(event_id)
+            self.proceed = False
+        elif len(self.events) == 3 and self.events[0] == 0 and self.events[1] == 1 and self.events[2] == 1 and event_id == 0:
+            self.events = []
+            self.proceed = True
+
+        if self.get_active_app()[0] not in self.get_settings("blacklist-apps"):
+            if self.proceed:
+                created = datetime.now()
+                clipboard_contents = self.get_clipboard_contents(clipboard, event)
+                if clipboard_contents is not None:
+                    target, content, thumbnail, file_extension, additional_desc, content_type = clipboard_contents
+                    source_app, source_icon = self.get_active_app()
+                    if source_app not in self.get_settings("protected-apps"):
+                        protected = "no"
+                    else:
+                        protected = "yes"
+
+                    print("clipboard event captured:", self.events)
+                    return target, content, source_app, source_icon, created, protected, thumbnail, file_extension, content_type
+            else:
+                print("clipboard event ignored:", self.events)
+                pass
 
 
     def get_clipboard_contents(self, clipboard, event):
@@ -104,32 +123,40 @@ class ClipboardManager():
                             target = Gdk.Atom.intern('text/html', False)
 
                         if "WPS Writer" in supported_target[2] or "LibreOffice Writer" in supported_target[2]:
-                            target = Gdk.Atom.intern('text/richtext', False)
+                            target = Gdk.Atom.intern('text/rtf', False)
 
                         if "LibreOffice Impress" in supported_target[2]:
                             target = Gdk.Atom.intern('application/x-openoffice-embed-source-xml;windows_formatname="Star Embed Source (XML)"', False)
 
                         if "text/plain;charset=utf-8" in supported_target[0] and "color" in supported_target[3]:
-                            if self.app.utils.isValidColorCode(content.get_text().strip()):
+                            if self.app.utils.isValidColorCode(clipboard.wait_for_contents(target).get_text().strip()):
                                 content_type = "color/" + self.app.utils.isValidColorCode(content.get_text().strip())[1]
                             else:
                                 proceed = False
 
                         if "text/plain;charset=utf-8" in supported_target[0] and "url" in supported_target[3]:
-                            if self.app.utils.isValidURL(content.get_text().strip()):
-                                content_type = "url/" + content.get_text().split(":")[0]
+                            if self.app.utils.isValidURL(clipboard.wait_for_contents(target).get_text().strip()):
+                                content_type = "url/" + clipboard.wait_for_contents(target).get_text().split(":")[0]
                             else:
                                 proceed = False
-
-                        # if "image/png" in supported_target[0] and "files" in supported_target[3]:
-                        #     if len(content.get_text().split("\n")) > 1:
-                        #         proceed = False
 
                         if proceed:
                             if thumbnail:
                                 thumbnail = clipboard.wait_for_contents(Gdk.Atom.intern('image/png', False))
                             else:
                                 thumbnail = None
+
+                            content = clipboard.wait_for_contents(target)
+                            # if content is not None:
+                            #     ext = str(target).split("/")
+                            #     if len(ext) == 1:
+                            #         ext = ext[0]
+                            #     else:
+                            #         ext = ext[1]
+                            #     data = content.get_data()
+                            #     file = open("{filename}.{ext}".format(filename="file", ext=ext),"wb")
+                            #     file.write(data)
+                            #     file.close()
 
                             clip_saved = True
 
@@ -157,6 +184,6 @@ class ClipboardManager():
 
         return source_app, source_icon
 
-    def clip_to_clipboard(self, clipboard_target, file):
+    def copy_to_clipboard(self, clipboard_target, file):
         import subprocess
         subprocess.Popen(['xclip', '-selection', 'clipboard', '-target', clipboard_target, '-i', file])
