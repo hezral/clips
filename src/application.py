@@ -138,28 +138,14 @@ class Clips(Gtk.Application):
     def load_clips_fromdb(self, clips, clips_view):
         app_startup = True
         
-        # initially load last 20 clips 
+        # initially load last 10 clips 
         for clip in reversed(clips[-10:]):
             GLib.idle_add(clips_view.new_clip, clip, app_startup)
             time.sleep(0.02)
-            #print(clip[0])
-        #if focus:
-        #clips_view.flowbox.get_child_at_index(0).grab_focus()
 
         for clip in reversed(clips[:-10]):
             GLib.idle_add(clips_view.new_clip, clip, app_startup)
             time.sleep(0.01)
-            #print(clip[0])
-
-        # for clip in reversed(clips[-30:-20]):
-        #     GLib.idle_add(clips_view.new_clip, clip, app_startup)
-        #     time.sleep(0.05)
-        #     #print(clip[0])
-
-        # for clip in reversed(clips[:-30]):
-        #     GLib.idle_add(clips_view.new_clip, clip, app_startup)
-        #     time.sleep(0.05)
-        #     #print(clip[0])
 
         print(datetime.now(), "finish load_clips")
 
