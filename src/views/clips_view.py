@@ -141,7 +141,7 @@ class ClipsContainer(Gtk.EventBox):
         elif "color" in self.type:
             self.content = ColorContainer(self.cache_file, self.type, utils)
         elif "url" in self.type:
-            self.content = FallbackContainer(self.cache_file, self.type, utils)
+            self.content = UrlContainer(self.cache_file, self.type, utils)
         else:
             print(self.cache_file, self.type)
             self.content = FallbackContainer(self.cache_file, self.type, utils)
@@ -448,7 +448,7 @@ class ClipsContainer(Gtk.EventBox):
             response = dialog.run()
             if response == Gtk.ResponseType.OK:
                 flowboxchild.destroy()
-                app.cache_manager.delete_record(self.id, self.cache_file)
+                app.cache_manager.delete_record(self.id, self.cache_file, self.type)
                 main_window.update_total_clips_label("delete")
             dialog.destroy()
 
@@ -828,7 +828,7 @@ class PresentationContainer(ImageContainer):
 
         self.props.name = "spreadsheet-container"
 
-        self.label = "Spreadsheet"
+        self.label = "Presentation"
 
 # ----------------------------------------------------------------------------------------------------
 
@@ -836,6 +836,25 @@ class UrlContainer(DefaultContainer):
     def __init__(self, filepath, type, utils, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        with open(filepath) as file:
+            self.content  = file.readlines()
+
+        # print(self.content)
+
+        self.content = Gtk.Label(type)
+        self.content.props.wrap_mode = Pango.WrapMode.CHAR
+        self.content.props.max_width_chars = 23
+        self.content.props.wrap = True
+        self.content.props.selectable = False
+        self.content.props.expand = True
+        self.content.props.ellipsize = Pango.EllipsizeMode.END
+        
+        self.props.margin = 10
+        self.props.margin_left = self.props.margin_right = 10
+        self.props.name = "default-container"
+        self.attach(self.content, 0, 0, 1, 1)
+
+
         self.props.name = "url-container"
 
-        self.label = "Spreadsheet"
+        self.label = "Internet URL"
