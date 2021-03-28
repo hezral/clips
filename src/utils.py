@@ -290,7 +290,18 @@ def GetOsDistroName():
 
 ###################################################################################################################
 
-# function to get web page title form a url
+# function to get domain from url
+def GetDomain(url):
+    from urllib.parse import urlparse
+    result = urlparse(url).netloc
+    if len(result.split('.')) == 3:
+        domain = '.'.join(result.split('.')[1:])
+    else:
+        domain = '.'.join(result.split('.'))
+    return domain
+
+
+# function to get web page title from url
 def GetWebpageTitle(url):
     import requests
     try:
@@ -306,25 +317,28 @@ def GetWebpageFavicon(url, download_path='./'):
     import requests
     from urllib.parse import urlparse
     
-    domain = urlparse(url).netloc
+    # domain = urlparse(url).netloc
 
-    if len(domain.split('.')) == 3:
-        domain_name = '.'.join(domain.split('.')[1:])
-    else:
-        domain_name = '.'.join(domain.split('.'))
+    # if len(domain.split('.')) == 3:
+    #     domain_name = '.'.join(domain.split('.')[1:])
+    # else:
+    #     domain_name = '.'.join(domain.split('.'))
 
-    icon_name = download_path + '/' + domain_name + '.ico'
-    favicon_url = urlparse(url).scheme + '://' + urlparse(url).netloc + '/' + 'favicon.ico'
+    domain = GetDomain(url)
+
+    icon_name = download_path + '/' + domain + '.ico'
+    favicon_url = urlparse(url).scheme + '://' + domain + '/' + 'favicon.ico'
     
+    # print(icon_name)
+    # print(favicon_url)
+
     r = None
     try:
         r = requests.get(favicon_url, allow_redirects=True)
     except:
-        return False
+        pass
     if r is not None:
         open(icon_name, 'wb').write(r.content)
-        return True
-        
     
 ###################################################################################################################
 
@@ -355,8 +369,17 @@ def isEmaild(str):
 
 ###################################################################################################################
 
-print(GetWebpageTitle('https://apple.com'))
-GetWebpageFavIcon('https://apple.com')
+# print(GetDomain('https://keep.google.com'))
+
+# print(GetWebpageTitle('https://apple.com'))
+# GetWebpageFavicon('https://apple.com')
+
+# print(GetWebpageTitle('https://keep.google.com/?pli=1#home'))
+# GetWebpageFavicon('https://keep.google.com/?pli=1#home')
+
+# print(GetWebpageTitle('https://appcenter.elementary.io/com.github.devalien.workspaces/e'))
+# GetWebpageFavicon('https://appcenter.elementary.io/com.github.devalien.workspaces/e')
+
 
 # get_distro()
 
