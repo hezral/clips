@@ -304,22 +304,35 @@ def GetDomain(url):
 def GetWebpageTitle(url):
     import requests
     try:
-        n = requests.get(url)
-        al = n.text
-        title = str(al[al.find('<title>') + 7 : al.find('</title>')])
+        response = requests.get(url)
+        contents = response.text
+        title_tag_open = "<title>"
+        title_tag_close = "</title>"
+        title = str(contents[contents.find(title_tag_open) + len(title_tag_open) : contents.find(title_tag_close)])
     except:
         title = '-'
     return title
 
 # function to get web page favicon form a url
 def GetWebpageFavicon(url, download_path='./'):
+    FAVICON = r"<link\srel\=\"(shortcut icon|icon)\"\s(.*(\/.*)+?|href)\=\".*(\/.*)+?\>"
+    import re
     import requests
     from urllib.parse import urlparse
 
     domain = GetDomain(url)
-
     icon_name = download_path + '/' + domain + '.ico'
-    favicon_url = urlparse(url).scheme + '://' + domain + '/' + 'favicon.ico'
+    
+    response = requests.get(url)
+    contents = response.text
+    regex_result = re.search(FAVICON, contents)
+
+    if regex_result is not None:
+        favicon_url = regex_result.group(0).split('href=')[1].replace('"',"").replace(">","")
+        if "http" not in favicon_url:
+            favicon_url = urlparse(url).scheme + '://' + domain + '/' + favicon_url
+    else:
+        favicon_url = urlparse(url).scheme + '://' + domain + '/' + 'favicon.ico'
 
     r = None
     try:
@@ -358,16 +371,20 @@ def isEmaild(str):
 
 ###################################################################################################################
 
-# print(GetDomain('https://keep.google.com'))
+print(GetWebpageTitle('https://apple.com'))
+GetWebpageFavicon('https://apple.com')
 
-# print(GetWebpageTitle('https://apple.com'))
-# GetWebpageFavicon('https://apple.com')
+print(GetWebpageTitle('https://keep.google.com/?pli=1#home'))
+GetWebpageFavicon('https://keep.google.com/?pli=1#home')
 
-# print(GetWebpageTitle('https://keep.google.com/?pli=1#home'))
-# GetWebpageFavicon('https://keep.google.com/?pli=1#home')
+print(GetWebpageTitle('https://appcenter.elementary.io/com.github.devalien.workspaces/e'))
+GetWebpageFavicon('https://appcenter.elementary.io/com.github.devalien.workspaces/e')
 
-# print(GetWebpageTitle('https://appcenter.elementary.io/com.github.devalien.workspaces/e'))
-# GetWebpageFavicon('https://appcenter.elementary.io/com.github.devalien.workspaces/e')
+print(GetWebpageTitle('https://getpasta.com/faq.html'))
+GetWebpageFavicon('https://getpasta.com/faq.html')
+
+print(GetWebpageTitle('https://stackoverflow.com/questions/55828169/how-to-filter-gtk-flowbox-children-with-gtk-entrysearch'))
+GetWebpageFavicon('https://stackoverflow.com/questions/55828169/how-to-filter-gtk-flowbox-children-with-gtk-entrysearch')
 
 
 # get_distro()
