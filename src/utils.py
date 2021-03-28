@@ -303,6 +303,7 @@ def GetDomain(url):
 # function to get web page title from url
 def GetWebpageTitle(url):
     import requests
+    from urllib.parse import urlparse
     try:
         response = requests.get(url)
         contents = response.text
@@ -310,7 +311,7 @@ def GetWebpageTitle(url):
         title_tag_close = "</title>"
         title = str(contents[contents.find(title_tag_open) + len(title_tag_open) : contents.find(title_tag_close)])
     except:
-        title = '-'
+        title = urlparse(url).netloc
     return title
 
 # function to get web page favicon form a url
@@ -371,20 +372,20 @@ def isEmaild(str):
 
 ###################################################################################################################
 
-print(GetWebpageTitle('https://apple.com'))
-GetWebpageFavicon('https://apple.com')
+# print(GetWebpageTitle('https://apple.com'))
+# GetWebpageFavicon('https://apple.com')
 
-print(GetWebpageTitle('https://keep.google.com/?pli=1#home'))
-GetWebpageFavicon('https://keep.google.com/?pli=1#home')
+# print(GetWebpageTitle('https://keep.google.com/?pli=1#home'))
+# GetWebpageFavicon('https://keep.google.com/?pli=1#home')
 
-print(GetWebpageTitle('https://appcenter.elementary.io/com.github.devalien.workspaces/e'))
-GetWebpageFavicon('https://appcenter.elementary.io/com.github.devalien.workspaces/e')
+# print(GetWebpageTitle('https://appcenter.elementary.io/com.github.devalien.workspaces/e'))
+# GetWebpageFavicon('https://appcenter.elementary.io/com.github.devalien.workspaces/e')
 
-print(GetWebpageTitle('https://getpasta.com/faq.html'))
-GetWebpageFavicon('https://getpasta.com/faq.html')
+# print(GetWebpageTitle('https://getpasta.com/faq.html'))
+# GetWebpageFavicon('https://getpasta.com/faq.html')
 
-print(GetWebpageTitle('https://stackoverflow.com/questions/55828169/how-to-filter-gtk-flowbox-children-with-gtk-entrysearch'))
-GetWebpageFavicon('https://stackoverflow.com/questions/55828169/how-to-filter-gtk-flowbox-children-with-gtk-entrysearch')
+# print(GetWebpageTitle('https://stackoverflow.com/questions/55828169/how-to-filter-gtk-flowbox-children-with-gtk-entrysearch'))
+# GetWebpageFavicon('https://stackoverflow.com/questions/55828169/how-to-filter-gtk-flowbox-children-with-gtk-entrysearch')
 
 
 # get_distro()
