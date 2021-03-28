@@ -196,7 +196,6 @@ class CacheManager():
             with open(cache_file) as file:
                 content  = file.readlines()[0] # returns a list with 1 item
             favicon_file = self.icon_cache_filedir + '/' + self.app.utils.GetDomain(content) + '.ico'
-            print(favicon_file)
             try:
                 os.remove(favicon_file)
                 return True

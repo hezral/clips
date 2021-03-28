@@ -300,7 +300,6 @@ def GetDomain(url):
         domain = '.'.join(result.split('.'))
     return domain
 
-
 # function to get web page title from url
 def GetWebpageTitle(url):
     import requests
@@ -316,21 +315,11 @@ def GetWebpageTitle(url):
 def GetWebpageFavicon(url, download_path='./'):
     import requests
     from urllib.parse import urlparse
-    
-    # domain = urlparse(url).netloc
-
-    # if len(domain.split('.')) == 3:
-    #     domain_name = '.'.join(domain.split('.')[1:])
-    # else:
-    #     domain_name = '.'.join(domain.split('.'))
 
     domain = GetDomain(url)
 
     icon_name = download_path + '/' + domain + '.ico'
     favicon_url = urlparse(url).scheme + '://' + domain + '/' + 'favicon.ico'
-    
-    # print(icon_name)
-    # print(favicon_url)
 
     r = None
     try:
