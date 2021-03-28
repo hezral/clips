@@ -293,11 +293,16 @@ def GetOsDistroName():
 # function to get web page title form a url
 def GetWebpageTitle(url):
     import requests
-    n = requests.get(url)
-    al = n.text
-    return str(al[al.find('<title>') + 7 : al.find('</title>')])
+    try:
+        n = requests.get(url)
+        al = n.text
+        title = str(al[al.find('<title>') + 7 : al.find('</title>')])
+    except:
+        title = '-'
+    return title
 
-def GetWebpageFavIcon(url, download_path='./'):
+# function to get web page favicon form a url
+def GetWebpageFavicon(url, download_path='./'):
     import requests
     from urllib.parse import urlparse
     
@@ -310,11 +315,17 @@ def GetWebpageFavIcon(url, download_path='./'):
 
     icon_name = download_path + '/' + domain_name + '.ico'
     favicon_url = urlparse(url).scheme + '://' + urlparse(url).netloc + '/' + 'favicon.ico'
-
-    r = requests.get(favicon_url, allow_redirects=True)
-    open(icon_name, 'wb').write(r.content)
     
-
+    r = None
+    try:
+        r = requests.get(favicon_url, allow_redirects=True)
+    except:
+        return False
+    if r is not None:
+        open(icon_name, 'wb').write(r.content)
+        return True
+        
+    
 ###################################################################################################################
 
 # function to check valid internet URL
@@ -344,8 +355,8 @@ def isEmaild(str):
 
 ###################################################################################################################
 
-# print(GetWebpageTitle('https://stackoverflow.com/questions/44113335/extract-domain-from-url-in-python'))
-# GetWebpageFavIcon('https://stackoverflow.com/questions/44113335/extract-domain-from-url-in-python')
+print(GetWebpageTitle('https://apple.com'))
+GetWebpageFavIcon('https://apple.com')
 
 # get_distro()
 
@@ -358,42 +369,3 @@ def isEmaild(str):
 # print(isValidUnixPath("/home/adi"))
 # print(isValidURL("http://google.com"))
 # print(isEmaild("hezral@gmail.com"))
-
-
-
-# colors = (
-# "#111",
-# "#222222",
-# "rgb(3,3,3)",
-# "rgba(4%,4,4%,0.4)",
-# "hsl(5,5,5)",
-# "hsla(6,6,6,0.6)",
-# "#111;",
-# "#222222;",
-# "rgb(3,3,3);",
-# "rgba(4%,4,4%,0.4);",
-# "hsl(5,5,5);",
-# "hsla(6,6,6,0.6);",
-# "#111; ",
-# "#222222; ",
-# "rgb(3,3,3)",
-# "rgba(4%,4,4%,0.4); ",
-# "hsl(5,5,5); ",
-# "hsla(6,6,6,0.6); ",
-# "#111 ",
-# "#222222 ",
-# "rgb(3,3,3) ",
-# "rgba(4%,4,4%,0.4) ",
-# "hsl(5,5,5) ",
-# "hsla(6,6,6,0.6) ",
-# "#111 junk",
-# "#222222 junk",
-# "rgb(3,3,3) junk",
-# "rgba(4%,4,4%,0.4) junk",
-# "hsl(5,5,5) junk",
-# "hsla(6,6,6,0.6) junk",
-# )
-
-# for color in colors:
-#     if isValidColorCode(color) is None:
-#         print(color)
