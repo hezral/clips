@@ -17,19 +17,19 @@
 
 ###################################################################################################################
 
-def run_async(func):
+def RunAsync(func):
     '''
     https://github.com/learningequality/ka-lite-gtk/blob/341813092ec7a6665cfbfb890aa293602fb0e92f/kalite_gtk/mainwindow.py
     http://code.activestate.com/recipes/576683-simple-threading-decorator/
-        run_async(func)
+        RunAsync(func)
             function decorator, intended to make "func" run in a separate
             thread (asynchronously).
             Returns the created Thread object
             E.g.:
-            @run_async
+            @RunAsync
             def task1():
                 do_something
-            @run_async
+            @RunAsync
             def task2():
                 do_something_too
     '''
@@ -48,7 +48,7 @@ def run_async(func):
 
 ###################################################################################################################
 
-def get_widget_by_name(widget, child_name, level, doPrint=False):
+def GetWidgetByName(widget, child_name, level, doPrint=False):
     '''
     Function to find widgets using its parent
     https://stackoverflow.com/questions/20461464/how-do-i-iterate-through-all-Gtk-children-in-pyGtk-recursively
@@ -73,7 +73,7 @@ def get_widget_by_name(widget, child_name, level, doPrint=False):
     if (hasattr(widget, 'get_child') and callable(getattr(widget, 'get_child')) and child_name != ""):
         child = widget.get_child()
         if child is not None:
-            return get_widget_by_name(child, child_name, level+1, doPrint)
+            return GetWidgetByName(child, child_name, level+1, doPrint)
 
     # /*** It might have many children, so search them ***/
     elif (hasattr(widget, 'get_children') and callable(getattr(widget, 'get_children')) and child_name !=""):
@@ -82,10 +82,10 @@ def get_widget_by_name(widget, child_name, level, doPrint=False):
         found = None
         for child in children:
             if child is not None:
-                found = get_widget_by_name(child, child_name, level+1, doPrint) # //search the child
+                found = GetWidgetByName(child, child_name, level+1, doPrint) # //search the child
                 if found: return found
 
-def get_widget_by_focus_state(widget, focus_state, level, doPrint=False):
+def GetWidgetByFocusState(widget, focus_state, level, doPrint=False):
     '''
     Function to find widgets using its focus state
     '''
@@ -107,7 +107,7 @@ def get_widget_by_focus_state(widget, focus_state, level, doPrint=False):
     if (hasattr(widget, 'get_child') and callable(getattr(widget, 'get_child'))):
         child = widget.get_child()
         if child is not None:
-            return get_widget_by_focus_state(child, focus_state, level+1, doPrint)
+            return GetWidgetByFocusState(child, focus_state, level+1, doPrint)
 
     # /*** It might have many children, so search them ***/
     elif (hasattr(widget, 'get_children') and callable(getattr(widget, 'get_children'))):
@@ -116,51 +116,14 @@ def get_widget_by_focus_state(widget, focus_state, level, doPrint=False):
         found = None
         for child in children:
             if child is not None:
-                found = get_widget_by_focus_state(child, focus_state, level+1, doPrint) # //search the child
+                found = GetWidgetByFocusState(child, focus_state, level+1, doPrint) # //search the child
                 if found: return found
 
 ###################################################################################################################
-# Color Validation Functions
-
-import re
-import math
-
-# function to check valid internet URL
-# https://stackoverflow.com/a/60267538/14741406
-# https://urlregex.com/
-URL = r"^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$"
-def isValidURL(str):
-    regex = URL
-    return validateStr(str, regex)
-
-# function to check valid file manager path
-# https://stackoverflow.com/a/38521489/14741406
-UNIXPATH = r"^(\/[\w^ ]+)+\/?([\w.])+[^.]$"
-
-def isValidUnixPath(str):
-    regex = UNIXPATH
-    return validateStr(str, regex)
-
-# function to check email address
-EMAIL = r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)"
-def isEmaild(str):
-    regex = EMAIL
-    return validateStr(str, regex)
-
-# Regex Pattern for Rgb, Rgba, Hsl, Hsla color coding
-# convert and test regex at https://regex101.com/
-# https://www.regexpal.com/97509 this one is better
-
-HEX = ("hex", r"^#([\da-f]{3}|[\dA-F]{3}){1,2};?\s?$")
-RGB = ("rgb", r"^[Rr][Gg][Bb]\(\d{1,3}%?(,\s?\d{1,3}%?){2}\);?\s?$")
-RGBA = ("rgba", r"^[Rr][Gg][Bb][Aa]\((\d{1,3}%?,\s?){3}(1|0?\.\d+)\);?\s?$")
-HSL = ("hsl", r"^[Hh][Ss][Ll]\(\d{1,3}%?(,\s?\d{1,3}%?){2}\);?\s?$")
-HSLA = ("hsla", r"^[Hh][Ss][Ll][Aa]\((\d{1,3}%?,\s?){3}(1|0?\.\d+)\);?\s?$")
-color_regex = (HEX, RGB, RGBA, HSL, HSLA)
 
 # function to validate string using regex
 def validateStr(str, regex):
-
+    import re
     p = re.compile(regex)
  
     # If the string is empty return false
@@ -172,6 +135,21 @@ def validateStr(str, regex):
         return True
     else:
         return False
+
+###################################################################################################################
+# Color Validation Functions
+
+
+# Regex Pattern for Rgb, Rgba, Hsl, Hsla color coding
+# convert and test regex at https://regex101.com/
+# https://www.regexpal.com/97509 this one is better
+
+HEX = ("hex", r"^#([\da-f]{3}|[\dA-F]{3}){1,2};?\s?$")
+RGB = ("rgb", r"^[Rr][Gg][Bb]\(\d{1,3}%?(,\s?\d{1,3}%?){2}\);?\s?$")
+RGBA = ("rgba", r"^[Rr][Gg][Bb][Aa]\((\d{1,3}%?,\s?){3}(1|0?\.\d+)\);?\s?$")
+HSL = ("hsl", r"^[Hh][Ss][Ll]\(\d{1,3}%?(,\s?\d{1,3}%?){2}\);?\s?$")
+HSLA = ("hsla", r"^[Hh][Ss][Ll][Aa]\((\d{1,3}%?,\s?){3}(1|0?\.\d+)\);?\s?$")
+color_regex = (HEX, RGB, RGBA, HSL, HSLA)
 
 # Function validate hexadecimal color code
 # https://www.geeksforgeeks.org/how-to-validate-hexadecimal-color-code-using-regular-expression/
@@ -202,10 +180,10 @@ def HexToRGB(hexcode):
     rgb = tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
     return rgb
 
-
 # Function to determine light or dark color using RGB values
 # https://stackoverflow.com/a/58270890/14741406
 def isLightOrDark(rgb=[0,0,0]):
+    import math
     [r,g,b] = rgb
     hsp = math.sqrt(0.299 * (r * r) + 0.587 * (g * g) + 0.114 * (b * b))
     if (hsp > 127.5):
@@ -215,7 +193,8 @@ def isLightOrDark(rgb=[0,0,0]):
 
 # function to extract background-color from html files
 # https://stackoverflow.com/a/4894134/14741406
-def get_css_background_color(str):
+def GetCssBackgroundColor(str):
+    import re
     regex = r"(?:background-color)\:(.*?)\;"
     result = re.search(regex, str)
     
@@ -225,7 +204,6 @@ def get_css_background_color(str):
         for regex in color_regex:
             if validateStr(css_background_color, regex[1]):
                 return css_background_color
-
 
 def ConvertToRGB(color_string):
     color_string = color_string.strip(" ").strip(";").strip(")") #strip "space ; )" chars    
@@ -277,8 +255,8 @@ def ConvertToRGB(color_string):
 
 ###################################################################################################################
 
-# Subprocess
-def view_clips(file):
+# function to view file using default application
+def ViewFile(file):
     import subprocess
     subprocess.Popen(['xdg-open', file])
 
@@ -287,7 +265,7 @@ def view_clips(file):
 # function to check distro since platform.linux_distribution() is deprecated since 3.7
 # https://majornetwork.net/2019/11/get-linux-distribution-name-and-version-with-python/
 
-def get_distro():
+def GetOsDistroName():
     import csv
 
     RELEASE_DATA = {}
@@ -309,6 +287,65 @@ def get_distro():
     print("{} {}".format(RELEASE_DATA["NAME"], RELEASE_DATA["VERSION"]))
 
     return RELEASE_DATA["NAME"], RELEASE_DATA["VERSION"]
+
+###################################################################################################################
+
+# function to get web page title form a url
+def GetWebpageTitle(url):
+    import requests
+    n = requests.get(url)
+    al = n.text
+    return str(al[al.find('<title>') + 7 : al.find('</title>')])
+
+def GetWebpageFavIcon(url, download_path='./'):
+    import requests
+    from urllib.parse import urlparse
+    
+    domain = urlparse(url).netloc
+
+    if len(domain.split('.')) == 3:
+        domain_name = '.'.join(domain.split('.')[1:])
+    else:
+        domain_name = '.'.join(domain.split('.'))
+
+    icon_name = download_path + '/' + domain_name + '.ico'
+    favicon_url = urlparse(url).scheme + '://' + urlparse(url).netloc + '/' + 'favicon.ico'
+
+    r = requests.get(favicon_url, allow_redirects=True)
+    open(icon_name, 'wb').write(r.content)
+    
+
+###################################################################################################################
+
+# function to check valid internet URL
+# https://stackoverflow.com/a/60267538/14741406
+# https://urlregex.com/
+URL = r"^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$"
+def isValidURL(str):
+    regex = URL
+    return validateStr(str, regex)
+
+###################################################################################################################
+
+# function to check valid file manager path
+# https://stackoverflow.com/a/38521489/14741406
+UNIXPATH = r"^(\/[\w^ ]+)+\/?([\w.])+[^.]$"
+def isValidUnixPath(str):
+    regex = UNIXPATH
+    return validateStr(str, regex)
+
+###################################################################################################################
+
+# function to check email address
+EMAIL = r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)"
+def isEmaild(str):
+    regex = EMAIL
+    return validateStr(str, regex)
+
+###################################################################################################################
+
+# print(GetWebpageTitle('https://stackoverflow.com/questions/44113335/extract-domain-from-url-in-python'))
+# GetWebpageFavIcon('https://stackoverflow.com/questions/44113335/extract-domain-from-url-in-python')
 
 # get_distro()
 
