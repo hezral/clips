@@ -64,7 +64,7 @@ richtext_target = ("text/richtext", "rtf", "Rich Text Format", "richtext", False
 text_target = ("text/plain;charset=utf-8", "txt", "Plain Text Format", "plaintext", False)
 
 # custom types, not a real clipboard data type
-url_target = ("text/plain;charset=utf-8", "desktop", "Internet URL", "url", False)
+url_target = ("text/plain;charset=utf-8", "txt", "Internet URL", "url", False)
 color_target = ("text/plain;charset=utf-8", "txt", "Color Codes", "color", False)
 
 supported_targets = (spreadsheet_libreoffice_target,
