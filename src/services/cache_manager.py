@@ -198,7 +198,6 @@ class CacheManager():
             favicon_file = self.icon_cache_filedir + '/' + self.app.utils.GetDomain(content) + '.ico'
             try:
                 os.remove(favicon_file)
-                return True
             except OSError:
                 return OSError
 
@@ -264,6 +263,8 @@ class CacheManager():
             
             if "http" in type:
                 self.app.utils.GetWebpageFavicon(content.get_text(), self.icon_cache_filedir)
+                with open(cache_uri, "a") as file:
+                    file.write("\n"+self.app.utils.GetWebpageTitle(content.get_text()))
 
             # fallback for source_icon
             # save a copy of the icon in case the app is uninstalled and no icon to use
