@@ -315,25 +315,28 @@ def GetWebpageTitle(url):
     return title
 
 # function to get web page favicon form a url
+#@RunAsync
 def GetWebpageFavicon(url, download_path='./'):
     FAVICON = r"<link\srel\=\"(shortcut icon|icon)\"\s(.*(\/.*)+?|href)\=\".*(\/.*)+?\>"
     import re
     import requests
     from urllib.parse import urlparse
+    import time
 
     domain = GetDomain(url)
     icon_name = download_path + '/' + domain + '.ico'
     
-    response = requests.get(url)
-    contents = response.text
-    regex_result = re.search(FAVICON, contents)
+    favicon_url = urlparse(url).scheme + '://' + domain + '/' + 'favicon.ico'
 
-    if regex_result is not None:
-        favicon_url = regex_result.group(0).split('href=')[1].replace('"',"").replace(">","")
-        if "http" not in favicon_url:
-            favicon_url = urlparse(url).scheme + '://' + domain + '/' + favicon_url
-    else:
-        favicon_url = urlparse(url).scheme + '://' + domain + '/' + 'favicon.ico'
+    if requests.get(favicon_url).status_code != 200:
+        response = requests.get(url)
+        contents = response.text
+        regex_result = re.search(FAVICON, contents)
+
+        if regex_result is not None:
+            favicon_url = regex_result.group(0).split('href=')[1].replace('"',"").replace(">","")
+            if "http" not in favicon_url:
+                favicon_url = urlparse(url).scheme + '://' + domain + '/' + favicon_url
 
     r = None
     try:
@@ -342,6 +345,8 @@ def GetWebpageFavicon(url, download_path='./'):
         pass
     if r is not None:
         open(icon_name, 'wb').write(r.content)
+        
+        
     
 ###################################################################################################################
 
