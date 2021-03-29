@@ -61,10 +61,12 @@ uri_dolphin_target = ("application/x-kde4-urilist", "uri", "Dolphin Format", "fi
 
 # text types
 richtext_target = ("text/richtext", "rtf", "Rich Text Format", "richtext", False)
-text_target = ("text/plain;charset=utf-8", "txt", "Plain Text Format", "plaintext", False)
+utf8text_target = ("text/plain;charset=utf-8", "txt", "Plain Text Format", "plaintext", False)
+plaintext_target = ("text/plain", "txt", "Plain Text Format", "plaintext", False)
 
 # custom types, not a real clipboard data type
-url_target = ("text/plain;charset=utf-8", "txt", "Internet URL", "url", False)
+url1_target = ("text/plain;charset=utf-8", "txt", "Internet URL", "url", False)
+url2_target = ("text/plain", "txt", "Internet URL", "url", False)
 color_target = ("text/plain;charset=utf-8", "txt", "Color Codes", "color", False)
 
 supported_targets = (spreadsheet_libreoffice_target,
@@ -82,8 +84,10 @@ supported_targets = (spreadsheet_libreoffice_target,
                     # html_webkit_target,
                     richtext_target,
                     color_target,
-                    url_target, 
-                    text_target, )
+                    url1_target,
+                    url2_target, 
+                    utf8text_target, 
+                    plaintext_target, )
 
 
 thumbnail_target = ("text/plain;charset=utf-8", "txt", "Color Codes", "color", False)
