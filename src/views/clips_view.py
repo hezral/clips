@@ -141,7 +141,7 @@ class ClipsContainer(Gtk.EventBox):
         elif "color" in self.type:
             self.content = ColorContainer(self.cache_file, self.type, utils)
         elif "url" in self.type:
-            self.content = UrlContainer(self.cache_file, self.type, utils)
+            self.content = UrlContainer(self.cache_file, self.type, utils, self.cache_filedir)
         else:
             print(self.cache_file, self.type)
             self.content = FallbackContainer(self.cache_file, self.type, utils)
@@ -418,7 +418,11 @@ class ClipsContainer(Gtk.EventBox):
             clip_info_revealer.set_reveal_child(True)
 
         elif action == "view":
-            utils.ViewFile(self.cache_file)
+            if "url" in self.type:
+                with open(self.cache_file) as file:
+                    utils.ViewFile(file.readlines()[0].replace("\n",""))
+            else:
+                utils.ViewFile(self.cache_file)
 
         elif action == "copy":
             clip_action_notify.set_reveal_child(True)
@@ -426,7 +430,7 @@ class ClipsContainer(Gtk.EventBox):
 
         elif action == "force_delete":
             flowboxchild.destroy()
-            app.cache_manager.delete_record(self.id, self.cache_file)
+            app.cache_manager.delete_record(self.id, self.cache_file, self.type)
             main_window.update_total_clips_label("delete")
 
         elif action == "delete":
@@ -639,15 +643,15 @@ class ColorContainer(DefaultContainer):
             font_color = "rgba(255,255,255,0.85)"
 
         color_content_css = ".color-container-bg {background-color: " + color_code + "; color: " + font_color + ";}"
-        font_css = ".color-content {letter-spacing: 1px; font-weight: bold; font-size: 120%; opacity: 0.8;}"
-        css = color_content_css + "\n" + font_css
+        # font_css = ".color-content {letter-spacing: 1px; font-weight: bold; font-size: 120%; opacity: 0.8;}"
+        css = color_content_css
         provider = Gtk.CssProvider()
         provider.load_from_data(bytes(css.encode()))
 
         self.content = Gtk.Label(self.content)
         self.content.props.expand = True
         self.content.get_style_context().add_provider(provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
-        self.content.get_style_context().add_class("color-content")
+        self.content.props.name = "color-container-content"
 
         # add checkerboard background for colors with alpha less than 1
         if str(a) != "1":
@@ -833,28 +837,47 @@ class PresentationContainer(ImageContainer):
 # ----------------------------------------------------------------------------------------------------
 
 class UrlContainer(DefaultContainer):
-    def __init__(self, filepath, type, utils, *args, **kwargs):
+    def __init__(self, filepath, type, utils, cache_filedir, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         with open(filepath) as file:
             self.content  = file.readlines()
 
-        # print(self.content)
-
-        self.content = Gtk.Label(type)
-        self.content.props.wrap_mode = Pango.WrapMode.CHAR
-        self.content.props.max_width_chars = 23
-        self.content.props.wrap = True
-        self.content.props.selectable = False
-        self.content.props.expand = True
-        self.content.props.ellipsize = Pango.EllipsizeMode.END
+        domain = utils.GetDomain(self.content[0].replace("\n",""))
         
+        icon_size = 48 * self.get_scale_factor()
+        favicon_file = os.path.join(cache_filedir[:-6],"icon", domain + ".ico")
+        
+        try:
+            favicon = Gtk.Image()
+            favicon_pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_size(favicon_file, icon_size, icon_size)
+            favicon.props.pixbuf = favicon_pixbuf
+        except:
+            favicon = Gtk.Image().new_from_icon_name("applications-internet", Gtk.IconSize.LARGE_TOOLBAR)
+            favicon.set_pixel_size(icon_size)
+            
+        favicon.props.margin_bottom = 10
+
+        title = Gtk.Label(self.content[1])
+        title.props.name = "url-container-title"
+        title.props.wrap_mode = Pango.WrapMode.WORD
+        title.props.max_width_chars = 20
+        title.props.wrap = True
+        title.props.justify = Gtk.Justification.CENTER
+        title.props.lines = 3
+        title.props.ellipsize = Pango.EllipsizeMode.END
+
+
+        domain = Gtk.Label(self.content[0].replace("\n","").split("/")[2])
+
         self.props.margin = 10
-        self.props.margin_left = self.props.margin_right = 10
-        self.props.name = "default-container"
-        self.attach(self.content, 0, 0, 1, 1)
+        self.props.name = "url-container"
 
+        self.attach(favicon, 0, 0, 1, 1)
+        self.attach(title, 0, 1, 1, 1)
+        self.attach(domain, 0, 2, 1, 1)
 
+        self.props.halign = self.props.valign = Gtk.Align.CENTER
         self.props.name = "url-container"
 
         self.label = "Internet URL"
