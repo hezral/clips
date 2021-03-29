@@ -297,6 +297,18 @@ button#app-action-enable:active, button#app-action-protect:active {
 }
 
 
+label#color-container-content {
+    letter-spacing: 1px; 
+    font-weight: bold; 
+    font-size: 120%; 
+    opacity: 0.8;
+}
+
+label#url-container-title {
+    letter-spacing: 1px; 
+    font-weight: bold; 
+    font-size: 105%; 
+}
 
 
 
