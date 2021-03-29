@@ -134,7 +134,7 @@ class ClipboardManager():
                             else:
                                 proceed = False
 
-                        if "text/plain;charset=utf-8" in supported_target[0] and "url" in supported_target[3]:
+                        if ("text/plain;charset=utf-8" in supported_target[0] or "text/plain" in supported_target[0]) and "url" in supported_target[3]:
                             if self.app.utils.isValidURL(clipboard.wait_for_contents(target).get_text().strip()):
                                 content_type = "url/" + clipboard.wait_for_contents(target).get_text().split(":")[0]
                             else:
