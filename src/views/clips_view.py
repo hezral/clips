@@ -127,7 +127,7 @@ class ClipsContainer(Gtk.EventBox):
         elif "office/presentation" in self.type:
             self.content = PresentationContainer(self.cache_file, self.type, utils)
         elif "office/word" in self.type:
-            self.content = FallbackContainer(self.cache_file, self.type, utils)
+            self.content = WordContainer(self.cache_file, self.type, utils)
         elif "files" in self.type:
             self.content = FilesContainer(self.cache_file, self.type, utils)
         elif "image" in self.type:
@@ -836,6 +836,48 @@ class PresentationContainer(ImageContainer):
 
 # ----------------------------------------------------------------------------------------------------
 
+class WordContainer(DefaultContainer):
+    def __init__(self, filepath, type, utils, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        scale = self.get_scale_factor()
+        self.icon_size = 64 * scale
+        self.icon_theme = Gtk.IconTheme.get_default()
+        icon = None
+
+        if os.path.isdir(filepath):  
+            mime_type = "inode/directory"
+        elif os.path.isfile(filepath):  
+            mime_type, val = Gio.content_type_guess(filepath, data=None)
+        elif not os.path.exists(filepath):
+            pass
+        else:
+            print(filepath, ": special file (socket, FIFO, device file)" )
+            pass
+                        
+        icons = Gio.content_type_get_icon(mime_type)
+        
+        for icon_name in icons.to_string().split():
+            if icon_name != "." and icon_name != "GThemedIcon":
+                try:
+                    icon_pixbuf = self.icon_theme.load_icon(icon_name, self.icon_size, 0)
+                    icon = Gtk.Image().new_from_pixbuf(icon_pixbuf)
+                    self.attach(icon, 0, 0, 1, 1)
+                    break
+                except:
+                    pass # file not exist for this entry
+
+        label = Gtk.Label("Preview Unavailable")
+        label.props.margin_top = 10
+        self.attach(label, 0, 1, 1, 1)
+
+        self.props.name = "word-container"
+        self.props.halign = self.props.valign = Gtk.Align.CENTER
+
+        self.label = "Word Document"
+
+# ----------------------------------------------------------------------------------------------------
+
 class UrlContainer(DefaultContainer):
     def __init__(self, filepath, type, utils, cache_filedir, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -881,3 +923,5 @@ class UrlContainer(DefaultContainer):
         self.props.name = "url-container"
 
         self.label = "Internet URL"
+
+# ----------------------------------------------------------------------------------------------------
