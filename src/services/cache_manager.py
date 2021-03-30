@@ -261,11 +261,13 @@ class CacheManager():
                 cache_thumbnail_uri = self.cache_filedir + '/' + cache_thumbnail_file
                 os.renames(temp_cache_thumbnail_uri, cache_thumbnail_uri)
             
+            from datetime import datetime
             if "http" in type:
-                self.app.utils.GetWebpageFavicon(content.get_text(), self.icon_cache_filedir)
-                with open(cache_uri, "a") as file:
-                    file.write("\n"+self.app.utils.GetWebpageTitle(content.get_text()))
-
+                # GLib.idle_add(self.app.utils.GetWebpageFavicon, content.get_text(), self.icon_cache_filedir, cache_uri)
+                # with open(cache_uri, "a") as file:
+                #     file.write("\n"+self.app.utils.GetWebpageTitle(content.get_text()))
+                self.app.utils.GetWebpageData(content.get_text(), cache_uri, self.icon_cache_filedir)
+                
             # fallback for source_icon
             # save a copy of the icon in case the app is uninstalled and no icon to use
             icon_theme = Gtk.IconTheme.get_default()
@@ -284,6 +286,8 @@ class CacheManager():
 
             clips_view = self.main_window.clips_view
 
+            print(datetime.now(), "start populating clip content")
+            
             # check duplicates using checksum
             if len(self.check_duplicate(checksum)) == 0:
                 self.add_record(record) # add to database
