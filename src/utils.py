@@ -14,6 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with this Application.  If not, see <http://www.gnu.org/licenses/>.
 '''
+from datetime import datetime
 
 ###################################################################################################################
 
@@ -300,53 +301,100 @@ def GetDomain(url):
         domain = '.'.join(result.split('.'))
     return domain
 
-# function to get web page title from url
-def GetWebpageTitle(url):
+
+def GetWebpageContents(url):
     import requests
-    from urllib.parse import urlparse
+    print(datetime.now(), "start get webpage contents", url)
     try:
-        response = requests.get(url)
-        contents = response.text
+        contents = requests.get(url).text
+        return contents
+    except:
+        return None
+    finally:
+        print(datetime.now(), "finish get webpage contents", url)
+
+# function to get web page title from url    
+def GetWebpageTitle(contents, url):
+    from urllib.parse import urlparse
+    print(datetime.now(), "start get webpage title", url)
+    if contents is not None:
         title_tag_open = "<title>"
         title_tag_close = "</title>"
         title = str(contents[contents.find(title_tag_open) + len(title_tag_open) : contents.find(title_tag_close)])
-    except:
+    else:
         title = urlparse(url).netloc
+    print(datetime.now(), "start get webpage title", url)
     return title
 
-# function to get web page favicon form a url
-#@RunAsync
-def GetWebpageFavicon(url, download_path='./'):
-    FAVICON = r"<link\srel\=\"(shortcut icon|icon)\"\s(.*(\/.*)+?|href)\=\".*(\/.*)+?\>"
+# function to get web page favicon from a url
+def GetWebpageFavicon(contents, url, download_path='./'):
+    LFAVICON = r"<link\srel\=\"(apple-touch-icon-precomposed|apple-touch-icon)\"\s(.*(\/.*)+?|href)\=\".*(\/.*)+?\>"
+    SFAVICON = r"<link\srel\=\"(icon|shortcut icon)\"\s(.*(\/.*)+?|href)\=\".*(\/.*)+?\>"
+    
     import re
     import requests
     from urllib.parse import urlparse
-    import time
+
+    print(datetime.now(), "start downloading favicon", url)
 
     domain = GetDomain(url)
-    icon_name = download_path + '/' + domain + '.ico'
+    icon_name = download_path + '/' + domain + '.ico'    
+
+    regex_result1 = re.search(LFAVICON, contents)
+    regex_result2 = re.search(SFAVICON, contents)
+
+    if regex_result1 is not None:
+        regex_result = regex_result1
+    else:
+        regex_result = regex_result2
+
+    if regex_result is not None:
+        favicon_url = regex_result.group(0).split('href="')[1].split('"')[0].strip(">").strip("/")
+        if "http" not in favicon_url:
+            favicon_url = urlparse(url).scheme + '://' + domain + '/' + favicon_url
+    else:
+        favicon_url = urlparse(url).scheme + '://' + domain + '/' + 'favicon.ico'
     
-    favicon_url = urlparse(url).scheme + '://' + domain + '/' + 'favicon.ico'
-
-    if requests.get(favicon_url).status_code != 200:
-        response = requests.get(url)
-        contents = response.text
-        regex_result = re.search(FAVICON, contents)
-
-        if regex_result is not None:
-            favicon_url = regex_result.group(0).split('href=')[1].replace('"',"").replace(">","")
-            if "http" not in favicon_url:
-                favicon_url = urlparse(url).scheme + '://' + domain + '/' + favicon_url
-
     r = None
+    print(datetime.now(), "favicon", favicon_url)
     try:
         r = requests.get(favicon_url, allow_redirects=True)
     except:
         pass
+
     if r is not None:
         open(icon_name, 'wb').write(r.content)
-        
-        
+        print(datetime.now(), "finish downloading favicon", url)
+        return icon_name
+
+def GetWebpageData(url, file_path, download_path='./'):
+    print(datetime.now(), "start get webpage data", url)
+    
+    contents = GetWebpageContents(url)
+    title = GetWebpageTitle(contents, url)
+    icon_name = GetWebpageFavicon(contents, url, download_path)
+
+    with open(file_path, "a") as file:
+        file.write("\n"+title)
+        file.close
+
+    print(datetime.now(), "finish get webpage data", url)
+
+    return title, icon_name
+
+def GetWebpageThread(url, file_path, download_path='./'):
+    import concurrent.futures
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        future = executor.submit(GetWebpageData, url, file_path, download_path)
+        return_value = future.result()
+        # print(return_value)
+
+
+# url = "https://netflix.com"
+# # GetWebpageThread(url)
+# GetWebpageData(url)
+# GetFaviconUrl1(url)
+# GetFaviconUrl2(url)
     
 ###################################################################################################################
 
