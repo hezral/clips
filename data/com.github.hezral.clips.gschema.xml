@@ -17,6 +17,11 @@
             <summary>Close on focus out of the Clips app window</summary>
             <description>Close on focus out of the Clips app window</description>
         </key>
+        <key type="b" name="show-close-button">
+            <default>false</default>
+            <summary>Show window close button</summary>
+            <description>Show window close button</description>
+        </key>
         <key type="b" name="sticky-mode">
             <default>false</default>
             <summary>Display Clips app window on all workspaces</summary>
@@ -27,9 +32,14 @@
             <summary>Hides Clips app window on startup</summary>
             <description>Hides Clips app window on startup</description>
         </key>
-        <key type="i" name="retention-period">
+        <key type="b" name="auto-purge">
+            <default>false</default>
+            <summary>Automatically purge Clips older than days set in Retention Period</summary>
+            <description>Hides Clips app window on startup</description>
+        </key>
+        <key type="i" name="auto-retention-period">
             <default>0</default>
-            <summary>Set number of days to retain clips before house keeping and deletion</summary>
+            <summary>Days to retain clips before house keeping</summary>
             <description>Set number of days to retain clips before house keeping and deletion</description>
         </key>
         <key type="as" name="blacklist-apps">
