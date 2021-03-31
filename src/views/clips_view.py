@@ -27,7 +27,7 @@ import time
 
 class ClipsView(Gtk.Grid):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, app, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         #------ flowbox ----#
@@ -37,7 +37,7 @@ class ClipsView(Gtk.Grid):
         self.flowbox.props.row_spacing = 10
         self.flowbox.props.column_spacing = 10
         self.flowbox.props.max_children_per_line = 9
-        self.flowbox.props.min_children_per_line = 3
+        self.flowbox.props.min_children_per_line = app.gio_settings.get_int("min-column-number")
         self.flowbox.props.valign = Gtk.Align.START
         self.flowbox.props.halign = Gtk.Align.FILL
         self.flowbox.set_sort_func(self.sort_flowbox)
