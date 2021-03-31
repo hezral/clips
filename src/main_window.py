@@ -29,11 +29,14 @@ class ClipsWindow(Gtk.ApplicationWindow):
         super().__init__(*args, **kwargs)
 
         self.utils = self.props.application.utils
+        self.app = self.props.application
+        self.gio_settings = self.props.application.gio_settings
+        self.gtk_settings = self.props.application.gtk_settings
 
         #------ views ----#
-        self.clips_view = ClipsView()
+        self.clips_view = ClipsView(self.app)
         self.info_view = InfoView("No Clips Found","Start Copying Stuffs", "system-os-installer")
-        self.settings_view = SettingsView()
+        self.settings_view = SettingsView(self.app)
         self.settings_view.connect("notify::visible", self.on_view_visible)
 
         #------ stack ----#
@@ -63,33 +66,73 @@ class ClipsWindow(Gtk.ApplicationWindow):
         self.props.border_width = 0
         self.props.window_position = Gtk.WindowPosition.CENTER
         self.get_style_context().add_class("rounded")
-        #self.set_default_size(958, 450)
-        self.set_size_request(880, 450)
-        # self.set_size_request(640, 450)
-        self.resize(958, 450)
-        geometry = Gdk.Geometry()
-        # setattr(geometry, 'base_height', 450)
-        # setattr(geometry, 'base_width', 800)
-        # self.set_geometry_hints(None, geometry, Gdk.WindowHints.BASE_SIZE)
-        setattr(geometry, 'min_height', 450)
-        setattr(geometry, 'min_width', 880)
-        self.set_geometry_hints(None, geometry, Gdk.WindowHints.MIN_SIZE)
-        # setattr(geometry, 'max_height', 1080)
-        # setattr(geometry, 'max_width', 1888)
-        # self.set_geometry_hints(None, geometry, Gdk.WindowHints.MAX_SIZE)
-        # setattr(geometry, 'height_inc', 100)
-        # setattr(geometry, 'width_inc', 100)
-        # self.set_geometry_hints(None, geometry, Gdk.WindowHints.RESIZE_INC)
+
         #self.connect("window-state-event", self.on_maximized)
         #self.connect("notify::is-maximized", self.on_max)
 
-        #self.set_keep_above(True)
+        self.set_main_window_size()
+
         self.add(main_view)
         self.show_all()
 
         # this is for tracking window state flags for persistent mode
         self.state_flags_changed_count = 0
         self.active_state_flags = ['GTK_STATE_FLAG_NORMAL', 'GTK_STATE_FLAG_DIR_LTR']
+
+    def set_main_window_size(self, column_number=None):
+
+        if column_number is None:
+            column_number = self.gio_settings.get_int("min-column-number")
+        default_height = 450
+        proceed = True
+
+        if column_number == 1:
+            default_width = 100
+            min_width = 100
+
+        elif column_number == 2:
+            default_width = 560
+            min_width = 560
+
+        elif column_number == 3:
+            default_width = 800
+            min_width = 800
+
+        elif column_number == 4:
+            default_width = 958
+            min_width = 958
+        
+        elif column_number > 3:
+            default_width = 1100
+            min_width = 958
+        
+        if proceed:
+            # print("min-column-number", column_number)
+            # print("set_size_request")
+            # self.set_size_request(min_width, default_height)
+            
+            # print("resize")
+            self.resize(default_width, default_height)
+            self.set_size_request(min_width, default_height)
+            
+            geometry = Gdk.Geometry()
+            # setattr(geometry, 'base_height', 450)
+            # setattr(geometry, 'base_width', 800)
+            # self.set_geometry_hints(None, geometry, Gdk.WindowHints.BASE_SIZE)
+            setattr(geometry, 'min_height', default_height)
+            setattr(geometry, 'min_width', min_width)
+            
+            # print("set_geometry_hints")
+            self.set_geometry_hints(None, geometry, Gdk.WindowHints.MIN_SIZE)
+            # setattr(geometry, 'max_height', 1080)
+            # setattr(geometry, 'max_width', 1888)
+            # self.set_geometry_hints(None, geometry, Gdk.WindowHints.MAX_SIZE)
+            # setattr(geometry, 'height_inc', 100)
+            # setattr(geometry, 'width_inc', 100)
+            # self.set_geometry_hints(None, geometry, Gdk.WindowHints.RESIZE_INC)
+            # print("width, height:", self.get_allocated_width(), self.get_allocated_height())
+            # print(column_number)
+
 
     def generate_headerbar(self):
         #------ self.searchentry ----#
@@ -133,7 +176,7 @@ class ClipsWindow(Gtk.ApplicationWindow):
         searchbar.attach(revealer, 0, 1, 1, 1)
 
         headerbar = Gtk.HeaderBar()
-        headerbar.props.show_close_button = False
+        headerbar.props.show_close_button = self.gio_settings.get_value("show-close-button")
         headerbar.props.has_subtitle = False
         headerbar.props.custom_title = searchbar
         #headerbar.add(searchbar)
@@ -284,14 +327,20 @@ class ClipsWindow(Gtk.ApplicationWindow):
         
         stack = self.utils.GetWidgetByName(widget=self, child_name="main-stack", level=0)
         main_view = self.utils.GetWidgetByName(widget=self, child_name="main-view", level=0)
+        settings_view = self.utils.GetWidgetByName(widget=self, child_name="settings-view", level=0)
+        clips_view = self.utils.GetWidgetByName(widget=self, child_name="clips-view", level=0)
 
         if view.is_visible():
             self.current_view = "settings-view"
             print("on:settings")
+            clips_view.hide()
+            settings_view.show_all()
 
         else:
             view.hide()
             self.current_view = "clips-view"
+            settings_view.hide()
+            clips_view.show_all()
             print("on:settings-view > clips-view")
 
         # toggle css styling
