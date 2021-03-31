@@ -19,10 +19,11 @@
 
 /* -- colors -- */
 /* ------------------------------ */
-@define-color shaded_dark shade(@theme_base_color, 0.85);
+@define-color shaded_dark rgba(0, 0, 0, 0.02);
 @define-color shaded_darker shade(@theme_base_color, 0.85);
 @define-color shaded_base shade(#6A0CAB, 0.98);
 @define-color popup shade(@theme_base_color, 0.98);
+@define-color bordercolor rgba(0, 0, 0, 0.3);
 
 /* *:backdrop {
     color: rgba(255, 255, 255, 0.5);
@@ -109,9 +110,10 @@ label#settings-group-label {
     opacity: 0.75;
 }
 
-.settings-frame {
+frame#settings-group-frame {
     border-radius: 4px;
-    background-color: @shaded_darker;
+    border-color: rgba(0, 0, 0, 0.3);
+    background-color: @shaded_dark;
 }
 
 .settings-sub-label {
@@ -134,7 +136,7 @@ label#settings-group-label {
 grid#clip-container-grid {
     border-style: solid;
     border-width: 1px;
-    border-color: rgba(0, 0, 0, 0.2);
+    border-color: rgba(0, 0, 0, 0.3);
     border-radius: 5px;
     background-color: transparent;
     animation: crossfader 0.5s ease-in-out forwards;
