@@ -82,7 +82,7 @@ class ClipboardManager():
             self.events = []
             self.proceed = True
 
-        if self.get_active_app()[0] not in self.get_settings("blacklist-apps"):
+        if self.get_active_app()[0] not in self.get_settings("excluded-apps"):
             if self.proceed:
                 created = datetime.now()
                 clipboard_contents = self.get_clipboard_contents(clipboard, event)

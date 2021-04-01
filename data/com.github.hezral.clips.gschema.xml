@@ -42,7 +42,7 @@
             <summary>Days to retain clips before house keeping</summary>
             <description>Set number of days to retain clips before house keeping and deletion</description>
         </key>
-        <key type="as" name="blacklist-apps">
+        <key type="as" name="excluded-apps">
             <default>['Wingpanel','Plank']</default>
             <summary>Blacklisted apps from Clips</summary>
             <description>These apps will not be monitored for clipboard events</description>
