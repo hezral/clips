@@ -104,10 +104,10 @@ class Clips(Gtk.Application):
         # present the window if its hidden
         self.main_window.present()
 
-        # if not self.gio_settings.get_value("hide-on-startup") and self.running is False:
-        #     self.main_window.hide()
-        # else:
-        #     self.main_window.present()
+        if self.gio_settings.get_value("hide-on-startup") and self.running is False:
+            self.main_window.hide()
+        else:
+            self.main_window.present()
 
         # link to cache_manager
         self.cache_manager.main_window = self.main_window
