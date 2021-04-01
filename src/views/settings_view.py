@@ -33,32 +33,32 @@ class SettingsView(Gtk.Grid):
 
         # display behaviour -------------------------------------------------
 
-        # theme switch ----#
+        # theme switch
         theme_switch = SubSettings(type="switch", name="theme-switch", label="Switch between Dark/Light theme", sublabel=None, separator=True)
         theme_switch.switch.bind_property("active", gtk_settings, "gtk-application-prefer-dark-theme", GObject.BindingFlags.SYNC_CREATE)
         gio_settings.bind("prefer-dark-style", theme_switch.switch, "active", Gio.SettingsBindFlags.DEFAULT)
 
-        # persistent mode ----#
+        # persistent mode
         persistent_mode = SubSettings(type="switch", name="persistent-mode", label="Persistent mode", sublabel="Stays open and updates as new clips added",separator=True)
         persistent_mode.switch.connect_after("notify::active", self.on_switch_activated)
         gio_settings.bind("persistent-mode", persistent_mode.switch, "active", Gio.SettingsBindFlags.DEFAULT)
         
-        # sticky mode ----#
+        # sticky mode
         sticky_mode = SubSettings(type="switch", name="sticky-mode", label="Sticky mode", sublabel="Display on all workspaces",separator=True)
         sticky_mode.switch.connect_after("notify::active", self.on_switch_activated)
         gio_settings.bind("sticky-mode", sticky_mode.switch, "active", Gio.SettingsBindFlags.DEFAULT)
 
-        # show close button ----#
+        # show close button
         show_close_button = SubSettings(type="switch", name="show-close-button", label="Show close button", sublabel=None,separator=True)
         show_close_button.switch.connect_after("notify::active", self.on_switch_activated)
         gio_settings.bind("show-close-button", show_close_button.switch, "active", Gio.SettingsBindFlags.DEFAULT)
 
-        # hide on startup ----#
+        # hide on startup
         hide_onstartup_mode = SubSettings(type="switch", name="hide-on-startup", label="Hide on startup", sublabel="Hides Clips app window on startup", separator=True)
         hide_onstartup_mode.switch.connect_after("notify::active", self.on_switch_activated)
         gio_settings.bind("hide-on-startup", hide_onstartup_mode.switch, "active", Gio.SettingsBindFlags.DEFAULT)
 
-        # min column number ----#
+        # min column number
         min_column_number = SubSettings(type="spinbutton", name="min-column-number", label="Columns", sublabel="Set minimum number of columns", separator=False, data=(1,9,1))
         min_column_number.spinbutton.connect("value-changed", self.on_spinbutton_activated)
         gio_settings.bind("min-column-number", min_column_number.spinbutton, "value", Gio.SettingsBindFlags.DEFAULT)
@@ -67,22 +67,28 @@ class SettingsView(Gtk.Grid):
 
         # app behaviour -------------------------------------------------
 
-
-        # auto housekeeping ----#
+        # auto housekeeping
         autopurge_mode = SubSettings(type="switch", name="auto-housekeeping", label="Auto housekeeping clips", sublabel="Automatic housekeeping Clips after retention period", separator=True)
         autopurge_mode.switch.connect_after("notify::active", self.on_switch_activated)
         gio_settings.bind("auto-housekeeping", autopurge_mode.switch, "active", Gio.SettingsBindFlags.DEFAULT)
 
-        # auto retention period ----#
+        # auto retention period
         auto_retention_period = SubSettings(type="spinbutton", name="auto-retention-period", label="Rentention period", sublabel="Days to retain clips before house keeping", separator=False, data=(0,365,5))
         auto_retention_period.spinbutton.connect_after("value-changed", self.on_spinbutton_activated)
         gio_settings.bind("auto-retention-period", auto_retention_period.spinbutton, "value", Gio.SettingsBindFlags.DEFAULT)
 
         app_settings = SettingsGroup("Configuration", (autopurge_mode, auto_retention_period, ))
 
+        # exceptions -------------------------------------------------
+
+        # blacklist app
+        blacklist_app = SubSettings(type="button", name="excluded-apps", label="Delete all clips", sublabel=None, separator=False, data=(Gtk.Image().new_from_icon_name("dialog-warning", Gtk.IconSize.MENU),))
+        delete_all.button.connect("clicked", self.on_button_clicked)
+        delete_all.button.get_style_context().add_class("destructive-action")
+
         # danger zone -------------------------------------------------
         
-        # delete all ----#
+        # delete all
         delete_all = SubSettings(type="button", name="delete-all", label="Delete all clips", sublabel=None, separator=False, data=(Gtk.Image().new_from_icon_name("dialog-warning", Gtk.IconSize.MENU),))
         delete_all.button.connect("clicked", self.on_button_clicked)
         delete_all.button.get_style_context().add_class("destructive-action")
@@ -91,7 +97,7 @@ class SettingsView(Gtk.Grid):
 
 
 
-        #------ flowbox ----#
+        #------ flowbox
         self.flowbox = Gtk.FlowBox()
         self.flowbox.props.name = "settings-flowbox"
         self.flowbox.add(display_behaviour_settings)
@@ -103,13 +109,16 @@ class SettingsView(Gtk.Grid):
         self.flowbox.props.margin = 10
         self.flowbox.props.selection_mode = Gtk.SelectionMode.NONE
 
-        #------ scrolled_window ----#
+        for child in self.flowbox.get_children():
+            child.props.can_focus = False
+
+        #------ scrolled_window
         scrolled_window = Gtk.ScrolledWindow()
         scrolled_window.props.expand = True
         scrolled_window.props.hscrollbar_policy = Gtk.PolicyType.NEVER
         scrolled_window.add(self.flowbox)
         
-        # construct--------#
+        # construct---
         self.props.name = "settings-view"
         self.get_style_context().add_class(self.props.name)
         self.props.expand = True
@@ -122,7 +131,6 @@ class SettingsView(Gtk.Grid):
         # self.attach(app_settings, 0, 1, 1, 1)
         # self.attach(danger_zone, 0, 2, 1, 1)
         
-
     def on_button_clicked(self, button):
         print("clicked")
 
@@ -148,7 +156,8 @@ class SettingsView(Gtk.Grid):
         name = switch.get_name()
 
         window = self.get_toplevel()
-        headerbar = [child for child in window.get_children() if isinstance(child, Gtk.HeaderBar)][0]
+        if window is not None:
+            headerbar = [child for child in window.get_children() if isinstance(child, Gtk.HeaderBar)][0]
 
         if self.is_visible():
 
@@ -186,7 +195,7 @@ class SettingsGroup(Gtk.Grid):
     def __init__(self, group_label, subsettings_list, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # settings grid --------#
+        # settings grid ---
         grid = Gtk.Grid()
         grid.props.margin = 8
         grid.props.hexpand = True
@@ -198,13 +207,13 @@ class SettingsGroup(Gtk.Grid):
             grid.attach(subsetting, 0, i, 1, 1)
             i += 1
 
-        # subsettingsgroup frame --------#
+        # subsettingsgroup frame ---
         frame = Gtk.Frame()
         frame.props.name = "settings-group-frame"
         frame.props.hexpand = True
         frame.add(grid)
 
-        # subsettingsgroup label --------#
+        # subsettingsgroup label ---
         label = Gtk.Label(group_label)
         label.props.name = "settings-group-label"
         label.props.halign = Gtk.Align.START
@@ -225,17 +234,17 @@ class SubSettings(Gtk.Grid):
     def __init__(self, type, name, label, sublabel=None, separator=True, data=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
        
-        # box--------#
+        # box---
         box = Gtk.VBox()
         box.props.spacing = 2
         box.props.hexpand = True
 
-        # label--------#
+        # label---
         label_text = Gtk.Label(label)
         label_text.props.halign = Gtk.Align.START
         box.add(label_text)
         
-        # sublabel--------#
+        # sublabel---
         if sublabel is not None:
             sub_label = Gtk.Label(sublabel)
             sub_label.props.halign = Gtk.Align.START
@@ -266,27 +275,29 @@ class SubSettings(Gtk.Grid):
             self.button.props.always_show_image = True
             self.attach(self.button, 1, 0, 1, 2)
 
-        # separator --------#
+        if type == "listbox":
+            self.listbox = Gtk.ListBox()
+
+
+        # separator ---
         if separator:
             row_separator = Gtk.Separator()
             row_separator.props.hexpand = True
             row_separator.props.valign = Gtk.Align.CENTER
             self.attach(row_separator, 0, 2, 2, 1)
         
-        # SubSettings construct--------#
+        # SubSettings construct---
         self.props.name = name
         self.props.hexpand = True
         self.props.row_spacing = 8
         self.props.column_spacing = 10
         self.attach(box, 0, 0, 1, 2)
-        
+
 # ----------------------------------------------------------------------------------------------------
-    
+
 class AppChooserPopover(Gtk.Popover):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        self.props.name = "appchooser"
 
         choose_button = Gtk.Button(label="Choose")
         choose_button.connect("clicked", self.on_button_clicked())
@@ -304,25 +315,20 @@ class AppChooserPopover(Gtk.Popover):
         scrolled_window.connect("edge-overshot", self.on_edget_overshot())
 
         search_entry = Gtk.SearchEntry
+        search_entry.props.placeholder_text = "Search..."
+        search_entry.props.margin = 12
+        search_entry.props.hexpand = True
+        search_entry.connect("search-changed", self.on_search_entry_changed())
 
+        grid = Gtk.Grid()
+        grid.attach(search_entry, 0, 0, 1, 1)
+        grid.attach(Gtk.Separator(), 0, 1, 1, 1)
+        grid.attach(scrolled_window, 0, 2, 1, 1)
+        grid.attach(Gtk.Separator(), 0, 3, 1, 1)
+        grid.attach(choose_button, 0, 4, 1, 1)
 
-        # search_entry = new Gtk.SearchEntry ()
-        # search_entry.placeholder_text = _ ("Search apps…")
-        # search_entry.margin_bottom = search_entry.margin_top = search_entry.margin_start = search_entry.margin_end = 12
-        # search_entry.hexpand = true
-        # search_entry.search_changed.connect (on_search_entry_changed)
-
-        # var box = new Gtk.Box (Gtk.Orientation.VERTICAL, 0)
-        # box.add (search_entry)
-        # box.add (new Gtk.Separator (Gtk.Orientation.HORIZONTAL))
-        # box.pack_start (scrolled, true, true)
-        # box.add (new Gtk.Separator (Gtk.Orientation.HORIZONTAL))
-        # box.add (button_box)
-        # add (box)
-
-        # public AppChooserPopover () {
-        #     Object ()
-        # }
+        self.props.name = "app-chooser"
+        self.add(grid)
 
     def on_row_selected(self, *args):
         print("on-row-selected", locals())
@@ -363,14 +369,172 @@ class AppChooserPopover(Gtk.Popover):
         #     app_list_box.invalidate_filter ()
         #     app_list_box.search (search_entry.text)
         # }
-# all_apps = Gio.AppInfo.get_all()  # Returns a list of DesktopAppInfo objects (see docs)
 
-# # For example, print display name and description of all apps
-# for app in all_apps:
-#     print(app.get_display_name())
+# ----------------------------------------------------------------------------------------------------
+
+class AppListBoxRow(Gtk.ListBoxRow):
+    def __init__(self, app_name, icon_name, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        icon_size = 24 * self.get_scale_factor()
+        icon = Gtk.Image().new_from_icon_name(icon_name, Gtk.IconSize.LARGE_TOOLBAR)
+        icon.set_pixel_size(icon_size)
+
+        label = Gtk.Label(app_name)
+
+        grid = Gtk.Grid()
+        grid.props.margin = 6
+        grid.props.column_spacing = 12
+        grid.attach(icon, 0, 0, 1, 1)
+        grid.attach(label, 0, 0, 1, 1)
+
+        self.add(grid)
+        self.props.name = "app-listboxrow"
+
+# ----------------------------------------------------------------------------------------------------
 
 class AppListBox(Gtk.ListBox):
+
+    LOADING_COUNT = 100
+    max_index = -1
+    current_index = 0
+    search_query = ""
+    search_cancellable = None
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.label = "app-listbox"
+        self.apps = []
+
+        for app in Gio.AppInfo.get_all(): # Returns a list of DesktopAppInfo objects (see docs)
+            if app.should_show():
+                icon = app.get_icon()
+                if icon is not None:
+                    icon_name = icon.to_string()
+                else:
+                    icon_name = "application-other"
+                name = app.get_name()
+                app = (name, icon)
+                self.apps.append(app)
+        
+        self.apps.sort(key=self.sort_apps())
+        self.max_index = len(self.apps) - 1
+
+        for app in self.apps:
+            self.add(AppListBoxRow(app_name=app[0], icon_name=app[0]))
+
+        self.props.name = "app-listbox"
+        self.props.selection_mode = Gtk.SelectionMode.BROWSE
+        self.props.activate_on_single_click = False
+        # self.set_sort_func(self.sort_func())
+        # self.set_filter_func(self.filter_func())
+        # self.load_next_apps()
+
+    def sort_apps(self, val):
+        return val[0].lower()
+
+    def sort_func(self, row_1, row_2, data, notify_destroy):
+        return row_1.app.name.lower() > row_2.app.name.lower()
+    
+    def filter_func(self, search_entry):
+        pass
+
+    def get_selected_app(self, *args):
+        row = self.get_selected_row()
+        if row is None:
+            pass
+        else:
+            return row
+
+    def add_app(self, app):
+        pass
+
+    def load_next(self):
+        index = self.current_index + self.LOADING_COUNT
+        bound = max(0, min(index, len(self.max_index)-1))
+
+        if self.current_index >= bound:
+            pass
+        
+        apps_to_load = self.apps[self.current_index:bound]
+
+        for app in apps_to_load:
+            self.add_app(app)
+
+        current_index = index
+        self.show_all()
+
+    def search(self, query):
+        if self.search_cancellable is None:
+            self.search_cancellable.cancel()
+        
+        self.search_cancellable = Gio.Cancellable.new()
+
+        self.search_internal.begin(query)
+            
+
+    def search_internal(self, query):
+        pass
+
+
+#     public void search (string query) {
+#         if (search_cancellable != null) {
+#             search_cancellable.cancel ();
+#         }
+
+#         search_cancellable = new Cancellable ();
+
+#         search_query = query;
+#         search_internal.begin (search_query);
+#     }
+
+#     private async void search_internal (string query) {
+#         new Thread<void*> ("search-internal", () => {
+#             Workspaces.Models.AppInfo[] matched = search_apps (query);
+#             if (search_cancellable.is_cancelled ()) {
+#                 return null;
+#             }
+
+#             Idle.add (() => {
+#                 foreach (Workspaces.Models.AppInfo app in matched) {
+#                     add_app (app);
+#                 }
+
+#                 show_all ();
+#                 invalidate_filter ();
+#                 return false;
+#             });
+
+#             return null;
+#         });
+#     }
+
+#     private Workspaces.Models.AppInfo[] search_apps (string query) {
+#         Workspaces.Models.AppInfo[] matched = { };
+#         for (int i = 0; i < apps.size; i++) {
+#             Workspaces.Models.AppInfo app = apps[i];
+#             if (!added.contains (app) && query_matches_name (query, app.name)) {
+#                 matched += app;
+#             }
+#         }
+
+#         return matched;
+#     }
+
+
+#     private bool filter_func (Gtk.ListBoxRow row) {
+#         if (search_query.strip () == "") {
+#             return true;
+#         }
+#         var icon_row = row as Workspaces.Widgets.AppRow;
+
+#         if (icon_row == null) {
+#             return true;
+#         }
+#         return query_matches_name (search_query, icon_row.app_info.name);
+#     }
+
+#     private static bool query_matches_name (string query, string name) {
+#         return query.down () in name.down ();
+#     }
+# }
