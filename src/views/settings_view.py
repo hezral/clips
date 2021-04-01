@@ -28,40 +28,40 @@ class SettingsView(Gtk.Grid):
         super().__init__(*args, **kwargs)
 
         self.app = app
-        gio_settings = app.gio_settings
-        gtk_settings = app.gtk_settings
+        self.gio_settings = app.gio_settings
+        self.gtk_settings = app.gtk_settings
 
         # display behaviour -------------------------------------------------
 
         # theme switch
         theme_switch = SubSettings(type="switch", name="theme-switch", label="Switch between Dark/Light theme", sublabel=None, separator=True)
-        theme_switch.switch.bind_property("active", gtk_settings, "gtk-application-prefer-dark-theme", GObject.BindingFlags.SYNC_CREATE)
-        gio_settings.bind("prefer-dark-style", theme_switch.switch, "active", Gio.SettingsBindFlags.DEFAULT)
+        theme_switch.switch.bind_property("active", self.gtk_settings, "gtk-application-prefer-dark-theme", GObject.BindingFlags.SYNC_CREATE)
+        self.gio_settings.bind("prefer-dark-style", theme_switch.switch, "active", Gio.SettingsBindFlags.DEFAULT)
 
         # persistent mode
         persistent_mode = SubSettings(type="switch", name="persistent-mode", label="Persistent mode", sublabel="Stays open and updates as new clips added",separator=True)
         persistent_mode.switch.connect_after("notify::active", self.on_switch_activated)
-        gio_settings.bind("persistent-mode", persistent_mode.switch, "active", Gio.SettingsBindFlags.DEFAULT)
+        self.gio_settings.bind("persistent-mode", persistent_mode.switch, "active", Gio.SettingsBindFlags.DEFAULT)
         
         # sticky mode
         sticky_mode = SubSettings(type="switch", name="sticky-mode", label="Sticky mode", sublabel="Display on all workspaces",separator=True)
         sticky_mode.switch.connect_after("notify::active", self.on_switch_activated)
-        gio_settings.bind("sticky-mode", sticky_mode.switch, "active", Gio.SettingsBindFlags.DEFAULT)
+        self.gio_settings.bind("sticky-mode", sticky_mode.switch, "active", Gio.SettingsBindFlags.DEFAULT)
 
         # show close button
         show_close_button = SubSettings(type="switch", name="show-close-button", label="Show close button", sublabel=None,separator=True)
         show_close_button.switch.connect_after("notify::active", self.on_switch_activated)
-        gio_settings.bind("show-close-button", show_close_button.switch, "active", Gio.SettingsBindFlags.DEFAULT)
+        self.gio_settings.bind("show-close-button", show_close_button.switch, "active", Gio.SettingsBindFlags.DEFAULT)
 
         # hide on startup
         hide_onstartup_mode = SubSettings(type="switch", name="hide-on-startup", label="Hide on startup", sublabel="Hides Clips app window on startup", separator=True)
         hide_onstartup_mode.switch.connect_after("notify::active", self.on_switch_activated)
-        gio_settings.bind("hide-on-startup", hide_onstartup_mode.switch, "active", Gio.SettingsBindFlags.DEFAULT)
+        self.gio_settings.bind("hide-on-startup", hide_onstartup_mode.switch, "active", Gio.SettingsBindFlags.DEFAULT)
 
         # min column number
         min_column_number = SubSettings(type="spinbutton", name="min-column-number", label="Columns", sublabel="Set minimum number of columns", separator=False, data=(1,9,1))
         min_column_number.spinbutton.connect("value-changed", self.on_spinbutton_activated)
-        gio_settings.bind("min-column-number", min_column_number.spinbutton, "value", Gio.SettingsBindFlags.DEFAULT)
+        self.gio_settings.bind("min-column-number", min_column_number.spinbutton, "value", Gio.SettingsBindFlags.DEFAULT)
 
         display_behaviour_settings = SettingsGroup("Display & Behaviour", (theme_switch, show_close_button, hide_onstartup_mode, persistent_mode, sticky_mode, min_column_number, ))
 
@@ -70,26 +70,32 @@ class SettingsView(Gtk.Grid):
         # auto housekeeping
         autopurge_mode = SubSettings(type="switch", name="auto-housekeeping", label="Auto housekeeping clips", sublabel="Automatic housekeeping Clips after retention period", separator=True)
         autopurge_mode.switch.connect_after("notify::active", self.on_switch_activated)
-        gio_settings.bind("auto-housekeeping", autopurge_mode.switch, "active", Gio.SettingsBindFlags.DEFAULT)
+        self.gio_settings.bind("auto-housekeeping", autopurge_mode.switch, "active", Gio.SettingsBindFlags.DEFAULT)
 
         # auto retention period
         auto_retention_period = SubSettings(type="spinbutton", name="auto-retention-period", label="Rentention period", sublabel="Days to retain clips before house keeping", separator=False, data=(0,365,5))
         auto_retention_period.spinbutton.connect_after("value-changed", self.on_spinbutton_activated)
-        gio_settings.bind("auto-retention-period", auto_retention_period.spinbutton, "value", Gio.SettingsBindFlags.DEFAULT)
+        self.gio_settings.bind("auto-retention-period", auto_retention_period.spinbutton, "value", Gio.SettingsBindFlags.DEFAULT)
 
         app_settings = SettingsGroup("Configuration", (autopurge_mode, auto_retention_period, ))
 
         # exceptions -------------------------------------------------
 
         # blacklist app
-        blacklist_app = SubSettings(type="button", name="excluded-apps", label="Delete all clips", sublabel=None, separator=False, data=(Gtk.Image().new_from_icon_name("dialog-warning", Gtk.IconSize.MENU),))
-        delete_all.button.connect("clicked", self.on_button_clicked)
-        delete_all.button.get_style_context().add_class("destructive-action")
+        excluded_apps = SubSettings(type="button", name="excluded-apps", label="Exclude apps", sublabel="Copy events are excluded for apps selected", separator=False, data=("Select app", ))
+        excluded_apps.button.connect("clicked", self.on_button_clicked)
+        excluded_apps.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
+
+        excluded_apps_list_values = self.gio_settings.get_value("excluded-apps").get_strv()
+        excluded_apps_list = SubSettings(type="listbox", name="excluded-apps-list", label=None, sublabel=None, separator=False, data=excluded_apps_list_values)
+        
+
+        exceptions = SettingsGroup("Exceptions", (excluded_apps, excluded_apps_list, ))
 
         # danger zone -------------------------------------------------
         
         # delete all
-        delete_all = SubSettings(type="button", name="delete-all", label="Delete all clips", sublabel=None, separator=False, data=(Gtk.Image().new_from_icon_name("dialog-warning", Gtk.IconSize.MENU),))
+        delete_all = SubSettings(type="button", name="delete-all", label="Delete all clips from cache", sublabel=None, separator=False, data=("Delete all", Gtk.Image().new_from_icon_name("dialog-warning", Gtk.IconSize.MENU),))
         delete_all.button.connect("clicked", self.on_button_clicked)
         delete_all.button.get_style_context().add_class("destructive-action")
 
@@ -102,6 +108,7 @@ class SettingsView(Gtk.Grid):
         self.flowbox.props.name = "settings-flowbox"
         self.flowbox.add(display_behaviour_settings)
         self.flowbox.add(app_settings)
+        self.flowbox.add(exceptions)
         self.flowbox.add(danger_zone)
         self.flowbox.props.homogeneous = False
         self.flowbox.props.row_spacing = 20
@@ -231,7 +238,7 @@ class SettingsGroup(Gtk.Grid):
 # ----------------------------------------------------------------------------------------------------
 
 class SubSettings(Gtk.Grid):
-    def __init__(self, type, name, label, sublabel=None, separator=True, data=None, *args, **kwargs):
+    def __init__(self, type, name, label=None, sublabel=None, separator=True, data=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
        
         # box---
@@ -240,9 +247,10 @@ class SubSettings(Gtk.Grid):
         box.props.hexpand = True
 
         # label---
-        label_text = Gtk.Label(label)
-        label_text.props.halign = Gtk.Align.START
-        box.add(label_text)
+        if label is not None:
+            label_text = Gtk.Label(label)
+            label_text.props.halign = Gtk.Align.START
+            box.add(label_text)
         
         # sublabel---
         if sublabel is not None:
@@ -269,7 +277,10 @@ class SubSettings(Gtk.Grid):
             self.attach(self.spinbutton, 1, 0, 1, 2)
 
         if type == "button":
-            self.button = Gtk.Button(label=label, image=data[0])
+            if len(data) == 1:
+                self.button = Gtk.Button(label=data[0])
+            else:
+                self.button = Gtk.Button(label=data[0], image=data[1])
             self.button.props.name = name
             self.button.props.hexpand = False
             self.button.props.always_show_image = True
@@ -277,7 +288,33 @@ class SubSettings(Gtk.Grid):
 
         if type == "listbox":
             self.listbox = Gtk.ListBox()
-
+            self.listbox.props.name = name
+            self.listbox.set_filter_func(self.filter_func, None, False)
+            icon_size = 32 * self.get_scale_factor()
+            if data is not None:
+                for app_name in data:
+                    app_info = self.get_appinfo(app_name)
+                    icon = app_info.get_icon()
+                    if icon is not None:
+                        app_icon = icon.to_string()
+                    else:
+                        app_icon = "application-other"
+                    app_name = Gtk.Label(app_info.get_name())
+                    app_icon = Gtk.Image().new_from_icon_name(app_icon, Gtk.IconSize.LARGE_TOOLBAR)
+                    app_icon.set_pixel_size(icon_size)
+                    grid = Gtk.Grid()
+                    grid.props.column_spacing = 10
+                    grid.props.margin = 6
+                    grid.attach(app_icon, 0, 0, 1, 1)
+                    grid.attach(app_name, 1, 0, 1, 1)
+                    row = Gtk.ListBoxRow()
+                    row.add(grid)
+                    self.listbox.add(row)
+            scrolled_window = Gtk.ScrolledWindow()
+            scrolled_window.props.shadow_type = Gtk.ShadowType.ETCHED_IN
+            scrolled_window.add(self.listbox)
+            scrolled_window.set_size_request(-1, 150)
+            self.attach(scrolled_window, 0, 1, 1, 1)
 
         # separator ---
         if separator:
@@ -292,6 +329,30 @@ class SubSettings(Gtk.Grid):
         self.props.row_spacing = 8
         self.props.column_spacing = 10
         self.attach(box, 0, 0, 1, 2)
+
+    def get_appinfo(self, app_name):
+        all_apps = Gio.AppInfo.get_all()
+        appinfo = [child for child in all_apps if child.get_name() == app_name][0]
+        return appinfo
+
+    def remove_selected(self, *args):
+        print(locals())
+
+    def filter_func(self, row, data, notify_destroy):
+        if row.get_index() % 2 != 0:
+            row.get_style_context().add_class("alternate-row")
+        # else:
+        #     row.get_style_context().add_class("view")
+        #return False if row.data == 'Fail' else True
+        return True
+
+# ----------------------------------------------------------------------------------------------------
+
+class SubSettingsListbox(Gtk.ListBox):
+    def __init__(self, type, name, label, sublabel=None, separator=True, data=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        pass
 
 # ----------------------------------------------------------------------------------------------------
 
@@ -406,7 +467,9 @@ class AppListBox(Gtk.ListBox):
 
         self.apps = []
 
-        for app in Gio.AppInfo.get_all(): # Returns a list of DesktopAppInfo objects (see docs)
+        all_apps = Gio.AppInfo.get_all()
+
+        for app in all_apps: # Returns a list of DesktopAppInfo objects (see docs)
             if app.should_show():
                 icon = app.get_icon()
                 if icon is not None:
