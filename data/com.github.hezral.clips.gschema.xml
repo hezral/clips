@@ -32,10 +32,10 @@
             <summary>Hides Clips app window on startup</summary>
             <description>Hides Clips app window on startup</description>
         </key>
-        <key type="b" name="auto-purge">
+        <key type="b" name="auto-housekeeping">
             <default>false</default>
-            <summary>Automatically purge Clips older than days set in Retention Period</summary>
-            <description>Hides Clips app window on startup</description>
+            <summary>Automatic housekeeping Clips after retention period</summary>
+            <description>Automatic housekeeping Clips after retention period</description>
         </key>
         <key type="i" name="auto-retention-period">
             <default>0</default>
