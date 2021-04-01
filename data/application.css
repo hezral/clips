@@ -121,6 +121,10 @@ frame#settings-group-frame {
     font-size: 0.9em;
     color: gray;
 }
+
+.alternate-row {
+    background-color:rgba(125, 48, 232, 0.1);
+}
 /* ------------------------------ */
 
 @keyframes crossfader {
