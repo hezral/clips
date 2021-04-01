@@ -314,7 +314,7 @@ class ClipsContainer(Gtk.EventBox):
         clip_action.props.can_focus = False
         clip_action.props.row_spacing = clip_action.props.column_spacing = 4
         
-        if "color" in self.type or "office" in self.type:
+        if "color" in self.type or "spreadsheet" in self.type or "presentation" in self.type:
             # protect_action.props.sensitive = False
             view_action.props.sensitive = False
             # protect_action.get_style_context().add_class("clip-action-disabled")
@@ -662,7 +662,7 @@ class ColorContainer(DefaultContainer):
         rgb, a = utils.ConvertToRGB(self.content)
 
         color_code = "rgba({red},{green},{blue},{alpha})".format(red=str(rgb[0]),green=str(rgb[1]),blue=str(rgb[2]),alpha=str(a))
-        
+
         if utils.isLightOrDark(rgb) == "light":
             font_color = "rgba(0,0,0,0.85)"
         else:
@@ -856,7 +856,7 @@ class PresentationContainer(ImageContainer):
         thumbnail = os.path.splitext(filepath)[0]+'-thumb.png'
         super().__init__(thumbnail, type, utils)
 
-        self.props.name = "spreadsheet-container"
+        self.props.name = "presentation-container"
 
         self.label = "Presentation"
 
