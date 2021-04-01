@@ -252,7 +252,9 @@ def ConvertToRGB(color_string):
         rgb = None
         a = None
     
-    return rgb, a
+    # print(type(rgb), type(float(a)))
+
+    return rgb, float(a)
 
 ###################################################################################################################
 
