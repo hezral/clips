@@ -20,7 +20,6 @@ import gi
 gi.require_version('Gtk', '3.0')
 gi.require_version('Granite', '1.0')
 from gi.repository import Gtk, Granite, GObject, Gdk
-from views.info_view import InfoView
 from views.clips_view import ClipsView
 from views.settings_view import SettingsView
 
@@ -35,30 +34,28 @@ class ClipsWindow(Gtk.ApplicationWindow):
 
         #------ views ----#
         self.clips_view = ClipsView(self.app)
-        self.info_view = InfoView("No Clips Found","Start Copying Stuffs", "system-os-installer")
         self.settings_view = SettingsView(self.app)
         self.settings_view.connect("notify::visible", self.on_view_visible)
 
         #------ stack ----#
-        stack = Gtk.Stack()
-        stack.props.name = "main-stack"
-        stack.props.transition_type = Gtk.StackTransitionType.CROSSFADE
-        stack.props.transition_duration = 150
-        stack.add_named(self.clips_view, self.clips_view.get_name())
-        stack.add_named(self.settings_view, self.settings_view.get_name())
-        stack.add_named(self.info_view, self.info_view.get_name())
+        self.stack = Gtk.Stack()
+        self.stack.props.name = "main-stack"
+        self.stack.props.transition_type = Gtk.StackTransitionType.CROSSFADE
+        self.stack.props.transition_duration = 150
+        self.stack.add_named(self.clips_view, self.clips_view.get_name())
+        self.stack.add_named(self.settings_view, self.settings_view.get_name())
 
         #------ headerbar ----#
         self.set_titlebar(self.generate_headerbar())
 
         #------ main_view ----#
-        main_view = Gtk.Grid()
-        main_view.props.name = "main-view"
-        main_view.attach(stack, 0, 0, 1, 1)
-        main_view.attach(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL), 0, 1, 1, 1)
+        self.main_view = Gtk.Grid()
+        self.main_view.props.name = "main-view"
+        self.main_view.attach(self.stack, 0, 0, 1, 1)
+        self.main_view.attach(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL), 0, 1, 1, 1)
         # main_view.attach(self.generate_actionbar(), 0, 2, 1, 1)
-        main_view.attach(self.generate_statusbar(), 0, 2, 1, 1)
-        main_view.attach(self.generate_viewswitch(settings_view_obj=self.settings_view), 0, 2, 1, 1)
+        self.main_view.attach(self.generate_statusbar(), 0, 2, 1, 1)
+        self.main_view.attach(self.generate_viewswitch(settings_view_obj=self.settings_view), 0, 2, 1, 1)
 
         #------ construct ----#
         self.props.title = "Clips"
@@ -67,12 +64,9 @@ class ClipsWindow(Gtk.ApplicationWindow):
         self.props.window_position = Gtk.WindowPosition.CENTER
         self.get_style_context().add_class("rounded")
 
-        #self.connect("window-state-event", self.on_maximized)
-        #self.connect("notify::is-maximized", self.on_max)
-
         self.set_main_window_size()
 
-        self.add(main_view)
+        self.add(self.main_view)
         self.show_all()
 
         # this is for tracking window state flags for persistent mode
@@ -80,7 +74,6 @@ class ClipsWindow(Gtk.ApplicationWindow):
         self.active_state_flags = ['GTK_STATE_FLAG_NORMAL', 'GTK_STATE_FLAG_DIR_LTR']
 
     def set_main_window_size(self, column_number=None):
-
         if column_number is None:
             column_number = self.gio_settings.get_int("min-column-number")
         default_height = 450
@@ -107,32 +100,12 @@ class ClipsWindow(Gtk.ApplicationWindow):
             min_width = 958
         
         if proceed:
-            # print("min-column-number", column_number)
-            # print("set_size_request")
-            # self.set_size_request(min_width, default_height)
-            
-            # print("resize")
             self.resize(default_width, default_height)
-            self.set_size_request(min_width, default_height)
-            
+            self.set_size_request(min_width, default_height)            
             geometry = Gdk.Geometry()
-            # setattr(geometry, 'base_height', 450)
-            # setattr(geometry, 'base_width', 800)
-            # self.set_geometry_hints(None, geometry, Gdk.WindowHints.BASE_SIZE)
             setattr(geometry, 'min_height', default_height)
             setattr(geometry, 'min_width', min_width)
-            
-            # print("set_geometry_hints")
             self.set_geometry_hints(None, geometry, Gdk.WindowHints.MIN_SIZE)
-            # setattr(geometry, 'max_height', 1080)
-            # setattr(geometry, 'max_width', 1888)
-            # self.set_geometry_hints(None, geometry, Gdk.WindowHints.MAX_SIZE)
-            # setattr(geometry, 'height_inc', 100)
-            # setattr(geometry, 'width_inc', 100)
-            # self.set_geometry_hints(None, geometry, Gdk.WindowHints.RESIZE_INC)
-            # print("width, height:", self.get_allocated_width(), self.get_allocated_height())
-            # print(column_number)
-
 
     def generate_headerbar(self):
         #------ self.searchentry ----#
@@ -321,64 +294,51 @@ class ClipsWindow(Gtk.ApplicationWindow):
 
     def on_search_changed(self, searchentry):
         self.searchentry.props.primary_icon_name = "system-search-symbolic"
-        #print(locals())
 
-    def on_view_visible(self, view, gparam=None, runlookup=None, word=None):
-        
-        stack = self.utils.GetWidgetByName(widget=self, child_name="main-stack", level=0)
-        main_view = self.utils.GetWidgetByName(widget=self, child_name="main-view", level=0)
-        settings_view = self.utils.GetWidgetByName(widget=self, child_name="settings-view", level=0)
-        clips_view = self.utils.GetWidgetByName(widget=self, child_name="clips-view", level=0)
-
+    def on_view_visible(self, view, gparam=None):
         if view.is_visible():
             self.current_view = "settings-view"
             print("on:settings")
-            clips_view.hide()
-            settings_view.show_all()
+            self.clips_view.hide()
+            self.settings_view.show_all()
 
         else:
             view.hide()
             self.current_view = "clips-view"
-            settings_view.hide()
-            clips_view.show_all()
+            self.settings_view.hide()
+            self.clips_view.show_all()
             print("on:settings-view > clips-view")
 
         # toggle css styling
         if self.current_view == "settings-view":
-            stack.get_style_context().add_class("stack-settings")
-            main_view.get_style_context().add_class("main_view-settings")
+            self.stack.get_style_context().add_class("stack-settings")
+            self.main_view.get_style_context().add_class("main_view-settings")
         else:
-            stack.get_style_context().remove_class("stack-settings")
-            main_view.get_style_context().remove_class("main_view-settings")
+            self.stack.get_style_context().remove_class("stack-settings")
+            self.main_view.get_style_context().remove_class("main_view-settings")
 
-        stack.set_visible_child_name(self.current_view)
+        self.stack.set_visible_child_name(self.current_view)
 
     def on_persistent_mode(self, widget, event):
-        
         # state flags for window active state
         self.state_flags = self.get_state_flags().value_names
-        # print(self.state_flags)
+        print(self.state_flags)
         if not self.state_flags == self.active_state_flags and self.state_flags_changed_count > 1:
             self.destroy()
         else:
             self.state_flags_changed_count += 1
-            # print('state-flags-changed', self.state_flags_changed_count)
+            print('state-flags-changed', self.state_flags_changed_count)
 
     def on_clips_action(self, button, action):
-        
-        app = self.props.application
-        
         if action == "enable":
-
             if button.state == "enabled":
                 button.props.tooltip_text = "Clipboard Monitoring: Disabled"
-                app.clipboard_manager.clipboard.disconnect_by_func(app.cache_manager.update_cache)
+                self.app.clipboard_manager.clipboard.disconnect_by_func(self.app.cache_manager.update_cache)
             else:
                 button.props.tooltip_text = "Clipboard Monitoring: Enabled"
-                app.clipboard_manager.clipboard.connect("owner-change", app.cache_manager.update_cache, app.clipboard_manager)
+                self.app.clipboard_manager.clipboard.connect("owner-change", self.app.cache_manager.update_cache, self.app.clipboard_manager)
         
         elif action == "protect":
-
             if button.state == "enabled":
                 button.props.tooltip_text = "Password Display/Monitoring: Disabled"
             else:
