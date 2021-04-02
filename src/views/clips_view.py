@@ -216,7 +216,7 @@ class ClipsContainer(Gtk.EventBox):
         button.props.tooltip_text = tooltiptext
         button.props.can_focus = False
         button.set_size_request(30, 30)
-        button.connect("clicked", self.on_clip_action, actionname, iconname, tooltiptext)
+        button.connect("clicked", self.on_clip_action, actionname)
         return button
     
     def generate_clip_info(self):
@@ -406,12 +406,10 @@ class ClipsContainer(Gtk.EventBox):
         if clip_select_revealer.get_child_revealed():
             clip_select_revealer.set_reveal_child(False)
 
-    def on_clip_action(self, button=None, action=None, iconname=None, tooltiptext=None):
+    def on_clip_action(self, button=None, action=None):
         main_window = self.get_toplevel()
         app = main_window.props.application
         utils = app.utils
-        # clipboard_manager = app.clipboard_manager
-        # cache_manager = app.cache_manager
         flowboxchild = self.get_parent()
         flowbox = flowboxchild.get_parent()
         clip_container_overlay = utils.GetWidgetByName(widget=flowboxchild, child_name="clip-container-overlay", level=0)
@@ -427,17 +425,9 @@ class ClipsContainer(Gtk.EventBox):
         # remove previous widgets
         for child in action_notify_box.get_children():
             child.destroy()
-
-        icon = Gtk.Image().new_from_icon_name(iconname, Gtk.IconSize.SMALL_TOOLBAR)
-        label = Gtk.Label(tooltiptext)
-
-        action_notify_box.attach(icon, 0, 0, 1, 1)
-        action_notify_box.attach(label, 1, 0, 1, 1)
-        action_notify_box.show_all()
  
         if action == "protect":
             clip_action_notify.set_reveal_child(True)
-            pass
 
         elif action == "info":
             clip_info_revealer.set_reveal_child(True)
@@ -450,8 +440,14 @@ class ClipsContainer(Gtk.EventBox):
                 utils.ViewFile(self.cache_file)
 
         elif action == "copy":
+            icon = Gtk.Image().new_from_icon_name("process-completed", Gtk.IconSize.SMALL_TOOLBAR)
+            label = Gtk.Label("Copied to clipboard")
+            action_notify_box.attach(icon, 0, 0, 1, 1)
+            action_notify_box.attach(label, 1, 0, 1, 1)
+            action_notify_box.show_all()
+
             clip_action_notify.set_reveal_child(True)
-            app.clipboard_manager.copy_to_clipboard(self.target, self.cache_file)
+            app.clipboard_manager.copy_to_clipboard(self.target, self.cache_file, self.type)
             app.cache_manager.update_cache_on_recopy(self.cache_file)
 
         elif action == "force_delete":
@@ -481,6 +477,7 @@ class ClipsContainer(Gtk.EventBox):
                 app.cache_manager.delete_record(self.id, self.cache_file, self.type)
                 main_window.update_total_clips_label("delete")
             dialog.destroy()
+
 
         else:
             print(action)
