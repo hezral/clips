@@ -559,7 +559,7 @@ class AppListBox(Gtk.ListBox):
     
     def app_listbox_filter_func(self, search_entry):
         def filter_func(row, text):
-            if text in row.app_name:
+            if text.lower() in row.app_name.lower():
                 return True
             else:
                 return False
