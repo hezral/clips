@@ -52,7 +52,6 @@ class Clips(Gtk.Application):
         self.clipboard_manager = ClipboardManager(gtk_application=self)
         self.cache_manager = CacheManager(gtk_application=self, clipboard_manager=self.clipboard_manager)
         
-
         # re-initialize some objects
         self.main_window = None
         self.total_clips = 0
@@ -77,7 +76,7 @@ class Clips(Gtk.Application):
         self.setup_action("view", self.on_clip_actions, "<Alt>V")
         self.setup_action("copy", self.on_clip_actions, "<Alt>C")
         self.setup_action("delete", self.on_clip_actions, "<Alt>D")
-        self.setup_action("force_delete", self.on_clip_actions, "<Shift>D")
+        self.setup_action("force_delete", self.on_clip_actions, "<Alt>F")
 
         # #applicationwindow theme
         settings = Gtk.Settings.get_default()
@@ -128,9 +127,6 @@ class Clips(Gtk.Application):
             self.main_window.total_clips_label.props.label = "Clips: {total}".format(total=len(clips))
             
             if len(clips) != 0:
-                # thread = threading.Thread(target=self.load_clips_fromdb, args=(clips, self.main_window.clips_view, ))
-                # thread.daemon = True
-                # thread.start()
                 self.load_clips_fromdb(clips, self.main_window.clips_view)
 
             self.running = True
@@ -139,8 +135,7 @@ class Clips(Gtk.Application):
     @utils.RunAsync
     def load_clips_fromdb(self, clips, clips_view):
         app_startup = True
-        
-        # initially load last 10 clips 
+
         for clip in reversed(clips[-10:]):
             GLib.idle_add(clips_view.new_clip, clip, app_startup)
             time.sleep(0.02)
@@ -179,8 +174,10 @@ class Clips(Gtk.Application):
     
     def on_clip_actions(self, action, param):
         if len(self.main_window.clips_view.flowbox.get_selected_children()) != 0:
-            flowboxchild = self.main_window.clips_view.flowbox.get_selected_children()[0].get_children()[0]
-            flowboxchild.on_clip_action(action=action.props.name)
+            flowboxchild = self.main_window.clips_view.flowbox.get_selected_children()[0]
+            if flowboxchild.is_selected():
+                clips_container = flowboxchild.get_children()[0]
+                clips_container.on_clip_action(action=action.props.name)
 
     def on_switch_views(self, action, param):
         
