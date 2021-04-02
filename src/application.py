@@ -68,15 +68,15 @@ class Clips(Gtk.Application):
         self.setup_action("hide", self.on_hide_action, "Escape")
         self.setup_action("quit", self.on_quit_action, "<Ctrl>Q")
         self.setup_action("search", self.on_search_action, "<Ctrl>F")
-        self.setup_action("settings-view", self.on_switch_views, "<Shift>Right")
-        self.setup_action("clips-view", self.on_switch_views, "<Shift>Left")
+        # self.setup_action("settings-view", self.on_switch_views, "<Shift>S")
+        # self.setup_action("clips-view", self.on_switch_views, "<Shift>C")
 
         # selected clip actions
-        self.setup_action("protect", self.on_clip_actions, "P")
-        self.setup_action("info", self.on_clip_actions, "I")
-        self.setup_action("view", self.on_clip_actions, "V")
-        self.setup_action("copy", self.on_clip_actions, "C")
-        self.setup_action("delete", self.on_clip_actions, "D")
+        # self.setup_action("protect", self.on_clip_actions, "<Alt>P")
+        self.setup_action("info", self.on_clip_actions, "<Alt>I")
+        self.setup_action("view", self.on_clip_actions, "<Alt>V")
+        self.setup_action("copy", self.on_clip_actions, "<Alt>C")
+        self.setup_action("delete", self.on_clip_actions, "<Alt>D")
         self.setup_action("force_delete", self.on_clip_actions, "<Shift>D")
 
         # #applicationwindow theme
@@ -183,11 +183,14 @@ class Clips(Gtk.Application):
             flowboxchild.on_clip_action(action=action.props.name)
 
     def on_switch_views(self, action, param):
+        
         if self.main_window is not None:
             if action.props.name == "settings-view":
-                self.main_window.stack.set_visible_child_name("settings-view")
+                print("settings-view")
+                # self.main_window.stack.set_visible_child_name("settings-view")
             if action.props.name == "clips-view":
-                self.main_window.stack.set_visible_child_name("clips-view")
+                print("clips-view")
+                # self.main_window.stack.set_visible_child_name("clips-view")
 
     def on_hide_action(self, action, param):
         if self.main_window is not None:
