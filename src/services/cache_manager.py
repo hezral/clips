@@ -287,42 +287,53 @@ class CacheManager():
             clips_view = self.main_window.clips_view
 
             print(datetime.now(), "start populating clip content")
-            
+        
             # check duplicates using checksum
             if len(self.check_duplicate(checksum)) == 0:
                 self.add_record(record) # add to database
                 new_record = self.select_record(self.db_cursor.lastrowid)[0] # prepare record for gui
                 clips_view.new_clip(new_record) # add to gui
+
             else:
-                # update db with new timestamp and get the timestamp
-                created_updated = self.update_record(checksum)
-                
-                # get the id for the clip that was updated
-                clip = self.check_duplicate(checksum)[0]
+                self.update_cache_on_recopy(checksum)
 
-                id = clip[0]
-                target = clip[1]
-                created = clip[2]
-                source = clip[3]
-                source_app = clip[4]
-                source_icon = clip[5]
-                cache_file = clip[6]
-                type = clip[7]
-                protected = clip[8]
-                created_short = created_updated.strftime('%a, %b %d %Y, %H:%M:%S')
+    def update_cache_on_recopy(self, cache_file=None, checksum=None):
 
-                # get the flowboxchild
-                flowboxchild_updated = [child for child in clips_view.flowbox.get_children() if child.get_children()[0].id == id][0]
+        clips_view = self.main_window.clips_view
 
-                # update the timestamp
-                flowboxchild_updated.get_children()[0].created = created_updated
-                flowboxchild_updated.get_children()[0].created_short = created_updated.strftime('%a, %b %d %Y, %H:%M:%S')
-                flowboxchild_updated.get_children()[0].props.tooltip_text = "id: {id}\ntype: {type}\nsource: {source_app}\ncreated: {created}".format(
-                                                                                                                                                    id=id, 
-                                                                                                                                                    type=type,
-                                                                                                                                                    source=source, 
-                                                                                                                                                    source_app=source_app, 
-                                                                                                                                                    created=created_short)
-                #flowboxchild_updated.get_children()[0].on_clip_action(action="updated")
-                
-                clips_view.flowbox.invalidate_sort()
+        if checksum is None:
+            checksum = os.path.splitext(cache_file)[0].split("/")[-1]
+
+        # update db with new timestamp and get the timestamp
+        created_updated = self.update_record(checksum)
+        
+        # get the id for the clip that was updated
+        clip = self.check_duplicate(checksum)[0]
+
+        id = clip[0]
+        target = clip[1]
+        created = clip[2]
+        source = clip[3]
+        source_app = clip[4]
+        source_icon = clip[5]
+        cache_file = clip[6]
+        type = clip[7]
+        protected = clip[8]
+        created_short = created_updated.strftime('%a, %b %d %Y, %H:%M:%S')
+
+        
+        # get the flowboxchild
+        flowboxchild_updated = [child for child in clips_view.flowbox.get_children() if child.get_children()[0].id == id][0]
+
+        # update the timestamp
+        flowboxchild_updated.get_children()[0].created = created_updated
+        flowboxchild_updated.get_children()[0].created_short = created_updated.strftime('%a, %b %d %Y, %H:%M:%S')
+        flowboxchild_updated.get_children()[0].props.tooltip_text = "id: {id}\ntype: {type}\nsource: {source_app}\ncreated: {created}".format(
+                                                                                                                                            id=id, 
+                                                                                                                                            type=type,
+                                                                                                                                            source=source, 
+                                                                                                                                            source_app=source_app, 
+                                                                                                                                            created=created_short)
+        #flowboxchild_updated.get_children()[0].on_clip_action(action="updated")
+        
+        clips_view.flowbox.invalidate_sort()

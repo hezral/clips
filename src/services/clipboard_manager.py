@@ -48,7 +48,7 @@ class ClipboardManager():
         # print("selection owner:", event.owner)
         # print("reason:", event.reason.value_name)
         # print("event type:", event.type.value_name)
-        
+
         if event.reason is Gdk.OwnerChange.NEW_OWNER and event.owner is not None:
             event_id = 0
 

@@ -410,7 +410,8 @@ class ClipsContainer(Gtk.EventBox):
         main_window = self.get_toplevel()
         app = main_window.props.application
         utils = app.utils
-        clipboard_manager = app.clipboard_manager
+        # clipboard_manager = app.clipboard_manager
+        # cache_manager = app.cache_manager
         flowboxchild = self.get_parent()
         flowbox = flowboxchild.get_parent()
         clip_container_overlay = utils.GetWidgetByName(widget=flowboxchild, child_name="clip-container-overlay", level=0)
@@ -427,15 +428,13 @@ class ClipsContainer(Gtk.EventBox):
         for child in action_notify_box.get_children():
             child.destroy()
 
-
         icon = Gtk.Image().new_from_icon_name(iconname, Gtk.IconSize.SMALL_TOOLBAR)
         label = Gtk.Label(tooltiptext)
 
         action_notify_box.attach(icon, 0, 0, 1, 1)
         action_notify_box.attach(label, 1, 0, 1, 1)
         action_notify_box.show_all()
-
-        
+ 
         if action == "protect":
             clip_action_notify.set_reveal_child(True)
             pass
@@ -452,7 +451,21 @@ class ClipsContainer(Gtk.EventBox):
 
         elif action == "copy":
             clip_action_notify.set_reveal_child(True)
-            clipboard_manager.copy_to_clipboard(self.target, self.cache_file)
+
+            # print("copy-to-clipboard", self.target, self.cache_file)
+            # data = (self.id,
+            #         self.target,
+            #         self.created,
+            #         self.source,
+            #         self.source_app,
+            #         self.source_icon,
+            #         self.cache_file,
+            #         self.type,
+            #         self.protected, )
+
+            app.clipboard_manager.copy_to_clipboard(self.target, self.cache_file)
+
+            app.cache_manager.update_cache_on_recopy(self.cache_file)
 
         elif action == "force_delete":
             flowboxchild.destroy()
