@@ -296,6 +296,9 @@ class ClipsWindow(Gtk.ApplicationWindow):
         self.searchentry.props.primary_icon_name = "system-search-symbolic"
 
     def on_view_visible(self, view, gparam=None):
+
+        print(locals())
+
         if view.is_visible():
             self.current_view = "settings-view"
             print("on:settings")
