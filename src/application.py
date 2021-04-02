@@ -21,6 +21,7 @@ from gi.repository import Gtk, Gio, GLib, Gdk
 from main_window import ClipsWindow
 from services.clipboard_manager import ClipboardManager
 from services.cache_manager import CacheManager
+from services.custom_shortcut_settings import CustomShortcutSettings
 import utils
 
 import platform
@@ -28,8 +29,6 @@ from datetime import datetime
 
 import sys, os
 import threading, time
-
-
 
 class Clips(Gtk.Application):
 
@@ -83,14 +82,7 @@ class Clips(Gtk.Application):
         settings.set_property("gtk-application-prefer-dark-theme", False)
 
         # set CSS provider
-        provider = Gtk.CssProvider()
-        #print(platform.linux_distribution()[2])
-        #if platform.linux_distribution()[2] == "hera":
-        #    provider.load_from_path(os.path.join(os.path.dirname(__file__), "..", "data", "application.css"))
-
-        #if platform.linux_distribution()[2] == "odin":
-        #    provider.load_from_path(os.path.join(os.path.dirname(__file__), "..", "data", "application.css"))
-        
+        provider = Gtk.CssProvider()        
         provider.load_from_path(os.path.join(os.path.dirname(__file__), "..", "data", "application.css"))
         Gtk.StyleContext.add_provider_for_screen(Gdk.Screen.get_default(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
 
@@ -113,12 +105,6 @@ class Clips(Gtk.Application):
         # link to cache_manager
         self.cache_manager.main_window = self.main_window
 
-        # clips_view = self.main_window.utils.GetWidgetByName(widget=self.main_window, child_name="clips-view", level=0)
-        # clips_view = self.main_window.clips_view
-        # self.main_window.clips_view.cache_manager = self.cache_manager
-        # self.main_window.clips_view.clipboard_manager = self.clipboard_manager
-        # self.main_window.clips_view.icon_theme = self.icon_theme
-
         if self.running is False:
             print(datetime.now(), "start load_clips")
             clips = self.cache_manager.load_clips()
@@ -131,7 +117,6 @@ class Clips(Gtk.Application):
 
             self.running = True
 
-    # def load_clips_fromdb(self, focus, clip_pos_start, clip_pos_end, clips, clips_view, cache_filedir):
     @utils.RunAsync
     def load_clips_fromdb(self, clips, clips_view):
         app_startup = True
