@@ -300,7 +300,7 @@ class ClipsContainer(Gtk.EventBox):
         return clip_action_notify_revealer
 
     def generate_clip_action(self):
-        protect_action = self.generate_action_button("com.github.hezral.clips-protect-symbolic", "Protect Content", "protect")
+        # protect_action = self.generate_action_button("com.github.hezral.clips-protect-symbolic", "Protect Content", "protect")
         info_action = self.generate_action_button("com.github.hezral.clips-info-symbolic", "Show Info", "info")
         view_action = self.generate_action_button("com.github.hezral.clips-view-symbolic", "View", "view")
         copy_action = self.generate_action_button("edit-copy-symbolic", "Copy to Clipboard", "copy")
@@ -320,7 +320,7 @@ class ClipsContainer(Gtk.EventBox):
             # protect_action.get_style_context().add_class("clip-action-disabled")
             view_action.get_style_context().add_class("clip-action-disabled")
                
-        clip_action.attach(protect_action, 0, 0, 1, 1)
+        # clip_action.attach(protect_action, 0, 0, 1, 1)
         clip_action.attach(info_action, 1, 0, 1, 1)
         clip_action.attach(view_action, 2, 0, 1, 1)
         clip_action.attach(copy_action, 3, 0, 1, 1)
@@ -451,20 +451,7 @@ class ClipsContainer(Gtk.EventBox):
 
         elif action == "copy":
             clip_action_notify.set_reveal_child(True)
-
-            # print("copy-to-clipboard", self.target, self.cache_file)
-            # data = (self.id,
-            #         self.target,
-            #         self.created,
-            #         self.source,
-            #         self.source_app,
-            #         self.source_icon,
-            #         self.cache_file,
-            #         self.type,
-            #         self.protected, )
-
             app.clipboard_manager.copy_to_clipboard(self.target, self.cache_file)
-
             app.cache_manager.update_cache_on_recopy(self.cache_file)
 
         elif action == "force_delete":
