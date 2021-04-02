@@ -169,18 +169,17 @@ class SettingsView(Gtk.Grid):
         name = switch.get_name()
 
         window = self.get_toplevel()
-        if window is not None:
-            headerbar = [child for child in window.get_children() if isinstance(child, Gtk.HeaderBar)][0]
+        
 
         if self.is_visible():
 
             if name == "persistent-mode":
                 if switch.get_active():
-                    #print('state-flags-on')
-                    window.disconnect_by_func(window.on_persistent_mode)
+                    print('state-flags-on')
+                    # window.disconnect_by_func(window.on_persistent_mode)
                 else:
-                    window.connect("state-flags-changed", window.on_persistent_mode)
-                    #print('state-flags-off')
+                    # window.connect("state-flags-changed", window.on_persistent_mode)
+                    print('state-flags-off')
 
             if name == "sticky-mode":
                 if switch.get_active():
@@ -189,12 +188,15 @@ class SettingsView(Gtk.Grid):
                     window.unstick()
 
             if name == "show-close-button":
-                if switch.get_active():
-                    headerbar.set_show_close_button(True)
-                else:
-                    headerbar.set_show_close_button(False)
-                    headerbar.hide()
-                    headerbar.show_all()
+                if window is not None:
+                    headerbar = [child for child in window.get_children() if isinstance(child, Gtk.HeaderBar)][0]
+
+                    if switch.get_active():
+                        headerbar.set_show_close_button(True)
+                    else:
+                        headerbar.set_show_close_button(False)
+                        headerbar.hide()
+                        headerbar.show_all()
 
             if name == "auto-housekeeping":
                 print("auto-housekeeping")
