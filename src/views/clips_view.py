@@ -146,28 +146,13 @@ class ClipsContainer(Gtk.EventBox):
             print(self.cache_file, self.type)
             self.content = FallbackContainer(self.cache_file, self.type, utils)
 
-
         # print(self.cache_file, self.type)
-
-        #------ clip_info ----#
         clip_info_revealer = self.generate_clip_info()
-
-        #------ clip_action_notify ----#
         clip_action_notify_revealer = self.generate_clip_action_notify()
-        
-        #------ clip_action ----#
         clip_action_revealer = self.generate_clip_action()
-
         clip_select_revealer = self.generate_clip_select()
 
         #------ construct ----#
-        # self.container_grid = Gtk.Grid()
-        # self.container_grid.props.name = "clip-container-grid"
-        # self.container_grid.attach(clip_info_revealer, 0, 0, 1, 1)
-        # self.container_grid.attach(clip_action_revealer, 0, 0, 1, 1)
-        # self.container_grid.attach(clip_action_notify, 0, 0, 1, 1)
-        # self.container_grid.attach(self.content, 0, 0, 1, 1)
-
         self.container_overlay = Gtk.Overlay()
         self.container_overlay.props.name = "clip-container-overlay"
         self.container_overlay.add(self.content)
