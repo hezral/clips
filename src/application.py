@@ -68,6 +68,8 @@ class Clips(Gtk.Application):
         self.setup_action("hide", self.on_hide_action, "Escape")
         self.setup_action("quit", self.on_quit_action, "<Ctrl>Q")
         self.setup_action("search", self.on_search_action, "<Ctrl>F")
+        self.setup_action("settings-view", self.on_switch_views, "<Shift>Right")
+        self.setup_action("clips-view", self.on_switch_views, "<Shift>Left")
 
         # selected clip actions
         self.setup_action("protect", self.on_clip_actions, "P")
@@ -179,6 +181,13 @@ class Clips(Gtk.Application):
         if len(self.main_window.clips_view.flowbox.get_selected_children()) != 0:
             flowboxchild = self.main_window.clips_view.flowbox.get_selected_children()[0].get_children()[0]
             flowboxchild.on_clip_action(action=action.props.name)
+
+    def on_switch_views(self, action, param):
+        if self.main_window is not None:
+            if action.props.name == "settings-view":
+                self.main_window.stack.set_visible_child_name("settings-view")
+            if action.props.name == "clips-view":
+                self.main_window.stack.set_visible_child_name("clips-view")
 
     def on_hide_action(self, action, param):
         if self.main_window is not None:
