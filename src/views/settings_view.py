@@ -98,15 +98,15 @@ class SettingsView(Gtk.Grid):
         excluded = SettingsGroup("Excluded Apps", (excluded_apps, excluded_apps_list, ))
 
         # protected app
-        protected_apps_list_values = self.gio_settings.get_value("excluded-apps").get_strv()
-        protected_apps_list = SubSettings(type="listbox", name="excluded-apps", label=None, sublabel=None, separator=False, params=(protected_apps_list_values, ))
+        # protected_apps_list_values = self.gio_settings.get_value("excluded-apps").get_strv()
+        # protected_apps_list = SubSettings(type="listbox", name="excluded-apps", label=None, sublabel=None, separator=False, params=(protected_apps_list_values, ))
 
-        protected_appchooser_popover = AppChooserPopover(params=(protected_apps_list, ))
-        protected_apps = SubSettings(type="button", name="protected-apps", label="Protected apps", sublabel="Contents copied will be protected", separator=False, params=("Select app", ))
-        protected_apps.button.connect("clicked", self.on_button_clicked, (protected_appchooser_popover, ))
-        protected_apps.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
+        # protected_appchooser_popover = AppChooserPopover(params=(protected_apps_list, ))
+        # protected_apps = SubSettings(type="button", name="protected-apps", label="Protected apps", sublabel="Contents copied will be protected", separator=False, params=("Select app", ))
+        # protected_apps.button.connect("clicked", self.on_button_clicked, (protected_appchooser_popover, ))
+        # protected_apps.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
 
-        protected = SettingsGroup("Protected Apps", (protected_apps, protected_apps_list, ))
+        # protected = SettingsGroup("Protected Apps", (protected_apps, protected_apps_list, ))
 
         # flowbox
         self.flowbox = Gtk.FlowBox()
@@ -114,7 +114,7 @@ class SettingsView(Gtk.Grid):
         self.flowbox.add(display_behaviour_settings)
         self.flowbox.add(app_settings)
         self.flowbox.add(excluded)
-        self.flowbox.add(protected)
+        # self.flowbox.add(protected)
         self.flowbox.props.homogeneous = False
         self.flowbox.props.row_spacing = 20
         self.flowbox.props.column_spacing = 20
@@ -439,16 +439,16 @@ class AppChooserPopover(Gtk.Popover):
         scrolled_window.set_size_request(-1, 300)
         scrolled_window.props.expand = True
         scrolled_window.add(self.app_listbox)
-        scrolled_window.connect("edge-overshot", self.on_edget_overshot)
+        # scrolled_window.connect("edge-overshot", self.on_edget_overshot)
 
-        search_entry = Gtk.SearchEntry()
-        search_entry.props.placeholder_text = "Search..."
-        search_entry.props.margin = 6
-        search_entry.props.hexpand = True
-        search_entry.connect("search-changed", self.on_search_entry_changed)
+        self.search_entry = Gtk.SearchEntry()
+        self.search_entry.props.placeholder_text = "Search..."
+        self.search_entry.props.margin = 6
+        self.search_entry.props.hexpand = True
+        self.search_entry.connect("search-changed", self.on_search_entry_changed)
 
         grid = Gtk.Grid()
-        grid.attach(search_entry, 0, 0, 1, 1)
+        grid.attach(self.search_entry, 0, 0, 1, 1)
         grid.attach(Gtk.Separator(), 0, 1, 1, 1)
         grid.attach(scrolled_window, 0, 2, 1, 1)
         grid.attach(Gtk.Separator(), 0, 3, 1, 1)
@@ -457,7 +457,6 @@ class AppChooserPopover(Gtk.Popover):
         self.props.name = "app-chooser"
         self.set_size_request(260, -1)
         self.add(grid)
-
 
     def on_row_selected(self, *args):
         self.choose_button.props.sensitive = True
@@ -483,13 +482,9 @@ class AppChooserPopover(Gtk.Popover):
         #     }
         # }
 
-    def on_search_entry_changed(self, *args):
-        print("on-search-entry-changed", locals())
-
-        # private void on_search_entry_changed () {
-        #     app_list_box.invalidate_filter ()
-        #     app_list_box.search (search_entry.text)
-        # }
+    def on_search_entry_changed(self, search_entry):
+        self.app_listbox.invalidate_filter()
+        self.app_listbox.app_listbox_filter_func(search_entry)
 
 # ----------------------------------------------------------------------------------------------------
 
@@ -562,8 +557,15 @@ class AppListBox(Gtk.ListBox):
     def sort_func(self, row_1, row_2, data, notify_destroy):
         return row_1.app.name.lower() > row_2.app.name.lower()
     
-    def filter_func(self, search_entry):
-        pass
+    def app_listbox_filter_func(self, search_entry):
+        def filter_func(row, text):
+            if text in row.app_name:
+                return True
+            else:
+                return False
+
+        text = search_entry.get_text()
+        self.set_filter_func(filter_func, text)
 
     def get_selected_app(self, *args):
         row = self.get_selected_row()
@@ -590,6 +592,8 @@ class AppListBox(Gtk.ListBox):
         current_index = index
         self.show_all()
 
+
+
     def search(self, query):
         if self.search_cancellable is None:
             self.search_cancellable.cancel()
@@ -602,8 +606,7 @@ class AppListBox(Gtk.ListBox):
     def search_internal(self, query):
         pass
 
-
-#     public void search (string query) {
+    #     public void search (string query) {
 #         if (search_cancellable != null) {
 #             search_cancellable.cancel ();
 #         }
@@ -613,6 +616,8 @@ class AppListBox(Gtk.ListBox):
 #         search_query = query;
 #         search_internal.begin (search_query);
 #     }
+
+
 
 #     private async void search_internal (string query) {
 #         new Thread<void*> ("search-internal", () => {
