@@ -160,7 +160,18 @@ class CacheManager():
         #confirm deleted
         self.select_record(id)
         self.delete_cache_file(cache_file, clip_type)
-
+    
+    def delete_all_record(self):
+        sqlite_with_param = '''
+            DELETE FROM 'ClipsDB'
+            '''
+        self.db_cursor.execute(sqlite_with_param)
+        self.db_connection.commit()
+        self.delete_all_cache_file()
+        
+        for flowboxchild in self.app.main_window.clips_view.flowbox.get_children():
+            flowboxchild.destroy()
+        
     def select_record(self, id):
         data_param = (str(id),) #pass in a sequence ie list
         sqlite_with_param = '''
@@ -172,17 +183,6 @@ class CacheManager():
         records = self.db_cursor.fetchall()
         # for row in records:
         #     print("db:", type(row), row)
-        return records
-
-    def check_duplicate(self, checksum):
-        data_param = (checksum + "%",) #pass in a sequence ie list
-        sqlite_with_param = '''
-            SELECT * FROM 'ClipsDB'
-            WHERE
-            cache_file LIKE ?;
-            '''
-        self.db_cursor.execute(sqlite_with_param, data_param)
-        records = self.db_cursor.fetchall()
         return records
 
     def search_record(self, data_tuple):
@@ -207,10 +207,30 @@ class CacheManager():
             return True
         except OSError:
             return OSError
-        
+
+    def delete_all_cache_file(self):
+        for directory in (self.cache_filedir, self.icon_cache_filedir):
+            for filename in os.listdir(directory):
+                file_path = os.path.join(directory, filename)
+                try:
+                    os.remove(file_path)
+                except Exception as e:
+                    print('Failed to delete %s. Reason: %s' % (file_path, e))
+
     def get_checksum(self, data):
         checksum = hashlib.md5(data).hexdigest()
         return checksum
+
+    def check_duplicate(self, checksum):
+        data_param = (checksum + "%",) #pass in a sequence ie list
+        sqlite_with_param = '''
+            SELECT * FROM 'ClipsDB'
+            WHERE
+            cache_file LIKE ?;
+            '''
+        self.db_cursor.execute(sqlite_with_param, data_param)
+        records = self.db_cursor.fetchall()
+        return records
 
     def update_cache(self, clipboard, event, clipboard_manager):
 
@@ -334,6 +354,5 @@ class CacheManager():
                                                                                                                                             source=source, 
                                                                                                                                             source_app=source_app, 
                                                                                                                                             created=created_short)
-        #flowboxchild_updated.get_children()[0].on_clip_action(action="updated")
         
         clips_view.flowbox.invalidate_sort()

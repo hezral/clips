@@ -123,7 +123,6 @@ class SettingsView(Gtk.Grid):
         for child in self.flowbox.get_children():
             child.props.can_focus = False
 
-        # scrolled_window
         scrolled_window = Gtk.ScrolledWindow()
         scrolled_window.props.expand = True
         scrolled_window.props.hscrollbar_policy = Gtk.PolicyType.NEVER
@@ -144,7 +143,29 @@ class SettingsView(Gtk.Grid):
             app_chooser_popover.show_all()
             app_chooser_popover.popup()
 
-        print("clicked")
+        if name == "delete-all":
+            window = self.get_toplevel()
+            dialog = Gtk.Dialog.new()
+            dialog.props.title="Confirm Delete All"
+            dialog.props.transient_for = window
+            btn_ok = Gtk.Button(label="Delete all", image=Gtk.Image().new_from_icon_name("dialog-warning", Gtk.IconSize.MENU))
+            btn_ok.props.always_show_image = True
+            btn_ok.get_style_context().add_class("destructive-action")
+            btn_cancel = Gtk.Button(label="Cancel")
+            dialog.add_action_widget(btn_ok, Gtk.ResponseType.OK)
+            dialog.add_action_widget(btn_cancel, Gtk.ResponseType.CANCEL)
+            dialog.set_default_size(150, 100)
+            label = Gtk.Label(label="Attention! This action will delete all clips from the cache and no recovery")
+            box = dialog.get_content_area()
+            box.props.margin = 10
+            box.add(label)
+            dialog.show_all()
+            btn_cancel.grab_focus()
+            response = dialog.run()
+            if response == Gtk.ResponseType.OK:
+                window.props.application.cache_manager.delete_all_record()
+            dialog.destroy()
+
 
     def on_spinbutton_activated(self, spinbutton):
         
