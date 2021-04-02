@@ -66,12 +66,33 @@ class ClipsWindow(Gtk.ApplicationWindow):
 
         self.set_main_window_size()
 
+        self.set_display_settings()
+
         self.add(self.main_view)
         self.show_all()
 
+
+    def set_display_settings(self):
         # this is for tracking window state flags for persistent mode
         self.state_flags_changed_count = 0
         self.active_state_flags = ['GTK_STATE_FLAG_NORMAL', 'GTK_STATE_FLAG_DIR_LTR']
+        # read settings
+        if not self.gio_settings.get_value("persistent-mode"):
+            self.state_flags_on = self.connect("state-flags-changed", self.on_persistent_mode)
+            # print('state-flags-on')
+        if self.gio_settings.get_value("sticky-mode"):
+            self.stick()
+
+    def on_persistent_mode(self, widget, event):
+        # state flags for window active state
+        self.state_flags = self.get_state_flags().value_names
+        # print(self.state_flags)
+        if not self.state_flags == self.active_state_flags and self.state_flags_changed_count > 1:
+            self.hide()
+            self.state_flags_changed_count = 0
+        else:
+            self.state_flags_changed_count += 1
+            # print('state-flags-changed', self.state_flags_changed_count)
 
     def set_main_window_size(self, column_number=None):
         if column_number is None:
@@ -321,16 +342,6 @@ class ClipsWindow(Gtk.ApplicationWindow):
             self.main_view.get_style_context().remove_class("main_view-settings")
 
         self.stack.set_visible_child_name(self.current_view)
-
-    def on_persistent_mode(self, widget, event):
-        # state flags for window active state
-        self.state_flags = self.get_state_flags().value_names
-        print(self.state_flags)
-        if not self.state_flags == self.active_state_flags and self.state_flags_changed_count > 1:
-            self.destroy()
-        else:
-            self.state_flags_changed_count += 1
-            print('state-flags-changed', self.state_flags_changed_count)
 
     def on_clips_action(self, button, action):
         if action == "enable":

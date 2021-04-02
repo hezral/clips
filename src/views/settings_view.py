@@ -79,8 +79,6 @@ class SettingsView(Gtk.Grid):
         delete_all.button.connect("clicked", self.on_button_clicked)
         delete_all.button.get_style_context().add_class("destructive-action")
 
-        # danger_zone = SettingsGroup("Danger Zone", (delete_all, ))
-
         app_settings = SettingsGroup("Housekeeping", (autopurge_mode, auto_retention_period, delete_all))
 
         # exceptions -------------------------------------------------
@@ -193,11 +191,11 @@ class SettingsView(Gtk.Grid):
 
             if name == "persistent-mode":
                 if switch.get_active():
-                    print('state-flags-on')
-                    # window.disconnect_by_func(window.on_persistent_mode)
+                    # print('state-flags-on')
+                    window.disconnect_by_func(window.on_persistent_mode)
                 else:
-                    # window.connect("state-flags-changed", window.on_persistent_mode)
-                    print('state-flags-off')
+                    window.connect("state-flags-changed", window.on_persistent_mode)
+                    # print('state-flags-off')
 
             if name == "sticky-mode":
                 if switch.get_active():
