@@ -83,23 +83,24 @@ class ClipboardManager():
             self.proceed = True
 
         # exclude apps
-        if self.get_active_app()[0] not in self.get_settings("excluded-apps") or self.get_active_app()[0] == "Clips":
-            if self.proceed:
-                created = datetime.now()
-                clipboard_contents = self.get_clipboard_contents(clipboard, event)
-                if clipboard_contents is not None:
-                    target, content, thumbnail, file_extension, additional_desc, content_type = clipboard_contents
-                    source_app, source_icon = self.get_active_app()
-                    if source_app not in self.get_settings("protected-apps"):
-                        protected = "no"
-                    else:
-                        protected = "yes"
+        if self.get_active_app()[0] != "Clips":
+            if self.get_active_app()[0] not in self.get_settings("excluded-apps"):
+                if self.proceed:
+                    created = datetime.now()
+                    clipboard_contents = self.get_clipboard_contents(clipboard, event)
+                    if clipboard_contents is not None:
+                        target, content, thumbnail, file_extension, additional_desc, content_type = clipboard_contents
+                        source_app, source_icon = self.get_active_app()
+                        if source_app not in self.get_settings("protected-apps"):
+                            protected = "no"
+                        else:
+                            protected = "yes"
 
-                    print("clipboard event captured:", self.events, self.get_active_app()[0])
-                    return target, content, source_app, source_icon, created, protected, thumbnail, file_extension, content_type
-            else:
-                print("clipboard event ignored:", self.events, event_id, self.get_active_app()[0])
-                pass
+                        print("clipboard event captured:", self.events, self.get_active_app()[0])
+                        return target, content, source_app, source_icon, created, protected, thumbnail, file_extension, content_type
+                else:
+                    print("clipboard event ignored:", self.events, event_id, self.get_active_app()[0])
+                    pass
 
 
     def get_clipboard_contents(self, clipboard, event):
@@ -154,16 +155,6 @@ class ClipboardManager():
                                 thumbnail = None
 
                             content = clipboard.wait_for_contents(target)
-                            # if content is not None:
-                            #     ext = str(target).split("/")
-                            #     if len(ext) == 1:
-                            #         ext = ext[0]
-                            #     else:
-                            #         ext = ext[1]
-                            #     data = content.get_data()
-                            #     file = open("{filename}.{ext}".format(filename="file", ext=ext),"wb")
-                            #     file.write(data)
-                            #     file.close()
 
                             clip_saved = True
 
@@ -191,6 +182,12 @@ class ClipboardManager():
 
         return source_app, source_icon
 
-    def copy_to_clipboard(self, clipboard_target, file):
-        import subprocess
-        subprocess.Popen(['xclip', '-selection', 'clipboard', '-target', clipboard_target, '-i', file])
+    def copy_to_clipboard(self, clipboard_target, file, type=None):
+        from subprocess import Popen, PIPE
+
+        if "url" in type:
+            with open(file) as _file:
+                data = Popen(['echo', _file.readlines()[0].rstrip("\n").rstrip("\n")], stdout=PIPE)
+                Popen(['xclip', '-selection', 'clipboard', '-target', clipboard_target], stdin=data.stdout)
+        else:
+            Popen(['xclip', '-selection', 'clipboard', '-target', clipboard_target, '-i', file])
