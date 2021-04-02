@@ -567,16 +567,6 @@ class AppListBox(Gtk.ListBox):
         text = search_entry.get_text()
         self.set_filter_func(filter_func, text)
 
-    def get_selected_app(self, *args):
-        row = self.get_selected_row()
-        if row is None:
-            pass
-        else:
-            return row
-
-    def add_app(self, app):
-        pass
-
     def load_next(self):
         index = self.current_index + self.LOADING_COUNT
         bound = max(0, min(index, len(self.max_index)-1))
@@ -591,81 +581,3 @@ class AppListBox(Gtk.ListBox):
 
         current_index = index
         self.show_all()
-
-
-
-    def search(self, query):
-        if self.search_cancellable is None:
-            self.search_cancellable.cancel()
-        
-        self.search_cancellable = Gio.Cancellable.new()
-
-        self.search_internal.begin(query)
-            
-
-    def search_internal(self, query):
-        pass
-
-    #     public void search (string query) {
-#         if (search_cancellable != null) {
-#             search_cancellable.cancel ();
-#         }
-
-#         search_cancellable = new Cancellable ();
-
-#         search_query = query;
-#         search_internal.begin (search_query);
-#     }
-
-
-
-#     private async void search_internal (string query) {
-#         new Thread<void*> ("search-internal", () => {
-#             Workspaces.Models.AppInfo[] matched = search_apps (query);
-#             if (search_cancellable.is_cancelled ()) {
-#                 return null;
-#             }
-
-#             Idle.add (() => {
-#                 foreach (Workspaces.Models.AppInfo app in matched) {
-#                     add_app (app);
-#                 }
-
-#                 show_all ();
-#                 invalidate_filter ();
-#                 return false;
-#             });
-
-#             return null;
-#         });
-#     }
-
-#     private Workspaces.Models.AppInfo[] search_apps (string query) {
-#         Workspaces.Models.AppInfo[] matched = { };
-#         for (int i = 0; i < apps.size; i++) {
-#             Workspaces.Models.AppInfo app = apps[i];
-#             if (!added.contains (app) && query_matches_name (query, app.name)) {
-#                 matched += app;
-#             }
-#         }
-
-#         return matched;
-#     }
-
-
-#     private bool filter_func (Gtk.ListBoxRow row) {
-#         if (search_query.strip () == "") {
-#             return true;
-#         }
-#         var icon_row = row as Workspaces.Widgets.AppRow;
-
-#         if (icon_row == null) {
-#             return true;
-#         }
-#         return query_matches_name (search_query, icon_row.app_info.name);
-#     }
-
-#     private static bool query_matches_name (string query, string name) {
-#         return query.down () in name.down ();
-#     }
-# }
