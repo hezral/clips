@@ -53,7 +53,6 @@ class SettingsView(Gtk.Grid):
 
         # hide on startup
         hide_onstartup_mode = SubSettings(type="switch", name="hide-on-startup", label="Hide on startup", sublabel="Hides Clips app window on startup", separator=True)
-        hide_onstartup_mode.switch.connect_after("notify::active", self.on_switch_activated)
         self.gio_settings.bind("hide-on-startup", hide_onstartup_mode.switch, "active", Gio.SettingsBindFlags.DEFAULT)
 
         # min column number
@@ -67,12 +66,12 @@ class SettingsView(Gtk.Grid):
 
         # auto housekeeping
         autopurge_mode = SubSettings(type="switch", name="auto-housekeeping", label="Auto housekeeping clips", sublabel="Automatic housekeeping Clips after retention period", separator=True)
-        autopurge_mode.switch.connect_after("notify::active", self.on_switch_activated)
+        # autopurge_mode.switch.connect_after("notify::active", self.on_switch_activated)
         self.gio_settings.bind("auto-housekeeping", autopurge_mode.switch, "active", Gio.SettingsBindFlags.DEFAULT)
 
         # auto retention period
         auto_retention_period = SubSettings(type="spinbutton", name="auto-retention-period", label="Rentention period", sublabel="Days to retain clips before house keeping", separator=True, params=(0,365,5))
-        auto_retention_period.spinbutton.connect_after("value-changed", self.on_spinbutton_activated)
+        # auto_retention_period.spinbutton.connect_after("value-changed", self.on_spinbutton_activated)
         self.gio_settings.bind("auto-retention-period", auto_retention_period.spinbutton, "value", Gio.SettingsBindFlags.DEFAULT)
 
         # delete all
@@ -167,10 +166,8 @@ class SettingsView(Gtk.Grid):
 
     def on_switch_activated(self, switch, gparam):
         name = switch.get_name()
-
         window = self.get_toplevel()
         
-
         if self.is_visible():
 
             if name == "persistent-mode":
@@ -200,9 +197,6 @@ class SettingsView(Gtk.Grid):
 
             if name == "auto-housekeeping":
                 print("auto-housekeeping")
-
-            if name == "hide-on-startup":
-                print("hide-on-startup")
 
 # ----------------------------------------------------------------------------------------------------
 
