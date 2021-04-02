@@ -63,7 +63,7 @@ class SettingsView(Gtk.Grid):
 
         display_behaviour_settings = SettingsGroup("Display & Behaviour", (theme_switch, show_close_button, hide_onstartup_mode, persistent_mode, sticky_mode, min_column_number, ))
 
-        # app behaviour -------------------------------------------------
+        # housekeeping -------------------------------------------------
 
         # auto housekeeping
         autopurge_mode = SubSettings(type="switch", name="auto-housekeeping", label="Auto housekeeping clips", sublabel="Automatic housekeeping Clips after retention period", separator=True)
@@ -71,11 +71,18 @@ class SettingsView(Gtk.Grid):
         self.gio_settings.bind("auto-housekeeping", autopurge_mode.switch, "active", Gio.SettingsBindFlags.DEFAULT)
 
         # auto retention period
-        auto_retention_period = SubSettings(type="spinbutton", name="auto-retention-period", label="Rentention period", sublabel="Days to retain clips before house keeping", separator=False, params=(0,365,5))
+        auto_retention_period = SubSettings(type="spinbutton", name="auto-retention-period", label="Rentention period", sublabel="Days to retain clips before house keeping", separator=True, params=(0,365,5))
         auto_retention_period.spinbutton.connect_after("value-changed", self.on_spinbutton_activated)
         self.gio_settings.bind("auto-retention-period", auto_retention_period.spinbutton, "value", Gio.SettingsBindFlags.DEFAULT)
 
-        app_settings = SettingsGroup("Configuration", (autopurge_mode, auto_retention_period, ))
+        # delete all
+        delete_all = SubSettings(type="button", name="delete-all", label="Delete all clips from cache", sublabel=None, separator=False, params=("Delete all", Gtk.Image().new_from_icon_name("dialog-warning", Gtk.IconSize.MENU),))
+        delete_all.button.connect("clicked", self.on_button_clicked)
+        delete_all.button.get_style_context().add_class("destructive-action")
+
+        # danger_zone = SettingsGroup("Danger Zone", (delete_all, ))
+
+        app_settings = SettingsGroup("Housekeeping", (autopurge_mode, auto_retention_period, delete_all))
 
         # exceptions -------------------------------------------------
 
@@ -88,24 +95,26 @@ class SettingsView(Gtk.Grid):
         excluded_apps.button.connect("clicked", self.on_button_clicked, (excluded_appchooser_popover, ))
         excluded_apps.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
 
-        exceptions = SettingsGroup("Exceptions", (excluded_apps, excluded_apps_list, ))
+        excluded = SettingsGroup("Excluded Apps", (excluded_apps, excluded_apps_list, ))
 
-        # danger zone -------------------------------------------------
-        
-        # delete all
-        delete_all = SubSettings(type="button", name="delete-all", label="Delete all clips from cache", sublabel=None, separator=False, params=("Delete all", Gtk.Image().new_from_icon_name("dialog-warning", Gtk.IconSize.MENU),))
-        delete_all.button.connect("clicked", self.on_button_clicked)
-        delete_all.button.get_style_context().add_class("destructive-action")
+        # protected app
+        protected_apps_list_values = self.gio_settings.get_value("excluded-apps").get_strv()
+        protected_apps_list = SubSettings(type="listbox", name="excluded-apps", label=None, sublabel=None, separator=False, params=(protected_apps_list_values, ))
 
-        danger_zone = SettingsGroup("Danger Zone", (delete_all, ))
+        protected_appchooser_popover = AppChooserPopover(params=(protected_apps_list, ))
+        protected_apps = SubSettings(type="button", name="protected-apps", label="Protected apps", sublabel="Contents copied will be protected", separator=False, params=("Select app", ))
+        protected_apps.button.connect("clicked", self.on_button_clicked, (protected_appchooser_popover, ))
+        protected_apps.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
+
+        protected = SettingsGroup("Protected Apps", (protected_apps, protected_apps_list, ))
 
         # flowbox
         self.flowbox = Gtk.FlowBox()
         self.flowbox.props.name = "settings-flowbox"
         self.flowbox.add(display_behaviour_settings)
         self.flowbox.add(app_settings)
-        self.flowbox.add(exceptions)
-        self.flowbox.add(danger_zone)
+        self.flowbox.add(excluded)
+        self.flowbox.add(protected)
         self.flowbox.props.homogeneous = False
         self.flowbox.props.row_spacing = 20
         self.flowbox.props.column_spacing = 20
