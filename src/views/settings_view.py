@@ -351,7 +351,6 @@ class SubSettings(Gtk.Grid):
 
         if add_new:
             settings_values, gio_settings = self.get_gio_settings_values(key_name)
-            print(settings_values, gio_settings)
             if app_name not in settings_values:
                 settings_values.append(app_name)
                 gio_settings.set_strv(key_name, settings_values)
@@ -547,8 +546,6 @@ class AppListBox(Gtk.ListBox):
         
         self.props.selection_mode = Gtk.SelectionMode.BROWSE
         self.props.activate_on_single_click = False
-        # self.set_sort_func(self.sort_func())
-        # self.set_filter_func(self.filter_func())
         # self.load_next_apps()
 
     def sort_apps(self, val):
