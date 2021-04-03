@@ -143,7 +143,7 @@ class ClipsWindow(Gtk.ApplicationWindow):
         # self.searchentry.connect_after("delete-text", self.on_delete_text, "delete")
         self.searchentry.connect("icon-press", self.on_quicksearch_activate)
         
-        self.searchentry.connect("search-changed", self.on_search_changed)
+        self.searchentry.connect("search-changed", self.on_search_entry_changed)
 
         quicksearchbar = Gtk.Grid()
         quicksearchbar.props.name = "search-quick"
@@ -316,8 +316,10 @@ class ClipsWindow(Gtk.ApplicationWindow):
         #     #searchbar.props.has_tooltip = True
         #     #searchbar.props.tooltip_text = "Try these quick search tags"
 
-    def on_search_changed(self, searchentry):
+    def on_search_entry_changed(self, search_entry):
         self.searchentry.props.primary_icon_name = "system-search-symbolic"
+        self.clips_view.flowbox.invalidate_filter()
+        self.clips_view.flowbox_filter_func(search_entry)
 
     def on_view_visible(self, view, gparam=None):
 
@@ -385,42 +387,6 @@ class ClipsWindow(Gtk.ApplicationWindow):
         elif event == "delete":
             total_clips = total_clips - count
         self.total_clips_label.props.label = "Clips: {total}".format(total=total_clips)
-        
-
-
-
-
-
-    def on_max(self, window, bool):
-        if window.is_maximized():
-            print("max")
-        else:
-            print("normal")
-            # rectangle1 = Gdk.Rectangle()
-            # setattr(rectangle1, 'height', 20)
-            # setattr(rectangle1, 'width', 20)
-            # self.clips_view.flowbox.size_allocate(rectangle1)
-            # rectangle2 = Gdk.Rectangle()
-            # setattr(rectangle2, 'height', 32)
-            # setattr(rectangle2, 'width', 37)
-            # self.size_allocate(rectangle2)
-            # print(self.clips_view.flowbox.get_allocation())
-            # self.clips_view.scrolled_window.set_size_request(1, 1)
-            # self.clips_view.flowbox.set_size_request(580, -1)
-            # self.clips_view.set_size_request(1, 1)
-            # self.resize(900, 600)
-            # self.resize(100,100)
-            # for size in self.get_preferred_size():
-            #     print(size.width, size.height)
-            # self.clips_view.flowbox.set_size_request(648, 500)
-            # self.clips_
-            self.resize(800, 450)
-
-    def on_maximized(self, window, eventwindowstate):
-        
-        if "GDK_WINDOW_STATE_MAXIMIZED" in eventwindowstate.changed_mask.value_names and len(eventwindowstate.changed_mask.value_names) == 1:
-            print(eventwindowstate.changed_mask.value_names)
-            self.resize(1, 1)
 
     def generate_searchbar(self):
         #------ self.searchentry ----#

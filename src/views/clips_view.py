@@ -54,8 +54,23 @@ class ClipsView(Gtk.Grid):
         self.props.expand = True
         self.attach(scrolled_window, 0, 0, 1, 1)
 
-    def filter_flowbox(self, *args):
-        print(locals())
+    def flowbox_filter_func(self, search_entry):
+        def filter_func(flowboxchild, text):
+            clips_container = flowboxchild.get_children()[0]
+
+            if text.lower() in str(clips_container.id):
+                return True
+            elif text.lower() in clips_container.type.lower():
+                return True
+            elif text.lower() in clips_container.source_app.lower():
+                return True
+            elif text.lower() in clips_container.created_short.lower():
+                return True
+            else:
+                return False
+
+        text = search_entry.get_text()
+        self.flowbox.set_filter_func(filter_func, text)
 
     def sort_flowbox(self, child1, child2):
         date1 = child1.get_children()[0].created
@@ -247,6 +262,8 @@ class ClipsContainer(Gtk.EventBox):
         self.timestamp.props.margin_bottom = 10
         self.timestamp.props.has_tooltip = True
         self.timestamp.props.tooltip_text = self.created_short
+
+        # print("clips_view.py:", type(self.created_short), self.created_short, type(self.created), self.created)
 
         self.info_text = "id: {id}\ntype: {type}\nsource app: {source}".format(id=self.id, type=self.type, source=self.source_app)
         
