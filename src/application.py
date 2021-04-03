@@ -65,7 +65,7 @@ class Clips(Gtk.Application):
         # app actions
         self.setup_action("hide", self.on_hide_action, "Escape")
         self.setup_action("quit", self.on_quit_action, "<Ctrl>Q")
-        self.setup_action("search", self.on_search_action, "<Ctrl>F")
+        self.setup_action("search", self.on_search_action, "<Alt>F")
         self.setup_action("settings-view", self.on_switch_views, "<Alt>Right")
         self.setup_action("clips-view", self.on_switch_views, "<Alt>Left")
 
