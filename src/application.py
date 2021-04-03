@@ -65,9 +65,9 @@ class Clips(Gtk.Application):
         # app actions
         self.setup_action("hide", self.on_hide_action, "Escape")
         self.setup_action("quit", self.on_quit_action, "<Ctrl>Q")
-        self.setup_action("search", self.on_search_action, "<Ctrl>F")
-        self.setup_action("settings-view", self.on_switch_views, "<Ctrl>Right")
-        self.setup_action("clips-view", self.on_switch_views, "<Ctrl>Left")
+        self.setup_action("search", self.on_search_action, "<Alt>F")
+        self.setup_action("settings-view", self.on_switch_views, "<Alt>Right")
+        self.setup_action("clips-view", self.on_switch_views, "<Alt>Left")
 
         # selected clip actions
         # self.setup_action("protect", self.on_clip_actions, "<Alt>P")
@@ -75,7 +75,7 @@ class Clips(Gtk.Application):
         self.setup_action("view", self.on_clip_actions, "<Alt>V")
         self.setup_action("copy", self.on_clip_actions, "<Alt>C")
         self.setup_action("delete", self.on_clip_actions, "<Alt>D")
-        self.setup_action("force_delete", self.on_clip_actions, "<Alt>F")
+        self.setup_action("force_delete", self.on_clip_actions, "<Shift><Alt>D")
 
         # #applicationwindow theme
         settings = Gtk.Settings.get_default()
