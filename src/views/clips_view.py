@@ -162,7 +162,7 @@ class ClipsContainer(Gtk.EventBox):
             self.content = FallbackContainer(self.cache_file, self.type, utils)
 
         # print(self.cache_file, self.type)
-        clip_info_revealer = self.generate_clip_info()
+        clip_info_revealer = self.generate_clip_info(utils)
         clip_action_notify_revealer = self.generate_clip_action_notify()
         clip_action_revealer = self.generate_clip_action()
         clip_select_revealer = self.generate_clip_select()
@@ -219,7 +219,7 @@ class ClipsContainer(Gtk.EventBox):
         button.connect("clicked", self.on_clip_action, actionname)
         return button
     
-    def generate_clip_info(self):
+    def generate_clip_info(self, utils):
         if self.content.label is None:
             self.content_label = Gtk.Label("Clip")
         else:
@@ -231,17 +231,17 @@ class ClipsContainer(Gtk.EventBox):
         self.content_label.props.expand = True
 
         #------ source_icon / application icon ----#
-        source_icon_cache = os.path.join(self.cache_filedir[:-6],"icon", self.source_app.replace(" ",".").lower() + ".png")
-        
-        if os.path.exists(source_icon_cache):
-            pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(source_icon_cache, 24 * self.scale, 24 * self.scale, True)
-            source_icon = Gtk.Image().new_from_pixbuf(pixbuf)
-            # if self.scale == 2:
-            #     source_icon.set_pixel_size(48)
-            #     print("scaled")
-        else:
-            source_icon = Gtk.Image().new_from_icon_name("image-missing", Gtk.IconSize.LARGE_TOOLBAR)
+        try:
+            source_icon = Gtk.Image().new_from_icon_name(self.source_icon, Gtk.IconSize.LARGE_TOOLBAR)
             source_icon.set_pixel_size(24 * self.scale)
+        except:
+            source_icon_cache = os.path.join(self.cache_filedir[:-6],"icon", self.source_app.replace(" ",".").lower() + ".png")
+            if os.path.exists(source_icon_cache):
+                pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(source_icon_cache, 24 * self.scale, 24 * self.scale, True)
+                source_icon = Gtk.Image().new_from_pixbuf(pixbuf)
+            else:
+                source_icon = Gtk.Image().new_from_icon_name("image-missing", Gtk.IconSize.LARGE_TOOLBAR)
+                source_icon.set_pixel_size(24 * self.scale)
 
         source_icon.props.halign = Gtk.Align.START
         source_icon.props.valign = Gtk.Align.END
