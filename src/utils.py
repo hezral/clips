@@ -306,26 +306,26 @@ def GetDomain(url):
 
 def GetWebpageContents(url):
     import requests
-    print(datetime.now(), "start get webpage contents", url)
+    # print(datetime.now(), "start get webpage contents", url)
     try:
         contents = requests.get(url).text
         return contents
     except:
         return None
     finally:
-        print(datetime.now(), "finish get webpage contents", url)
+        # print(datetime.now(), "finish get webpage contents", url)
 
 # function to get web page title from url    
 def GetWebpageTitle(contents, url):
     from urllib.parse import urlparse
-    print(datetime.now(), "start get webpage title", url)
+    # print(datetime.now(), "start get webpage title", url)
     if contents is not None:
         title_tag_open = "<title>"
         title_tag_close = "</title>"
         title = str(contents[contents.find(title_tag_open) + len(title_tag_open) : contents.find(title_tag_close)])
     else:
         title = urlparse(url).netloc
-    print(datetime.now(), "start get webpage title", url)
+    # print(datetime.now(), "start get webpage title", url)
     return title
 
 # function to get web page favicon from a url
@@ -337,7 +337,7 @@ def GetWebpageFavicon(contents, url, download_path='./'):
     import requests
     from urllib.parse import urlparse
 
-    print(datetime.now(), "start downloading favicon", url)
+    # print(datetime.now(), "start downloading favicon", url)
 
     domain = GetDomain(url)
     icon_name = download_path + '/' + domain + '.ico'    
@@ -358,7 +358,7 @@ def GetWebpageFavicon(contents, url, download_path='./'):
         favicon_url = urlparse(url).scheme + '://' + domain + '/' + 'favicon.ico'
     
     r = None
-    print(datetime.now(), "favicon", favicon_url)
+    # print(datetime.now(), "favicon", favicon_url)
     try:
         r = requests.get(favicon_url, allow_redirects=True)
     except:
@@ -366,11 +366,11 @@ def GetWebpageFavicon(contents, url, download_path='./'):
 
     if r is not None:
         open(icon_name, 'wb').write(r.content)
-        print(datetime.now(), "finish downloading favicon", url)
+        # print(datetime.now(), "finish downloading favicon", url)
         return icon_name
 
 def GetWebpageData(url, file_path, download_path='./'):
-    print(datetime.now(), "start get webpage data", url)
+    # print(datetime.now(), "start get webpage data", url)
     
     contents = GetWebpageContents(url)
     title = GetWebpageTitle(contents, url)
@@ -380,7 +380,7 @@ def GetWebpageData(url, file_path, download_path='./'):
         file.write("\n"+title)
         file.close
 
-    print(datetime.now(), "finish get webpage data", url)
+    # print(datetime.now(), "finish get webpage data", url)
 
     return title, icon_name
 
