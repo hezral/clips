@@ -108,7 +108,12 @@ class Clips(Gtk.Application):
         if self.gio_settings.get_value("auto-housekeeping"):
             print(datetime.now(), "start auto-housekeeping")
             print(datetime.now(), "auto-retention-period", self.gio_settings.get_int("auto-retention-period"))
-            self.cache_manager.auto_housekeeping(self.gio_settings.get_int("auto-retention-period"))
+            last_run, count = self.cache_manager.auto_housekeeping(self.gio_settings.get_int("auto-retention-period"))        
+            if count > 0:
+                self.main_window.total_clips_label.props.label = "Clips: {total}".format(total=count)
+            last_run_short = datetime.strftime(last_run, '%a, %d %B %Y, %-I:%M:%S %p')
+            run_autohouseekping= self.utils.GetWidgetByName(widget=self.main_window.settings_view, child_name="run-housekeeping-now", level=0)
+            run_autohouseekping.sublabel_text.props.label = last_run_short
 
         if self.running is False:
             print(datetime.now(), "start load_clips")
