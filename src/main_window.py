@@ -218,21 +218,13 @@ class ClipsWindow(Gtk.ApplicationWindow):
         return actionbar
 
     def generate_viewswitch(self, settings_view_obj):
-        view_switch = Granite.ModeSwitch.from_icon_name("com.github.hezral.clips-symbolic", "com.github.hezral.clips-settings-symbolic")
-        # view_switch.props.primary_icon_tooltip_text = "Ghoster"
-        # view_switch.props.secondary_icon_tooltip_text = "Settings"
-        view_switch.props.valign = Gtk.Align.CENTER
-        view_switch.props.halign = Gtk.Align.END
-        view_switch.props.margin = 4
-        view_switch.props.name = "view-switch"
-        view_switch.bind_property("active", settings_view_obj, "visible", GObject.BindingFlags.BIDIRECTIONAL)
-
-        
-        # switch = [child for child in view_switch.get_children() if isinstance(child, Gtk.Switch)][0]
-        # print("mode-switch", switch)
-        # switch.set_size_request(-1, 32)
-        # print(switch.get_allocated_height(), switch.get_allocated_width())
-        return view_switch
+        self.view_switch = Granite.ModeSwitch.from_icon_name("com.github.hezral.clips-symbolic", "com.github.hezral.clips-settings-symbolic")
+        self.view_switch.props.valign = Gtk.Align.CENTER
+        self.view_switch.props.halign = Gtk.Align.END
+        self.view_switch.props.margin = 4
+        self.view_switch.props.name = "view-switch"
+        self.view_switch.bind_property("active", settings_view_obj, "visible", GObject.BindingFlags.BIDIRECTIONAL)
+        return self.view_switch
 
     def on_country_combo_changed(self, combo):
         tree_iter = combo.get_active_iter()
