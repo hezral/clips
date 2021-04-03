@@ -316,6 +316,7 @@ class ClipsContainer(Gtk.EventBox):
 
     def generate_clip_action(self):
         # protect_action = self.generate_action_button("com.github.hezral.clips-protect-symbolic", "Protect Content", "protect")
+        reveal_action = self.generate_action_button("document-open-symbolic", "Reveal files", "reveal")
         info_action = self.generate_action_button("com.github.hezral.clips-info-symbolic", "Show Info", "info")
         view_action = self.generate_action_button("com.github.hezral.clips-view-symbolic", "View", "view")
         copy_action = self.generate_action_button("edit-copy-symbolic", "Copy to Clipboard", "copy")
@@ -336,6 +337,7 @@ class ClipsContainer(Gtk.EventBox):
             view_action.get_style_context().add_class("clip-action-disabled")
                
         # clip_action.attach(protect_action, 0, 0, 1, 1)
+        clip_action.attach(reveal_action, 0, 0, 1, 1)
         clip_action.attach(info_action, 1, 0, 1, 1)
         clip_action.attach(view_action, 2, 0, 1, 1)
         clip_action.attach(copy_action, 3, 0, 1, 1)
@@ -444,6 +446,10 @@ class ClipsContainer(Gtk.EventBox):
         if action == "protect":
             clip_action_notify.set_reveal_child(True)
 
+        elif action == "reveal":
+            base_dir = os.path.dirname(self.cache_file)
+            utils.ViewFile(base_dir)
+            
         elif action == "info":
             clip_info_revealer.set_reveal_child(True)
 
@@ -451,6 +457,10 @@ class ClipsContainer(Gtk.EventBox):
             if "url" in self.type:
                 with open(self.cache_file) as file:
                     utils.ViewFile(file.readlines()[0].replace("\n",""))
+            # if "files" in self.type:
+            #     with open(self.cache_file) as file:
+            #         base_dir = os.path.dirname(file.readlines()[0].replace("copyfile://", ""))
+            #     utils.ViewFile(base_dir)
             else:
                 utils.ViewFile(self.cache_file)
 
@@ -832,8 +842,8 @@ class FilesContainer(DefaultContainer):
                             else:
                                 icon_pixbuf = self.icon_theme.load_icon(icon_name, self.icon_size, 0)
                                 icon = Gtk.Image().new_from_pixbuf(icon_pixbuf)
-                                # icon.props.has_tooltip = True
-                                # icon.props.tooltip_text = line_content
+                                icon.props.has_tooltip = True
+                                icon.props.tooltip_text = line_content
                                 self.flowbox.add(icon)
                             i += 1
                             break
