@@ -63,7 +63,8 @@ class CacheManager():
                 self.create_table(self.db_cursor)
         except (OSError, sqlite3.Error) as error:
             print("Exception: ", error)
-  
+
+
     def open_db(self, database_file):
         connection = sqlite3.connect(database_file) 
         cursor = connection.cursor()
@@ -171,7 +172,44 @@ class CacheManager():
         
         for flowboxchild in self.app.main_window.clips_view.flowbox.get_children():
             flowboxchild.destroy()
+
+    def auto_housekeeping(self, days):
+        days_param = "-" + str(days) + " " + "day"
+        data_param = (days_param,) #pass in a sequence ie list
+        sqlite_with_param = '''
+            SELECT * FROM 'ClipsDB'
+            WHERE
+            created <= date('now',?);
+            '''
+        self.db_cursor.execute(sqlite_with_param, data_param)
+        records = self.db_cursor.fetchall()
+
+        count = len(records)
+
+        print(count, "found for auto housekeeping")
+
+        # delete each record that match days criteria
+        sqlite_with_param = '''
+            DELETE FROM 'ClipsDB'
+            WHERE
+            id = ?;
+            '''
+        if count != 0:
+            for record in records:
+                print("id:", record[0], "cache_file:", record[6], "type:", record[7])
+                cache_file = self.cache_filedir + "/" + record[6]
+                type = record[7]
+                self.delete_cache_file(cache_file, type)
+                data_param = (str(record[0]),) #pass in a sequence ie list
+                self.db_cursor.execute(sqlite_with_param, data_param)
+                self.db_connection.commit()
+        else:
+            print("No records found for auto housekeeping")
         
+        print(datetime.now(), "finish auto-housekeeping")
+
+        return datetime.now(), count
+
     def select_record(self, id):
         data_param = (str(id),) #pass in a sequence ie list
         sqlite_with_param = '''

@@ -89,8 +89,7 @@ class Clips(Gtk.Application):
     def do_activate(self):
         # We only allow a single window and raise any existing ones
         if not self.main_window:
-            # Windows are associated with the application 
-            # when the last one is closed the application shuts down
+            # Windows are associated with the application when the last one is closed the application shuts down
             self.main_window = ClipsWindow(application=self)
             self.add_window(self.main_window)
             
@@ -104,6 +103,12 @@ class Clips(Gtk.Application):
 
         # link to cache_manager
         self.cache_manager.main_window = self.main_window
+
+        # check for auto housekeeping
+        if self.gio_settings.get_value("auto-housekeeping"):
+            print(datetime.now(), "start auto-housekeeping")
+            print(datetime.now(), "auto-retention-period", self.gio_settings.get_int("auto-retention-period"))
+            self.cache_manager.auto_housekeeping(self.gio_settings.get_int("auto-retention-period"))
 
         if self.running is False:
             print(datetime.now(), "start load_clips")

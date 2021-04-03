@@ -74,12 +74,17 @@ class SettingsView(Gtk.Grid):
         # auto_retention_period.spinbutton.connect_after("value-changed", self.on_spinbutton_activated)
         self.gio_settings.bind("auto-retention-period", auto_retention_period.spinbutton, "value", Gio.SettingsBindFlags.DEFAULT)
 
+        # run housekeeping now
+        run_houseekeeping_now = SubSettings(type="button", name="run-housekeeping-now", label="Run housekeeping now", sublabel="no last run date", separator=True, params=("Run now", Gtk.Image().new_from_icon_name("edit-clear", Gtk.IconSize.MENU),))
+        run_houseekeeping_now.button.connect("clicked", self.on_button_clicked, run_houseekeeping_now)
+        run_houseekeeping_now.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
+
         # delete all
         delete_all = SubSettings(type="button", name="delete-all", label="Delete all clips from cache", sublabel=None, separator=False, params=("Delete all", Gtk.Image().new_from_icon_name("dialog-warning", Gtk.IconSize.MENU),))
         delete_all.button.connect("clicked", self.on_button_clicked)
         delete_all.button.get_style_context().add_class("destructive-action")
 
-        app_settings = SettingsGroup("Housekeeping", (autopurge_mode, auto_retention_period, delete_all))
+        app_settings = SettingsGroup("Housekeeping", (autopurge_mode, auto_retention_period, run_houseekeeping_now, delete_all, ))
 
         # exceptions -------------------------------------------------
 
@@ -163,6 +168,16 @@ class SettingsView(Gtk.Grid):
             if response == Gtk.ResponseType.OK:
                 window.props.application.cache_manager.delete_all_record()
             dialog.destroy()
+
+        if name == "run-housekeeping-now":
+            from datetime import datetime
+            main_window = self.get_toplevel()
+            sublabel_text = params.sublabel_text          
+            last_run, count = self.app.cache_manager.auto_housekeeping(self.gio_settings.get_int("auto-retention-period"))
+            if count > 0:
+                main_window.total_clips_label.props.label = "Clips: {total}".format(total=count)
+            last_run_short = datetime.strftime(last_run, '%a, %d %B %Y, %-I:%M:%S %p')
+            sublabel_text.props.label = last_run_short
 
 
     def on_spinbutton_activated(self, spinbutton):
@@ -269,20 +284,20 @@ class SubSettings(Gtk.Grid):
 
         # label---
         if label is not None:
-            label_text = Gtk.Label(label)
-            label_text.props.halign = Gtk.Align.START
-            box.add(label_text)
+            self.label_text = Gtk.Label(label)
+            self.label_text.props.halign = Gtk.Align.START
+            box.add(self.label_text)
         
         # sublabel---
         if sublabel is not None:
-            sub_label = Gtk.Label(sublabel)
-            sub_label.props.halign = Gtk.Align.START
-            sub_label.props.wrap_mode = Pango.WrapMode.WORD
-            sub_label.props.max_width_chars = 30
-            sub_label.props.justify = Gtk.Justification.LEFT
-            #sub_label.props.wrap = True
-            sub_label.get_style_context().add_class("settings-sub-label")
-            box.add(sub_label)
+            self.sublabel_text = Gtk.Label(sublabel)
+            self.sublabel_text.props.halign = Gtk.Align.START
+            self.sublabel_text.props.wrap_mode = Pango.WrapMode.WORD
+            self.sublabel_text.props.max_width_chars = 30
+            self.sublabel_text.props.justify = Gtk.Justification.LEFT
+            #self.sublabel_text.props.wrap = True
+            self.sublabel_text.get_style_context().add_class("settings-sub-label")
+            box.add(self.sublabel_text)
 
         if type == "switch":
             self.switch = Gtk.Switch()

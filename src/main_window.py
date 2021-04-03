@@ -101,8 +101,8 @@ class ClipsWindow(Gtk.ApplicationWindow):
         proceed = True
 
         if column_number == 1:
-            default_width = 100
-            min_width = 100
+            default_width = 340
+            min_width = 340
 
         elif column_number == 2:
             default_width = 560
@@ -318,7 +318,7 @@ class ClipsWindow(Gtk.ApplicationWindow):
 
     def on_view_visible(self, view, gparam=None):
 
-        print(locals())
+        # print(locals())
 
         if view.is_visible():
             self.current_view = "settings-view"
@@ -371,12 +371,12 @@ class ClipsWindow(Gtk.ApplicationWindow):
             button.get_style_context().add_class("clips-action-enabled")
             button.get_style_context().remove_class("clips-action-disabled")
 
-    def update_total_clips_label(self, event):
+    def update_total_clips_label(self, event, count=1):
         total_clips = int(self.total_clips_label.props.label.split(": ")[1])
         if event == "add":
-            total_clips = total_clips + 1
+            total_clips = total_clips + count
         elif event == "delete":
-            total_clips = total_clips - 1
+            total_clips = total_clips - count
         self.total_clips_label.props.label = "Clips: {total}".format(total=total_clips)
         
 
