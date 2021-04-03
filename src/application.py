@@ -58,6 +58,13 @@ class Clips(Gtk.Application):
         # prepend custom path for icon theme
         self.icon_theme = Gtk.IconTheme.get_default()
         self.icon_theme.prepend_search_path(os.path.join(os.path.dirname(__file__), "..", "data", "icons"))
+
+        # Set shortcut
+        # if self.gio_settings.get_value("first-run"):
+        #     SHORTCUT = "<Super><Control>C"
+        #     ID = "gtk-launch" + " " + self.props.application_id
+        #     setup_shortcut = CustomShortcutSettings()
+        #     self.gio_settings.set_value("first-run", False)
   
     def do_startup(self):
         Gtk.Application.do_startup(self)
