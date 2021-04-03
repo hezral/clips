@@ -75,12 +75,12 @@ class SettingsView(Gtk.Grid):
         self.gio_settings.bind("auto-retention-period", auto_retention_period.spinbutton, "value", Gio.SettingsBindFlags.DEFAULT)
 
         # run housekeeping now
-        run_houseekeeping_now = SubSettings(type="button", name="run-housekeeping-now", label="Run housekeeping now", sublabel="no last run date", separator=True, params=("Run now", Gtk.Image().new_from_icon_name("edit-clear", Gtk.IconSize.MENU),))
+        run_houseekeeping_now = SubSettings(type="button", name="run-housekeeping-now", label="Run housekeeping now", sublabel="no last run date", separator=True, params=("Run now", Gtk.Image().new_from_icon_name("edit-clear", Gtk.IconSize.LARGE_TOOLBAR),))
         run_houseekeeping_now.button.connect("clicked", self.on_button_clicked, run_houseekeeping_now)
         run_houseekeeping_now.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
 
         # delete all
-        delete_all = SubSettings(type="button", name="delete-all", label="Delete all clips from cache", sublabel=None, separator=False, params=("Delete all", Gtk.Image().new_from_icon_name("dialog-warning", Gtk.IconSize.MENU),))
+        delete_all = SubSettings(type="button", name="delete-all", label="Delete all clips from cache", sublabel=None, separator=False, params=("Delete all", Gtk.Image().new_from_icon_name("dialog-warning", Gtk.IconSize.LARGE_TOOLBAR),))
         delete_all.button.connect("clicked", self.on_button_clicked)
         delete_all.button.get_style_context().add_class("destructive-action")
 
@@ -93,7 +93,7 @@ class SettingsView(Gtk.Grid):
         excluded_apps_list = SubSettings(type="listbox", name="excluded-apps", label=None, sublabel=None, separator=False, params=(excluded_apps_list_values, ))
 
         excluded_appchooser_popover = AppChooserPopover(params=(excluded_apps_list, ))
-        excluded_apps = SubSettings(type="button", name="excluded-apps", label="Exclude apps", sublabel="Copy events are excluded for apps selected", separator=False, params=("Select app", ))
+        excluded_apps = SubSettings(type="button", name="excluded-apps", label="Exclude apps", sublabel="Copy events are excluded for apps selected", separator=False, params=("Select app", Gtk.Image().new_from_icon_name("application-default-icon", Gtk.IconSize.LARGE_TOOLBAR), ))
         excluded_apps.button.connect("clicked", self.on_button_clicked, (excluded_appchooser_popover, ))
         excluded_apps.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
 
