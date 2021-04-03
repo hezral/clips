@@ -63,7 +63,7 @@ class CacheManager():
                 self.create_table(self.db_cursor)
         except (OSError, sqlite3.Error) as error:
             print("Exception: ", error)
-
+        
 
     def open_db(self, database_file):
         connection = sqlite3.connect(database_file) 
@@ -422,5 +422,13 @@ class CacheManager():
                 pass
             if not self.main_window.settings_view.is_visible():
                 self.main_window.stack.set_visible_child_name("info-view")
-                
+
+    def load_source_apps(self):
+        sqlite_with_param = '''
+            SELECT DISTINCT source_app FROM 'ClipsDB'
+            '''
+        self.db_cursor.execute(sqlite_with_param)
+        records = self.db_cursor.fetchall()
+        return records
+
             
