@@ -312,7 +312,7 @@ def GetWebpageContents(url):
         return contents
     except:
         return None
-    finally:
+    # finally:
         # print(datetime.now(), "finish get webpage contents", url)
 
 # function to get web page title from url    
