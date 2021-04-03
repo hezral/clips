@@ -55,22 +55,35 @@ class ClipsView(Gtk.Grid):
         self.attach(scrolled_window, 0, 0, 1, 1)
 
     def flowbox_filter_func(self, search_entry):
-        def filter_func(flowboxchild, text):
+        def filter_func(flowboxchild, search_text):
             clips_container = flowboxchild.get_children()[0]
-
-            if text.lower() in str(clips_container.id):
-                return True
-            elif text.lower() in clips_container.type.lower():
-                return True
-            elif text.lower() in clips_container.source_app.lower():
-                return True
-            elif text.lower() in clips_container.created_short.lower():
-                return True
+            if " " in search_text:
+                search_texts = search_text.split(" ")            
+                for text in search_texts:
+                    if text.lower() in str(clips_container.id):
+                        return True
+                    elif text.lower() in clips_container.type.lower():
+                        return True
+                    elif text.lower() in clips_container.source_app.lower():
+                        return True
+                    elif text.lower() in clips_container.created_short.lower():
+                        return True
+                    else:
+                        return False
             else:
-                return False
+                if search_text.lower() in str(clips_container.id):
+                    return True
+                elif search_text.lower() in clips_container.type.lower():
+                    return True
+                elif search_text.lower() in clips_container.source_app.lower():
+                    return True
+                elif search_text.lower() in clips_container.created_short.lower():
+                    return True
+                else:
+                    return False
 
-        text = search_entry.get_text()
-        self.flowbox.set_filter_func(filter_func, text)
+        search_text = search_entry.get_text()
+        self.flowbox.set_filter_func(filter_func, search_text)
 
     def sort_flowbox(self, child1, child2):
         date1 = child1.get_children()[0].created
