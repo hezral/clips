@@ -90,7 +90,7 @@ class SettingsView(Gtk.Grid):
 
         # excluded app
         excluded_apps_list_values = self.gio_settings.get_value("excluded-apps").get_strv()
-        excluded_apps_list = SubSettings(type="listbox", name="excluded-apps", label=None, sublabel=None, separator=False, params=(excluded_apps_list_values, ))
+        excluded_apps_list = SubSettings(type="listbox", name="excluded-apps", label=None, sublabel=None, separator=False, params=(excluded_apps_list_values, ), utils=self.app.utils)
 
         excluded_appchooser_popover = AppChooserPopover(params=(excluded_apps_list, ))
         excluded_apps = SubSettings(type="button", name="excluded-apps", label="Exclude apps", sublabel="Copy events are excluded for apps selected", separator=False, params=("Select app", Gtk.Image().new_from_icon_name("application-default-icon", Gtk.IconSize.LARGE_TOOLBAR), ))
@@ -270,7 +270,7 @@ class SettingsGroup(Gtk.Grid):
 # ----------------------------------------------------------------------------------------------------
 
 class SubSettings(Gtk.Grid):
-    def __init__(self, type, name, label=None, sublabel=None, separator=True, params=None, *args, **kwargs):
+    def __init__(self, type, name, label=None, sublabel=None, separator=True, params=None, utils=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
        
         # box---
@@ -322,21 +322,13 @@ class SubSettings(Gtk.Grid):
 
         if type == "listbox" and "-apps" in name:
             self.last_row_selected_idx = 0
-
             self.listbox = Gtk.ListBox()
             self.listbox.props.name = name
             self.listbox.connect("row-selected", self.on_row_selected)
             icon = None
             if params is not None:
-                for app_name in params[0]:
-                    app_info = self.get_appinfo(app_name)
-                    if app_info is not None:
-                        icon = app_info.get_icon()
-                    if icon is not None:
-                        icon_name = icon.to_string()
-                    else:
-                        icon_name = "application-other"
-
+                for app in params[0]:
+                    app_name, icon_name = utils.GetAppInfo(app)
                     self.add_listboxrow(app_name, icon_name)
 
             scrolled_window = Gtk.ScrolledWindow()
