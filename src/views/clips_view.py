@@ -791,7 +791,7 @@ class FilesContainer(DefaultContainer):
         self.flowbox.props.expand = True
         self.flowbox.props.homogeneous = True
         self.flowbox.props.row_spacing = 4
-        self.flowbox.props.column_spacing = 2
+        self.flowbox.props.column_spacing = 4
         self.flowbox.props.max_children_per_line = 4
         self.flowbox.props.min_children_per_line = 2
         self.flowbox.props.valign = Gtk.Align.CENTER
@@ -799,6 +799,8 @@ class FilesContainer(DefaultContainer):
 
         with open(filepath) as file:
             file_content = file.readlines()
+
+        file_count = len(file_content)
 
         with open(filepath) as file:
             i = 0
@@ -821,7 +823,9 @@ class FilesContainer(DefaultContainer):
                         try:
                             if i == 7:
                                 more_label = Gtk.Label("+" + str(file_count - 7))
-                                more_label.props.name = "files-container-more-label"
+                                more_label.props.name = "files-container-more"
+                                more_label.props.valign = Gtk.Align.END
+                                more_label.props.margin_bottom = 4
                                 self.flowbox.add(more_label)
                             elif i > 7 :
                                 pass
@@ -837,7 +841,7 @@ class FilesContainer(DefaultContainer):
                             pass # file not exist for this entry
 
                         
-            # file_count = line_number + 1
+            
             if len(file_content) < 4:
                 self.flowbox.props.max_children_per_line = len(file_content)
         
