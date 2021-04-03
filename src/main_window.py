@@ -19,7 +19,7 @@ import os
 import gi
 gi.require_version('Gtk', '3.0')
 gi.require_version('Granite', '1.0')
-from gi.repository import Gtk, Granite, GObject, Gdk
+from gi.repository import Gtk, Granite, GObject, Gdk, Gio
 from views.clips_view import ClipsView
 from views.settings_view import SettingsView
 from views.info_view import InfoView
@@ -132,7 +132,6 @@ class ClipsWindow(Gtk.ApplicationWindow):
             self.set_geometry_hints(None, geometry, Gdk.WindowHints.MIN_SIZE)
 
     def generate_headerbar(self):
-        #------ self.searchentry ----#
         self.searchentry = Gtk.SearchEntry()
         self.searchentry.props.placeholder_text = "Search Clips" #"Search Clips\u2026"
         self.searchentry.props.hexpand = True
@@ -141,55 +140,41 @@ class ClipsWindow(Gtk.ApplicationWindow):
         self.searchentry.connect("focus-in-event", self.on_searchbar_activate, "in")
         self.searchentry.connect("focus-out-event", self.on_searchbar_activate, "out")
         # self.searchentry.connect_after("delete-text", self.on_delete_text, "delete")
-        self.searchentry.connect("icon-press", self.on_quicksearch_activate)
+        # self.searchentry.connect("icon-press", self.on_quicksearch_activate)
         
         self.searchentry.connect("search-changed", self.on_search_entry_changed)
 
-        quicksearchbar = Gtk.Grid()
-        quicksearchbar.props.name = "search-quick"
-        quicksearchbar.props.margin_top = 8
-        quicksearchbar.props.column_spacing = 2
-        quicksearchbar.props.row_spacing = 2
-        quicksearchbar.props.hexpand = True
-
-        images = Gtk.Button(label="images")
-        images.connect("clicked", self.on_quicksearch)
-        texts = Gtk.Button(label="texts")
-        texts.connect("clicked", self.on_quicksearch)
-
-        quicksearchbar.attach(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL), 0, 0, 1, 1)
-        quicksearchbar.attach(images, 0, 1, 1, 1)
-        quicksearchbar.attach(texts, 1, 1, 1, 1)
-
-        revealer = Gtk.Revealer()
-        revealer.props.name = "search-revealer"
-        revealer.add(quicksearchbar)
+        sourceapp_appchooser_popover = ClipsFilterPopover(self.app, self.searchentry)
+        sourceapp_filter = Gtk.Button(image=Gtk.Image().new_from_icon_name("application-default-icon", Gtk.IconSize.LARGE_TOOLBAR))
+        sourceapp_filter.props.always_show_image = True
+        sourceapp_filter.props.halign = Gtk.Align.END
+        sourceapp_filter.connect("clicked", self.on_sourceapp_filter, sourceapp_appchooser_popover)
 
         #------ searchbar ----#
         searchbar = Gtk.Grid()
         searchbar.props.name = "search-bar"
         searchbar.attach(self.searchentry, 0, 0, 1, 1)
-        # searchbar.attach(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL), 0, 1, 1, 1)
-        searchbar.attach(revealer, 0, 1, 1, 1)
+
+        overlay = Gtk.Overlay()
+        overlay.add(searchbar)
+        # overlay.add_overlay(sourceapp_filter)
+        # overlay.set_overlay_pass_through(sourceapp_filter, True)
 
         headerbar = Gtk.HeaderBar()
         headerbar.props.show_close_button = self.gio_settings.get_value("show-close-button")
         headerbar.props.has_subtitle = False
-        headerbar.props.custom_title = searchbar
-        #headerbar.add(searchbar)
+        headerbar.props.custom_title = overlay
         return headerbar
 
     def generate_statusbar(self):
-
         self.total_clips_label = Gtk.Label("Clips: {total}".format(total=self.props.application.total_clips))
-
-        infobar = Gtk.Grid()
-        infobar.props.name = "app-statusbar"
-        infobar.props.halign = Gtk.Align.START
-        infobar.props.valign = Gtk.Align.CENTER
-        infobar.props.margin_left = 3
-        infobar.attach(self.total_clips_label, 0, 0, 1, 1)
-        return infobar
+        status = Gtk.Grid()
+        status.props.name = "app-statusbar"
+        status.props.halign = Gtk.Align.START
+        status.props.valign = Gtk.Align.CENTER
+        status.props.margin_left = 3
+        status.attach(self.total_clips_label, 0, 0, 1, 1)
+        return status
 
     def generate_actionbar(self):
         clipstoggle_action = Gtk.Button(image=Gtk.Image().new_from_icon_name("com.github.hezral.clips-enabled-symbolic", Gtk.IconSize.SMALL_TOOLBAR))
@@ -214,7 +199,7 @@ class ClipsWindow(Gtk.ApplicationWindow):
         actionbar.props.valign = Gtk.Align.CENTER
         actionbar.props.margin_left = 3
         actionbar.attach(clipstoggle_action, 0, 0, 1, 1)
-        actionbar.attach(protecttoggle_action, 1, 0, 1, 1)
+        # actionbar.attach(protecttoggle_action, 1, 0, 1, 1)
         return actionbar
 
     def generate_viewswitch(self, settings_view_obj):
@@ -226,65 +211,19 @@ class ClipsWindow(Gtk.ApplicationWindow):
         self.view_switch.bind_property("active", settings_view_obj, "visible", GObject.BindingFlags.BIDIRECTIONAL)
         return self.view_switch
 
-    def on_country_combo_changed(self, combo):
-        tree_iter = combo.get_active_iter()
-        if tree_iter is not None:
-            model = combo.get_model()
-            country = model[tree_iter][0]
-            print("Selected: country=%s" % country)
-
-    def on_delete_text(self, searchentry, int1, int2, type):
-        # searchbar = self.searchentry.get_parent()
-
-        # revealer = utils.GetWidgetByName(widget=searchbar, child_name="search-revealer", level=0)
-        # if revealer.get_child_revealed():
-        #     revealer.set_reveal_child(False)
-
-        # else:
-        #     revealer.set_reveal_child(True)
-        pass
-
-    def on_quicksearch_activate(self, searchentry, iconposition, eventbutton):
-        print(locals())
-        searchbar = self.searchentry.get_parent()
-        revealer = self.utils.GetWidgetByName(widget=searchbar, child_name="search-revealer", level=0)
-        if revealer.get_child_revealed():
-            revealer.set_reveal_child(False)
-        else:
-            revealer.set_reveal_child(True)
-
-    def on_date_select(self, button):
-        # searchbar = [child for child in self.get_children() if child.get_name() == "search-bar"][0]
-        # calendar_dialog = utils.GetWidgetByName(widget=searchbar, child_name="search-calendar-dialog", level=0)
-        # print(calendar_dialog)
-
-        calendar_dialog = Gtk.Window(type=Gtk.WindowType.POPUP)
-        calendar_dialog.props.name = "search-calendar-dialog"
-        calendar_dialog.set_modal(True)
-        calendar_dialog.set_transient_for(self)
-        calendar_dialog.set_attached_to(button)
-        calendar_dialog.set_type_hint(Gdk.WindowTypeHint.DIALOG)
-        
-        calendar = Gtk.Calendar()
-        calendar_dialog.add(calendar)
-        calendar_dialog.show_all()
-
-    def on_quicksearch(self, button):
-        
-        searchbar = [child for child in self.get_children() if child.get_name() == "search-bar"][0]
-        self.searchentry = self.utils.GetWidgetByName(widget=searchbar, child_name="search-entry", level=0)
-
-        if self.searchentry.props.text == "":
-            self.searchentry.props.text = button.props.label
-        else:
-            self.searchentry.props.text = self.searchentry.props.text + ", " + button.props.label
+    def on_sourceapp_filter(self, button, popover):
+        popover.set_relative_to(button)
+        popover.show_all()
+        popover.popup()
+        popover.listbox.unselect_all()
 
     def on_searchbar_activate(self, searchentry, event, type):
 
         searchbar = self.searchentry.get_parent()
-        revealer = self.utils.GetWidgetByName(widget=searchbar, child_name="search-revealer", level=0)
+        # revealer = self.utils.GetWidgetByName(widget=searchbar, child_name="search-revealer", level=0)
 
-        if type == "in" and revealer.get_child_revealed() is False:
+        # if type == "in" and revealer.get_child_revealed() is False:
+        if type == "in":
             self.searchentry.props.primary_icon_name = "quick-search"
             self.searchentry.props.primary_icon_tooltip_text = "Use quick search tags"
             self.searchentry.props.name = "search-entry-active"
@@ -380,69 +319,106 @@ class ClipsWindow(Gtk.ApplicationWindow):
             total_clips = total_clips - count
         self.total_clips_label.props.label = "Clips: {total}".format(total=total_clips)
 
-    def generate_searchbar(self):
-        #------ self.searchentry ----#
-        self.searchentry = Gtk.SearchEntry()
-        self.searchentry.props.placeholder_text = "Search Clips" #"Search Clips\u2026"
-        self.searchentry.props.hexpand = True
-        self.searchentry.props.name = "search-entry"
-        self.searchentry.props.primary_icon_activatable = True
-        self.searchentry.props.primary_icon_sensitive = True
+# ----------------------------------------------------------------------------------------------------
 
-        self.searchentry.connect("focus-in-event", self.on_searchbar_activate, "in")
-        self.searchentry.connect_after("delete-text", self.on_delete_text, "delete")
-        self.searchentry.connect("icon-press", self.on_quicksearch_activate)
-        self.searchentry.connect("focus-out-event", self.on_searchbar_activate, "out")
+class ClipsFilterPopover(Gtk.Popover):
+    def __init__(self, app, search_entry, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-        #------ quicksearchbar ----#
-        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
-        country_store = Gtk.ListStore(str)
-        countries = [
-            "Austria",
-            "Brazil",
-            "Belgium",
-            "France",
-            "Germany",
-            "Switzerland",
-            "United Kingdom",
-            "United States of America",
-            "Uruguay",
-        ]
-        for country in countries:
-            country_store.append([country])
+        self.clips_search_entry = search_entry
+        
+        self.listbox = ClipsSourceAppListBox(app)
+        # self.app_listbox.connect("row-selected", self.on_row_selected)
+        self.listbox.connect("row-activated", self.on_row_activated)
 
-        country_combo = Gtk.ComboBox.new_with_model(country_store)
-        country_combo.connect("changed", self.on_country_combo_changed)
-        renderer_text = Gtk.CellRendererText()
-        country_combo.pack_start(renderer_text, True)
-        country_combo.add_attribute(renderer_text, "text", 0)
-        vbox.pack_start(country_combo, False, False, True)
+        scrolled_window = Gtk.ScrolledWindow()
+        scrolled_window.set_size_request(-1, 150)
+        scrolled_window.props.expand = True
+        scrolled_window.add(self.listbox)
 
-        quicksearchbar = Gtk.Grid()
-        quicksearchbar.props.name = "search-quick"
-        quicksearchbar.props.column_spacing = 2
-        quicksearchbar.props.margin_top = 3
-        images = Gtk.Button(label="images")
-        images.connect("clicked", self.on_quicksearch)
-        texts = Gtk.Button(label="texts")
-        texts.connect("clicked", self.on_quicksearch)
+        self.search_entry = Gtk.SearchEntry()
+        self.search_entry.props.placeholder_text = "Search..."
+        self.search_entry.props.margin = 6
+        self.search_entry.props.hexpand = True
+        self.search_entry.connect("search-changed", self.on_search_entry_changed)
 
-        calendar_btn = Gtk.Button(label="Date")
-        calendar_btn.connect("clicked", self.on_date_select)
+        grid = Gtk.Grid()
+        grid.attach(self.search_entry, 0, 0, 1, 1)
+        grid.attach(Gtk.Separator(), 0, 1, 1, 1)
+        grid.attach(scrolled_window, 0, 2, 1, 1)
+        
+        self.props.name = "clips-sourceapp-chooser"
+        self.set_size_request(260, -1)
+        self.add(grid)
 
-        quicksearchbar.attach(images, 0, 0, 1, 1)
-        quicksearchbar.attach(texts, 1, 0, 1, 1)
-        # quicksearchbar.attach(calendar_btn, 2, 0, 1, 1)
+    def on_row_selected(self, *args):
+        self.add_selected()
 
-        #------ revealer ----#
-        revealer = Gtk.Revealer()
-        revealer.props.name = "search-revealer"
-        revealer.add(quicksearchbar)
+    def on_row_activated(self, *args):
+        self.add_selected()
+        
+    def add_selected(self, *args):
+        app_name = self.listbox.get_selected_row().app_name 
+        self.clips_search_entry.props.text = app_name
+        self.popdown()
 
-        #------ searchbar ----#
-        searchbar = Gtk.Grid()
-        searchbar.props.name = "search-bar"
-        searchbar.attach(self.searchentry, 0, 0, 1, 1)
-        searchbar.attach(revealer, 0, 1, 1, 1)
+    def on_search_entry_changed(self, search_entry):
+        self.listbox.invalidate_filter()
+        self.listbox.app_listbox_filter_func(search_entry)
 
-        return searchbar
+# ----------------------------------------------------------------------------------------------------
+
+class ClipsSourceAppListBoxRow(Gtk.ListBoxRow):
+    def __init__(self, app_name, icon_name, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        icon_size = 24 * self.get_scale_factor()
+        icon = Gtk.Image().new_from_icon_name(icon_name, Gtk.IconSize.LARGE_TOOLBAR)
+        icon.set_pixel_size(icon_size)
+
+        label = Gtk.Label(app_name)
+
+        grid = Gtk.Grid()
+        grid.props.margin = 6
+        grid.props.column_spacing = 12
+        grid.attach(icon, 0, 0, 1, 1)
+        grid.attach(label, 1, 0, 1, 1)
+
+        self.add(grid)
+        self.props.name = "clips-sourceapp-listboxrow"
+        self.app_name = app_name
+        self.icon_name = icon_name
+
+# ----------------------------------------------------------------------------------------------------
+
+class ClipsSourceAppListBox(Gtk.ListBox):
+
+    def __init__(self, app, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.app = app
+
+        source_apps = self.app.cache_manager.load_source_apps()
+        source_apps.sort(key=self.sort_apps)
+
+        for source_app in source_apps:
+            app_name, icon_name = self.app.utils.GetAppInfo(source_app[0])
+            self.add(ClipsSourceAppListBoxRow(app_name, icon_name))
+
+        self.props.name = "app-listbox"
+        
+        self.props.selection_mode = Gtk.SelectionMode.BROWSE
+        self.props.activate_on_single_click = False
+
+    def sort_apps(self, val):
+        return val[0].lower()
+    
+    def app_listbox_filter_func(self, search_entry):
+        def filter_func(row, text):
+            if text.lower() in row.app_name.lower():
+                return True
+            else:
+                return False
+
+        text = search_entry.get_text()
+        self.set_filter_func(filter_func, text)
