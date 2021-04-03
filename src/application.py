@@ -111,19 +111,20 @@ class Clips(Gtk.Application):
         # link to cache_manager
         self.cache_manager.main_window = self.main_window
 
-        # check for auto housekeeping
-        if self.gio_settings.get_value("auto-housekeeping"):
-            print(datetime.now(), "start auto-housekeeping")
-            print(datetime.now(), "auto-retention-period", self.gio_settings.get_int("auto-retention-period"))
-            last_run, count = self.cache_manager.auto_housekeeping(self.gio_settings.get_int("auto-retention-period"))        
-            if count > 0:
-                self.main_window.total_clips_label.props.label = "Clips: {total}".format(total=count)
-                last_run_short = datetime.strftime(last_run, '%a, %d %B %Y, %-I:%M:%S %p')
-                run_autohouseekping= self.utils.GetWidgetByName(widget=self.main_window.settings_view, child_name="run-housekeeping-now", level=0)
-                run_autohouseekping.sublabel_text.props.label = last_run_short
-
         # check if already running
         if self.running is False:
+
+            # check for auto housekeeping
+            if self.gio_settings.get_value("auto-housekeeping"):
+                print(datetime.now(), "start auto-housekeeping")
+                print(datetime.now(), "auto-retention-period", self.gio_settings.get_int("auto-retention-period"))
+                last_run, count = self.cache_manager.auto_housekeeping(self.gio_settings.get_int("auto-retention-period"))        
+                if count > 0:
+                    self.main_window.total_clips_label.props.label = "Clips: {total}".format(total=count)
+                    last_run_short = datetime.strftime(last_run, '%a, %d %B %Y, %-I:%M:%S %p')
+                    run_autohouseekping= self.utils.GetWidgetByName(widget=self.main_window.settings_view, child_name="run-housekeeping-now", level=0)
+                    run_autohouseekping.sublabel_text.props.label = last_run_short
+
             print(datetime.now(), "start load_clips")
 
             # load clips
