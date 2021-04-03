@@ -316,6 +316,8 @@ class SubSettings(Gtk.Grid):
             self.button.props.name = name
             self.button.props.hexpand = False
             self.button.props.always_show_image = True
+            label = [child for child in self.button.get_children()[0].get_child() if isinstance(child, Gtk.Label)][0]
+            label.props.valign = Gtk.Align.CENTER
             self.attach(self.button, 1, 0, 1, 2)
 
         if type == "listbox" and "-apps" in name:
