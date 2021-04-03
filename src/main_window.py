@@ -332,7 +332,6 @@ class ClipsWindow(Gtk.ApplicationWindow):
         else:
             view.hide()
             self.settings_view.hide()
-            print(len(self.clips_view.flowbox.get_children()))
             if len(self.clips_view.flowbox.get_children()) == 0:
                 self.current_view = "info-view"
                 self.info_view.show_all()

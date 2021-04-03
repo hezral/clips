@@ -180,12 +180,9 @@ class SettingsView(Gtk.Grid):
             sublabel_text.props.label = last_run_short
 
 
-    def on_spinbutton_activated(self, spinbutton):
-        
+    def on_spinbutton_activated(self, spinbutton):        
         name = spinbutton.get_name()
         window = self.get_toplevel()
-
-        print("spin:", name, "value:", spinbutton.props.value, )
 
         if self.is_visible():
             if name == "min-column-number":
@@ -194,7 +191,6 @@ class SettingsView(Gtk.Grid):
                 flowbox = self.app.utils.GetWidgetByName(widget=window, child_name="flowbox", level=0)
                 flowbox.props.min_children_per_line = spinbutton.props.value
                 
-
             if name == "auto-retention-period":
                 print("spin:", spinbutton, spinbutton.props.value, name)
 
