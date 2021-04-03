@@ -22,6 +22,7 @@ gi.require_version('Granite', '1.0')
 from gi.repository import Gtk, Granite, GObject, Gdk
 from views.clips_view import ClipsView
 from views.settings_view import SettingsView
+from views.info_view import InfoView
 
 class ClipsWindow(Gtk.ApplicationWindow):
     def __init__(self, *args, **kwargs):
@@ -36,6 +37,7 @@ class ClipsWindow(Gtk.ApplicationWindow):
         self.clips_view = ClipsView(self.app)
         self.settings_view = SettingsView(self.app)
         self.settings_view.connect("notify::visible", self.on_view_visible)
+        self.info_view = InfoView("No Clips Found","Start Copying Stuffs", "system-os-installer")
 
         #------ stack ----#
         self.stack = Gtk.Stack()
@@ -44,6 +46,7 @@ class ClipsWindow(Gtk.ApplicationWindow):
         self.stack.props.transition_duration = 150
         self.stack.add_named(self.clips_view, self.clips_view.get_name())
         self.stack.add_named(self.settings_view, self.settings_view.get_name())
+        self.stack.add_named(self.info_view, self.info_view.get_name())
 
         #------ headerbar ----#
         self.set_titlebar(self.generate_headerbar())
@@ -328,10 +331,15 @@ class ClipsWindow(Gtk.ApplicationWindow):
 
         else:
             view.hide()
-            self.current_view = "clips-view"
             self.settings_view.hide()
-            self.clips_view.show_all()
-            print("on:settings-view > clips-view")
+            print(len(self.clips_view.flowbox.get_children()))
+            if len(self.clips_view.flowbox.get_children()) == 0:
+                self.current_view = "info-view"
+                self.info_view.show_all()
+            else:
+                self.current_view = "clips-view"
+                self.clips_view.show_all()
+                print("on:settings-view > clips-view")
 
         # toggle css styling
         if self.current_view == "settings-view":
