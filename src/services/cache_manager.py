@@ -161,6 +161,7 @@ class CacheManager():
         #confirm deleted
         self.select_record(id)
         self.delete_cache_file(cache_file, clip_type)
+        self.check_total_clips()
     
     def delete_all_record(self):
         sqlite_with_param = '''
@@ -172,6 +173,8 @@ class CacheManager():
         
         for flowboxchild in self.app.main_window.clips_view.flowbox.get_children():
             flowboxchild.destroy()
+
+        self.check_total_clips()
 
     def auto_housekeeping(self, days):
         days_param = "-" + str(days) + " " + "day"
@@ -207,6 +210,7 @@ class CacheManager():
             print("No records found for auto housekeeping")
         
         print(datetime.now(), "finish auto-housekeeping")
+        self.check_total_clips()
 
         return datetime.now(), count
 
@@ -354,6 +358,8 @@ class CacheManager():
 
             else:
                 self.update_cache_on_recopy(checksum)
+            
+            self.check_total_clips()
 
     def update_cache_on_recopy(self, cache_file=None, checksum=None):
 
@@ -394,3 +400,27 @@ class CacheManager():
                                                                                                                                             created=created_short)
         
         clips_view.flowbox.invalidate_sort()
+
+    def check_total_clips(self):
+        total = len(self.load_clips())
+
+        # total not zero = show clips-view
+        # total not zero, info-view is visible = hide info-view, show clips-view
+        # total zero, clips-view is visible = show info-view
+        # total zero, settings-view is not visible = show info-view
+        # total zero, settings-view is visible = do nothing
+
+        if total != 0:
+            print("total clips:", total)
+            self.main_window.clips_view.show_all()
+            self.main_window.stack.set_visible_child_name("clips-view")
+        else:
+            print("total clips:", total)
+            if self.main_window.clips_view.is_visible():
+                self.main_window.stack.set_visible_child_name("info-view")
+            if self.main_window.settings_view.is_visible():
+                pass
+            if not self.main_window.settings_view.is_visible():
+                self.main_window.stack.set_visible_child_name("info-view")
+                
+            
