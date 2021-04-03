@@ -62,7 +62,7 @@ def GetAppInfo(app_name):
             if icon is not None:
                 icon_name = icon.to_string()
             else:
-                icon_name = "application-other"
+                icon_name = "application-default-icon"
         app_name = appinfo.get_name()
         return app_name, icon_name
 
