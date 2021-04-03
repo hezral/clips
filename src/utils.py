@@ -49,6 +49,23 @@ def RunAsync(func):
 
 ###################################################################################################################
 
+def GetAppInfo(app_name):
+    from gi.repository import Gio
+    all_apps = Gio.AppInfo.get_all()
+    try:
+        appinfo = [child for child in all_apps if child.get_name() == app_name][0]
+    except:
+        appinfo = None
+    finally:
+        if appinfo is not None:
+            icon = appinfo.get_icon()
+            if icon is not None:
+                icon_name = icon.to_string()
+            else:
+                icon_name = "application-other"
+        app_name = appinfo.get_name()
+        return app_name, icon_name
+
 def GetWidgetByName(widget, child_name, level, doPrint=False):
     '''
     Function to find widgets using its parent
