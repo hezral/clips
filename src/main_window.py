@@ -253,9 +253,6 @@ class ClipsWindow(Gtk.ApplicationWindow):
         self.clips_view.flowbox_filter_func(search_entry)
 
     def on_view_visible(self, view, gparam=None):
-
-        # print(locals())
-
         if view.is_visible():
             self.current_view = "settings-view"
             print("on:settings")
@@ -265,13 +262,18 @@ class ClipsWindow(Gtk.ApplicationWindow):
         else:
             view.hide()
             self.settings_view.hide()
-            if len(self.clips_view.flowbox.get_children()) == 0 and self.clips_view.is_visible():
+
+            total_clips_in_db = self.app.cache_manager.get_total_clips()[0][0]
+
+            if total_clips_in_db == 0:
                 self.current_view = "info-view"
                 self.info_view.show_all()
+                print("on:settings-view > info-view > clips-view")
+
             else:
                 self.current_view = "clips-view"
                 self.clips_view.show_all()
-                print("on:settings-view > clips-view")
+                print("on:settings-view > clips-view1")
 
         # toggle css styling
         if self.current_view == "settings-view":
