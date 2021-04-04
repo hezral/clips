@@ -58,48 +58,36 @@ class ClipsView(Gtk.Grid):
         def filter_func(flowboxchild, search_text):
             clips_container = flowboxchild.get_children()[0]
 
+            contents_single_keyword = [str(clips_container.id), clips_container.type.lower(), clips_container.target.lower(), clips_container.source_app.lower(), clips_container.created_short.lower()]
+            contents_multi_keyword = ' '.join(contents_single_keyword)
+
+            # check if multi keyword search
             if "," in search_text:
+                # check if grouped keyword 
+                if '"' in search_text:
+                    search_text = search_text.replace('"',"")
+
+                # split into multi keyword list
                 search_texts = search_text.split(",")
 
-            # sentence = "My screen is broken"
-            # search_texts = ["screen", "broken"]
+                # remove any begin/end whitespace
+                search_texts = [text.lstrip(' ') for text in search_texts]
+                search_texts = [text.rstrip(' ') for text in search_texts]
 
-            # if all(i in sentence for i in keys):
-            #     return True
-            # else:
-            #     return False
-
-                for text in search_texts:
-                    text = text.lstrip().rstrip()
-                    if text.lower() in str(clips_container.id):
-                        return True
-                    elif text.lower() in clips_container.type.lower():
-                        return True
-                    elif text.lower() in clips_container.target.lower():
-                        return True
-                    elif text.lower() in clips_container.source_app.lower():
-                        return True
-                    elif text.lower() in clips_container.created_short.lower():
-                        return True
-                    else:
-                        return False
-            
-            else:
-                if search_text.lower() in str(clips_container.id):
-                    return True
-                elif search_text.lower() in clips_container.type.lower():
-                    return True
-                elif search_text.lower() in clips_container.target.lower():
-                    return True
-                elif search_text.lower() in clips_container.source_app.lower():
-                    return True
-                elif search_text.lower() in clips_container.created_short.lower():
+                # print("multi-keyword-match", search_texts, contents_multi_keyword)
+                if all(i in contents_multi_keyword for i in search_texts):
                     return True
                 else:
                     return False
+            else:
+                # print("single-keyword-match", search_text)
+                if '"' in search_text:
+                    search_text = search_text.replace('"',"")
 
-
-                
+                if any(search_text in keyword for keyword in contents_single_keyword):
+                    return True
+                else:
+                    return False
 
         search_text = search_entry.get_text()
         self.flowbox.set_filter_func(filter_func, search_text)
