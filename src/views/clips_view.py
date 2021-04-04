@@ -64,6 +64,8 @@ class ClipsView(Gtk.Grid):
                         return True
                     elif text.lower() in clips_container.type.lower():
                         return True
+                    elif text.lower() in clips_container.target.lower():
+                        return True
                     elif text.lower() in clips_container.source_app.lower():
                         return True
                     elif text.lower() in clips_container.created_short.lower():
@@ -74,6 +76,8 @@ class ClipsView(Gtk.Grid):
                 if search_text.lower() in str(clips_container.id):
                     return True
                 elif search_text.lower() in clips_container.type.lower():
+                    return True
+                elif search_text.lower() in clips_container.target.lower():
                     return True
                 elif search_text.lower() in clips_container.source_app.lower():
                     return True
@@ -278,7 +282,7 @@ class ClipsContainer(Gtk.EventBox):
 
         # print("clips_view.py:", type(self.created_short), self.created_short, type(self.created), self.created)
 
-        self.info_text = "id: {id}\nformat: {format}\ntype: {type}\nsource app: {source}".format(id=self.id, format=self.target, type=self.type, source=self.source_app)
+        self.info_text = "id: {id}\nformat: {format}\ntype: {type}".format(id=self.id, format=self.target, type=self.type)
         
         clip_info = Gtk.Grid()
         clip_info.props.name = "clip-info"
@@ -919,7 +923,7 @@ class WordContainer(DefaultContainer):
                 except:
                     pass # file not exist for this entry
 
-        label = Gtk.Label("Preview Unavailable")
+        label = Gtk.Label("Preview with View action")
         label.props.margin_top = 10
         self.attach(label, 0, 1, 1, 1)
 
