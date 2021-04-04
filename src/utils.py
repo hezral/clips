@@ -387,16 +387,17 @@ def GetWebpageFavicon(contents, url, download_path='./'):
         # print(datetime.now(), "finish downloading favicon", url)
         return icon_name
 
-def GetWebpageData(url, file_path, download_path='./'):
+def GetWebpageData(url, file_path=None, download_path='./'):
     # print(datetime.now(), "start get webpage data", url)
     
     contents = GetWebpageContents(url)
     title = GetWebpageTitle(contents, url)
     icon_name = GetWebpageFavicon(contents, url, download_path)
 
-    with open(file_path, "a") as file:
-        file.write("\n"+title)
-        file.close
+    if file_path is not None:
+        with open(file_path, "a") as file:
+            file.write("\n"+title)
+            file.close
 
     # print(datetime.now(), "finish get webpage data", url)
 
@@ -410,11 +411,10 @@ def GetWebpageThread(url, file_path, download_path='./'):
         # print(return_value)
 
 
-# url = "https://netflix.com"
-# # GetWebpageThread(url)
+# url = "https://flathub.org"
+# # # GetWebpageThread(url)
 # GetWebpageData(url)
-# GetFaviconUrl1(url)
-# GetFaviconUrl2(url)
+
     
 ###################################################################################################################
 
