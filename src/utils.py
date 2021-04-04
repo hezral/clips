@@ -472,3 +472,9 @@ def isEmaild(str):
 # print(isValidUnixPath("/home/adi"))
 # print(isValidURL("http://google.com"))
 # print(isEmaild("hezral@gmail.com"))
+
+# import os
+# path = os.path.join(os.path.dirname(__file__), "..", "..", "data", "icons")
+
+# print(path)
+# print(os.path.exists(path))
