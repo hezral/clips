@@ -78,6 +78,7 @@ class Clips(Gtk.Application):
 
         # selected clip actions
         # self.setup_action("protect", self.on_clip_actions, "<Alt>P")
+        self.setup_action("reveal", self.on_clip_actions, "<Alt>R")
         self.setup_action("info", self.on_clip_actions, "<Alt>I")
         self.setup_action("view", self.on_clip_actions, "<Alt>V")
         self.setup_action("copy", self.on_clip_actions, "<Alt>C")
