@@ -174,9 +174,9 @@ class CacheManager():
         for flowboxchild in self.app.main_window.clips_view.flowbox.get_children():
             flowboxchild.destroy()
 
-        self.check_total_clips()
+        # self.check_total_clips()
 
-    def auto_housekeeping(self, days):
+    def auto_housekeeping(self, days, manual_run=False):
         days_param = "-" + str(days) + " " + "day"
         data_param = (days_param,) #pass in a sequence ie list
         sqlite_with_param = '''
@@ -210,7 +210,8 @@ class CacheManager():
             print("No records found for auto housekeeping")
         
         print(datetime.now(), "finish auto-housekeeping")
-        self.check_total_clips()
+        if manual_run is False:
+            self.check_total_clips()
 
         return datetime.now(), count
 
