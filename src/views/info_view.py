@@ -17,12 +17,17 @@
 
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk
+from gi.repository import Gtk, GdkPixbuf
+
+import os
+resource_path = os.path.join(os.path.dirname(__file__), "..", "..", "data", "images")
 
 class InfoView(Gtk.Grid):
     def __init__(self, title, description, icon):
         super().__init__()
         
+        self.props.name = "info-view"
+
         title_label = Gtk.Label(title)
         title_label.get_style_context().add_class("h1")
         description_label = Gtk.Label(description)
@@ -35,14 +40,23 @@ class InfoView(Gtk.Grid):
         icon_box.set_valign(Gtk.Align.START)
         icon_box.add(icon_image)
 
-        self.props.name = "info-view"
+        scale = self.get_scale_factor()
+        help_switch_views_pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(filename=os.path.join(resource_path, "help_switch_views.png"), width=200*scale, height=200*scale, preserve_aspect_ratio=True)
+        help_switch_views_image = Gtk.Image().new_from_pixbuf(help_switch_views_pixbuf)
+
         self.props.column_spacing = 12
         self.props.row_spacing = 6
         self.set_halign(Gtk.Align.CENTER)
         self.set_valign(Gtk.Align.CENTER)
         self.props.expand = True
         self.props.margin = 24
-        self.attach(icon_box, 1, 1, 1, 1)
-        self.attach(title_label, 1, 2, 1, 1)
-        self.attach(description_label, 1, 3, 1, 1)
-        #self.set_visible(True)
+        self.attach(icon_box, 0, 1, 1, 1)
+        self.attach(title_label, 0, 2, 1, 1)
+        self.attach(description_label, 0, 3, 1, 1)
+        self.attach(help_switch_views_image, 0, 4, 1, 1)
+
+class HelpView(Gtk.Grid):
+    def __init__(self, title, description, icon):
+        super().__init__()
+
+        self.props.name = "help-view"

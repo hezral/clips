@@ -205,20 +205,29 @@ class CacheManager():
                 print("id:", record[0], "cache_file:", record[6], "type:", record[7])
                 cache_file = self.cache_filedir + "/" + record[6]
                 type = record[7]
+                id = record[0]
                 self.delete_cache_file(cache_file, type)
                 data_param = (str(record[0]),) #pass in a sequence ie list
                 self.db_cursor.execute(sqlite_with_param, data_param)
                 self.db_connection.commit()
+                if manual_run:
+                    flowboxchild = [child for child in self.app.main_window.clips_view.flowbox.get_children() if child.get_children()[0].id == id][0]
+                    flowboxchild.destroy()
+
+            if manual_run is False:
+                self.check_total_clips()
+                
+            self.main_window.update_total_clips_label("delete", count)
         else:
             print("No records found for auto housekeeping")
-        
-        self.main_window.update_total_clips_label("delete", count)
 
         print(datetime.now(), "finish auto-housekeeping")
-        if manual_run is False:
-            self.check_total_clips()
 
-        return datetime.now(), count
+        last_run = datetime.now()
+        last_run_short = datetime.strftime(last_run, '%a, %d %B %Y, %-I:%M:%S %p')
+        run_autohousekeeping= self.app.utils.GetWidgetByName(widget=self.main_window.settings_view, child_name="run-housekeeping-now", level=0)
+        run_autohousekeeping.sublabel_text.props.label = last_run_short
+
 
     def select_record(self, id):
         data_param = (str(id),) #pass in a sequence ie list

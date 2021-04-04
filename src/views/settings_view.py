@@ -173,12 +173,7 @@ class SettingsView(Gtk.Grid):
             from datetime import datetime
             main_window = self.get_toplevel()
             sublabel_text = params.sublabel_text          
-            last_run, count = self.app.cache_manager.auto_housekeeping(self.gio_settings.get_int("auto-retention-period"), manual_run=True)
-            if count > 0:
-                main_window.total_clips_label.props.label = "Clips: {total}".format(total=count)
-            last_run_short = datetime.strftime(last_run, '%a, %d %B %Y, %-I:%M:%S %p')
-            sublabel_text.props.label = last_run_short
-
+            self.app.cache_manager.auto_housekeeping(self.gio_settings.get_int("auto-retention-period"), manual_run=True)
 
     def on_spinbutton_activated(self, spinbutton):        
         name = spinbutton.get_name()
