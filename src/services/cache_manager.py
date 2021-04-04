@@ -439,4 +439,12 @@ class CacheManager():
         records = self.db_cursor.fetchall()
         return records
 
+    def get_total_clips(self):
+        sqlite_with_param = '''
+            SELECT count(id) FROM 'ClipsDB'
+            '''
+        self.db_cursor.execute(sqlite_with_param)
+        records = self.db_cursor.fetchall()
+        return records
+
             
