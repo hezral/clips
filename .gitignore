@@ -31,12 +31,3 @@ ENV/
 env.bak/
 venv.bak/
 
-SQLite_Python.db
-ClipsDatabase.db
-ClipsDatabase.db
-cache/
-icon/
-*.png
-*.jpeg
-*.jpg
-*.gif
