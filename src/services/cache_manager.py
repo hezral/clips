@@ -356,7 +356,7 @@ class CacheManager():
 
             clips_view = self.main_window.clips_view
 
-            print(datetime.now(), "start populating clip content")
+            # print(datetime.now(), "start populating clip content")
         
             # check duplicates using checksum
             if len(self.check_duplicate(checksum)) == 0:
