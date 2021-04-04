@@ -57,9 +57,20 @@ class ClipsView(Gtk.Grid):
     def flowbox_filter_func(self, search_entry):
         def filter_func(flowboxchild, search_text):
             clips_container = flowboxchild.get_children()[0]
-            if " " in search_text:
-                search_texts = search_text.split(" ")            
+
+            if "," in search_text:
+                search_texts = search_text.split(",")
+
+            # sentence = "My screen is broken"
+            # search_texts = ["screen", "broken"]
+
+            # if all(i in sentence for i in keys):
+            #     return True
+            # else:
+            #     return False
+
                 for text in search_texts:
+                    text = text.lstrip().rstrip()
                     if text.lower() in str(clips_container.id):
                         return True
                     elif text.lower() in clips_container.type.lower():
@@ -72,6 +83,7 @@ class ClipsView(Gtk.Grid):
                         return True
                     else:
                         return False
+            
             else:
                 if search_text.lower() in str(clips_container.id):
                     return True
@@ -85,6 +97,9 @@ class ClipsView(Gtk.Grid):
                     return True
                 else:
                     return False
+
+
+                
 
         search_text = search_entry.get_text()
         self.flowbox.set_filter_func(filter_func, search_text)
@@ -942,9 +957,10 @@ class UrlContainer(DefaultContainer):
             self.content  = file.readlines()
 
         domain = utils.GetDomain(self.content[0].replace("\n",""))
+        checksum = os.path.splitext(filepath)[0].split("/")[-1]
         
         icon_size = 48 * self.get_scale_factor()
-        favicon_file = os.path.join(cache_filedir[:-6],"icon", domain + ".ico")
+        favicon_file = os.path.join(cache_filedir[:-6],"icon", domain + "-" + checksum + ".ico")
         
         try:
             favicon = Gtk.Image()

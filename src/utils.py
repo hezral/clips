@@ -347,7 +347,7 @@ def GetWebpageTitle(contents, url):
     return title
 
 # function to get web page favicon from a url
-def GetWebpageFavicon(contents, url, download_path='./'):
+def GetWebpageFavicon(contents, url, download_path='./', checksum='na'):
     LFAVICON = r"<link\srel\=\"(apple-touch-icon-precomposed|apple-touch-icon)\"\s(.*(\/.*)+?|href)\=\".*(\/.*)+?\""
     SFAVICON = r"<link\srel\=\"(icon|shortcut icon)\"\s(.*(\/.*)+?|href)\=\".*(\/.*)+?\""
     
@@ -358,7 +358,7 @@ def GetWebpageFavicon(contents, url, download_path='./'):
     # print(datetime.now(), "start downloading favicon", url)
 
     domain = GetDomain(url)
-    icon_name = download_path + '/' + domain + '.ico'    
+    icon_name = download_path + '/' + domain + '-' + checksum + '.ico'    
 
     regex_result1 = re.search(LFAVICON, contents)
     regex_result2 = re.search(SFAVICON, contents)
@@ -387,12 +387,12 @@ def GetWebpageFavicon(contents, url, download_path='./'):
         # print(datetime.now(), "finish downloading favicon", url)
         return icon_name
 
-def GetWebpageData(url, file_path=None, download_path='./'):
+def GetWebpageData(url, file_path=None, download_path='./', checksum='na'):
     # print(datetime.now(), "start get webpage data", url)
     
     contents = GetWebpageContents(url)
     title = GetWebpageTitle(contents, url)
-    icon_name = GetWebpageFavicon(contents, url, download_path)
+    icon_name = GetWebpageFavicon(contents, url, download_path, checksum)
 
     if file_path is not None:
         with open(file_path, "a") as file:

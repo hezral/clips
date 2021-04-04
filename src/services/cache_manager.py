@@ -237,7 +237,9 @@ class CacheManager():
         if 'http' in clip_type:
             with open(cache_file) as file:
                 content  = file.readlines()[0] # returns a list with 1 item
-            favicon_file = self.icon_cache_filedir + '/' + self.app.utils.GetDomain(content) + '.ico'
+            checksum = os.path.splitext(cache_file)[0].split("/")[-1]
+            domain = self.app.utils.GetDomain(content)
+            favicon_file = self.icon_cache_filedir + '/' + domain + '-' + checksum + '.ico'
             try:
                 os.remove(favicon_file)
             except OSError:
@@ -328,7 +330,7 @@ class CacheManager():
                 # GLib.idle_add(self.app.utils.GetWebpageFavicon, content.get_text(), self.icon_cache_filedir, cache_uri)
                 # with open(cache_uri, "a") as file:
                 #     file.write("\n"+self.app.utils.GetWebpageTitle(content.get_text()))
-                self.app.utils.GetWebpageData(content.get_text(), cache_uri, self.icon_cache_filedir)
+                self.app.utils.GetWebpageData(content.get_text(), cache_uri, self.icon_cache_filedir, checksum)
                 
             # fallback for source_icon
             # save a copy of the icon in case the app is uninstalled and no icon to use
