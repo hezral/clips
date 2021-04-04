@@ -171,10 +171,13 @@ class CacheManager():
         self.db_connection.commit()
         self.delete_all_cache_file()
         
+        count = len(self.app.main_window.clips_view.flowbox.get_children())
+
         for flowboxchild in self.app.main_window.clips_view.flowbox.get_children():
             flowboxchild.destroy()
 
         # self.check_total_clips()
+        self.main_window.update_total_clips_label("delete", count)
 
     def auto_housekeeping(self, days, manual_run=False):
         days_param = "-" + str(days) + " " + "day"
@@ -209,6 +212,8 @@ class CacheManager():
         else:
             print("No records found for auto housekeeping")
         
+        self.main_window.update_total_clips_label("delete", count)
+
         print(datetime.now(), "finish auto-housekeeping")
         if manual_run is False:
             self.check_total_clips()
@@ -361,9 +366,9 @@ class CacheManager():
 
             else:
                 self.update_cache_on_recopy(checksum)
-            
-            self.check_total_clips()
 
+            self.check_total_clips()
+            
     def update_cache_on_recopy(self, cache_file=None, checksum=None):
 
         clips_view = self.main_window.clips_view
