@@ -823,15 +823,16 @@ class FilesContainer(DefaultContainer):
             i = 0
             for line_number, line_content in enumerate(file):
                 line_content = line_content.replace("copy","").replace("file://","").strip()
-                if os.path.isdir(line_content):  
-                    mime_type = "inode/directory"
-                elif os.path.isfile(line_content):  
-                    mime_type, val = Gio.content_type_guess(line_content, data=None)
-                elif not os.path.exists(line_content):
-                    pass
+                if os.path.exists(line_content):
+                    if os.path.isdir(line_content):  
+                        mime_type = "inode/directory"
+                    elif os.path.isfile(line_content):  
+                        mime_type, val = Gio.content_type_guess(line_content, data=None)
+                    else:
+                        print(line_content, ": special file (socket, FIFO, device file)" )
+                        pass
                 else:
-                    print(line_content, ": special file (socket, FIFO, device file)" )
-                    pass
+                    mime_type = "inode/blockdevice"
                                 
                 icons = Gio.content_type_get_icon(mime_type)
                 
