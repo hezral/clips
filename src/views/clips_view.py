@@ -278,7 +278,7 @@ class ClipsContainer(Gtk.EventBox):
 
         # print("clips_view.py:", type(self.created_short), self.created_short, type(self.created), self.created)
 
-        self.info_text = "id: {id}\ntype: {type}\nsource app: {source}".format(id=self.id, type=self.type, source=self.source_app)
+        self.info_text = "id: {id}\nformat: {format}\ntype: {type}\nsource app: {source}".format(id=self.id, format=self.target, type=self.type, source=self.source_app)
         
         clip_info = Gtk.Grid()
         clip_info.props.name = "clip-info"
