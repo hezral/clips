@@ -75,6 +75,8 @@ class Clips(Gtk.Application):
         self.setup_action("search", self.on_search_action, "<Ctrl>F")
         self.setup_action("settings-view", self.on_switch_views, "<Alt>Right")
         self.setup_action("clips-view", self.on_switch_views, "<Alt>Left")
+        self.setup_action("add-column", self.on_column_number_changed, "<Alt>Up")
+        self.setup_action("del-column", self.on_column_number_changed, "<Alt>Down")
 
         # selected clip actions
         # self.setup_action("protect", self.on_clip_actions, "<Alt>P")
@@ -198,6 +200,19 @@ class Clips(Gtk.Application):
                 self.main_window.clips_view.show_all()
                 self.main_window.stack.set_visible_child_name("clips-view")
                 self.main_window.view_switch.props.active = False
+
+    def on_column_number_changed(self, action, param):
+        if self.main_window is not None:
+            current_column_number = self.gio_settings.get_int("min-column-number")
+            if action.props.name == "add-column":
+                new_column_number = current_column_number + 1
+            if action.props.name == "del-column":
+                new_column_number = current_column_number - 1
+
+            self.main_window.set_main_window_size(column_number=new_column_number)
+            flowbox = self.utils.GetWidgetByName(widget=self.main_window, child_name="flowbox", level=0)
+            flowbox.props.min_children_per_line = new_column_number
+            self.gio_settings.set_int(key="min-column-number", value=new_column_number)
 
     def on_hide_action(self, action, param):
         if self.main_window is not None:
