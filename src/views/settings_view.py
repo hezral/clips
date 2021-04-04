@@ -183,8 +183,10 @@ class SettingsView(Gtk.Grid):
             if name == "min-column-number":
 
                 window.set_main_window_size(column_number=spinbutton.props.value)
-                flowbox = self.app.utils.GetWidgetByName(widget=window, child_name="flowbox", level=0)
-                flowbox.props.min_children_per_line = spinbutton.props.value
+                clips_flowbox = self.app.utils.GetWidgetByName(widget=window, child_name="flowbox", level=0)
+                clips_flowbox.props.min_children_per_line = spinbutton.props.value
+                help_flowbox = self.app.utils.GetWidgetByName(widget=window, child_name="help-flowbox", level=0)
+                help_flowbox.props.min_children_per_line = spinbutton.props.value
                 
             if name == "auto-retention-period":
                 print("spin:", spinbutton, spinbutton.props.value, name)

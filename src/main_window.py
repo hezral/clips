@@ -37,7 +37,7 @@ class ClipsWindow(Gtk.ApplicationWindow):
         self.clips_view = ClipsView(self.app)
         self.settings_view = SettingsView(self.app)
         self.settings_view.connect("notify::visible", self.on_view_visible)
-        self.info_view = InfoView("No Clips Found","Start Copying Stuffs", "system-os-installer")
+        self.info_view = InfoView(self.app, "No Clips Found","Start Copying Stuffs", "system-os-installer")
 
         #------ stack ----#
         self.stack = Gtk.Stack()

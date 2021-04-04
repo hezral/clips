@@ -205,8 +205,10 @@ class Clips(Gtk.Application):
                 new_column_number = current_column_number - 1
 
             self.main_window.set_main_window_size(column_number=new_column_number)
-            flowbox = self.utils.GetWidgetByName(widget=self.main_window, child_name="flowbox", level=0)
-            flowbox.props.min_children_per_line = new_column_number
+            clips_flowbox = self.utils.GetWidgetByName(widget=self.main_window, child_name="flowbox", level=0)
+            clips_flowbox.props.min_children_per_line = new_column_number
+            help_flowbox = self.utils.GetWidgetByName(widget=self.main_window, child_name="help-flowbox", level=0)
+            help_flowbox.props.min_children_per_line = new_column_number
             self.gio_settings.set_int(key="min-column-number", value=new_column_number)
 
     def on_hide_action(self, action, param):

@@ -23,10 +23,14 @@ import os
 resource_path = os.path.join(os.path.dirname(__file__), "..", "..", "data", "images")
 
 class InfoView(Gtk.Grid):
-    def __init__(self, title, description, icon):
-        super().__init__()
+    def __init__(self, app, title, description, icon, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         
         self.props.name = "info-view"
+
+        self.app = app
+
+        prefer_dark_style = self.app.gio_settings.get_boolean("prefer-dark-style")
 
         title_label = Gtk.Label(title)
         title_label.get_style_context().add_class("h1")
@@ -39,24 +43,84 @@ class InfoView(Gtk.Grid):
         icon_box = Gtk.EventBox()
         icon_box.set_valign(Gtk.Align.START)
         icon_box.add(icon_image)
+        
+        help_switch_views = HelpSubView(prefer_dark_style, image_name="help_switch_views", subtitle_text="Switch between views")
+        help_search = HelpSubView(prefer_dark_style, image_name="help_search", subtitle_text="Search with multi keyword")
+        help_clip_actions = HelpSubView(prefer_dark_style, image_name="help_clip_actions", subtitle_text="Actions on clips")
+        help_hide_clips = HelpSubView(prefer_dark_style, image_name="help_hide_clips", subtitle_text="Run in background")
 
-        scale = self.get_scale_factor()
-        help_switch_views_pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(filename=os.path.join(resource_path, "help_switch_views.png"), width=200*scale, height=200*scale, preserve_aspect_ratio=True)
-        help_switch_views_image = Gtk.Image().new_from_pixbuf(help_switch_views_pixbuf)
-
-        self.props.column_spacing = 12
-        self.props.row_spacing = 6
+        self.props.column_spacing = 0
+        self.props.row_spacing = 0
         self.set_halign(Gtk.Align.CENTER)
         self.set_valign(Gtk.Align.CENTER)
         self.props.expand = True
-        self.props.margin = 24
-        self.attach(icon_box, 0, 1, 1, 1)
-        self.attach(title_label, 0, 2, 1, 1)
-        self.attach(description_label, 0, 3, 1, 1)
-        self.attach(help_switch_views_image, 0, 4, 1, 1)
+        self.props.margin = 10
+        # self.attach(icon_box, 0, 1, 1, 1)
+        # self.attach(title_label, 0, 2, 1, 1)
+        # self.attach(description_label, 0, 3, 1, 1)
 
-class HelpView(Gtk.Grid):
-    def __init__(self, title, description, icon):
-        super().__init__()
+        # flowbox
+        self.flowbox = Gtk.FlowBox()
+        self.flowbox.props.name = "help-flowbox"
+        self.flowbox.props.homogeneous = False
+        self.flowbox.props.row_spacing = 2
+        self.flowbox.props.column_spacing = 2
+        self.flowbox.props.max_children_per_line = 4
+        self.flowbox.props.min_children_per_line = app.gio_settings.get_int("min-column-number")
+        self.flowbox.props.margin = 2
+        self.flowbox.props.valign = Gtk.Align.START
+        self.flowbox.props.halign = Gtk.Align.FILL
+        self.flowbox.props.selection_mode = Gtk.SelectionMode.NONE
+            
+        self.flowbox.add(help_switch_views)
+        self.flowbox.add(help_search)
+        self.flowbox.add(help_clip_actions)
+        self.flowbox.add(help_hide_clips)
+
+        for child in self.flowbox.get_children():
+            child.props.can_focus = False
+
+
+        self.attach(self.flowbox, 0, 0, 1, 1)
+        # self.attach(help_switch_views, 0, 0, 1, 1)
+        # self.attach(help_search, 1, 0, 1, 1)
+        # self.attach(help_clip_actions, 2, 0, 1, 1)
+        # self.attach(help_hide_clips, 3, 0, 1, 1)
+
+# ----------------------------------------------------------------------------------------------------
+
+class HelpSubView(Gtk.Grid):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
         self.props.name = "help-view"
+
+# ----------------------------------------------------------------------------------------------------
+
+class HelpSubView(Gtk.Grid):
+    def __init__(self, prefer_dark_theme, image_name, subtitle_text, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.props.name = "help-subview"
+
+        if prefer_dark_theme:
+            filename = image_name + "_dark.png"
+        else:
+            filename = image_name + "_light.png"
+
+        scale = self.get_scale_factor()
+        image_size = 200 * scale
+        pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(filename=os.path.join(resource_path, filename), width=image_size, height=image_size, preserve_aspect_ratio=True)
+        image = Gtk.Image().new_from_pixbuf(pixbuf)
+
+        label = Gtk.Label(subtitle_text)
+        label.props.name = "help-subtitle-text"
+        label.props.halign = Gtk.Align.CENTER
+
+        self.props.column_spacing = 2
+        self.props.row_spacing = 2
+        self.set_halign(Gtk.Align.CENTER)
+        self.set_valign(Gtk.Align.CENTER)
+        self.props.expand = True
+        self.attach(image, 0, 0, 1, 1)
+        self.attach(label, 0, 1, 1, 1)
