@@ -144,11 +144,11 @@ class ClipsWindow(Gtk.ApplicationWindow):
         
         self.searchentry.connect("search-changed", self.on_search_entry_changed)
 
-        sourceapp_appchooser_popover = ClipsFilterPopover(self.app, self.searchentry)
-        sourceapp_filter = Gtk.Button(image=Gtk.Image().new_from_icon_name("application-default-icon", Gtk.IconSize.LARGE_TOOLBAR))
-        sourceapp_filter.props.always_show_image = True
-        sourceapp_filter.props.halign = Gtk.Align.END
-        sourceapp_filter.connect("clicked", self.on_sourceapp_filter, sourceapp_appchooser_popover)
+        # sourceapp_appchooser_popover = ClipsFilterPopover(self.app, self.searchentry)
+        # sourceapp_filter = Gtk.Button(image=Gtk.Image().new_from_icon_name("application-default-icon", Gtk.IconSize.LARGE_TOOLBAR))
+        # sourceapp_filter.props.always_show_image = True
+        # sourceapp_filter.props.halign = Gtk.Align.END
+        # sourceapp_filter.connect("clicked", self.on_sourceapp_filter, sourceapp_appchooser_popover)
 
         #------ searchbar ----#
         searchbar = Gtk.Grid()
@@ -402,6 +402,7 @@ class ClipsSourceAppListBox(Gtk.ListBox):
         source_apps.sort(key=self.sort_apps)
 
         for source_app in source_apps:
+            print(source_app[0])
             app_name, icon_name = self.app.utils.GetAppInfo(source_app[0])
             self.add(ClipsSourceAppListBoxRow(app_name, icon_name))
 
