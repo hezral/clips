@@ -52,7 +52,7 @@ class InfoView(Gtk.Grid):
         self.set_halign(Gtk.Align.CENTER)
         self.set_valign(Gtk.Align.CENTER)
         self.props.expand = True
-        self.props.margin = 10
+        # self.props.margin = 10
         # self.attach(icon_box, 0, 1, 1, 1)
         # self.attach(title_label, 0, 2, 1, 1)
         # self.attach(description_label, 0, 3, 1, 1)
@@ -65,7 +65,7 @@ class InfoView(Gtk.Grid):
         self.flowbox.props.column_spacing = 2
         self.flowbox.props.max_children_per_line = 4
         self.flowbox.props.min_children_per_line = app.gio_settings.get_int("min-column-number")
-        self.flowbox.props.margin = 2
+        # self.flowbox.props.margin = 2
         self.flowbox.props.valign = Gtk.Align.START
         self.flowbox.props.halign = Gtk.Align.FILL
         self.flowbox.props.selection_mode = Gtk.SelectionMode.NONE
@@ -84,12 +84,15 @@ class InfoView(Gtk.Grid):
             help_clip_actions = HelpSubView(prefer_dark_style, image_name="help_clip_actions", subtitle_text="Actions on clips")
             help_hide_clips = HelpSubView(prefer_dark_style, image_name="help_hide_clips", subtitle_text="Run in background")
             help_clipsapp_toggle = HelpSubView(prefer_dark_style, image_name="help_clipsapp_toggle", subtitle_text="Toggle clipboard monitoring")
+            help_column_number = HelpSubView(prefer_dark_style, image_name="help_column_number", subtitle_text="Adjust columns display")
 
             self.flowbox.add(help_switch_views)
-            self.flowbox.add(help_search)
+            self.flowbox.add(help_column_number)
             self.flowbox.add(help_clip_actions)
             self.flowbox.add(help_hide_clips)
             self.flowbox.add(help_clipsapp_toggle)
+            self.flowbox.add(help_search)
+            
 
             for child in self.flowbox.get_children():
                 child.props.can_focus = False
