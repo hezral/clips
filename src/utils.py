@@ -277,9 +277,22 @@ def ConvertToRGB(color_string):
 ###################################################################################################################
 
 # function to view file using default application
-def ViewFile(file):
+def ViewFileXdg(file):
     import subprocess
     subprocess.Popen(['xdg-open', file])
+
+def ViewFile(file):
+    print("view")
+    from gi.repository import Gio
+    view_file = Gio.File.new_for_path(file)
+    if view_file.query_exists():
+        try:
+            Gio.AppInfo.launch_default_for_uri(uri=view_file.get_uri(), context=None)
+        except:
+            print("Unable to launch {file}".format(file=view_file))
+            pass
+
+# ViewFile("/home/adi/Work/")
 
 ###################################################################################################################
 
