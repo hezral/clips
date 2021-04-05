@@ -171,6 +171,9 @@ def debug():
     clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
     clipboard.connect('owner_change', get_clipboard_contents, True)
 
+    print("running in debug mode")
+    print("waiting for clipboard event")
+
     # run
     Gtk.main()
 
