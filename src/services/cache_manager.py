@@ -29,6 +29,7 @@ from datetime import datetime
 class CacheManager():
 
     main_window = None
+    clipboard_monitoring = False
 
     def __init__(self, gtk_application=None, clipboard_manager=None):
 
@@ -39,6 +40,7 @@ class CacheManager():
 
         if clipboard_manager is not None:
             clipboard_manager.clipboard.connect("owner-change", self.update_cache, clipboard_manager)
+            self.clipboard_monitoring = True
 
         # initialize cache directory
         self.cache_dir = os.path.join(GLib.get_user_cache_dir(), application_id)

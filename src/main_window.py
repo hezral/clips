@@ -285,34 +285,6 @@ class ClipsWindow(Gtk.ApplicationWindow):
 
         self.stack.set_visible_child_name(self.current_view)
 
-    def on_clips_action(self, button, action):
-        if action == "enable":
-            if button.state == "enabled":
-                button.props.tooltip_text = "Clipboard Monitoring: Disabled"
-                self.app.clipboard_manager.clipboard.disconnect_by_func(self.app.cache_manager.update_cache)
-            else:
-                button.props.tooltip_text = "Clipboard Monitoring: Enabled"
-                self.app.clipboard_manager.clipboard.connect("owner-change", self.app.cache_manager.update_cache, self.app.clipboard_manager)
-        
-        elif action == "protect":
-            if button.state == "enabled":
-                button.props.tooltip_text = "Password Display/Monitoring: Disabled"
-            else:
-                button.props.tooltip_text = "Password Display/Monitoring: Enabled"
-            
-        else:
-            pass
-
-        if button.state == "enabled":
-            button.state = "disabled"
-            button.get_style_context().add_class("clips-action-disabled")
-            button.get_style_context().remove_class("clips-action-enabled")
-
-        else:
-            button.state = "enabled"
-            button.get_style_context().add_class("clips-action-enabled")
-            button.get_style_context().remove_class("clips-action-disabled")
-
     def update_total_clips_label(self, event, count=1):
         total_clips = int(self.total_clips_label.props.label.split(": ")[1])
         if event == "add":

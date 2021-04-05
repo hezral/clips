@@ -73,6 +73,7 @@ class Clips(Gtk.Application):
         self.setup_action("hide", self.on_hide_action, "Escape")
         self.setup_action("quit", self.on_quit_action, "<Ctrl>Q")
         self.setup_action("search", self.on_search_action, "<Ctrl>F")
+        self.setup_action("enable_app", self.on_clipsapp_action, "<Ctrl>period")
         self.setup_action("settings-view", self.on_switch_views, "<Alt>Right")
         self.setup_action("clips-view", self.on_switch_views, "<Alt>Left")
         self.setup_action("add-column", self.on_column_number_action, "<Alt>Up")
@@ -206,6 +207,22 @@ class Clips(Gtk.Application):
 
             self.main_window.settings_view.on_min_column_number_changed(new_column_number)
 
+    def on_clipsapp_action(self, action, param):
+        if self.cache_manager.clipboard_monitoring:
+            try:
+                self.clipboard_manager.clipboard.disconnect_by_func(self.cache_manager.update_cache)
+                self.cache_manager.clipboard_monitoring = False
+                print(datetime.now(), "clipboard monitoring disabled")
+            except:
+                print(datetime.now(), "clipboard monitoring disabling failed")
+        else:
+            try:
+                self.clipboard_manager.clipboard.connect("owner-change", self.cache_manager.update_cache, self.clipboard_manager)
+                self.cache_manager.clipboard_monitoring = True
+                print(datetime.now(), "clipboard monitoring enabled")
+            except:
+                print(datetime.now(), "clipboard monitoring enabling failed")
+ 
 
     def on_hide_action(self, action, param):
         if self.main_window is not None:
