@@ -16,9 +16,11 @@ Depends: ${python3:Depends},
          python3-gi,
          libgranite-dev,
          bamfdaemon,
-         libbamf3-2
+         libbamf3-2,
          libbamf3-dev,
          libwnck-3-dev,
-         libwebkit2gtk-4.0-dev
+         libwebkit2gtk-4.0-dev,
+         xclip,
+         xdg-utils
 Description: Clips
  Multi format clibpboard manager with support for images, html, richtext, office docs and plaintext.
