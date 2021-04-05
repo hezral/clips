@@ -54,6 +54,7 @@
         </key>
         <key type="i" name="min-column-number">
             <default>3</default>
+            <range min="1" max="20"/>
             <summary>Set minimum number of columns</summary>
             <description>Set minimum number of columns</description>
         </key>

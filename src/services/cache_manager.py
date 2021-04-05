@@ -452,6 +452,8 @@ class CacheManager():
             if not self.main_window.settings_view.is_visible():
                 self.main_window.info_view.show_all()
                 self.main_window.stack.set_visible_child_name("info-view")
+            else:
+                self.main_window.info_view.hide()
 
     def load_source_apps(self):
         sqlite_with_param = '''

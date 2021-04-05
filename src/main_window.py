@@ -98,6 +98,8 @@ class ClipsWindow(Gtk.ApplicationWindow):
         if column_number is None:
             column_number = self.gio_settings.get_int("min-column-number")
         default_height = 450
+        default_width = 340
+        min_width = 340
         proceed = True
 
         if column_number == 1:
@@ -259,6 +261,7 @@ class ClipsWindow(Gtk.ApplicationWindow):
         else:
             view.hide()
             self.settings_view.hide()
+            self.info_view.hide()
 
             total_clips_in_db = self.app.cache_manager.get_total_clips()[0][0]
 

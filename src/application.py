@@ -204,8 +204,9 @@ class Clips(Gtk.Application):
                 new_column_number = current_column_number + 1
             if action.props.name == "del-column":
                 new_column_number = current_column_number - 1
-
-            self.main_window.settings_view.on_min_column_number_changed(new_column_number)
+            
+            if new_column_number != 0:
+                self.main_window.settings_view.on_min_column_number_changed(new_column_number)
 
     def on_clipsapp_action(self, action=None, param=None):
         if self.cache_manager.clipboard_monitoring:

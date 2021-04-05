@@ -221,6 +221,7 @@ class SettingsView(Gtk.Grid):
                 print("auto-housekeeping")
 
     def on_min_column_number_changed(self, value):
+        print(value)
         main_window = self.get_toplevel()
         main_window.set_main_window_size(column_number=value)
         clips_flowbox = self.app.utils.GetWidgetByName(widget=main_window, child_name="flowbox", level=0)
