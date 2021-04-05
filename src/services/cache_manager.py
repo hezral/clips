@@ -390,9 +390,6 @@ class CacheManager():
             self.check_total_clips()
             
     def update_cache_on_recopy(self, cache_file=None, checksum=None):
-
-        clips_view = self.main_window.clips_view
-
         if checksum is None:
             checksum = os.path.splitext(cache_file)[0].split("/")[-1]
 
@@ -415,7 +412,7 @@ class CacheManager():
 
         
         # get the flowboxchild
-        flowboxchild_updated = [child for child in clips_view.flowbox.get_children() if child.get_children()[0].id == id][0]
+        flowboxchild_updated = [child for child in self.main_window.clips_view.flowbox.get_children() if child.get_children()[0].id == id][0]
 
         # update the timestamp
         flowboxchild_updated.get_children()[0].created = created_updated
@@ -427,7 +424,7 @@ class CacheManager():
                                                                                                                                             source_app=source_app, 
                                                                                                                                             created=created_short)
         
-        clips_view.flowbox.invalidate_sort()
+        self.main_window.clips_view.flowbox.invalidate_sort()
 
     def check_total_clips(self):
         total = len(self.load_clips())

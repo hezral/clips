@@ -132,22 +132,22 @@ class Clips(Gtk.Application):
             self.main_window.total_clips_label.props.label = "Clips: {total}".format(total=len(clips))
             
             if len(clips) != 0:
-                self.load_clips_fromdb(clips, self.main_window.clips_view)
+                self.load_clips_fromdb(clips)
             else:
                 self.main_window.stack.set_visible_child_name("info-view")
 
             self.running = True
 
     @utils.RunAsync
-    def load_clips_fromdb(self, clips, clips_view):
+    def load_clips_fromdb(self, clips):
         app_startup = True
 
         for clip in reversed(clips[-10:]):
-            GLib.idle_add(clips_view.new_clip, clip, app_startup)
+            GLib.idle_add(self.main_window.clips_view.new_clip, clip, app_startup)
             time.sleep(0.02)
 
         for clip in reversed(clips[:-10]):
-            GLib.idle_add(clips_view.new_clip, clip, app_startup)
+            GLib.idle_add(self.main_window.clips_view.new_clip, clip, app_startup)
             time.sleep(0.01)
 
         print(datetime.now(), "finish load_clips")
