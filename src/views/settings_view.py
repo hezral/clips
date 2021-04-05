@@ -34,6 +34,7 @@ class SettingsView(Gtk.Grid):
         # theme switch
         theme_switch = SubSettings(type="switch", name="theme-switch", label="Switch between Dark/Light theme", sublabel=None, separator=True)
         theme_switch.switch.bind_property("active", self.gtk_settings, "gtk-application-prefer-dark-theme", GObject.BindingFlags.SYNC_CREATE)
+        theme_switch.switch.connect_after("notify::active", self.on_switch_activated)
         self.gio_settings.bind("prefer-dark-style", theme_switch.switch, "active", Gio.SettingsBindFlags.DEFAULT)
 
         # persistent mode
@@ -188,27 +189,27 @@ class SettingsView(Gtk.Grid):
 
     def on_switch_activated(self, switch, gparam):
         name = switch.get_name()
-        window = self.get_toplevel()
+        main_window = self.get_toplevel()
         
         if self.is_visible():
 
             if name == "persistent-mode":
                 if switch.get_active():
                     # print('state-flags-on')
-                    window.disconnect_by_func(window.on_persistent_mode)
+                    main_window.disconnect_by_func(window.on_persistent_mode)
                 else:
-                    window.connect("state-flags-changed", window.on_persistent_mode)
+                    main_window.connect("state-flags-changed", window.on_persistent_mode)
                     # print('state-flags-off')
 
             if name == "sticky-mode":
                 if switch.get_active():
-                    window.stick()
+                    main_window.stick()
                 else:
-                    window.unstick()
+                    main_window.unstick()
 
             if name == "show-close-button":
-                if window is not None:
-                    headerbar = [child for child in window.get_children() if isinstance(child, Gtk.HeaderBar)][0]
+                if main_window is not None:
+                    headerbar = [child for child in main_window.get_children() if isinstance(child, Gtk.HeaderBar)][0]
 
                     if switch.get_active():
                         headerbar.set_show_close_button(True)
@@ -219,6 +220,14 @@ class SettingsView(Gtk.Grid):
 
             if name == "auto-housekeeping":
                 print("auto-housekeeping")
+
+            if name == "theme-switch":
+                print("theme-switch")
+                if main_window.info_view.help_view:
+                    print("three")
+                    for child in main_window.info_view.flowbox.get_children():
+                        child.destroy()
+                    main_window.info_view.help_view = main_window.info_view.generate_help_view()
 
     def on_min_column_number_changed(self, value):
         print(value)
