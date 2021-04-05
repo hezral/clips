@@ -105,6 +105,18 @@ class CacheManager():
             '''
         self.db_cursor.execute(sqlite_with_param, data_param)
         records = self.db_cursor.fetchall()
+        
+        for record in records:
+            id = record[0]
+            cache_file = os.path.join(self.cache_filedir,record[6])
+            clip_type = record[7]
+
+            # clean-up and delete from db since cache_file doesn't exist
+            if os.path.exists(cache_file) is False:
+                print("cache file doesn't exist, record removed from db:", id, cache_file, clip_type)
+                self.delete_record(id, cache_file, clip_type)
+                records.remove(record)
+
         return records
 
     def add_record(self, data_tuple):
@@ -159,7 +171,7 @@ class CacheManager():
         self.db_cursor.execute(sqlite_with_param, data_param)
         self.db_connection.commit()
         #confirm deleted
-        self.select_record(id)
+        # self.select_record(id)
         self.delete_cache_file(cache_file, clip_type)
         self.check_total_clips()
     
@@ -227,7 +239,6 @@ class CacheManager():
         last_run_short = datetime.strftime(last_run, '%a, %d %B %Y, %-I:%M:%S %p')
         run_autohousekeeping= self.app.utils.GetWidgetByName(widget=self.main_window.settings_view, child_name="run-housekeeping-now", level=0)
         run_autohousekeeping.sublabel_text.props.label = last_run_short
-
 
     def select_record(self, id):
         data_param = (str(id),) #pass in a sequence ie list

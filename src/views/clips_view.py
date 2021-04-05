@@ -102,29 +102,16 @@ class ClipsView(Gtk.Grid):
         main_window = self.get_toplevel()
         id = clip[0]
         cache_file = os.path.join(app.cache_manager.cache_filedir, clip[6])
-
-        # cache_file = os.path.join(cache_filedir, clip[6])
         new_flowboxchild = [child for child in self.flowbox.get_children() if child.get_children()[0].id == id]
 
         # add the new clip if cache_file exists
         if os.path.exists(cache_file) and len(new_flowboxchild) == 0:
             self.flowbox.add(ClipsContainer(clip, app.cache_manager.cache_filedir, app.utils))
-            # new_flowboxchild = [child for child in self.flowbox.get_children() if child.get_children()[0].id == id][0]
-            # new_flowboxchild.connect("focus-out-event", self.on_child_focus_out, new_flowboxchild)
-            # new_flowboxchild.connect("focus", self.on_child_focus)
             
             if app_startup is False:
-                # total_clips = int(main_window.total_clips_label.props.label.split(": ")[1])
-                # total_clips = total_clips + 1
-                # main_window.total_clips_label.props.label = "Clips: {total}".format(total=total_clips)
                 main_window.update_total_clips_label("add")
 
             self.flowbox.show_all()
-
-        # clean-up and delete from db since cache_file doesn't exist
-        elif os.path.exists(cache_file) is False:
-            print("cache file doesn't exist")
-            app.cache_manager.delete_record(id, cache_file)
 
     def on_edge_reached(self, scrolledwindow, position):
         if position.value_name == "GTK_POS_BOTTOM":
@@ -819,7 +806,7 @@ class FilesContainer(DefaultContainer):
         with open(filepath) as file:
             i = 0
             for line_number, line_content in enumerate(file):
-                line_content = line_content.replace("copy","").replace("file://","").strip()
+                line_content = line_content.replace("copy","").replace("file://","").strip().replace("%20", " ")
                 if os.path.exists(line_content):
                     if os.path.isdir(line_content):  
                         mime_type = "inode/directory"
@@ -829,7 +816,7 @@ class FilesContainer(DefaultContainer):
                         print(line_content, ": special file (socket, FIFO, device file)" )
                         pass
                 else:
-                    mime_type = "inode/blockdevice"
+                    mime_type = "application/octet-stream"
                                 
                 icons = Gio.content_type_get_icon(mime_type)
                 
