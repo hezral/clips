@@ -207,7 +207,7 @@ class Clips(Gtk.Application):
 
             self.main_window.settings_view.on_min_column_number_changed(new_column_number)
 
-    def on_clipsapp_action(self, action, param):
+    def on_clipsapp_action(self, action=None, param=None):
         if self.cache_manager.clipboard_monitoring:
             try:
                 self.clipboard_manager.clipboard.disconnect_by_func(self.cache_manager.update_cache)
