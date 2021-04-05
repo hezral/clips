@@ -48,6 +48,7 @@ class InfoView(Gtk.Grid):
         help_search = HelpSubView(prefer_dark_style, image_name="help_search", subtitle_text="Search with multi keyword")
         help_clip_actions = HelpSubView(prefer_dark_style, image_name="help_clip_actions", subtitle_text="Actions on clips")
         help_hide_clips = HelpSubView(prefer_dark_style, image_name="help_hide_clips", subtitle_text="Run in background")
+        help_clipsapp_toggle = HelpSubView(prefer_dark_style, image_name="help_clipsapp_toggle", subtitle_text="Toggle clipboard monitoring")
 
         self.props.column_spacing = 0
         self.props.row_spacing = 0
@@ -76,6 +77,7 @@ class InfoView(Gtk.Grid):
         self.flowbox.add(help_search)
         self.flowbox.add(help_clip_actions)
         self.flowbox.add(help_hide_clips)
+        self.flowbox.add(help_clipsapp_toggle)
 
         for child in self.flowbox.get_children():
             child.props.can_focus = False

@@ -268,6 +268,7 @@ class ClipsWindow(Gtk.ApplicationWindow):
                 print("on:settings-view > info-view > clips-view")
 
             else:
+                self.info_view.hide()
                 self.current_view = "clips-view"
                 self.clips_view.show_all()
                 print("on:settings-view > clips-view1")

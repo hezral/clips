@@ -225,7 +225,9 @@ class SettingsView(Gtk.Grid):
         main_window.set_main_window_size(column_number=value)
         clips_flowbox = self.app.utils.GetWidgetByName(widget=main_window, child_name="flowbox", level=0)
         help_flowbox = self.app.utils.GetWidgetByName(widget=main_window, child_name="help-flowbox", level=0)
-        clips_flowbox.props.min_children_per_line = help_flowbox.props.min_children_per_line = value
+        clips_flowbox.props.min_children_per_line = value
+        if help_flowbox is not None:
+            help_flowbox.props.min_children_per_line = value
         self.gio_settings.set_int(key="min-column-number", value=value)
 
 # ----------------------------------------------------------------------------------------------------

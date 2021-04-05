@@ -439,15 +439,18 @@ class CacheManager():
 
         if total != 0:
             # print("total clips:", total)
+            self.main_window.info_view.hide()
             self.main_window.clips_view.show_all()
             self.main_window.stack.set_visible_child_name("clips-view")
         else:
             # print("total clips:", total)
             if self.main_window.clips_view.is_visible():
+                self.main_window.info_view.show_all()
                 self.main_window.stack.set_visible_child_name("info-view")
             if self.main_window.settings_view.is_visible():
                 pass
             if not self.main_window.settings_view.is_visible():
+                self.main_window.info_view.show_all()
                 self.main_window.stack.set_visible_child_name("info-view")
 
     def load_source_apps(self):
