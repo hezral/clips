@@ -444,7 +444,7 @@ class ClipsContainer(Gtk.EventBox):
 
         elif action == "reveal":
             base_dir = os.path.dirname(self.cache_file)
-            self.app.utils.ViewFile(base_dir)
+            self.app.utils.ViewFileGio(base_dir)
             
         elif action == "info":
             self.clip_info_revealer.set_reveal_child(True)
