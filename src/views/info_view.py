@@ -23,14 +23,17 @@ import os
 resource_path = os.path.join(os.path.dirname(__file__), "..", "..", "data", "images")
 
 class InfoView(Gtk.Grid):
+
+    help_view = None
+    welcome_view = None
+
     def __init__(self, app, title, description, icon, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
         self.props.name = "info-view"
 
         self.app = app
-
-        prefer_dark_style = self.app.gio_settings.get_boolean("prefer-dark-style")
+        self.gio_settings = self.app.gio_settings
 
         title_label = Gtk.Label(title)
         title_label.get_style_context().add_class("h1")
@@ -43,12 +46,6 @@ class InfoView(Gtk.Grid):
         icon_box = Gtk.EventBox()
         icon_box.set_valign(Gtk.Align.START)
         icon_box.add(icon_image)
-        
-        help_switch_views = HelpSubView(prefer_dark_style, image_name="help_switch_views", subtitle_text="Switch between views")
-        help_search = HelpSubView(prefer_dark_style, image_name="help_search", subtitle_text="Search with multi keyword")
-        help_clip_actions = HelpSubView(prefer_dark_style, image_name="help_clip_actions", subtitle_text="Actions on clips")
-        help_hide_clips = HelpSubView(prefer_dark_style, image_name="help_hide_clips", subtitle_text="Run in background")
-        help_clipsapp_toggle = HelpSubView(prefer_dark_style, image_name="help_clipsapp_toggle", subtitle_text="Toggle clipboard monitoring")
 
         self.props.column_spacing = 0
         self.props.row_spacing = 0
@@ -73,21 +70,38 @@ class InfoView(Gtk.Grid):
         self.flowbox.props.halign = Gtk.Align.FILL
         self.flowbox.props.selection_mode = Gtk.SelectionMode.NONE
             
-        self.flowbox.add(help_switch_views)
-        self.flowbox.add(help_search)
-        self.flowbox.add(help_clip_actions)
-        self.flowbox.add(help_hide_clips)
-        self.flowbox.add(help_clipsapp_toggle)
-
-        for child in self.flowbox.get_children():
-            child.props.can_focus = False
-
-
         self.attach(self.flowbox, 0, 0, 1, 1)
-        # self.attach(help_switch_views, 0, 0, 1, 1)
-        # self.attach(help_search, 1, 0, 1, 1)
-        # self.attach(help_clip_actions, 2, 0, 1, 1)
-        # self.attach(help_hide_clips, 3, 0, 1, 1)
+
+    def generate_welcome_view(self):
+        print("welcome-view")
+
+    def generate_help_view(self):
+
+        if self.help_view is None:
+            prefer_dark_style = self.app.gio_settings.get_boolean("prefer-dark-style")
+            help_switch_views = HelpSubView(prefer_dark_style, image_name="help_switch_views", subtitle_text="Switch between views")
+            help_search = HelpSubView(prefer_dark_style, image_name="help_search", subtitle_text="Search with multi keyword")
+            help_clip_actions = HelpSubView(prefer_dark_style, image_name="help_clip_actions", subtitle_text="Actions on clips")
+            help_hide_clips = HelpSubView(prefer_dark_style, image_name="help_hide_clips", subtitle_text="Run in background")
+            help_clipsapp_toggle = HelpSubView(prefer_dark_style, image_name="help_clipsapp_toggle", subtitle_text="Toggle clipboard monitoring")
+
+            self.flowbox.add(help_switch_views)
+            self.flowbox.add(help_search)
+            self.flowbox.add(help_clip_actions)
+            self.flowbox.add(help_hide_clips)
+            self.flowbox.add(help_clipsapp_toggle)
+
+            for child in self.flowbox.get_children():
+                child.props.can_focus = False
+        
+            self.show_all()
+
+            return True
+
+        else:
+            pass
+        
+        
 
 # ----------------------------------------------------------------------------------------------------
 
