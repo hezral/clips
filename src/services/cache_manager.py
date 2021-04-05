@@ -440,20 +440,26 @@ class CacheManager():
         if total != 0:
             # print("total clips:", total)
             self.main_window.info_view.hide()
+            for child in self.main_window.info_view.flowbox.get_children():
+                child.destroy()
+            self.main_window.info_view.help_view = None
             self.main_window.clips_view.show_all()
             self.main_window.stack.set_visible_child_name("clips-view")
         else:
             # print("total clips:", total)
             if self.main_window.clips_view.is_visible():
-                self.main_window.info_view.show_all()
+                # if self.main_window.info_view.help_view is None:
+                #     print("one")
+                self.main_window.info_view.help_view = self.main_window.info_view.generate_help_view()
                 self.main_window.stack.set_visible_child_name("info-view")
             if self.main_window.settings_view.is_visible():
                 pass
             if not self.main_window.settings_view.is_visible():
-                self.main_window.info_view.show_all()
+                # if self.main_window.info_view.help_view is None:
+                self.main_window.info_view.help_view = self.main_window.info_view.generate_help_view()
                 self.main_window.stack.set_visible_child_name("info-view")
-            else:
-                self.main_window.info_view.hide()
+            # else:
+            #     self.main_window.info_view.hide()
 
     def load_source_apps(self):
         sqlite_with_param = '''

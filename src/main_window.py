@@ -267,7 +267,10 @@ class ClipsWindow(Gtk.ApplicationWindow):
 
             if total_clips_in_db == 0:
                 self.current_view = "info-view"
-                self.info_view.show_all()
+                # if self.info_view.help_view is None:
+                self.info_view.help_view = self.info_view.generate_help_view()
+                # self.info_view.show_all()
+                # self.info_view.show_all()
                 print("on:settings-view > info-view > clips-view")
 
             else:
