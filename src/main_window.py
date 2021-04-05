@@ -54,11 +54,11 @@ class ClipsWindow(Gtk.ApplicationWindow):
         #------ main_view ----#
         self.main_view = Gtk.Grid()
         self.main_view.props.name = "main-view"
-        self.main_view.attach(self.stack, 0, 0, 1, 1)
-        self.main_view.attach(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL), 0, 1, 1, 1)
-        # main_view.attach(self.generate_actionbar(), 0, 2, 1, 1)
-        self.main_view.attach(self.generate_statusbar(), 0, 2, 1, 1)
-        self.main_view.attach(self.generate_viewswitch(settings_view_obj=self.settings_view), 0, 2, 1, 1)
+        self.main_view.attach(self.stack, 0, 0, 3, 1)
+        self.main_view.attach(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL), 0, 1, 3, 1)
+        self.main_view.attach(self.generate_actionbar(), 0, 2, 1, 1)
+        self.main_view.attach(self.generate_statusbar(), 1, 2, 1, 1)
+        self.main_view.attach(self.generate_viewswitch(settings_view_obj=self.settings_view), 2, 2, 1, 1)
 
         #------ construct ----#
         self.props.title = "Clips"
@@ -68,12 +68,9 @@ class ClipsWindow(Gtk.ApplicationWindow):
         self.get_style_context().add_class("rounded")
 
         self.set_main_window_size()
-
         self.set_display_settings()
-
         self.add(self.main_view)
         self.show_all()
-
 
     def set_display_settings(self):
         # this is for tracking window state flags for persistent mode
@@ -172,34 +169,35 @@ class ClipsWindow(Gtk.ApplicationWindow):
         status.props.name = "app-statusbar"
         status.props.halign = Gtk.Align.START
         status.props.valign = Gtk.Align.CENTER
+        status.props.hexpand = True
         status.props.margin_left = 3
         status.attach(self.total_clips_label, 0, 0, 1, 1)
         return status
 
     def generate_actionbar(self):
-        clipstoggle_action = Gtk.Button(image=Gtk.Image().new_from_icon_name("com.github.hezral.clips-enabled-symbolic", Gtk.IconSize.SMALL_TOOLBAR))
-        clipstoggle_action.props.name = "app-action-enable"
-        clipstoggle_action.props.has_tooltip = True
-        clipstoggle_action.props.tooltip_text = "Clipboard Monitoring: Enabled"
-        clipstoggle_action.state = "enabled"
-        clipstoggle_action.get_style_context().add_class("app-action-enabled")
-        clipstoggle_action.connect("clicked", self.on_clips_action, "enable")
+        self.clipsapp_toggle = Gtk.Button(image=Gtk.Image().new_from_icon_name("com.github.hezral.clips-enabled-symbolic", Gtk.IconSize.SMALL_TOOLBAR))
+        self.clipsapp_toggle.props.name = "app-action-enable"
+        self.clipsapp_toggle.props.has_tooltip = True
+        self.clipsapp_toggle.props.tooltip_text = "Clipboard Monitoring: Enabled"
+        self.clipsapp_toggle.state = "enabled"
+        # self.clipsapp_toggle.get_style_context().add_class("app-action-enabled")
+        # self.clipsapp_toggle.connect("clicked", self.on_clips_action, "enable")
         
-        protecttoggle_action = Gtk.Button(image=Gtk.Image().new_from_icon_name("com.github.hezral.clips-protect-symbolic", Gtk.IconSize.SMALL_TOOLBAR))
-        protecttoggle_action.props.name = "app-action-protect"
-        protecttoggle_action.props.has_tooltip = True
-        protecttoggle_action.props.tooltip_text = "Password Display/Monitoring: Enabled"
-        protecttoggle_action.state = "enabled"
-        protecttoggle_action.get_style_context().add_class("clips-action-enabled")
-        protecttoggle_action.connect("clicked", self.on_clips_action, "protect")
+        self.passwordprotect_toggle = Gtk.Button(image=Gtk.Image().new_from_icon_name("com.github.hezral.clips-protect-symbolic", Gtk.IconSize.SMALL_TOOLBAR))
+        self.passwordprotect_toggle.props.name = "app-action-protect"
+        self.passwordprotect_toggle.props.has_tooltip = True
+        self.passwordprotect_toggle.props.tooltip_text = "Password Display/Monitoring: Enabled"
+        self.passwordprotect_toggle.state = "enabled"
+        # self.passwordprotect_toggle.get_style_context().add_class("clips-action-enabled")
+        # self.passwordprotect_toggle.connect("clicked", self.on_clips_action, "protect")
 
         actionbar = Gtk.Grid()
         actionbar.props.name = "app-actionbar"
         actionbar.props.halign = Gtk.Align.START
         actionbar.props.valign = Gtk.Align.CENTER
         actionbar.props.margin_left = 3
-        actionbar.attach(clipstoggle_action, 0, 0, 1, 1)
-        # actionbar.attach(protecttoggle_action, 1, 0, 1, 1)
+        actionbar.attach(self.clipsapp_toggle, 0, 0, 1, 1)
+        # actionbar.attach(self.passwordprotect_toggle, 1, 0, 1, 1)
         return actionbar
 
     def generate_viewswitch(self, settings_view_obj):

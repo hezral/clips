@@ -212,6 +212,9 @@ class Clips(Gtk.Application):
             try:
                 self.clipboard_manager.clipboard.disconnect_by_func(self.cache_manager.update_cache)
                 self.cache_manager.clipboard_monitoring = False
+                self.main_window.clipsapp_toggle.props.tooltip_text = "Clipboard Monitoring: Disabled"
+                self.main_window.clipsapp_toggle.get_style_context().add_class("app-action-disabled")
+                self.main_window.clipsapp_toggle.get_style_context().remove_class("app-action-enabled")
                 print(datetime.now(), "clipboard monitoring disabled")
             except:
                 print(datetime.now(), "clipboard monitoring disabling failed")
@@ -219,10 +222,12 @@ class Clips(Gtk.Application):
             try:
                 self.clipboard_manager.clipboard.connect("owner-change", self.cache_manager.update_cache, self.clipboard_manager)
                 self.cache_manager.clipboard_monitoring = True
+                self.main_window.clipsapp_toggle.props.tooltip_text = "Clipboard Monitoring: Enabled"
+                self.main_window.clipsapp_toggle.get_style_context().add_class("app-action-enabled")
+                self.main_window.clipsapp_toggle.get_style_context().remove_class("app-action-disabled")
                 print(datetime.now(), "clipboard monitoring enabled")
             except:
                 print(datetime.now(), "clipboard monitoring enabling failed")
- 
 
     def on_hide_action(self, action, param):
         if self.main_window is not None:
