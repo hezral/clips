@@ -150,8 +150,6 @@ class SettingsView(Gtk.Grid):
         # disable focus on flowboxchilds
         for child in self.flowbox.get_children():
             child.props.can_focus = False
-
-
         
     def on_button_clicked(self, button, params=None):
         name = button.get_name()
@@ -252,7 +250,6 @@ class SettingsView(Gtk.Grid):
                     main_window.info_view.help_view = main_window.info_view.generate_help_view()
 
     def on_min_column_number_changed(self, value):
-        print(value)
         main_window = self.get_toplevel()
         main_window.set_main_window_size(column_number=value)
         clips_flowbox = self.app.utils.GetWidgetByName(widget=main_window, child_name="flowbox", level=0)
