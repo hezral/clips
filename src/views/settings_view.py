@@ -28,6 +28,26 @@ class SettingsView(Gtk.Grid):
         self.app = app
         self.gio_settings = app.gio_settings
         self.gtk_settings = app.gtk_settings
+        
+        # construct---
+        self.props.name = "settings-view"
+        self.get_style_context().add_class(self.props.name)
+        self.props.expand = True
+
+        scrolled_window = Gtk.ScrolledWindow()
+        scrolled_window.props.expand = True
+        scrolled_window.props.hscrollbar_policy = Gtk.PolicyType.NEVER
+
+        self.flowbox = Gtk.FlowBox()
+        self.flowbox.props.name = "settings-flowbox"
+        self.flowbox.props.homogeneous = False
+        self.flowbox.props.row_spacing = 20
+        self.flowbox.props.column_spacing = 20
+        self.flowbox.props.margin = 10
+        self.flowbox.props.selection_mode = Gtk.SelectionMode.NONE
+        scrolled_window.add(self.flowbox)
+        self.attach(scrolled_window, 0, 0, 1, 1)
+
 
         # display behaviour -------------------------------------------------
 
@@ -62,6 +82,7 @@ class SettingsView(Gtk.Grid):
         self.gio_settings.bind("min-column-number", min_column_number.spinbutton, "value", Gio.SettingsBindFlags.DEFAULT)
 
         display_behaviour_settings = SettingsGroup("Display & Behaviour", (theme_switch, show_close_button, hide_onstartup_mode, persistent_mode, sticky_mode, min_column_number, ))
+        self.flowbox.add(display_behaviour_settings)
 
         # housekeeping -------------------------------------------------
 
@@ -86,6 +107,7 @@ class SettingsView(Gtk.Grid):
         delete_all.button.get_style_context().add_class("destructive-action")
 
         app_settings = SettingsGroup("Housekeeping", (autopurge_mode, auto_retention_period, run_houseekeeping_now, delete_all, ))
+        self.flowbox.add(app_settings)
 
         # exceptions -------------------------------------------------
 
@@ -99,49 +121,42 @@ class SettingsView(Gtk.Grid):
         excluded_apps.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
 
         excluded = SettingsGroup("Excluded Apps", (excluded_apps, excluded_apps_list, ))
+        self.flowbox.add(excluded)
 
-        # protected app
-        # protected_apps_list_values = self.gio_settings.get_value("excluded-apps").get_strv()
-        # protected_apps_list = SubSettings(type="listbox", name="excluded-apps", label=None, sublabel=None, separator=False, params=(protected_apps_list_values, ))
+        # # protected app -------------------------------------------------
+        # protected_apps_list_values = self.gio_settings.get_value("protected-apps").get_strv()
+        # protected_apps_list = SubSettings(type="listbox", name="protected-apps", label=None, sublabel=None, separator=False, params=(protected_apps_list_values, ))
 
         # protected_appchooser_popover = AppChooserPopover(params=(protected_apps_list, ))
-        # protected_apps = SubSettings(type="button", name="protected-apps", label="Protected apps", sublabel="Contents copied will be protected", separator=False, params=("Select app", ))
+        # protected_apps = SubSettings(type="button", name="protected-apps", label="Protected apps", sublabel="Contents copied will be protected", separator=False, params=("Select app", Gtk.Image().new_from_icon_name("application-default-icon", Gtk.IconSize.LARGE_TOOLBAR), ))
         # protected_apps.button.connect("clicked", self.on_button_clicked, (protected_appchooser_popover, ))
         # protected_apps.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
 
         # protected = SettingsGroup("Protected Apps", (protected_apps, protected_apps_list, ))
-
-        # flowbox
-        self.flowbox = Gtk.FlowBox()
-        self.flowbox.props.name = "settings-flowbox"
-        self.flowbox.add(display_behaviour_settings)
-        self.flowbox.add(app_settings)
-        self.flowbox.add(excluded)
         # self.flowbox.add(protected)
-        self.flowbox.props.homogeneous = False
-        self.flowbox.props.row_spacing = 20
-        self.flowbox.props.column_spacing = 20
-        self.flowbox.props.margin = 10
-        self.flowbox.props.selection_mode = Gtk.SelectionMode.NONE
 
+        # help -------------------------------------------------
+        view_guides = SubSettings(type="button", name="view-help", label="Guides", sublabel="Guides on how to use Clips", separator=True, params=("View Guides", Gtk.Image().new_from_icon_name("help-contents", Gtk.IconSize.LARGE_TOOLBAR),))
+        view_guides.button.connect("clicked", self.on_button_clicked)
+        view_guides.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
+        
+        report_issue = SubSettings(type="button", name="report-issue", label="Have a feature or issue?", sublabel="Report and help make Clips better", separator=False, params=("Report issue", Gtk.Image().new_from_icon_name("help-faq", Gtk.IconSize.LARGE_TOOLBAR),))
+        report_issue.button.connect("clicked", self.on_button_clicked)
+        report_issue.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
+
+        help = SettingsGroup("Help", (view_guides, report_issue, ))
+        self.flowbox.add(help)
+
+        # disable focus on flowboxchilds
         for child in self.flowbox.get_children():
             child.props.can_focus = False
 
-        scrolled_window = Gtk.ScrolledWindow()
-        scrolled_window.props.expand = True
-        scrolled_window.props.hscrollbar_policy = Gtk.PolicyType.NEVER
-        scrolled_window.add(self.flowbox)
-        
-        # construct---
-        self.props.name = "settings-view"
-        self.get_style_context().add_class(self.props.name)
-        self.props.expand = True
-        self.attach(scrolled_window, 0, 0, 1, 1)
+
         
     def on_button_clicked(self, button, params=None):
         name = button.get_name()
 
-        if name == "excluded-apps":
+        if name == "excluded-apps" or name == "protected-apps":
             app_chooser_popover = params[0]
             app_chooser_popover.set_relative_to(button)
             app_chooser_popover.show_all()
@@ -171,10 +186,17 @@ class SettingsView(Gtk.Grid):
             dialog.destroy()
 
         if name == "run-housekeeping-now":
-            from datetime import datetime
-            main_window = self.get_toplevel()
-            sublabel_text = params.sublabel_text          
+            # from datetime import datetime
+            # # main_window = self.get_toplevel()
+            # # sublabel_text = params.sublabel_text          
             self.app.cache_manager.auto_housekeeping(self.gio_settings.get_int("auto-retention-period"), manual_run=True)
+
+        if name == "view-help":
+            print("view-help")
+
+        if name == "report-issue":
+            print("view-help")
+            Gtk.show_uri_on_window(None, "https://github.com/hezral/clips/issues/new", Gdk.CURRENT_TIME)
 
     def on_spinbutton_activated(self, spinbutton):        
         name = spinbutton.get_name()
