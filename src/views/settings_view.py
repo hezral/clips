@@ -177,16 +177,11 @@ class SettingsView(Gtk.Grid):
 
     def on_spinbutton_activated(self, spinbutton):        
         name = spinbutton.get_name()
-        window = self.get_toplevel()
+        main_window = self.get_toplevel()
 
         if self.is_visible():
             if name == "min-column-number":
-
-                window.set_main_window_size(column_number=spinbutton.props.value)
-                clips_flowbox = self.app.utils.GetWidgetByName(widget=window, child_name="flowbox", level=0)
-                clips_flowbox.props.min_children_per_line = spinbutton.props.value
-                help_flowbox = self.app.utils.GetWidgetByName(widget=window, child_name="help-flowbox", level=0)
-                help_flowbox.props.min_children_per_line = spinbutton.props.value
+                self.on_min_column_number_changed(spinbutton.props.value)
                 
             if name == "auto-retention-period":
                 print("spin:", spinbutton, spinbutton.props.value, name)
@@ -224,6 +219,14 @@ class SettingsView(Gtk.Grid):
 
             if name == "auto-housekeeping":
                 print("auto-housekeeping")
+
+    def on_min_column_number_changed(self, value):
+        main_window = self.get_toplevel()
+        main_window.set_main_window_size(column_number=value)
+        clips_flowbox = self.app.utils.GetWidgetByName(widget=main_window, child_name="flowbox", level=0)
+        help_flowbox = self.app.utils.GetWidgetByName(widget=main_window, child_name="help-flowbox", level=0)
+        clips_flowbox.props.min_children_per_line = help_flowbox.props.min_children_per_line = value
+        self.gio_settings.set_int(key="min-column-number", value=value)
 
 # ----------------------------------------------------------------------------------------------------
 
