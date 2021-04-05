@@ -277,11 +277,11 @@ def ConvertToRGB(color_string):
 ###################################################################################################################
 
 # function to view file using default application
-def ViewFileXdg(file):
+def ViewFile(file):
     import subprocess
     subprocess.Popen(['xdg-open', file])
 
-def ViewFile(file):
+def ViewFileGio(file):
     print("view")
     from gi.repository import Gio
     view_file = Gio.File.new_for_path(file)
