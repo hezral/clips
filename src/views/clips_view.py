@@ -30,10 +30,13 @@ class ClipsView(Gtk.Grid):
     def __init__(self, app, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        self.app = app
+
         #------ flowbox ----#
         self.flowbox = Gtk.FlowBox()
         self.flowbox.props.name = "flowbox"
         self.flowbox.props.homogeneous = False
+        self.flowbox.props.activate_on_single_click = False
         self.flowbox.props.row_spacing = 10
         self.flowbox.props.column_spacing = 10
         self.flowbox.props.max_children_per_line = 9
@@ -41,6 +44,7 @@ class ClipsView(Gtk.Grid):
         self.flowbox.props.valign = Gtk.Align.START
         self.flowbox.props.halign = Gtk.Align.FILL
         self.flowbox.set_sort_func(self.sort_flowbox)
+        self.flowbox.connect("child-activated", self.on_child_activated)
 
         #------ scrolled_window ----#
         scrolled_window = Gtk.ScrolledWindow()
@@ -53,6 +57,9 @@ class ClipsView(Gtk.Grid):
         self.props.name = "clips-view"
         self.props.expand = True
         self.attach(scrolled_window, 0, 0, 1, 1)
+
+    def on_child_activated(self, flowbox, flowboxchild):
+        flowboxchild.get_children()[0].on_clip_action(button=None, action="copy", flowbox=flowbox, flowboxchild=flowboxchild)
 
     def flowbox_filter_func(self, search_entry):
         def filter_func(flowboxchild, search_text):
@@ -106,7 +113,7 @@ class ClipsView(Gtk.Grid):
 
         # add the new clip if cache_file exists
         if os.path.exists(cache_file) and len(new_flowboxchild) == 0:
-            self.flowbox.add(ClipsContainer(clip, app.cache_manager.cache_filedir, app.utils))
+            self.flowbox.add(ClipsContainer(self.app, clip, app.cache_manager.cache_filedir, app.utils))
             
             if app_startup is False:
                 main_window.update_total_clips_label("add")
@@ -120,9 +127,10 @@ class ClipsView(Gtk.Grid):
 # ----------------------------------------------------------------------------------------------------
 
 class ClipsContainer(Gtk.EventBox):
-    def __init__(self, clip, cache_filedir, utils, *args, **kwargs):
+    def __init__(self, app, clip, cache_filedir, utils, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        self.app = app
         # get widget scale factor for redraw event
         self.scale = self.get_scale_factor()
 
@@ -169,22 +177,22 @@ class ClipsContainer(Gtk.EventBox):
             self.content = FallbackContainer(self.cache_file, self.type, utils)
 
         # print(self.cache_file, self.type)
-        clip_info_revealer = self.generate_clip_info(utils)
-        clip_action_notify_revealer = self.generate_clip_action_notify()
-        clip_action_revealer = self.generate_clip_action()
-        clip_select_revealer = self.generate_clip_select()
+        self.clip_info_revealer = self.generate_clip_info(utils)
+        self.clip_action_notify_revealer = self.generate_clip_action_notify()
+        self.clip_action_revealer = self.generate_clip_action()
+        self.clip_select_revealer = self.generate_clip_select()
 
         #------ construct ----#
         self.container_overlay = Gtk.Overlay()
         self.container_overlay.props.name = "clip-container-overlay"
         self.container_overlay.add(self.content)
-        self.container_overlay.add_overlay(clip_action_notify_revealer)
-        self.container_overlay.set_overlay_pass_through(clip_action_notify_revealer, True)
-        self.container_overlay.add_overlay(clip_action_revealer)
-        self.container_overlay.set_overlay_pass_through(clip_action_revealer, True)
-        self.container_overlay.add_overlay(clip_info_revealer)
-        self.container_overlay.set_overlay_pass_through(clip_info_revealer, True)
-        self.container_overlay.add_overlay(clip_select_revealer)
+        self.container_overlay.add_overlay(self.clip_action_notify_revealer)
+        self.container_overlay.set_overlay_pass_through(self.clip_action_notify_revealer, True)
+        self.container_overlay.add_overlay(self.clip_action_revealer)
+        self.container_overlay.set_overlay_pass_through(self.clip_action_revealer, True)
+        self.container_overlay.add_overlay(self.clip_info_revealer)
+        self.container_overlay.set_overlay_pass_through(self.clip_info_revealer, True)
+        self.container_overlay.add_overlay(self.clip_select_revealer)
 
         self.container_grid = Gtk.Grid()
         self.container_grid.props.name = "clip-container-grid"
@@ -417,46 +425,40 @@ class ClipsContainer(Gtk.EventBox):
         if clip_select_revealer.get_child_revealed():
             clip_select_revealer.set_reveal_child(False)
 
-    def on_clip_action(self, button=None, action=None):
-        main_window = self.get_toplevel()
-        app = main_window.props.application
-        utils = app.utils
-        flowboxchild = self.get_parent()
-        flowbox = flowboxchild.get_parent()
-        clip_container_overlay = utils.GetWidgetByName(widget=flowboxchild, child_name="clip-container-overlay", level=0)
-        # utils.GetWidgetByName not working for some widget class like Gtk.Overlay
-        clip_action_revealer = [child for child in clip_container_overlay.get_children() if child.props.name == "clip-action-revealer"][0]
-        clip_action_notify = [child for child in clip_container_overlay.get_children() if child.props.name == "clip-action-notify-revealer"][0]
-        clip_info_revealer = [child for child in clip_container_overlay.get_children() if child.props.name == "clip-info-revealer"][0]
-        
-        flowboxchild.do_activate(flowboxchild)        
+    def on_clip_action(self, button=None, action=None, flowbox=None, flowboxchild=None):
+        if flowboxchild is None:
+            flowboxchild = self.get_parent()
+        if flowbox is None:
+            flowbox = flowboxchild.get_parent()
+    
+        # flowboxchild.do_activate(flowboxchild)       
         flowbox.select_child(flowboxchild)
 
-        action_notify_box = clip_action_notify.get_children()[0]
+        action_notify_box = self.clip_action_notify_revealer.get_children()[0]
         # remove previous widgets
         for child in action_notify_box.get_children():
             child.destroy()
  
         if action == "protect":
-            clip_action_notify.set_reveal_child(True)
+            self.clip_action_notify_revealer.set_reveal_child(True)
 
         elif action == "reveal":
             base_dir = os.path.dirname(self.cache_file)
-            utils.ViewFile(base_dir)
+            self.app.utils.ViewFile(base_dir)
             
         elif action == "info":
-            clip_info_revealer.set_reveal_child(True)
+            self.clip_info_revealer.set_reveal_child(True)
 
         elif action == "view":
             if "url" in self.type:
                 with open(self.cache_file) as file:
-                    utils.ViewFile(file.readlines()[0].replace("\n",""))
+                    self.app.utils.ViewFile(file.readlines()[0].replace("\n",""))
             # if "files" in self.type:
             #     with open(self.cache_file) as file:
             #         base_dir = os.path.dirname(file.readlines()[0].replace("copyfile://", ""))
             #     utils.ViewFile(base_dir)
             else:
-                utils.ViewFile(self.cache_file)
+                self.app.utils.ViewFile(self.cache_file)
 
         elif action == "copy":
             icon = Gtk.Image().new_from_icon_name("process-completed", Gtk.IconSize.SMALL_TOOLBAR)
@@ -465,19 +467,19 @@ class ClipsContainer(Gtk.EventBox):
             action_notify_box.attach(label, 1, 0, 1, 1)
             action_notify_box.show_all()
 
-            clip_action_notify.set_reveal_child(True)
-            app.clipboard_manager.copy_to_clipboard(self.target, self.cache_file, self.type)
-            app.cache_manager.update_cache_on_recopy(self.cache_file)
+            self.clip_action_notify_revealer.set_reveal_child(True)
+            self.app.clipboard_manager.copy_to_clipboard(self.target, self.cache_file, self.type)
+            self.app.cache_manager.update_cache_on_recopy(self.cache_file)
 
         elif action == "force_delete":
             flowboxchild.destroy()
-            app.cache_manager.delete_record(self.id, self.cache_file, self.type)
-            main_window.update_total_clips_label("delete")
+            self.app.cache_manager.delete_record(self.id, self.cache_file, self.type)
+            self.app.main_window.update_total_clips_label("delete")
 
         elif action == "delete":
             dialog = Gtk.Dialog.new()
             dialog.props.title="Confirm delete action"
-            dialog.props.transient_for = main_window
+            dialog.props.transient_for = self.app.main_window
             btn_ok = Gtk.Button(label="OK")
             btn_ok.get_style_context().add_class("destructive-action")
             btn_cancel = Gtk.Button(label="Cancel")
@@ -493,10 +495,9 @@ class ClipsContainer(Gtk.EventBox):
             response = dialog.run()
             if response == Gtk.ResponseType.OK:
                 flowboxchild.destroy()
-                app.cache_manager.delete_record(self.id, self.cache_file, self.type)
-                main_window.update_total_clips_label("delete")
+                self.app.cache_manager.delete_record(self.id, self.cache_file, self.type)
+                self.app.main_window.update_total_clips_label("delete")
             dialog.destroy()
-
 
         else:
             print(action)
