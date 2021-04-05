@@ -72,7 +72,7 @@ class CacheManager():
         cursor = connection.cursor()
         cursor.execute("PRAGMA database_list;")
         curr_table = cursor.fetchall()
-        print(curr_table)
+        print("Found ClipsDB", curr_table)
         return connection, cursor
 
     def create_table(self, database_cursor):
