@@ -452,13 +452,14 @@ class ClipsContainer(Gtk.EventBox):
         elif action == "view":
             if "url" in self.type:
                 with open(self.cache_file) as file:
-                    self.app.utils.ViewFile(file.readlines()[0].replace("\n",""))
+                    lines = file.readlines()
+                self.app.utils.ViewUrl(lines[0].replace('\n',''))
             # if "files" in self.type:
             #     with open(self.cache_file) as file:
             #         base_dir = os.path.dirname(file.readlines()[0].replace("copyfile://", ""))
             #     utils.ViewFile(base_dir)
             else:
-                self.app.utils.ViewFile(self.cache_file)
+                self.app.utils.ViewFileGio(self.cache_file)
 
         elif action == "copy":
             icon = Gtk.Image().new_from_icon_name("process-completed", Gtk.IconSize.SMALL_TOOLBAR)

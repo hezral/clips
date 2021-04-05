@@ -277,14 +277,26 @@ def ConvertToRGB(color_string):
 ###################################################################################################################
 
 # function to view file using default application
-def ViewFile(file):
+def ViewFileXdg(filepath):
     import subprocess
-    subprocess.Popen(['xdg-open', file])
+    try:
+        subprocess.Popen(['xdg-open', filepath])
+    except:
+        pass
 
-def ViewFileGio(file):
+def ViewUrl(url):
+    import gi
+    gi.require_version('Gtk', '3.0')
+    from gi.repository import Gtk, Gdk
+    try:
+        Gtk.show_uri_on_window(None, url, Gdk.CURRENT_TIME)
+    except:
+        pass
+
+def ViewFileGio(filepath):
     print("view")
     from gi.repository import Gio
-    view_file = Gio.File.new_for_path(file)
+    view_file = Gio.File.new_for_path(filepath)
     if view_file.query_exists():
         try:
             Gio.AppInfo.launch_default_for_uri(uri=view_file.get_uri(), context=None)
