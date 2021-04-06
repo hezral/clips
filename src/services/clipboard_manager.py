@@ -44,7 +44,7 @@ class ClipboardManager():
 
     def clipboard_changed(self, clipboard, event):
 
-        # print("active app:", self.get_active_app()[0])
+        # print("active app:", active_app)
         # print("selection owner:", event.owner)
         # print("reason:", event.reason.value_name)
         # print("event type:", event.type.value_name)
@@ -61,7 +61,7 @@ class ClipboardManager():
         if event.reason is Gdk.OwnerChange.CLOSE and event.owner is None:
             event_id = 1
 
-        # print((self.get_active_app()[0], event.reason.value_name, event.owner, event_id))
+        # print((active_app, event.reason.value_name, event.owner, event_id))
 
         if len(self.events) == 0 and event_id == 0:
             self.events.append(event_id)
@@ -83,32 +83,36 @@ class ClipboardManager():
             self.proceed = True
 
         # exclude apps
-        if self.get_active_app()[0] != "Clips":
-            if self.get_active_app()[0] not in self.get_settings("excluded-apps"):
+        active_app, active_app_icon = self.app.utils.GetActiveAppWindow()
+
+        if active_app != "Clips":
+            if active_app not in self.get_settings("excluded-apps"):
                 if self.proceed:
                     created = datetime.now()
-                    clipboard_contents = self.get_clipboard_contents(clipboard, event)
+                    clipboard_contents = self.get_clipboard_contents(clipboard, event, active_app)
                     if clipboard_contents is not None:
                         target, content, thumbnail, file_extension, additional_desc, content_type = clipboard_contents
-                        source_app, source_icon = self.get_active_app()
+                        source_app = active_app
+                        source_icon = active_app_icon
+
                         if source_app not in self.get_settings("protected-apps"):
                             protected = "no"
                         else:
                             protected = "yes"
 
-                        print("clipboard event captured:", self.events, self.get_active_app()[0])
+                        print("clipboard event captured:", self.events, active_app)
                         return target, content, source_app, source_icon, created, protected, thumbnail, file_extension, content_type
             else:
-                print("clipboard event ignored:", self.events, event_id, self.get_active_app()[0])
+                print("clipboard event ignored:", self.events, event_id, active_app)
                 pass
 
 
 
-    def get_clipboard_contents(self, clipboard, event):
+    def get_clipboard_contents(self, clipboard, event, active_app):
         
         clip_saved = False
 
-        for supported_target in self.clips_supported.supported_targets:       
+        for supported_target in self.clips_supported.supported_targets:   
             for target in clipboard.wait_for_targets()[1]:
                 if target not in self.clips_supported.excluded_targets and supported_target[0] in str(target) and clip_saved is False:
                     proceed = True
@@ -122,10 +126,10 @@ class ClipboardManager():
                         thumbnail = supported_target[4]
 
                         # only get the right target for these types
-                        if "WPS" in self.get_active_app()[0] and not "WPS" in supported_target[2]:
+                        if "WPS" in active_app and not "WPS" in supported_target[2]:
                             proceed = False
 
-                        if "Libre" in self.get_active_app()[0] and not "Libre" in supported_target[2]:
+                        if "Libre" in active_app and not "Libre" in supported_target[2]:
                             proceed = False
 
                         if "WPS Spreadsheets" in supported_target[2] or "LibreOffice Calc" in supported_target[2]:
@@ -169,35 +173,3 @@ class ClipboardManager():
                             clip_saved = True
 
                             return target, content, thumbnail, file_extension, additional_desc, content_type
-
-    def get_active_app(self):
-        matcher = Bamf.Matcher()
-        screen = Wnck.Screen.get_default()
-        screen.force_update()
-
-        # if matcher.get_active_window() is None:
-        #     active_win = screen.get_active_window()
-        # else:
-        #     active_win = matcher.get_active_window()
-
-        active_win = matcher.get_active_window()
-        if active_win is not None:
-            active_app = matcher.get_application_for_window(active_win)
-            if active_app is not None:
-                source_app = active_app.get_name().split(" – ")[-1] #some app's name are shown with current document name so we split it and get the last part only
-                source_icon = active_app.get_icon()
-        else: 
-            source_app = screen.get_active_workspace().get_name() # if no active window, fallback to workspace name
-            source_icon = 'preferences-desktop-wallpaper' 
-
-        return source_app, source_icon
-
-    def copy_to_clipboard(self, clipboard_target, file, type=None):
-        from subprocess import Popen, PIPE
-
-        if "url" in type:
-            with open(file) as _file:
-                data = Popen(['echo', _file.readlines()[0].rstrip("\n").rstrip("\n")], stdout=PIPE)
-                Popen(['xclip', '-selection', 'clipboard', '-target', clipboard_target], stdin=data.stdout)
-        else:
-            Popen(['xclip', '-selection', 'clipboard', '-target', clipboard_target, '-i', file])

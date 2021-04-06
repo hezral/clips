@@ -16,7 +16,7 @@
 '''
 from datetime import datetime
 
-###################################################################################################################
+#-------------------------------------------------------------------------------------------------------
 
 def RunAsync(func):
     '''
@@ -47,13 +47,50 @@ def RunAsync(func):
 
     return async_func
 
-###################################################################################################################
+#-------------------------------------------------------------------------------------------------------
+
+def GetActiveAppWindow():
+    import gi
+    gi.require_version("Wnck", "3.0")
+    gi.require_version("Bamf", "3")
+    from gi.repository import Bamf, Wnck
+
+    matcher = Bamf.Matcher()
+    screen = Wnck.Screen.get_default()
+    screen.force_update()
+
+    # if matcher.get_active_window() is None:
+    #     active_win = screen.get_active_window()
+    # else:
+    #     active_win = matcher.get_active_window()
+
+    active_win = matcher.get_active_window()
+
+    if active_win is not None:
+        active_app = matcher.get_application_for_window(active_win)
+
+        print("get_active_app:", active_app.get_desktop_file())
+
+        # from gi.repository import Gio
+
+        # desktopapp_info = Gio.DesktopAppInfo.new_from_filename(active_app.get_desktop_file())
+
+        # print("get_active_app:", desktopapp_info.get_name())
+
+        if active_app is not None:
+            source_app = active_app.get_name().split(" – ")[-1] #some app's name are shown with current document name so we split it and get the last part only
+            source_icon = active_app.get_icon()
+    else: 
+        source_app = screen.get_active_workspace().get_name() # if no active window, fallback to workspace name
+        source_icon = 'preferences-desktop-wallpaper' 
+
+    return source_app, source_icon
 
 def GetAppInfo(app):
     from gi.repository import Gio
     all_apps = Gio.AppInfo.get_all()
     try:
-        appinfo = [child for child in all_apps if child.get_name() == app][0]
+        appinfo = [child for child in all_apps if app.lower() in child.get_name().lower()][0]
     except:
         appinfo = None
     finally:
@@ -138,7 +175,7 @@ def GetWidgetByFocusState(widget, focus_state, level, doPrint=False):
                 found = GetWidgetByFocusState(child, focus_state, level+1, doPrint) # //search the child
                 if found: return found
 
-###################################################################################################################
+#-------------------------------------------------------------------------------------------------------
 
 # function to validate string using regex
 def validateStr(str, regex):
@@ -155,7 +192,7 @@ def validateStr(str, regex):
     else:
         return False
 
-###################################################################################################################
+#-------------------------------------------------------------------------------------------------------
 # Color Validation Functions
 
 
@@ -274,7 +311,7 @@ def ConvertToRGB(color_string):
 
     return rgb, float(a)
 
-###################################################################################################################
+#-------------------------------------------------------------------------------------------------------
 
 # function to view file using default application
 def ViewFileXdg(filepath):
@@ -334,7 +371,7 @@ def RevealFile(files):
 # RevealFile(files)
 # RevealFile(file1)
 
-###################################################################################################################
+#-------------------------------------------------------------------------------------------------------
 
 # function to check distro since platform.linux_distribution() is deprecated since 3.7
 # https://majornetwork.net/2019/11/get-linux-distribution-name-and-version-with-python/
@@ -362,7 +399,7 @@ def GetOsDistroName():
 
     return RELEASE_DATA["NAME"], RELEASE_DATA["VERSION"]
 
-###################################################################################################################
+#-------------------------------------------------------------------------------------------------------
 
 # function to get domain from url
 def GetDomain(url):
@@ -466,7 +503,7 @@ def GetWebpageThread(url, file_path, download_path='./'):
 # # # # GetWebpageThread(url)
 # GetWebpageData(url)
 
-###################################################################################################################
+#-------------------------------------------------------------------------------------------------------
 
 # function to check valid internet URL
 # https://stackoverflow.com/a/60267538/14741406
@@ -482,7 +519,7 @@ def isValidURL(str):
 # print(url1, isValidURL(url1))
 # print(url2, isValidURL(url2))
 
-###################################################################################################################
+#-------------------------------------------------------------------------------------------------------
 
 # function to check valid file manager path
 # https://stackoverflow.com/a/38521489/14741406
@@ -491,7 +528,7 @@ def isValidUnixPath(str):
     regex = UNIXPATH
     return validateStr(str, regex)
 
-###################################################################################################################
+#-------------------------------------------------------------------------------------------------------
 
 # function to check email address
 EMAIL = r"(^(mailto\:)?[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)"
@@ -499,38 +536,16 @@ def isEmaild(str):
     regex = EMAIL
     return validateStr(str, regex)
 
-###################################################################################################################
+#-------------------------------------------------------------------------------------------------------
 
-# print(GetWebpageTitle('https://apple.com'))
-# GetWebpageFavicon('https://apple.com')
+def CopyToClipboard(clipboard_target, file, type=None):
+    from subprocess import Popen, PIPE
 
-# print(GetWebpageTitle('https://keep.google.com/?pli=1#home'))
-# GetWebpageFavicon('https://keep.google.com/?pli=1#home')
-
-# print(GetWebpageTitle('https://appcenter.elementary.io/com.github.devalien.workspaces/e'))
-# GetWebpageFavicon('https://appcenter.elementary.io/com.github.devalien.workspaces/e')
-
-# print(GetWebpageTitle('https://getpasta.com/faq.html'))
-# GetWebpageFavicon('https://getpasta.com/faq.html')
-
-# print(GetWebpageTitle('https://stackoverflow.com/questions/55828169/how-to-filter-gtk-flowbox-children-with-gtk-entrysearch'))
-# GetWebpageFavicon('https://stackoverflow.com/questions/55828169/how-to-filter-gtk-flowbox-children-with-gtk-entrysearch')
+    if "url" in type:
+        with open(file) as _file:
+            data = Popen(['echo', _file.readlines()[0].rstrip("\n").rstrip("\n")], stdout=PIPE)
+            Popen(['xclip', '-selection', 'clipboard', '-target', clipboard_target], stdin=data.stdout)
+    else:
+        Popen(['xclip', '-selection', 'clipboard', '-target', clipboard_target, '-i', file])
 
 
-# get_distro()
-
-# print(ConvertToRGB("rgb(255, 242, 0)")[0][0])
-# print(ConvertToRGB("hsl(133, 100%, 50%)"))
-# print(ConvertToRGB("#ff005d"))
-# print(ConvertToRGB("rgba(25, 0, 255, 0.75)"))
-# print(ConvertToRGB("hsla(124, 100%, 50%, 0.45)"))
-
-# print(isValidUnixPath("/home/adi"))
-# print(isValidURL("http://google.com"))
-# print(isEmaild("hezral@gmail.com"))
-
-# import os
-# path = os.path.join(os.path.dirname(__file__), "..", "..", "data", "icons")
-
-# print(path)
-# print(os.path.exists(path))

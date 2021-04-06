@@ -56,6 +56,7 @@ class ClipsView(Gtk.Grid):
         self.props.expand = True
         self.attach(scrolled_window, 0, 0, 1, 1)
 
+
     def flowbox_filter_func(self, search_entry):
         def filter_func(flowboxchild, search_text):
             clips_container = flowboxchild.get_children()[0]
@@ -132,7 +133,7 @@ class ClipsContainer(Gtk.EventBox):
         self.cache_filedir = cache_filedir
         self.id = clip[0]
         self.target = clip[1]
-        self.created = clip[2]
+        self.created = datetime.strptime(clip[2], '%Y-%m-%d %H:%M:%S.%f')
         self.source = clip[3]
         self.source_app = clip[4]
         self.source_icon = clip[5]
@@ -148,33 +149,33 @@ class ClipsContainer(Gtk.EventBox):
 
         #------ container types, refer to clips_supported.py ----#
         if "office/spreadsheet" in self.type:
-            self.content = SpreadsheetContainer(self.cache_file, self.type, utils)
+            self.content = SpreadsheetContainer(self.cache_file, self.type, app)
         elif "office/presentation" in self.type:
-            self.content = PresentationContainer(self.cache_file, self.type, utils)
+            self.content = PresentationContainer(self.cache_file, self.type, app)
         elif "office/word" in self.type:
-            self.content = WordContainer(self.cache_file, self.type, utils)
+            self.content = WordContainer(self.cache_file, self.type, app)
         elif "files" in self.type:
-            self.content = FilesContainer(self.cache_file, self.type, utils)
+            self.content = FilesContainer(self.cache_file, self.type, app)
         elif "image" in self.type:
-            self.content = ImageContainer(self.cache_file, self.type, utils)
+            self.content = ImageContainer(self.cache_file, self.type, app)
         elif "html" in self.type:
-            self.content = HtmlContainer(self.cache_file, self.type, utils)
+            self.content = HtmlContainer(self.cache_file, self.type, app)
         elif "richtext" in self.type:
-            self.content = FilesContainer(self.cache_file, self.type, utils)
+            self.content = FilesContainer(self.cache_file, self.type, app)
         elif "plaintext" in self.type:
-            self.content = PlainTextContainer(self.cache_file, self.type, utils)
+            self.content = PlainTextContainer(self.cache_file, self.type, app)
         elif "color" in self.type:
-            self.content = ColorContainer(self.cache_file, self.type, utils)
+            self.content = ColorContainer(self.cache_file, self.type, app)
         elif "url" in self.type:
-            self.content = UrlContainer(self.cache_file, self.type, utils, self.cache_filedir)
+            self.content = UrlContainer(self.cache_file, self.type, app, self.cache_filedir)
         elif "mail" in self.type:
-            self.content = EmailContainer(self.cache_file, self.type, utils, self.cache_filedir)
+            self.content = EmailContainer(self.cache_file, self.type, app, self.cache_filedir)
         else:
             print("clips_view.py:", "FallbackContainer:", self.cache_file, self.type)
-            self.content = FallbackContainer(self.cache_file, self.type, utils)
+            self.content = FallbackContainer(self.cache_file, self.type, app)
 
         # print(self.cache_file, self.type)
-        self.clip_info_revealer = self.generate_clip_info(utils)
+        # self.clip_info = self.generate_clip_info(utils)
         self.clip_action_notify_revealer = self.generate_clip_action_notify()
         self.clip_action_revealer = self.generate_clip_action()
         self.clip_select_revealer = self.generate_clip_select()
@@ -187,8 +188,8 @@ class ClipsContainer(Gtk.EventBox):
         self.container_overlay.set_overlay_pass_through(self.clip_action_notify_revealer, True)
         self.container_overlay.add_overlay(self.clip_action_revealer)
         self.container_overlay.set_overlay_pass_through(self.clip_action_revealer, True)
-        self.container_overlay.add_overlay(self.clip_info_revealer)
-        self.container_overlay.set_overlay_pass_through(self.clip_info_revealer, True)
+        # self.container_overlay.add_overlay(self.clip_info_revealer)
+        # self.container_overlay.set_overlay_pass_through(self.clip_info_revealer, True)
         self.container_overlay.add_overlay(self.clip_select_revealer)
 
         self.container_grid = Gtk.Grid()
@@ -205,6 +206,27 @@ class ClipsContainer(Gtk.EventBox):
         self.connect("enter-notify-event", self.on_cursor_entering_clip)
         self.connect("leave-notify-event", self.on_cursor_leaving_clip)
         self.connect("button-press-event", self.on_double_clicked_clip)
+
+        self.props.has_tooltip = True
+        
+        self.connect("query-tooltip", self.on_tooltip)
+
+
+
+        # try:
+        #     source_icon = Gtk.Image().new_from_icon_name(self.source_icon, Gtk.IconSize.LARGE_TOOLBAR)
+        #     self.tooltip_pixbuf = source_icon.props.pixbuf
+        #     print(self.tooltip_pixbuf)
+        # except:
+        #     source_icon_cache = os.path.join(self.cache_filedir[:-6],"icon", self.source_app.replace(" ",".").lower() + ".png")
+        #     if os.path.exists(source_icon_cache):
+        #         self.tooltip_pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(source_icon_cache, 24 * self.scale, 24 * self.scale, True)
+        #         print(self.tooltip_pixbuf)
+        #     else:
+        #         source_icon = Gtk.Image().new_from_icon_name("image-missing", Gtk.IconSize.LARGE_TOOLBAR)
+        #         self.tooltip_pixbuf = source_icon.props.pixbuf
+        #         print(self.tooltip_pixbuf)
+
 
     def generate_clip_select(self):
         clip_select_button = self.generate_action_button("com.github.hezral.clips-select-symbolic", "Select", "select")
@@ -293,14 +315,14 @@ class ClipsContainer(Gtk.EventBox):
         clip_info.attach(self.content_label, 1, 0, 1, 1)
         clip_info.attach(self.timestamp, 2, 0, 1, 1)
 
-        clip_info_revealer = Gtk.Revealer()
-        clip_info_revealer.props.name = "clip-info-revealer"
-        clip_info_revealer.props.halign = Gtk.Align.FILL
-        clip_info_revealer.props.valign = Gtk.Align.START
-        clip_info_revealer.props.transition_type = Gtk.RevealerTransitionType.CROSSFADE
-        clip_info_revealer.add(clip_info)
+        # clip_info_revealer = Gtk.Revealer()
+        # clip_info_revealer.props.name = "clip-info-revealer"
+        # clip_info_revealer.props.halign = Gtk.Align.FILL
+        # clip_info_revealer.props.valign = Gtk.Align.START
+        # clip_info_revealer.props.transition_type = Gtk.RevealerTransitionType.CROSSFADE
+        # clip_info_revealer.add(clip_info)
 
-        return clip_info_revealer
+        return clip_info
         
     def generate_clip_action_notify(self):
         action_notify_box = Gtk.Grid()
@@ -317,7 +339,7 @@ class ClipsContainer(Gtk.EventBox):
     def generate_clip_action(self):
         # protect_action = self.generate_action_button("com.github.hezral.clips-protect-symbolic", "Protect Content", "protect")
         reveal_action = self.generate_action_button("document-open-symbolic", "Reveal files", "reveal")
-        info_action = self.generate_action_button("com.github.hezral.clips-info-symbolic", "Show Info", "info")
+        # info_action = self.generate_action_button("com.github.hezral.clips-info-symbolic", "Show Info", "info")
         view_action = self.generate_action_button("com.github.hezral.clips-view-symbolic", "View", "view")
         copy_action = self.generate_action_button("edit-copy-symbolic", "Copy to Clipboard", "copy")
         delete_action = self.generate_action_button("edit-delete-symbolic", "Delete", "delete")
@@ -335,18 +357,44 @@ class ClipsContainer(Gtk.EventBox):
             view_action.props.sensitive = False
             # protect_action.get_style_context().add_class("clip-action-disabled")
             view_action.get_style_context().add_class("clip-action-disabled")
-               
+
+        app_name, app_icon = self.app.utils.GetAppInfo(self.source_app)
+        icon_size = 32 * self.scale
+        if app_icon == "application-default-icon":
+            source_icon_cache = os.path.join(self.cache_filedir[:-6],"icon", self.source_app.replace(" ",".").lower() + ".png")
+            try:
+                if os.path.exists(source_icon_cache):
+                    pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(source_icon_cache, icon_size, icon_size, True)
+                    icon = Gtk.Image().new_from_pixbuf(pixbuf)
+            except:
+                icon = Gtk.Image().new_from_icon_name("application-default-icon", Gtk.IconSize.LARGE_TOOLBAR)
+        else:
+            icon = Gtk.Image().new_from_icon_name(app_icon, Gtk.IconSize.LARGE_TOOLBAR)
+        
+        icon.set_pixel_size(icon_size)
+        icon.props.halign = Gtk.Align.START
+        icon.props.valign = Gtk.Align.START
+        icon.props.expand = True
+        icon.props.margin = 4
+
         # clip_action.attach(protect_action, 0, 0, 1, 1)
         clip_action.attach(reveal_action, 0, 0, 1, 1)
-        clip_action.attach(info_action, 1, 0, 1, 1)
+        # clip_action.attach(info_action, 1, 0, 1, 1)
         clip_action.attach(view_action, 2, 0, 1, 1)
         clip_action.attach(copy_action, 3, 0, 1, 1)
         clip_action.attach(delete_action, 5, 0, 1, 1)
 
+        grid = Gtk.Grid()
+        grid.props.expand = True
+        grid.props.halign = grid.props.valign = Gtk.Align.FILL
+        grid.attach(icon, 0, 0, 1, 1)
+        grid.attach(clip_action, 0, 1, 1, 1)
+
         clip_action_revealer = Gtk.Revealer()
         clip_action_revealer.props.name = "clip-action-revealer"    
         clip_action_revealer.props.transition_type = Gtk.RevealerTransitionType.CROSSFADE
-        clip_action_revealer.add(clip_action)
+        clip_action_revealer.add(grid)
+        # clip_action_revealer.add(clip_action)
         clip_action_revealer.props.can_focus = True
         
         # handle mouse focus in/out on the clip action bar
@@ -410,7 +458,7 @@ class ClipsContainer(Gtk.EventBox):
         # utils.GetWidgetByName not working for some widget class like Gtk.Overlay
         clip_action_revealer = [child for child in clip_container_overlay.get_children() if child.props.name == "clip-action-revealer"][0]
         clip_action_notify = [child for child in clip_container_overlay.get_children() if child.props.name == "clip-action-notify-revealer"][0]
-        clip_info_revealer = [child for child in clip_container_overlay.get_children() if child.props.name == "clip-info-revealer"][0]
+        # clip_info_revealer = [child for child in clip_container_overlay.get_children() if child.props.name == "clip-info-revealer"][0]
         clip_select_revealer = [child for child in clip_container_overlay.get_children() if child.props.name == "clip-select-revealer"][0]
 
         if flowboxchild.is_selected():
@@ -422,8 +470,8 @@ class ClipsContainer(Gtk.EventBox):
         if clip_action_notify.get_child_revealed():
             clip_action_notify.set_reveal_child(False)
 
-        if clip_info_revealer.get_child_revealed():
-            clip_info_revealer.set_reveal_child(False)
+        # if clip_info_revealer.get_child_revealed():
+        #     clip_info_revealer.set_reveal_child(False)
 
         if clip_select_revealer.get_child_revealed():
             clip_select_revealer.set_reveal_child(False)
@@ -470,7 +518,7 @@ class ClipsContainer(Gtk.EventBox):
             action_notify_box.show_all()
 
             self.clip_action_notify_revealer.set_reveal_child(True)
-            self.app.clipboard_manager.copy_to_clipboard(self.target, self.cache_file, self.type)
+            self.app.utils.CopyToClipboard(self.target, self.cache_file, self.type)
             self.app.cache_manager.update_cache_on_recopy(self.cache_file)
 
         elif action == "force_delete":
@@ -504,6 +552,27 @@ class ClipsContainer(Gtk.EventBox):
         else:
             print(action)
             pass
+
+    def on_tooltip(self, widget, x, y, keyboard_mode, tooltip):
+        app_name, app_icon = self.app.utils.GetAppInfo(self.source_app)
+        # tooltip.set_icon_from_icon_name(app_icon, Gtk.IconSize.LARGE_TOOLBAR)
+        text = str(self.id) + " :" + app_name
+        # tooltip.set_text(text)
+        self.props.tooltip_text = text
+        # grid = Gtk.Grid()
+        # grid.attach(Gtk.Label(text), 0, 0, 1, 1)
+        # tooltip.set_custom(grid)
+
+    def generate_tooltip(self):
+        # print(self.source_icon)
+        # source_icon = Gtk.Image().new_from_icon_name("process-completed", Gtk.IconSize.LARGE_TOOLBAR)
+        # grid = Gtk.Grid()
+        # grid.attach(source_icon, 0, 0, 1, 1)
+        # grid.show_all()
+        # print(source_icon)
+        print(self.app.utils.GetAppInfo(self.source_app))
+        
+
 
     def on_notify_action_hide(self, clip_action_notify, event):
         clip_action_notify.set_reveal_child(False)
@@ -569,7 +638,7 @@ class DefaultContainer(Gtk.Grid):
 # ----------------------------------------------------------------------------------------------------
 
 class FallbackContainer(DefaultContainer):
-    def __init__(self, filepath, type, utils, *args, **kwargs):
+    def __init__(self, filepath, type, app, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.content = Gtk.Label(type)
@@ -590,7 +659,7 @@ class FallbackContainer(DefaultContainer):
 # ----------------------------------------------------------------------------------------------------
 
 class ImageContainer(DefaultContainer):
-    def __init__(self, filepath, type, utils, *args, **kwargs):
+    def __init__(self, filepath, type, app, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.pixbuf_original = GdkPixbuf.Pixbuf.new_from_file(filepath)
@@ -669,17 +738,17 @@ class ImageContainer(DefaultContainer):
 # ----------------------------------------------------------------------------------------------------
 
 class ColorContainer(DefaultContainer):
-    def __init__(self, filepath, type, utils, *args, **kwargs):
+    def __init__(self, filepath, type, app, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.content = open(filepath, "r")
         self.content = self.content.read()
 
-        rgb, a = utils.ConvertToRGB(self.content)
+        rgb, a = app.utils.ConvertToRGB(self.content)
 
         color_code = "rgba({red},{green},{blue},{alpha})".format(red=str(rgb[0]),green=str(rgb[1]),blue=str(rgb[2]),alpha=str(a))
 
-        if utils.isLightOrDark(rgb) == "light":
+        if app.utils.isLightOrDark(rgb) == "light":
             font_color = "rgba(0,0,0,0.85)"
         else:
             font_color = "rgba(255,255,255,0.85)"
@@ -710,7 +779,7 @@ class ColorContainer(DefaultContainer):
 # ----------------------------------------------------------------------------------------------------
 
 class PlainTextContainer(DefaultContainer):
-    def __init__(self, filepath, type, utils, *args, **kwargs):
+    def __init__(self, filepath, type, app, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         with open(filepath) as file:
@@ -744,7 +813,7 @@ class PlainTextContainer(DefaultContainer):
 # ----------------------------------------------------------------------------------------------------
 
 class HtmlContainer(DefaultContainer):
-    def __init__(self, filepath, type, utils, *args, **kwargs):
+    def __init__(self, filepath, type, app, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.content = open(filepath, "r")
@@ -756,10 +825,10 @@ class HtmlContainer(DefaultContainer):
         webview.props.expand = True
         # webview.props.sensitive = False
 
-        css_bg_color = utils.GetCssBackgroundColor(self.content)
+        css_bg_color = app.utils.GetCssBackgroundColor(self.content)
 
         if css_bg_color is not None:
-            rgb, a = utils.ConvertToRGB(css_bg_color)
+            rgb, a = app.utils.ConvertToRGB(css_bg_color)
             color_code = "rgba({red},{green},{blue},{alpha})".format(red=str(rgb[0]),green=str(rgb[1]),blue=str(rgb[2]),alpha=str(a))
             webview_bg_color = Gdk.RGBA(red=float(rgb[0] / 255), green=float(rgb[1] / 255), blue=float(rgb[2] / 255), alpha=1)
             webview.set_background_color(webview_bg_color)
@@ -783,7 +852,7 @@ class HtmlContainer(DefaultContainer):
 # ----------------------------------------------------------------------------------------------------
 
 class FilesContainer(DefaultContainer):
-    def __init__(self, filepath, type, utils, *args, **kwargs):
+    def __init__(self, filepath, type, app, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         scale = self.get_scale_factor()
@@ -862,9 +931,9 @@ class FilesContainer(DefaultContainer):
 # ----------------------------------------------------------------------------------------------------
 
 class SpreadsheetContainer(ImageContainer):
-    def __init__(self, filepath, type, utils, *args, **kwargs):
+    def __init__(self, filepath, type, app, *args, **kwargs):
         thumbnail = os.path.splitext(filepath)[0]+'-thumb.png'
-        super().__init__(thumbnail, type, utils)
+        super().__init__(thumbnail, type, app)
 
         self.props.name = "spreadsheet-container"
 
@@ -873,9 +942,9 @@ class SpreadsheetContainer(ImageContainer):
 # ----------------------------------------------------------------------------------------------------
 
 class PresentationContainer(ImageContainer):
-    def __init__(self, filepath, type, utils, *args, **kwargs):
+    def __init__(self, filepath, type, app, *args, **kwargs):
         thumbnail = os.path.splitext(filepath)[0]+'-thumb.png'
-        super().__init__(thumbnail, type, utils)
+        super().__init__(thumbnail, type, app)
 
         self.props.name = "presentation-container"
 
@@ -884,7 +953,7 @@ class PresentationContainer(ImageContainer):
 # ----------------------------------------------------------------------------------------------------
 
 class WordContainer(DefaultContainer):
-    def __init__(self, filepath, type, utils, *args, **kwargs):
+    def __init__(self, filepath, type, app, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         scale = self.get_scale_factor()
@@ -926,13 +995,13 @@ class WordContainer(DefaultContainer):
 # ----------------------------------------------------------------------------------------------------
 
 class UrlContainer(DefaultContainer):
-    def __init__(self, filepath, type, utils, cache_filedir, *args, **kwargs):
+    def __init__(self, filepath, type, app, cache_filedir, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         with open(filepath) as file:
             self.content  = file.readlines()
 
-        domain = utils.GetDomain(self.content[0].replace("\n",""))
+        domain = app.utils.GetDomain(self.content[0].replace("\n",""))
         checksum = os.path.splitext(filepath)[0].split("/")[-1]
         
         icon_size = 48 * self.get_scale_factor()
@@ -974,10 +1043,11 @@ class UrlContainer(DefaultContainer):
 
         self.label = "Internet URL"
 
+
 # ----------------------------------------------------------------------------------------------------
 
 class EmailContainer(DefaultContainer):
-    def __init__(self, filepath, type, utils, cache_filedir, *args, **kwargs):
+    def __init__(self, filepath, type, app, cache_filedir, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.props.name = "email-container"
@@ -1025,3 +1095,5 @@ class EmailContainer(DefaultContainer):
         self.attach(domain, 0, 2, 1, 1)
 
         self.props.halign = self.props.valign = Gtk.Align.CENTER
+
+        
