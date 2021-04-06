@@ -330,3 +330,7 @@ label#files-container-more {
     background-position:0 0, 12px 0, 12px -12px, 0px 12px; /* Must be half of one side of the square */
 }
 
+image#clip-source-app-icon-overlay {
+    -gtk-icon-shadow: 0 2px 24px rgba(0, 0, 0, 0.2), 0 1px 3px rgba(0, 0, 0, 0.4);
+    }
+    
