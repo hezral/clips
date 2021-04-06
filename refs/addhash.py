@@ -14,18 +14,25 @@ conn = sqlite3.connect('hashBase.db')
 
 c = conn.cursor()
 
+c.execute('''
+    CREATE TABLE Hashes (
+        user    TEXT        NOT NULL,
+        hash    TEXT        NOT NULL
+    );
+    ''')
+
 #Get username and password
-currentUser = raw_input("User name: ")
-txtPassword = raw_input("Password: ")
+currentUser = input("User name: ")
+txtPassword = input("Password: ")
 
 #Hash the user's password
-currentPassword = hashlib.sha256(txtPassword).hexdigest()
+currentPassword = hashlib.sha256(txtPassword.encode('utf-8')).hexdigest()
 
 #Write entry to database table and commit
 c.execute("insert into Hashes values (?, ?)", (currentUser, currentPassword))
 conn.commit()
 
-print "Password added."
+print("Password added.")
 
 #Close connection to database
 conn.close()

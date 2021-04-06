@@ -11,23 +11,23 @@ conn = sqlite3.connect('hashBase.db')
 c = conn.cursor()
 
 #Read entered password and generate hash
-currentUser = raw_input("Login: ")
-currentPass = raw_input("Enter password: ")
-currentHash = hashlib.sha256(currentPass).hexdigest()
+currentUser = input("Login: ")
+currentPass = input("Enter password: ")
+currentHash = hashlib.sha256(currentPass.encode('utf-8')).hexdigest()
 
 #Read entry in database and get password hash
 t = (currentUser,)
-c.execute('SELECT Hash FROM Hashes WHERE Username=?', t)
+c.execute('SELECT hash FROM Hashes WHERE user=?', t)
 
 #Run if user account exists in database
 row = c.fetchone()
 if row is None:
-	print "Account not found"
+	print("Account/Password is incorrect")
 else:
 	fetchedHash = row[0]
 
 	#Compare currentHash with entry from database
 	if fetchedHash == currentHash:
-		print "Login Success."
+		print("Login Success.")
 	else:
-		print "Login Fail."
+		print("Account/Password is incorrect.")
