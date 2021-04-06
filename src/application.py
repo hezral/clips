@@ -138,6 +138,7 @@ class Clips(Gtk.Application):
             else:
                 self.main_window.stack.set_visible_child_name("info-view")
 
+            # self.main_window.clips_view.flowbox.select_child(self.main_window.clips_view.flowbox.get_child_at_index(0))
             self.running = True
 
     @utils.RunAsync
@@ -152,6 +153,8 @@ class Clips(Gtk.Application):
             GLib.idle_add(self.main_window.clips_view.new_clip, clip, app_startup)
             time.sleep(0.01)
 
+        # selects the first flowboxchild
+        self.main_window.clips_view.flowbox.select_child(self.main_window.clips_view.flowbox.get_child_at_index(0))
         print(datetime.now(), "finish load_clips")
 
     def do_command_line(self, command_line):
@@ -178,7 +181,8 @@ class Clips(Gtk.Application):
             self.main_window.searchentry.grab_focus()
         # focus back on first flowboxchild
         else:
-            self.main_window.clips_view.flowbox.get_child_at_index(0).grab_focus()
+            self.main_window.clips_view.flowbox.get_selected_children()[0].grab_focus()
+
     
     def on_clip_actions(self, action, param):
         if len(self.main_window.clips_view.flowbox.get_selected_children()) != 0:
