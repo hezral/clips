@@ -69,7 +69,7 @@ def GetActiveAppWindow():
     if active_win is not None:
         active_app = matcher.get_application_for_window(active_win)
 
-        print("get_active_app:", active_app.get_desktop_file())
+        # print("get_active_app:", active_app.get_desktop_file())
 
         # from gi.repository import Gio
 
