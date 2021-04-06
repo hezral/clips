@@ -72,6 +72,7 @@ class CacheManager():
         cursor = connection.cursor()
         cursor.execute("PRAGMA database_list;")
         curr_table = cursor.fetchall()
+        print(datetime.now(), "open_db")
         print("Found ClipsDB", curr_table)
         return connection, cursor
 
@@ -90,7 +91,20 @@ class CacheManager():
                 protected       TEXT
             );
             ''')
+
+    def create_table_hash(self, database_cursor):
+        # Initializes the database with the hash table
+        database_cursor.execute('''
+            CREATE TABLE hash (
+                id          INTEGER     PRIMARY KEY     NOT NULL,
+                created     TEXT        NOT NULL        DEFAULT (STRFTIME('%Y-%m-%d %H:%M:%S.%f', 'NOW', 'localtime')),
+                user        TEXT,
+                hash        TEXT
+            );
+            ''')
+
     
+
     def load_clips(self):
         # get lastrow id
         last_id = self.db_cursor.execute('SELECT max(id) FROM ClipsDB')
