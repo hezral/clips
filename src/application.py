@@ -88,6 +88,16 @@ class Clips(Gtk.Application):
         self.setup_action("copy", self.on_clip_actions, "<Alt>C")
         self.setup_action("delete", self.on_clip_actions, "<Alt>D")
         self.setup_action("force_delete", self.on_clip_actions, "<Alt>F")
+        self.setup_action("quick_copy1", self.on_clip_actions, "<Alt>1")
+        self.setup_action("quick_copy2", self.on_clip_actions, "<Alt>2")
+        self.setup_action("quick_copy3", self.on_clip_actions, "<Alt>3")
+        self.setup_action("quick_copy4", self.on_clip_actions, "<Alt>4")
+        self.setup_action("quick_copy5", self.on_clip_actions, "<Alt>5")
+        self.setup_action("quick_copy6", self.on_clip_actions, "<Alt>6")
+        self.setup_action("quick_copy7", self.on_clip_actions, "<Alt>7")
+        self.setup_action("quick_copy8", self.on_clip_actions, "<Alt>8")
+        self.setup_action("quick_copy9", self.on_clip_actions, "<Alt>9")
+        
 
         # #applicationwindow theme
         settings = Gtk.Settings.get_default()
@@ -186,10 +196,25 @@ class Clips(Gtk.Application):
     
     def on_clip_actions(self, action, param):
         if len(self.main_window.clips_view.flowbox.get_selected_children()) != 0:
-            flowboxchild = self.main_window.clips_view.flowbox.get_selected_children()[0]
-            if flowboxchild.is_selected():
-                clips_container = flowboxchild.get_children()[0]
-                clips_container.on_clip_action(action=action.props.name)
+
+            quick_copy_accels = ["1","2","3","4","5","6","7","8","9"]
+            if action.props.name[-1] in quick_copy_accels:
+                index = int(action.props.name[-1]) - 1
+                flowboxchild = self.main_window.clips_view.flowbox.get_child_at_index(index)
+                self.main_window.clips_view.flowbox.select_child(flowboxchild)
+                flowboxchild.do_activate(flowboxchild)
+                # do_activate triggers on_child_activated that sets current_selected_flowboxchild_index to index of selected flowboxchild
+                # need to reset index to 0 due to copy action will update created timestamp and flowbox will sort it to first item
+                self.main_window.clips_view.current_selected_flowboxchild_index = 0
+                if flowboxchild.is_selected():
+                    clips_container = flowboxchild.get_children()[0]
+                    clips_container.on_clip_action(action="copy")
+            else:
+                flowboxchild = self.main_window.clips_view.flowbox.get_selected_children()[0]
+                if flowboxchild.is_selected():
+                    clips_container = flowboxchild.get_children()[0]
+                    clips_container.on_clip_action(action=action.props.name)
+
 
     def on_switch_views(self, action, param):
         if self.main_window is not None:
