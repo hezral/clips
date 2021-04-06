@@ -282,6 +282,7 @@ def ViewFileXdg(filepath):
     try:
         subprocess.Popen(['xdg-open', filepath])
     except:
+        print("Unable to launch {filepath}".format(filepath=filepath))
         pass
 
 def ViewUrl(url):
@@ -291,10 +292,10 @@ def ViewUrl(url):
     try:
         Gtk.show_uri_on_window(None, url, Gdk.CURRENT_TIME)
     except:
+        print("Unable to launch {url}".format(url=url))
         pass
 
 def ViewFileGio(filepath):
-    print("view")
     from gi.repository import Gio
     view_file = Gio.File.new_for_path(filepath)
     if view_file.query_exists():
@@ -304,7 +305,34 @@ def ViewFileGio(filepath):
             print("Unable to launch {file}".format(file=view_file))
             pass
 
-# ViewFile("/home/adi/Work/")
+def ViewEmail(uri):
+    from gi.repository import Gio
+    try:
+        Gio.AppInfo.launch_default_for_uri(uri, None)
+    except:
+        print("Unable to launch {uri}".format(uri=uri))
+        pass
+
+def RevealFile(files):
+    from gi.repository import Gio, GLib, Gdk
+    app_info = Gio.AppInfo.get_default_for_type("inode/directory", True)
+    # add check if file or files
+    if isinstance(files, list):
+        try:
+            app_info.launch_uris(files, None)
+        except:
+            print("Unable to reveal {files}".format(files=files))
+            pass
+    else:
+        view_file = Gio.File.new_for_path(files)
+        files_list = [view_file, ]
+        app_info.launch(files_list, None)
+
+# file1 = "/home/adi/Work/clips/colors.txt"
+# file2 = "/home/adi/Work/clips/setup.py"
+# files = [file1, file2]
+# RevealFile(files)
+# RevealFile(file1)
 
 ###################################################################################################################
 
@@ -345,7 +373,6 @@ def GetDomain(url):
     else:
         domain = '.'.join(result.split('.'))
     return domain
-
 
 def GetWebpageContents(url):
     import requests
@@ -393,6 +420,8 @@ def GetWebpageFavicon(contents, url, download_path='./', checksum='na'):
     else:
         regex_result = regex_result2
 
+    print(regex_result)
+
     if regex_result is not None:
         favicon_url = regex_result.group(0).split('href="')[1].split('"')[0].strip(">").strip("/")
         if "http" not in favicon_url:
@@ -435,21 +464,25 @@ def GetWebpageThread(url, file_path, download_path='./'):
         return_value = future.result()
         # print(return_value)
 
-
-# url = "https://flathub.org"
+url = "https://gmail.com"
 # # # GetWebpageThread(url)
-# GetWebpageData(url)
+GetWebpageData(url)
 
-    
 ###################################################################################################################
 
 # function to check valid internet URL
 # https://stackoverflow.com/a/60267538/14741406
 # https://urlregex.com/
-URL = r"^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$"
+URL = r"(^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$)"
 def isValidURL(str):
     regex = URL
     return validateStr(str, regex)
+
+# url1 = "https://gmail.com"
+# url2 = "mailto:hezral@gmail.com"
+
+# print(url1, isValidURL(url1))
+# print(url2, isValidURL(url2))
 
 ###################################################################################################################
 
@@ -463,7 +496,7 @@ def isValidUnixPath(str):
 ###################################################################################################################
 
 # function to check email address
-EMAIL = r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)"
+EMAIL = r"(^(mailto\:)?[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)"
 def isEmaild(str):
     regex = EMAIL
     return validateStr(str, regex)

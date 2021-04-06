@@ -144,7 +144,6 @@ class ClipboardManager():
                                 else:
                                     proceed = False
 
-
                         if ("text/plain;charset=utf-8" in supported_target[0] or "text/plain" in supported_target[0]) and "url" in supported_target[3]:
                             if clipboard.wait_for_contents(target).get_text() is not None:
                                 if self.app.utils.isValidURL(clipboard.wait_for_contents(target).get_text().strip()):
@@ -152,6 +151,12 @@ class ClipboardManager():
                                 else:
                                     proceed = False
 
+                        if ("text/plain;charset=utf-8" in supported_target[0] or "text/plain" in supported_target[0]) and "mail" in supported_target[3]:
+                            if clipboard.wait_for_contents(target).get_text() is not None:
+                                if self.app.utils.isEmaild(clipboard.wait_for_contents(target).get_text().strip()):
+                                    content_type = "mail"
+                                else:
+                                    proceed = False
 
                         if proceed:
                             if thumbnail:

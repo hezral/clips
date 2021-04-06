@@ -67,6 +67,8 @@ plaintext_target = ("text/plain", "txt", "Plain Text Format", "plaintext", False
 # custom types, not a real clipboard data type
 url1_target = ("text/plain;charset=utf-8", "txt", "Internet URL", "url", False)
 url2_target = ("text/plain", "txt", "Internet URL", "url", False)
+mail1_target = ("text/plain;charset=utf-8", "txt", "Email", "mail", False)
+mail2_target = ("text/plain", "txt", "email", "mail", False)
 color_target = ("text/plain;charset=utf-8", "txt", "Color Codes", "color", False)
 
 supported_targets = (spreadsheet_libreoffice_target,
@@ -85,7 +87,9 @@ supported_targets = (spreadsheet_libreoffice_target,
                     richtext_target,
                     color_target,
                     url1_target,
-                    url2_target, 
+                    url2_target,
+                    mail1_target,
+                    mail2_target,
                     utf8text_target, 
                     plaintext_target, )
 

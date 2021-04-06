@@ -358,7 +358,14 @@ class CacheManager():
                 # GLib.idle_add(self.app.utils.GetWebpageFavicon, content.get_text(), self.icon_cache_filedir, cache_uri)
                 # with open(cache_uri, "a") as file:
                 #     file.write("\n"+self.app.utils.GetWebpageTitle(content.get_text()))
-                self.app.utils.GetWebpageData(content.get_text(), cache_uri, self.icon_cache_filedir, checksum)
+                url = content.get_text()
+                self.app.utils.GetWebpageData(url, cache_uri, self.icon_cache_filedir, checksum)
+
+            if "mail" in type:
+                url = "https://" + content.get_text().split("@")[-1]
+                print(url)
+                self.app.utils.GetWebpageData(url, cache_uri, self.icon_cache_filedir, checksum)
+
                 
             # fallback for source_icon
             # save a copy of the icon in case the app is uninstalled and no icon to use

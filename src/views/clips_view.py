@@ -167,8 +167,10 @@ class ClipsContainer(Gtk.EventBox):
             self.content = ColorContainer(self.cache_file, self.type, utils)
         elif "url" in self.type:
             self.content = UrlContainer(self.cache_file, self.type, utils, self.cache_filedir)
+        elif "mail" in self.type:
+            self.content = EmailContainer(self.cache_file, self.type, utils, self.cache_filedir)
         else:
-            print(self.cache_file, self.type)
+            print("clips_view.py:", "FallbackContainer:", self.cache_file, self.type)
             self.content = FallbackContainer(self.cache_file, self.type, utils)
 
         # print(self.cache_file, self.type)
@@ -946,7 +948,9 @@ class UrlContainer(DefaultContainer):
             
         favicon.props.margin_bottom = 10
 
-        title = Gtk.Label(self.content[1])
+        self.title = self.content[1]
+
+        title = Gtk.Label(self.title)
         title.props.name = "url-container-title"
         title.props.wrap_mode = Pango.WrapMode.WORD
         title.props.max_width_chars = 20
@@ -954,9 +958,9 @@ class UrlContainer(DefaultContainer):
         title.props.justify = Gtk.Justification.CENTER
         title.props.lines = 3
         title.props.ellipsize = Pango.EllipsizeMode.END
-
-
-        domain = Gtk.Label(self.content[0].replace("\n","").split("/")[2])
+        
+        print(domain)
+        domain = Gtk.Label(domain)
 
         self.props.margin = 10
         self.props.name = "url-container"
@@ -971,3 +975,53 @@ class UrlContainer(DefaultContainer):
         self.label = "Internet URL"
 
 # ----------------------------------------------------------------------------------------------------
+
+class EmailContainer(DefaultContainer):
+    def __init__(self, filepath, type, utils, cache_filedir, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.props.name = "email-container"
+
+        self.label = "Email"
+
+        with open(filepath) as file:
+            self.content  = file.readlines()
+
+        domain = self.content[0].split("@")[-1]
+        checksum = os.path.splitext(filepath)[0].split("/")[-1]
+        
+        icon_size = 48 * self.get_scale_factor()
+        favicon_file = os.path.join(cache_filedir[:-6],"icon", domain + "-" + checksum + ".ico")
+        
+        try:
+            favicon = Gtk.Image()
+            favicon_pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_size(favicon_file, icon_size, icon_size)
+            favicon.props.pixbuf = favicon_pixbuf
+        except:
+            favicon = Gtk.Image().new_from_icon_name("applications-internet", Gtk.IconSize.LARGE_TOOLBAR)
+            favicon.set_pixel_size(icon_size)
+            
+        favicon.props.margin_bottom = 10
+
+        self.title = self.content[0].split(":")[-1].replace("\n","")
+
+        title = Gtk.Label(self.title)
+        title.props.name = "mail-container-title"
+        title.props.wrap_mode = Pango.WrapMode.WORD
+        title.props.max_width_chars = 30
+        title.props.wrap = True
+        title.props.justify = Gtk.Justification.CENTER
+        title.props.lines = 3
+        title.props.ellipsize = Pango.EllipsizeMode.END
+        title.props.valign = Gtk.Align.CENTER
+
+        domain = Gtk.Label(domain)
+
+        self.props.margin = 10
+        self.props.name = "mail-container"
+
+        self.attach(favicon, 0, 0, 1, 1)
+        self.attach(title, 0, 1, 1, 1)
+        self.attach(domain, 0, 2, 1, 1)
+
+        self.props.halign = self.props.valign = Gtk.Align.CENTER

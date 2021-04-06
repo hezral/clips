@@ -299,7 +299,7 @@ label#color-container-content {
     opacity: 0.8;
 }
 
-label#url-container-title {
+label#url-container-title, label#mail-container-title{
     letter-spacing: 1px; 
     font-weight: bold; 
     font-size: 105%; 
