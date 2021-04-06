@@ -386,11 +386,11 @@ class CacheManager():
             icon_theme = Gtk.IconTheme.get_default()
             try:
                 if source_icon.find("/") != -1:
-                    pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(source_icon, 48, 48, True) # load from path for non-theme icons
+                    pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(source_icon, 64, 64, True) # load from path for non-theme icons
                 else:
-                    pixbuf = icon_theme.load_icon(source_icon, 48, Gtk.IconLookupFlags.USE_BUILTIN)
+                    pixbuf = icon_theme.load_icon(source_icon, 64, Gtk.IconLookupFlags.USE_BUILTIN)
             except:
-                pixbuf = icon_theme.load_icon("image-missing", 48, Gtk.IconLookupFlags.USE_BUILTIN)
+                pixbuf = icon_theme.load_icon("image-missing", 64, Gtk.IconLookupFlags.USE_BUILTIN)
 
             source_icon_cache = os.path.join(self.icon_cache_filedir, source_app.replace(" ",".").lower() + ".png")
             pixbuf.savev(source_icon_cache, 'png', [], []) # save to icon cache folder
