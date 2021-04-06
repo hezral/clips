@@ -106,8 +106,6 @@ class ClipboardManager():
                 print("clipboard event ignored:", self.events, event_id, active_app)
                 pass
 
-
-
     def get_clipboard_contents(self, clipboard, event, active_app):
         
         clip_saved = False
