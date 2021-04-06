@@ -27,6 +27,8 @@ import time
 
 class ClipsView(Gtk.Grid):
 
+    current_selected_flowboxchild_index = None
+
     def __init__(self, app, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -43,6 +45,7 @@ class ClipsView(Gtk.Grid):
         self.flowbox.props.valign = Gtk.Align.START
         self.flowbox.props.halign = Gtk.Align.FILL
         self.flowbox.set_sort_func(self.sort_flowbox)
+        self.flowbox.connect("child-activated", self.on_child_activated)
 
         #------ scrolled_window ----#
         scrolled_window = Gtk.ScrolledWindow()
@@ -120,11 +123,26 @@ class ClipsView(Gtk.Grid):
         if position.value_name == "GTK_POS_BOTTOM":
             print(datetime.now(), "loading next items")
 
+    def on_child_activated(self, flowbox, flowboxchild):
+        # print("on-child-activated")
+        # print("last-selected-flowboxchild-index:", self.current_selected_flowboxchild_index)
+        if self.current_selected_flowboxchild_index is not None:
+            last_selected_flowboxchild = flowbox.get_child_at_index(self.current_selected_flowboxchild_index)
+            # print("last-selected-flowboxchild:", last_selected_flowboxchild.get_children()[0].clip_overlay_revealer)
+            last_selected_flowboxchild.get_children()[0].clip_overlay_revealer.set_reveal_child(False)
+        self.current_selected_flowboxchild_index = flowboxchild.get_index()
+        # print("current-selected-flowboxchild-index:", flowboxchild.get_index())
+        # print("current-selected-flowboxchild:", flowboxchild.get_children()[0].clip_overlay_revealer)
+        flowboxchild.get_children()[0].clip_overlay_revealer.set_reveal_child(True)
+        
+
 # ----------------------------------------------------------------------------------------------------
 
 class ClipsContainer(Gtk.EventBox):
     def __init__(self, app, clip, cache_filedir, utils, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        self.props.name = "clip-container"
 
         self.app = app
         # get widget scale factor for redraw event
@@ -140,6 +158,7 @@ class ClipsContainer(Gtk.EventBox):
         self.cache_file = clip[6]
         self.type = clip[7]
         self.protected = clip[8]
+        self.info_text = "id: {id}\nformat: {format}\ntype: {type}".format(id=self.id, format=self.target, type=self.type)
 
         # initialize cache file with full path        
         self.cache_file = os.path.join(self.cache_filedir, self.cache_file)
@@ -177,7 +196,7 @@ class ClipsContainer(Gtk.EventBox):
         # print(self.cache_file, self.type)
         # self.clip_info = self.generate_clip_info(utils)
         self.clip_action_notify_revealer = self.generate_clip_action_notify()
-        self.clip_action_revealer = self.generate_clip_action()
+        self.clip_overlay_revealer = self.generate_clip_overlay()
         self.clip_select_revealer = self.generate_clip_select()
 
         #------ construct ----#
@@ -186,8 +205,8 @@ class ClipsContainer(Gtk.EventBox):
         self.container_overlay.add(self.content)
         self.container_overlay.add_overlay(self.clip_action_notify_revealer)
         self.container_overlay.set_overlay_pass_through(self.clip_action_notify_revealer, True)
-        self.container_overlay.add_overlay(self.clip_action_revealer)
-        self.container_overlay.set_overlay_pass_through(self.clip_action_revealer, True)
+        self.container_overlay.add_overlay(self.clip_overlay_revealer)
+        self.container_overlay.set_overlay_pass_through(self.clip_overlay_revealer, True)
         # self.container_overlay.add_overlay(self.clip_info_revealer)
         # self.container_overlay.set_overlay_pass_through(self.clip_info_revealer, True)
         self.container_overlay.add_overlay(self.clip_select_revealer)
@@ -199,34 +218,16 @@ class ClipsContainer(Gtk.EventBox):
         self.add(self.container_grid)
 
         self.set_size_request(200, 160)
-        self.props.name = "clip-container"
-        self.props.expand = True
         
+        self.props.expand = True
+
         # handle mouse enter/leave events on the flowboxchild
         self.connect("enter-notify-event", self.on_cursor_entering_clip)
         self.connect("leave-notify-event", self.on_cursor_leaving_clip)
         self.connect("button-press-event", self.on_double_clicked_clip)
 
-        self.props.has_tooltip = True
-        
-        self.connect("query-tooltip", self.on_tooltip)
-
-
-
-        # try:
-        #     source_icon = Gtk.Image().new_from_icon_name(self.source_icon, Gtk.IconSize.LARGE_TOOLBAR)
-        #     self.tooltip_pixbuf = source_icon.props.pixbuf
-        #     print(self.tooltip_pixbuf)
-        # except:
-        #     source_icon_cache = os.path.join(self.cache_filedir[:-6],"icon", self.source_app.replace(" ",".").lower() + ".png")
-        #     if os.path.exists(source_icon_cache):
-        #         self.tooltip_pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(source_icon_cache, 24 * self.scale, 24 * self.scale, True)
-        #         print(self.tooltip_pixbuf)
-        #     else:
-        #         source_icon = Gtk.Image().new_from_icon_name("image-missing", Gtk.IconSize.LARGE_TOOLBAR)
-        #         self.tooltip_pixbuf = source_icon.props.pixbuf
-        #         print(self.tooltip_pixbuf)
-
+    def on_focus_event(self, *args):
+        print(locals())
 
     def generate_clip_select(self):
         clip_select_button = self.generate_action_button("com.github.hezral.clips-select-symbolic", "Select", "select")
@@ -265,24 +266,24 @@ class ClipsContainer(Gtk.EventBox):
         self.content_label.props.margin_bottom = 9
         self.content_label.props.expand = True
 
-        #------ source_icon / application icon ----#
-        try:
-            source_icon = Gtk.Image().new_from_icon_name(self.source_icon, Gtk.IconSize.LARGE_TOOLBAR)
-            source_icon.set_pixel_size(24 * self.scale)
-        except:
-            source_icon_cache = os.path.join(self.cache_filedir[:-6],"icon", self.source_app.replace(" ",".").lower() + ".png")
-            if os.path.exists(source_icon_cache):
-                pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(source_icon_cache, 24 * self.scale, 24 * self.scale, True)
-                source_icon = Gtk.Image().new_from_pixbuf(pixbuf)
-            else:
-                source_icon = Gtk.Image().new_from_icon_name("image-missing", Gtk.IconSize.LARGE_TOOLBAR)
-                source_icon.set_pixel_size(24 * self.scale)
+        # #------ source_icon / application icon ----#
+        # try:
+        #     source_icon = Gtk.Image().new_from_icon_name(self.source_icon, Gtk.IconSize.LARGE_TOOLBAR)
+        #     source_icon.set_pixel_size(24 * self.scale)
+        # except:
+        #     source_icon_cache = os.path.join(self.cache_filedir[:-6],"icon", self.source_app.replace(" ",".").lower() + ".png")
+        #     if os.path.exists(source_icon_cache):
+        #         pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(source_icon_cache, 24 * self.scale, 24 * self.scale, True)
+        #         source_icon = Gtk.Image().new_from_pixbuf(pixbuf)
+        #     else:
+        #         source_icon = Gtk.Image().new_from_icon_name("image-missing", Gtk.IconSize.LARGE_TOOLBAR)
+        #         source_icon.set_pixel_size(24 * self.scale)
 
-        source_icon.props.halign = Gtk.Align.START
-        source_icon.props.valign = Gtk.Align.END
-        source_icon.props.margin = 4
-        source_icon.props.has_tooltip = True
-        source_icon.props.tooltip_text = self.source_app
+        # source_icon.props.halign = Gtk.Align.START
+        # source_icon.props.valign = Gtk.Align.END
+        # source_icon.props.margin = 4
+        # source_icon.props.has_tooltip = True
+        # source_icon.props.tooltip_text = self.source_app
 
         #------ timestamp ----#
         self.created_short = datetime.strptime(self.created, '%Y-%m-%d %H:%M:%S.%f')
@@ -336,7 +337,7 @@ class ClipsContainer(Gtk.EventBox):
         clip_action_notify_revealer.add(action_notify_box)
         return clip_action_notify_revealer
 
-    def generate_clip_action(self):
+    def generate_clip_overlay(self):
         # protect_action = self.generate_action_button("com.github.hezral.clips-protect-symbolic", "Protect Content", "protect")
         reveal_action = self.generate_action_button("document-open-symbolic", "Reveal files", "reveal")
         # info_action = self.generate_action_button("com.github.hezral.clips-info-symbolic", "Show Info", "info")
@@ -375,7 +376,10 @@ class ClipsContainer(Gtk.EventBox):
         icon.props.halign = Gtk.Align.START
         icon.props.valign = Gtk.Align.START
         icon.props.expand = True
-        icon.props.margin = 4
+        icon.props.margin = 6
+        icon.props.name = "clip-source-app-icon-overlay"
+        icon.props.has_tooltip = True
+        icon.connect("query-tooltip", self.on_tooltip)
 
         # clip_action.attach(protect_action, 0, 0, 1, 1)
         clip_action.attach(reveal_action, 0, 0, 1, 1)
@@ -390,40 +394,17 @@ class ClipsContainer(Gtk.EventBox):
         grid.attach(icon, 0, 0, 1, 1)
         grid.attach(clip_action, 0, 1, 1, 1)
 
-        clip_action_revealer = Gtk.Revealer()
-        clip_action_revealer.props.name = "clip-action-revealer"    
-        clip_action_revealer.props.transition_type = Gtk.RevealerTransitionType.CROSSFADE
-        clip_action_revealer.add(grid)
-        # clip_action_revealer.add(clip_action)
-        clip_action_revealer.props.can_focus = True
+        clip_overlay_revealer = Gtk.Revealer()
+        clip_overlay_revealer.props.name = "clip-action-revealer"    
+        clip_overlay_revealer.props.transition_type = Gtk.RevealerTransitionType.CROSSFADE
+        clip_overlay_revealer.add(grid)
+        # clip_overlay_revealer.props.can_focus = True # this breaks keyboard navigation!
         
-        # handle mouse focus in/out on the clip action bar
-        clip_action_revealer.connect("focus-out-event", self.on_clip_focused, "out")
-        clip_action_revealer.connect("focus-in-event", self.on_clip_focused, "in")
-
-        return clip_action_revealer
+        return clip_overlay_revealer
 
     def on_double_clicked_clip(self, widget, eventbutton):
         if eventbutton.type.value_name == "GDK_2BUTTON_PRESS":
-            print(eventbutton.type.value_name)
-            self.on_clip_action(button=None, action="copy")
-
-    def on_clip_focused(self, clip_action_revealer, eventfocus, type):
-        flowboxchild = self.get_parent()
-        main_window = self.get_toplevel()
-        app = main_window.props.application
-        utils = app.utils
-        clip_container_overlay = utils.GetWidgetByName(widget=flowboxchild, child_name="clip-container-overlay", level=0)
-        # utils.GetWidgetByName not working for some widget class like Gtk.Overlay
-        clip_action_revealer = [child for child in clip_container_overlay.get_children() if child.props.name == "clip-action-revealer"][0]
-        clip_select_revealer = [child for child in clip_container_overlay.get_children() if child.props.name == "clip-select-revealer"][0]
-        if type == "out":
-            if not flowboxchild.is_selected():
-                clip_action_revealer.set_reveal_child(False)
-                # clip_select_revealer.set_reveal_child(False)
-        else:
-            clip_action_revealer.set_reveal_child(True)
-            # clip_select_revealer.set_reveal_child(True)
+            self.on_clip_action(button=None, action="copy")        
 
     def on_cursor_entering_clip(self, widget, eventcrossing):
         # add css class for hover event
@@ -435,10 +416,10 @@ class ClipsContainer(Gtk.EventBox):
         utils = app.utils
         clip_container_overlay = utils.GetWidgetByName(widget=flowboxchild, child_name="clip-container-overlay", level=0)
         # utils.GetWidgetByName not working for some widget class like Gtk.Overlay
-        clip_action_revealer = [child for child in clip_container_overlay.get_children() if child.props.name == "clip-action-revealer"][0]
+        clip_overlay_revealer = [child for child in clip_container_overlay.get_children() if child.props.name == "clip-action-revealer"][0]
         clip_select_revealer = [child for child in clip_container_overlay.get_children() if child.props.name == "clip-select-revealer"][0]
 
-        clip_action_revealer.set_reveal_child(True)
+        clip_overlay_revealer.set_reveal_child(True)
         clip_select_revealer.set_reveal_child(True)
 
         # add zoom effect on hovering an image container
@@ -456,25 +437,31 @@ class ClipsContainer(Gtk.EventBox):
         utils = app.utils
         clip_container_overlay = utils.GetWidgetByName(widget=flowboxchild, child_name="clip-container-overlay", level=0)
         # utils.GetWidgetByName not working for some widget class like Gtk.Overlay
-        clip_action_revealer = [child for child in clip_container_overlay.get_children() if child.props.name == "clip-action-revealer"][0]
-        clip_action_notify = [child for child in clip_container_overlay.get_children() if child.props.name == "clip-action-notify-revealer"][0]
+        clip_overlay_revealer = [child for child in clip_container_overlay.get_children() if child.props.name == "clip-action-revealer"][0]
+        clip_action_notify_revealer = [child for child in clip_container_overlay.get_children() if child.props.name == "clip-action-notify-revealer"][0]
         # clip_info_revealer = [child for child in clip_container_overlay.get_children() if child.props.name == "clip-info-revealer"][0]
-        clip_select_revealer = [child for child in clip_container_overlay.get_children() if child.props.name == "clip-select-revealer"][0]
+        # clip_select_revealer = [child for child in clip_container_overlay.get_children() if child.props.name == "clip-select-revealer"][0]
 
         if flowboxchild.is_selected():
-            clip_action_revealer.set_reveal_child(True)
-            clip_action_revealer.grab_focus()
+            clip_overlay_revealer.set_reveal_child(True)
+            clip_overlay_revealer.grab_focus()
         else: 
-            clip_action_revealer.set_reveal_child(False)
+            clip_overlay_revealer.set_reveal_child(False)
         
-        if clip_action_notify.get_child_revealed():
-            clip_action_notify.set_reveal_child(False)
+        if clip_action_notify_revealer.get_child_revealed():
+            clip_action_notify_revealer.set_reveal_child(False)
 
         # if clip_info_revealer.get_child_revealed():
         #     clip_info_revealer.set_reveal_child(False)
 
-        if clip_select_revealer.get_child_revealed():
-            clip_select_revealer.set_reveal_child(False)
+        # if clip_select_revealer.get_child_revealed():
+        #     clip_select_revealer.set_reveal_child(False)
+
+        flowboxchild_selected = main_window.clips_view.flowbox.get_selected_children()
+
+        if len(flowboxchild_selected) != 0:
+            if flowboxchild_selected[0].get_children()[0].clip_action_notify_revealer.get_child_revealed():
+                flowboxchild_selected[0].get_children()[0].clip_action_notify_revealer.set_reveal_child(False)
 
     def on_clip_action(self, button=None, action=None):
         flowboxchild = self.get_parent()
@@ -483,6 +470,7 @@ class ClipsContainer(Gtk.EventBox):
         flowbox.select_child(flowboxchild)
 
         action_notify_box = self.clip_action_notify_revealer.get_children()[0]
+
         # remove previous widgets
         for child in action_notify_box.get_children():
             child.destroy()
@@ -520,6 +508,7 @@ class ClipsContainer(Gtk.EventBox):
             self.clip_action_notify_revealer.set_reveal_child(True)
             self.app.utils.CopyToClipboard(self.target, self.cache_file, self.type)
             self.app.cache_manager.update_cache_on_recopy(self.cache_file)
+            
 
         elif action == "force_delete":
             flowboxchild.destroy()
@@ -555,31 +544,24 @@ class ClipsContainer(Gtk.EventBox):
 
     def on_tooltip(self, widget, x, y, keyboard_mode, tooltip):
         app_name, app_icon = self.app.utils.GetAppInfo(self.source_app)
-        # tooltip.set_icon_from_icon_name(app_icon, Gtk.IconSize.LARGE_TOOLBAR)
         text = str(self.id) + " :" + app_name
-        # tooltip.set_text(text)
-        self.props.tooltip_text = text
-        # grid = Gtk.Grid()
-        # grid.attach(Gtk.Label(text), 0, 0, 1, 1)
-        # tooltip.set_custom(grid)
+        grid = Gtk.Box()
+        label = Gtk.Label(text)
+        icon = Gtk.Image().new_from_icon_name(app_icon, Gtk.IconSize.LARGE_TOOLBAR)
 
-    def generate_tooltip(self):
-        # print(self.source_icon)
-        # source_icon = Gtk.Image().new_from_icon_name("process-completed", Gtk.IconSize.LARGE_TOOLBAR)
-        # grid = Gtk.Grid()
-        # grid.attach(source_icon, 0, 0, 1, 1)
-        # grid.show_all()
-        # print(source_icon)
-        print(self.app.utils.GetAppInfo(self.source_app))
+        grid = Gtk.Grid()
+        grid.attach(icon, 0, 0, 1, 1)
+        grid.attach(label, 1, 0, 1, 1)
+        grid.show_all()
+
+        tooltip.set_custom(None)
+        tooltip.set_custom(grid)
         
-
+        return True
 
     def on_notify_action_hide(self, clip_action_notify, event):
         clip_action_notify.set_reveal_child(False)
         clip_action_notify.props.can_focus = False
-
-    def on_revealer_focus_out(self, revealer, event):
-        revealer.set_reveal_child(False)
 
     def generate_friendly_timestamp(self, time=False):
         """
@@ -781,6 +763,8 @@ class ColorContainer(DefaultContainer):
 class PlainTextContainer(DefaultContainer):
     def __init__(self, filepath, type, app, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        # print("parent", parent_container)
 
         with open(filepath) as file:
             firstNlines = file.readlines()[0:10] #put here the interval you want
@@ -1028,7 +1012,6 @@ class UrlContainer(DefaultContainer):
         title.props.lines = 3
         title.props.ellipsize = Pango.EllipsizeMode.END
         
-        print(domain)
         domain = Gtk.Label(domain)
 
         self.props.margin = 10
@@ -1042,7 +1025,6 @@ class UrlContainer(DefaultContainer):
         self.props.name = "url-container"
 
         self.label = "Internet URL"
-
 
 # ----------------------------------------------------------------------------------------------------
 
@@ -1096,4 +1078,4 @@ class EmailContainer(DefaultContainer):
 
         self.props.halign = self.props.valign = Gtk.Align.CENTER
 
-        
+# ----------------------------------------------------------------------------------------------------
