@@ -36,7 +36,6 @@ class ClipsView(Gtk.Grid):
         self.flowbox = Gtk.FlowBox()
         self.flowbox.props.name = "flowbox"
         self.flowbox.props.homogeneous = False
-        self.flowbox.props.activate_on_single_click = False
         self.flowbox.props.row_spacing = 10
         self.flowbox.props.column_spacing = 10
         self.flowbox.props.max_children_per_line = 9
@@ -44,7 +43,6 @@ class ClipsView(Gtk.Grid):
         self.flowbox.props.valign = Gtk.Align.START
         self.flowbox.props.halign = Gtk.Align.FILL
         self.flowbox.set_sort_func(self.sort_flowbox)
-        self.flowbox.connect("child-activated", self.on_child_activated)
 
         #------ scrolled_window ----#
         scrolled_window = Gtk.ScrolledWindow()
@@ -57,9 +55,6 @@ class ClipsView(Gtk.Grid):
         self.props.name = "clips-view"
         self.props.expand = True
         self.attach(scrolled_window, 0, 0, 1, 1)
-
-    def on_child_activated(self, flowbox, flowboxchild):
-        flowboxchild.get_children()[0].on_clip_action(button=None, action="copy", flowbox=flowbox, flowboxchild=flowboxchild)
 
     def flowbox_filter_func(self, search_entry):
         def filter_func(flowboxchild, search_text):
@@ -207,6 +202,7 @@ class ClipsContainer(Gtk.EventBox):
         # handle mouse enter/leave events on the flowboxchild
         self.connect("enter-notify-event", self.on_cursor_entering_clip)
         self.connect("leave-notify-event", self.on_cursor_leaving_clip)
+        self.connect("button-press-event", self.on_button_pressed_clip)
 
     def generate_clip_select(self):
         clip_select_button = self.generate_action_button("com.github.hezral.clips-select-symbolic", "Select", "select")
@@ -357,6 +353,11 @@ class ClipsContainer(Gtk.EventBox):
 
         return clip_action_revealer
 
+    def on_button_pressed_clip(self, widget, eventbutton):
+        if eventbutton.type.value_name == "GDK_2BUTTON_PRESS":
+            print(eventbutton.type.value_name)
+            self.on_clip_action(button=None, action="copy")
+
     def on_clip_focused(self, clip_action_revealer, eventfocus, type):
         flowboxchild = self.get_parent()
         main_window = self.get_toplevel()
@@ -425,13 +426,10 @@ class ClipsContainer(Gtk.EventBox):
         if clip_select_revealer.get_child_revealed():
             clip_select_revealer.set_reveal_child(False)
 
-    def on_clip_action(self, button=None, action=None, flowbox=None, flowboxchild=None):
-        if flowboxchild is None:
-            flowboxchild = self.get_parent()
-        if flowbox is None:
-            flowbox = flowboxchild.get_parent()
+    def on_clip_action(self, button=None, action=None):
+        flowboxchild = self.get_parent()
+        flowbox = flowboxchild.get_parent()
     
-        # flowboxchild.do_activate(flowboxchild)       
         flowbox.select_child(flowboxchild)
 
         action_notify_box = self.clip_action_notify_revealer.get_children()[0]
@@ -443,8 +441,7 @@ class ClipsContainer(Gtk.EventBox):
             self.clip_action_notify_revealer.set_reveal_child(True)
 
         elif action == "reveal":
-            base_dir = os.path.dirname(self.cache_file)
-            self.app.utils.ViewFileGio(base_dir)
+            self.app.utils.RevealFile(self.cache_file)
             
         elif action == "info":
             self.clip_info_revealer.set_reveal_child(True)
@@ -454,10 +451,12 @@ class ClipsContainer(Gtk.EventBox):
                 with open(self.cache_file) as file:
                     lines = file.readlines()
                 self.app.utils.ViewUrl(lines[0].replace('\n',''))
-            # if "files" in self.type:
-            #     with open(self.cache_file) as file:
-            #         base_dir = os.path.dirname(file.readlines()[0].replace("copyfile://", ""))
-            #     utils.ViewFile(base_dir)
+            if "files" in self.type:
+                with open(self.cache_file) as file:
+                    lines = file.readlines()
+                    # .replace("copyfile://", ""))
+                print(lines)
+                self.app.utils.ViewFileGio(self.cache_file)
             else:
                 self.app.utils.ViewFileGio(self.cache_file)
 
