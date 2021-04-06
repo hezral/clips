@@ -124,15 +124,12 @@ class ClipsView(Gtk.Grid):
             print(datetime.now(), "loading next items")
 
     def on_child_activated(self, flowbox, flowboxchild):
-        # print("on-child-activated")
-        # print("last-selected-flowboxchild-index:", self.current_selected_flowboxchild_index)
         if self.current_selected_flowboxchild_index is not None:
             last_selected_flowboxchild = flowbox.get_child_at_index(self.current_selected_flowboxchild_index)
-            # print("last-selected-flowboxchild:", last_selected_flowboxchild.get_children()[0].clip_overlay_revealer)
             last_selected_flowboxchild.get_children()[0].clip_overlay_revealer.set_reveal_child(False)
+        
         self.current_selected_flowboxchild_index = flowboxchild.get_index()
-        # print("current-selected-flowboxchild-index:", flowboxchild.get_index())
-        # print("current-selected-flowboxchild:", flowboxchild.get_children()[0].clip_overlay_revealer)
+        
         flowboxchild.get_children()[0].clip_overlay_revealer.set_reveal_child(True)
         flowboxchild.grab_focus()
         
