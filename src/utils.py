@@ -420,8 +420,6 @@ def GetWebpageFavicon(contents, url, download_path='./', checksum='na'):
     else:
         regex_result = regex_result2
 
-    print(regex_result)
-
     if regex_result is not None:
         favicon_url = regex_result.group(0).split('href="')[1].split('"')[0].strip(">").strip("/")
         if "http" not in favicon_url:
@@ -464,9 +462,9 @@ def GetWebpageThread(url, file_path, download_path='./'):
         return_value = future.result()
         # print(return_value)
 
-url = "https://gmail.com"
-# # # GetWebpageThread(url)
-GetWebpageData(url)
+# url = "https://gmail.com"
+# # # # GetWebpageThread(url)
+# GetWebpageData(url)
 
 ###################################################################################################################
 
