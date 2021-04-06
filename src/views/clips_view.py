@@ -202,7 +202,7 @@ class ClipsContainer(Gtk.EventBox):
         # handle mouse enter/leave events on the flowboxchild
         self.connect("enter-notify-event", self.on_cursor_entering_clip)
         self.connect("leave-notify-event", self.on_cursor_leaving_clip)
-        self.connect("button-press-event", self.on_button_pressed_clip)
+        self.connect("button-press-event", self.on_double_clicked_clip)
 
     def generate_clip_select(self):
         clip_select_button = self.generate_action_button("com.github.hezral.clips-select-symbolic", "Select", "select")
@@ -353,7 +353,7 @@ class ClipsContainer(Gtk.EventBox):
 
         return clip_action_revealer
 
-    def on_button_pressed_clip(self, widget, eventbutton):
+    def on_double_clicked_clip(self, widget, eventbutton):
         if eventbutton.type.value_name == "GDK_2BUTTON_PRESS":
             print(eventbutton.type.value_name)
             self.on_clip_action(button=None, action="copy")
