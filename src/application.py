@@ -37,6 +37,7 @@ class Clips(Gtk.Application):
     def __init__(self):
         super().__init__()
 
+        print(datetime.now(), "startup")
         # construct
         self.props.application_id = "com.github.hezral.clips"
         self.props.flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE
