@@ -432,7 +432,6 @@ class CacheManager():
         type = clip[7]
         protected = clip[8]
         created_short = created_updated.strftime('%a, %b %d %Y, %H:%M:%S')
-
         
         # get the flowboxchild
         flowboxchild_updated = [child for child in self.main_window.clips_view.flowbox.get_children() if child.get_children()[0].id == id][0]
@@ -440,12 +439,6 @@ class CacheManager():
         # update the timestamp
         flowboxchild_updated.get_children()[0].created = created_updated
         flowboxchild_updated.get_children()[0].created_short = created_updated.strftime('%a, %b %d %Y, %H:%M:%S')
-        flowboxchild_updated.get_children()[0].props.tooltip_text = "id: {id}\ntype: {type}\nsource: {source_app}\ncreated: {created}".format(
-                                                                                                                                            id=id, 
-                                                                                                                                            type=type,
-                                                                                                                                            source=source, 
-                                                                                                                                            source_app=source_app, 
-                                                                                                                                            created=created_short)
         
         self.main_window.clips_view.flowbox.invalidate_sort()
 
