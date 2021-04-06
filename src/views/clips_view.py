@@ -124,12 +124,20 @@ class ClipsView(Gtk.Grid):
             print(datetime.now(), "loading next items")
 
     def on_child_activated(self, flowbox, flowboxchild):
+        # print("activate: current_selected_flowboxchild_index", self.current_selected_flowboxchild_index)
+        
         if self.current_selected_flowboxchild_index is not None:
+            # print("activate: current_selected_flowboxchild_index is None")
             last_selected_flowboxchild = flowbox.get_child_at_index(self.current_selected_flowboxchild_index)
             last_selected_flowboxchild.get_children()[0].clip_overlay_revealer.set_reveal_child(False)
+            last_selected_flowboxchild.get_children()[0].clip_action_notify_revealer.set_reveal_child(False)
         
         self.current_selected_flowboxchild_index = flowboxchild.get_index()
-        
+        # self.current_selected_flowboxchild_index = 0
+        # print("activate: current_selected_flowboxchild_index", self.current_selected_flowboxchild_index)
+        # if flowboxchild.is_selected():
+        #     flowboxchild.get_children()[0].clip_overlay_revealer.set_reveal_child(False)
+        # else:
         flowboxchild.get_children()[0].clip_overlay_revealer.set_reveal_child(True)
         flowboxchild.grab_focus()
         
@@ -307,8 +315,8 @@ class ClipsContainer(Gtk.EventBox):
         clip_info.props.valign = Gtk.Align.START
         clip_info.props.hexpand = True
         clip_info.props.can_focus = False
-        clip_info.props.has_tooltip = True
-        clip_info.props.tooltip_text = self.info_text
+        # clip_info.props.has_tooltip = True
+        # clip_info.props.tooltip_text = self.info_text
         clip_info.set_size_request(-1, 32)
         clip_info.attach(source_icon, 0, 0, 1, 1)
         clip_info.attach(self.content_label, 1, 0, 1, 1)
@@ -357,6 +365,30 @@ class ClipsContainer(Gtk.EventBox):
             # protect_action.get_style_context().add_class("clip-action-disabled")
             view_action.get_style_context().add_class("clip-action-disabled")
 
+        icon = self.generate_source_icon_overlay()
+
+        # clip_action.attach(protect_action, 0, 0, 1, 1)
+        clip_action.attach(reveal_action, 0, 0, 1, 1)
+        # clip_action.attach(info_action, 1, 0, 1, 1)
+        clip_action.attach(view_action, 2, 0, 1, 1)
+        clip_action.attach(copy_action, 3, 0, 1, 1)
+        clip_action.attach(delete_action, 5, 0, 1, 1)
+
+        grid = Gtk.Grid()
+        grid.props.expand = True
+        grid.props.halign = grid.props.valign = Gtk.Align.FILL
+        grid.attach(icon, 0, 0, 1, 1)
+        grid.attach(clip_action, 0, 1, 1, 1)
+
+        clip_overlay_revealer = Gtk.Revealer()
+        clip_overlay_revealer.props.name = "clip-action-revealer"    
+        clip_overlay_revealer.props.transition_type = Gtk.RevealerTransitionType.CROSSFADE
+        clip_overlay_revealer.add(grid)
+        clip_overlay_revealer.props.can_focus = False # this breaks keyboard navigation!, disable it
+        
+        return clip_overlay_revealer
+
+    def generate_source_icon_overlay(self):
         app_name, app_icon = self.app.utils.GetAppInfo(self.source_app)
         icon_size = 32 * self.scale
         if app_icon == "application-default-icon":
@@ -379,26 +411,7 @@ class ClipsContainer(Gtk.EventBox):
         icon.props.has_tooltip = True
         icon.connect("query-tooltip", self.on_tooltip)
 
-        # clip_action.attach(protect_action, 0, 0, 1, 1)
-        clip_action.attach(reveal_action, 0, 0, 1, 1)
-        # clip_action.attach(info_action, 1, 0, 1, 1)
-        clip_action.attach(view_action, 2, 0, 1, 1)
-        clip_action.attach(copy_action, 3, 0, 1, 1)
-        clip_action.attach(delete_action, 5, 0, 1, 1)
-
-        grid = Gtk.Grid()
-        grid.props.expand = True
-        grid.props.halign = grid.props.valign = Gtk.Align.FILL
-        grid.attach(icon, 0, 0, 1, 1)
-        grid.attach(clip_action, 0, 1, 1, 1)
-
-        clip_overlay_revealer = Gtk.Revealer()
-        clip_overlay_revealer.props.name = "clip-action-revealer"    
-        clip_overlay_revealer.props.transition_type = Gtk.RevealerTransitionType.CROSSFADE
-        clip_overlay_revealer.add(grid)
-        # clip_overlay_revealer.props.can_focus = True # this breaks keyboard navigation!
-        
-        return clip_overlay_revealer
+        return icon
 
     def on_double_clicked_clip(self, widget, eventbutton):
         if eventbutton.type.value_name == "GDK_2BUTTON_PRESS":
@@ -507,7 +520,6 @@ class ClipsContainer(Gtk.EventBox):
             self.app.utils.CopyToClipboard(self.target, self.cache_file, self.type)
             self.app.cache_manager.update_cache_on_recopy(self.cache_file)
             
-
         elif action == "force_delete":
             flowboxchild.destroy()
             self.app.cache_manager.delete_record(self.id, self.cache_file, self.type)
@@ -890,8 +902,8 @@ class FilesContainer(DefaultContainer):
                             else:
                                 icon_pixbuf = self.icon_theme.load_icon(icon_name, self.icon_size, 0)
                                 icon = Gtk.Image().new_from_pixbuf(icon_pixbuf)
-                                icon.props.has_tooltip = True
-                                icon.props.tooltip_text = line_content
+                                # icon.props.has_tooltip = True
+                                # icon.props.tooltip_text = line_content
                                 self.flowbox.add(icon)
                             i += 1
                             break
