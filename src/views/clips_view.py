@@ -134,6 +134,7 @@ class ClipsView(Gtk.Grid):
         # print("current-selected-flowboxchild-index:", flowboxchild.get_index())
         # print("current-selected-flowboxchild:", flowboxchild.get_children()[0].clip_overlay_revealer)
         flowboxchild.get_children()[0].clip_overlay_revealer.set_reveal_child(True)
+        flowboxchild.grab_focus()
         
 
 # ----------------------------------------------------------------------------------------------------
@@ -777,7 +778,9 @@ class PlainTextContainer(DefaultContainer):
         self.content.props.selectable = False
         self.content.props.expand = True
         self.content.props.ellipsize = Pango.EllipsizeMode.END
-        
+        # self.content.props.justify = Gtk.Justification.LEFT
+        # self.content.props.halign = Gtk.Align.FILL
+
         self.props.margin = 10
         self.props.margin_left = self.props.margin_right = 10
         self.props.name = "plaintext-container"
