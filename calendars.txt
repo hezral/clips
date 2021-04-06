@@ -1,0 +1,24 @@
+adi@elementary6vm:~/Work/clips$ python3 src/services/clips_supported.py -d
+Gtk-Message: 22:19:20.885: Failed to load module "pantheon-filechooser-module"
+running in debug mode
+waiting for clipboard event
+Active App: ('Evolution Mail and Calendar', 'evolution')
+Current clipboard offers formats:  6
+0 text/calendar
+1 text/x-vcalendar
+Active App: ('Calendar', 'io.elementary.calendar')
+Current clipboard offers formats:  0
+Active App: ('Evolution Mail and Calendar', 'evolution')
+Current clipboard offers formats:  6
+0 text/directory
+1 text/x-vcard
+Active App: ('Files', 'system-file-manager')
+Current clipboard offers formats:  6
+0 x-special/gnome-copied-files
+1 image/png
+Active App: ('Files', 'system-file-manager')
+Current clipboard offers formats:  6
+0 x-special/gnome-copied-files
+1 image/png
+^Cadi@elementary6vm:~/Work/clips$ 
+
