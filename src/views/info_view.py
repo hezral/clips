@@ -26,6 +26,7 @@ class InfoView(Gtk.Grid):
 
     help_view = None
     welcome_view = None
+    noclips_view = None
 
     def __init__(self, app, title, description, icon, *args, **kwargs):
         super().__init__(*args, **kwargs)
