@@ -202,7 +202,7 @@ class ClipsWindow(Gtk.ApplicationWindow):
         return actionbar
 
     def generate_viewswitch(self, settings_view_obj):
-        self.view_switch = Granite.ModeSwitch.from_icon_name("com.github.hezral.clips-symbolic", "com.github.hezral.clips-settings-symbolic")
+        self.view_switch = Granite.ModeSwitch.from_icon_name("com.github.hezral.clips-flowbox-symbolic", "com.github.hezral.clips-settings-symbolic")
         self.view_switch.props.valign = Gtk.Align.CENTER
         self.view_switch.props.halign = Gtk.Align.END
         self.view_switch.props.margin = 4
