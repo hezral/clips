@@ -61,11 +61,23 @@ class Clips(Gtk.Application):
         self.icon_theme.prepend_search_path(os.path.join(os.path.dirname(__file__), "..", "data", "icons"))
 
         # Set shortcut
-        # if self.gio_settings.get_value("first-run"):
-        #     SHORTCUT = "<Super><Control>C"
-        #     ID = "gtk-launch" + " " + self.props.application_id
-        #     setup_shortcut = CustomShortcutSettings()
-        #     self.gio_settings.set_value("first-run", False)
+        if self.gio_settings.get_boolean("first-run"):
+            SHORTCUT = "<Super><Control>c"
+            ID = "gtk-launch" + " " + self.props.application_id
+            setup_shortcut = CustomShortcutSettings()
+            has_shortcut = False
+            for shortcut in setup_shortcut.list_custom_shortcuts():
+                if shortcut[1] == ID:
+                    has_shortcut = True
+
+            if has_shortcut is False:
+                shortcut = setup_shortcut.create_shortcut()
+                if shortcut is not None:
+                    setup_shortcut.edit_shortcut(shortcut, SHORTCUT)
+                    setup_shortcut.edit_command(shortcut, ID)
+                    self.gio_settings.set_boolean("first-run", False)
+
+            
   
     def do_startup(self):
         Gtk.Application.do_startup(self)
@@ -268,7 +280,7 @@ class Clips(Gtk.Application):
         if self.main_window is not None:
             self.main_window.destroy()
 
-# comment out once ready for deployment
-if __name__ == "__main__":
-    app = Clips()
-    app.run(sys.argv)
+# # comment out once ready for deployment
+# if __name__ == "__main__":
+#     app = Clips()
+#     app.run(sys.argv)
