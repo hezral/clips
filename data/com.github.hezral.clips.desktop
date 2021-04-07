@@ -1,7 +1,7 @@
 [Desktop Entry]
 Name=Clips
 GenericName=Clips
-Comment=Clipboard Manager
+Comment=Clips Multi Format Clipboard Manager
 Categories=Utility;
 Exec=com.github.hezral.clips
 Icon=com.github.hezral.clips
