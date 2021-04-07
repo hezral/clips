@@ -180,15 +180,15 @@ class ClipsWindow(Gtk.ApplicationWindow):
         self.clipsapp_toggle = Gtk.Button(image=Gtk.Image().new_from_icon_name("com.github.hezral.clips-enabled-symbolic", Gtk.IconSize.SMALL_TOOLBAR))
         self.clipsapp_toggle.props.name = "app-action-enable"
         self.clipsapp_toggle.props.has_tooltip = True
+        self.clipsapp_toggle.props.can_focus = False
         self.clipsapp_toggle.props.tooltip_text = "Clipboard Monitoring: Enabled"
-        self.clipsapp_toggle.state = "enabled"
         self.clipsapp_toggle.connect("clicked", self.app.on_clipsapp_action)
         
         self.passwordprotect_toggle = Gtk.Button(image=Gtk.Image().new_from_icon_name("com.github.hezral.clips-protect-symbolic", Gtk.IconSize.SMALL_TOOLBAR))
         self.passwordprotect_toggle.props.name = "app-action-protect"
         self.passwordprotect_toggle.props.has_tooltip = True
+        self.passwordprotect_toggle.props.can_focus = False
         self.passwordprotect_toggle.props.tooltip_text = "Password Display/Monitoring: Enabled"
-        self.passwordprotect_toggle.state = "enabled"
         # self.passwordprotect_toggle.get_style_context().add_class("clips-action-enabled")
         # self.passwordprotect_toggle.connect("clicked", self.on_clips_action, "protect")
 
