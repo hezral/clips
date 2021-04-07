@@ -59,7 +59,6 @@ class ClipsView(Gtk.Grid):
         self.props.expand = True
         self.attach(scrolled_window, 0, 0, 1, 1)
 
-
     def flowbox_filter_func(self, search_entry):
         def filter_func(flowboxchild, search_text):
             clips_container = flowboxchild.get_children()[0]
@@ -158,6 +157,8 @@ class ClipsContainer(Gtk.EventBox):
         self.id = clip[0]
         self.target = clip[1]
         self.created = datetime.strptime(clip[2], '%Y-%m-%d %H:%M:%S.%f')
+        self.created_short = datetime.strptime(clip[2], '%Y-%m-%d %H:%M:%S.%f')
+        self.created_short = self.created_short.strftime('%a, %b %d %Y, %H:%M:%S')
         self.source = clip[3]
         self.source_app = clip[4]
         self.source_icon = clip[5]
