@@ -34,6 +34,9 @@ prefix_data = path.join(prefix, 'share')
 install_path = path.join(prefix_data, app_id)
 src_path = path.join(install_path, 'src')
 data_path = path.join(install_path, 'data')
+metainfo_path = path.join(prefix_data,'metainfo')
+applications_path = path.join(prefix_data,'applications')
+gschema_path = path.join(prefix_data,'glib-2.0/schemas')
 icon_path = 'icons/hicolor'
 icon_sizes = ['16','24','32','48','64','128']
 icon_scalable = prefix_data + '/icons/hicolor/scalable/apps'
@@ -50,13 +53,10 @@ icon_48_2x = prefix_data + '/icons/hicolor/48x48@2/apps'
 icon_64_2x = prefix_data + '/icons/hicolor/64x64@2/apps'
 icon_128_2x = prefix_data + '/icons/hicolor/128x128@2/apps'
 
-
 # Setup install data list
-install_data = [(prefix_data + '/metainfo', ['data/' + app_id + '.appdata.xml']),
-                (prefix_data + '/applications', ['data/' + app_id + '.desktop']),
-                (prefix_data + '/glib-2.0/schemas',['data/' + app_id + '.gschema.xml']),
-                (data_path + '/icons',['data/icons/' + app_id + '-info-symbolic.svg']),
-                (data_path + '/icons',['data/icons/' + app_id + '-view-symbolic.svg']),
+install_data = [(metainfo_path, ['data/' + app_id + '.appdata.xml']),
+                (applications_path, ['data/' + app_id + '.desktop']),
+                (gschema_path,['data/' + app_id + '.gschema.xml']),
                 (data_path,['data/application.css']),
                 (src_path,['src' + '/application.py']),
                 (src_path,['src' + '/main_window.py']),
