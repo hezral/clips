@@ -1,18 +1,13 @@
 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
 <rect x="2" y="2" width="12" height="12" rx="1" fill="url(#paint0_radial)"/>
-<rect x="2" y="2" width="12" height="12" rx="1" fill="#F1EEE9" style="mix-blend-mode:color"/>
-<rect x="2" y="2" width="12" height="12" rx="1" fill="white" style="mix-blend-mode:soft-light"/>
-<rect x="2" y="2" width="12" height="12" rx="1" fill="white" fill-opacity="0.8" style="mix-blend-mode:soft-light"/>
 <rect x="1.75" y="1.75" width="12.5" height="12.5" rx="1.25" stroke="#66635D" stroke-opacity="0.2" stroke-width="0.5"/>
 <rect x="1.5" y="1.5" width="13" height="13" rx="1.5" stroke="#66635D" stroke-opacity="0.5"/>
 <rect opacity="0.3" x="2.5" y="2.5" width="11" height="11" rx="0.5" stroke="url(#paint1_linear)" stroke-linecap="round" stroke-linejoin="round"/>
 <g filter="url(#filter0_f)">
 <rect x="3" y="3" width="10" height="10" rx="1" fill="url(#paint2_radial)"/>
-<rect x="3" y="3" width="10" height="10" rx="1" fill="#BAB8B5" style="mix-blend-mode:color"/>
-<rect x="3" y="3" width="10" height="10" rx="1" fill="white" style="mix-blend-mode:soft-light"/>
-<rect x="3" y="3" width="10" height="10" rx="1" fill="white" fill-opacity="0.5" style="mix-blend-mode:soft-light"/>
-<rect x="2.75" y="2.75" width="10.5" height="10.5" rx="1.25" stroke="#84817D" stroke-opacity="0.2" stroke-width="0.5"/>
+<rect x="2.75" y="2.75" width="10.5" height="10.5" rx="1.25" stroke="#66635D" stroke-opacity="0.2" stroke-width="0.5"/>
 <rect x="2.5" y="2.5" width="11" height="11" rx="1.5" stroke="#84817D" stroke-opacity="0.5"/>
+<rect opacity="0.2" x="3" y="3" width="10" height="10" rx="1" fill="#84817D"/>
 <rect opacity="0.3" x="3.5" y="3.5" width="9" height="9" rx="0.5" stroke="url(#paint3_linear)" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
 <g filter="url(#filter1_f)">
@@ -70,10 +65,10 @@
 <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
 <feGaussianBlur stdDeviation="0.5" result="effect1_foregroundBlur"/>
 </filter>
-<radialGradient id="paint0_radial" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(8.25572 -4.38108) rotate(90) scale(37.0313 45.4626)">
-<stop stop-color="#A6A6A6"/>
-<stop offset="0.26238" stop-color="#7B7B7B"/>
-<stop offset="0.704952" stop-color="#5A5A5A"/>
+<radialGradient id="paint0_radial" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(8.25572 -0.279997) rotate(90) scale(28.56 35.0626)">
+<stop stop-color="#F2F0EE"/>
+<stop offset="0.26238" stop-color="#E5E3DF"/>
+<stop offset="0.704952" stop-color="#BFBDB8"/>
 <stop offset="1" stop-color="#989898"/>
 </radialGradient>
 <linearGradient id="paint1_linear" x1="8" y1="1.83784" x2="8" y2="14.1622" gradientUnits="userSpaceOnUse">
@@ -82,10 +77,10 @@
 <stop offset="0.950563" stop-color="white" stop-opacity="0.156863"/>
 <stop offset="1" stop-color="white" stop-opacity="0.392157"/>
 </linearGradient>
-<radialGradient id="paint2_radial" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(8.2131 -2.31757) rotate(90) scale(30.8594 37.8855)">
-<stop stop-color="#A6A6A6"/>
-<stop offset="0.26238" stop-color="#7B7B7B"/>
-<stop offset="0.704952" stop-color="#5A5A5A"/>
+<radialGradient id="paint2_radial" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(8.2131 1.1) rotate(90) scale(23.8 29.2188)">
+<stop stop-color="#F2F0EE"/>
+<stop offset="0.26238" stop-color="#E5E3DF"/>
+<stop offset="0.704952" stop-color="#BFBDB8"/>
 <stop offset="1" stop-color="#989898"/>
 </radialGradient>
 <linearGradient id="paint3_linear" x1="8" y1="2.86486" x2="8" y2="13.1351" gradientUnits="userSpaceOnUse">
