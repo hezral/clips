@@ -18,19 +18,19 @@ from datetime import datetime
 
 #-------------------------------------------------------------------------------------------------------
 
-def RunAsync(func):
+def run_async(func):
     '''
     https://github.com/learningequality/ka-lite-gtk/blob/341813092ec7a6665cfbfb890aa293602fb0e92f/kalite_gtk/mainwindow.py
     http://code.activestate.com/recipes/576683-simple-threading-decorator/
-        RunAsync(func)
+        run_async(func)
             function decorator, intended to make "func" run in a separate
             thread (asynchronously).
             Returns the created Thread object
             E.g.:
-            @RunAsync
+            @run_async
             def task1():
                 do_something
-            @RunAsync
+            @run_async
             def task2():
                 do_something_too
     '''
@@ -49,7 +49,7 @@ def RunAsync(func):
 
 #-------------------------------------------------------------------------------------------------------
 
-def GetActiveAppWindow():
+def get_active_app_window():
     import gi
     gi.require_version("Wnck", "3.0")
     gi.require_version("Bamf", "3")
@@ -86,7 +86,7 @@ def GetActiveAppWindow():
 
     return source_app, source_icon
 
-def GetAppInfo(app):
+def get_appinfo(app):
     from gi.repository import Gio
     all_apps = Gio.AppInfo.get_all()
     try:
@@ -104,7 +104,7 @@ def GetAppInfo(app):
             icon_name = "application-default-icon"
     return app_name, icon_name
 
-def GetWidgetByName(widget, child_name, level, doPrint=False):
+def get_widget_by_name(widget, child_name, level, doPrint=False):
     '''
     Function to find widgets using its parent
     https://stackoverflow.com/questions/20461464/how-do-i-iterate-through-all-Gtk-children-in-pyGtk-recursively
@@ -129,7 +129,7 @@ def GetWidgetByName(widget, child_name, level, doPrint=False):
     if (hasattr(widget, 'get_child') and callable(getattr(widget, 'get_child')) and child_name != ""):
         child = widget.get_child()
         if child is not None:
-            return GetWidgetByName(child, child_name, level+1, doPrint)
+            return get_widget_by_name(child, child_name, level+1, doPrint)
 
     # /*** It might have many children, so search them ***/
     elif (hasattr(widget, 'get_children') and callable(getattr(widget, 'get_children')) and child_name !=""):
@@ -138,10 +138,10 @@ def GetWidgetByName(widget, child_name, level, doPrint=False):
         found = None
         for child in children:
             if child is not None:
-                found = GetWidgetByName(child, child_name, level+1, doPrint) # //search the child
+                found = get_widget_by_name(child, child_name, level+1, doPrint) # //search the child
                 if found: return found
 
-def GetWidgetByFocusState(widget, focus_state, level, doPrint=False):
+def get_widget_by_focus_state(widget, focus_state, level, doPrint=False):
     '''
     Function to find widgets using its focus state
     '''
@@ -163,7 +163,7 @@ def GetWidgetByFocusState(widget, focus_state, level, doPrint=False):
     if (hasattr(widget, 'get_child') and callable(getattr(widget, 'get_child'))):
         child = widget.get_child()
         if child is not None:
-            return GetWidgetByFocusState(child, focus_state, level+1, doPrint)
+            return get_widget_by_focus_state(child, focus_state, level+1, doPrint)
 
     # /*** It might have many children, so search them ***/
     elif (hasattr(widget, 'get_children') and callable(getattr(widget, 'get_children'))):
@@ -172,13 +172,13 @@ def GetWidgetByFocusState(widget, focus_state, level, doPrint=False):
         found = None
         for child in children:
             if child is not None:
-                found = GetWidgetByFocusState(child, focus_state, level+1, doPrint) # //search the child
+                found = get_widget_by_focus_state(child, focus_state, level+1, doPrint) # //search the child
                 if found: return found
 
 #-------------------------------------------------------------------------------------------------------
 
 # function to validate string using regex
-def validateStr(str, regex):
+def validate_string_with_regex(str, regex):
     import re
     p = re.compile(regex)
  
@@ -211,19 +211,19 @@ color_regex = (HEX, RGB, RGBA, HSL, HSLA)
 # https://www.geeksforgeeks.org/how-to-validate-hexadecimal-color-code-using-regular-expression/
 
 # Function validate is any of the HEX, RGB, RGBA, HSL, HSLA color code
-def isValidColorCode(str):
+def is_valid_color_code(str):
     #clean whitespaces 
     #str_ = str.replace(" ", "")
     for regex in color_regex:
         # #print(regex)
-        if validateStr(str, regex[1]):
+        if validate_string_with_regex(str, regex[1]):
             return True, regex[0]
         else:
             pass
 
 # Function to convert hsl string to RGB color code
 import colorsys
-def HSLtoRGB(hslcode):
+def hsl_to_rgb(hslcode):
     h, s, l = hslcode
     r, g, b = colorsys.hls_to_rgb(h, l, s)
     rgb = (int(r*255), int(g*255), int(b*255))
@@ -231,14 +231,14 @@ def HSLtoRGB(hslcode):
 
 # Function to convert hexadecimal string to RGB color code
 # https://stackoverflow.com/a/29643643/14741406
-def HexToRGB(hexcode):
+def hex_to_rgb(hexcode):
     h = hexcode.lstrip('#')
     rgb = tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
     return rgb
 
 # Function to determine light or dark color using RGB values
 # https://stackoverflow.com/a/58270890/14741406
-def isLightOrDark(rgb=[0,0,0]):
+def is_light_color(rgb=[0,0,0]):
     import math
     [r,g,b] = rgb
     hsp = math.sqrt(0.299 * (r * r) + 0.587 * (g * g) + 0.114 * (b * b))
@@ -249,7 +249,7 @@ def isLightOrDark(rgb=[0,0,0]):
 
 # function to extract background-color from html files
 # https://stackoverflow.com/a/4894134/14741406
-def GetCssBackgroundColor(str):
+def get_css_background_color(str):
     import re
     regex = r"(?:background-color)\:(.*?)\;"
     result = re.search(regex, str)
@@ -258,10 +258,10 @@ def GetCssBackgroundColor(str):
         css_background_color = re.search(regex, str).group(1).strip()
 
         for regex in color_regex:
-            if validateStr(css_background_color, regex[1]):
+            if validate_string_with_regex(css_background_color, regex[1]):
                 return css_background_color
 
-def ConvertToRGB(color_string):
+def to_rgb(color_string):
     color_string = color_string.strip(" ").strip(";").strip(")") #strip "space ; )" chars    
     color_string = color_string.replace(" ","") #replace space chars
 
@@ -269,7 +269,7 @@ def ConvertToRGB(color_string):
     
     if "#" in color_string[0]:
         a = 1
-        rgb = HexToRGB(color_string[0])
+        rgb = hex_to_rgb(color_string[0])
 
     elif "rgb" in color_string[0]:
         r, g, b = color_string[1].split(",")[0:3]
@@ -293,7 +293,7 @@ def ConvertToRGB(color_string):
         s = float(s.replace("%","")) / 100
         l = float(l.replace("%","")) / 100
         a = 1
-        rgb = HSLtoRGB((h, s, l))
+        rgb = hsl_to_rgb((h, s, l))
 
     elif "hsla" in color_string[0]:
         h, s, l, a = color_string[1].split(",") 
@@ -301,7 +301,7 @@ def ConvertToRGB(color_string):
         s = int(s.replace("%","")) / 100
         l = int(l.replace("%","")) / 100
         a = float(a.split(")")[0])
-        rgb = HSLtoRGB((h, s, l))
+        rgb = hsl_to_rgb((h, s, l))
     
     else:
         rgb = None
@@ -314,7 +314,7 @@ def ConvertToRGB(color_string):
 #-------------------------------------------------------------------------------------------------------
 
 # function to view file using default application
-def ViewFileXdg(filepath):
+def open_file_xdg(filepath):
     import subprocess
     try:
         subprocess.Popen(['xdg-open', filepath])
@@ -322,7 +322,7 @@ def ViewFileXdg(filepath):
         print("Unable to launch {filepath}".format(filepath=filepath))
         pass
 
-def ViewUrl(url):
+def open_url_gtk(url):
     import gi
     gi.require_version('Gtk', '3.0')
     from gi.repository import Gtk, Gdk
@@ -332,7 +332,7 @@ def ViewUrl(url):
         print("Unable to launch {url}".format(url=url))
         pass
 
-def ViewFileGio(filepath):
+def open_file_gio(filepath):
     from gi.repository import Gio
     view_file = Gio.File.new_for_path(filepath)
     if view_file.query_exists():
@@ -342,7 +342,7 @@ def ViewFileGio(filepath):
             print("Unable to launch {file}".format(file=view_file))
             pass
 
-def ViewEmail(uri):
+def open_url_email(uri):
     from gi.repository import Gio
     try:
         Gio.AppInfo.launch_default_for_uri(uri, None)
@@ -350,7 +350,7 @@ def ViewEmail(uri):
         print("Unable to launch {uri}".format(uri=uri))
         pass
 
-def RevealFile(files):
+def reveal_file_gio(files):
     from gi.repository import Gio, GLib, Gdk
     app_info = Gio.AppInfo.get_default_for_type("inode/directory", True)
     # add check if file or files
@@ -368,8 +368,8 @@ def RevealFile(files):
 # file1 = "/home/adi/Work/clips/colors.txt"
 # file2 = "/home/adi/Work/clips/setup.py"
 # files = [file1, file2]
-# RevealFile(files)
-# RevealFile(file1)
+# reveal_file_gio(files)
+# reveal_file_gio(file1)
 
 #-------------------------------------------------------------------------------------------------------
 
@@ -402,7 +402,7 @@ def GetOsDistroName():
 #-------------------------------------------------------------------------------------------------------
 
 # function to get domain from url
-def GetDomain(url):
+def get_domain(url):
     from urllib.parse import urlparse
     result = urlparse(url).netloc
     if len(result.split('.')) == 3:
@@ -411,7 +411,7 @@ def GetDomain(url):
         domain = '.'.join(result.split('.'))
     return domain
 
-def GetWebpageContents(url):
+def get_web_contents(url):
     import requests
     # print(datetime.now(), "start get webpage contents", url)
     try:
@@ -423,7 +423,7 @@ def GetWebpageContents(url):
         # print(datetime.now(), "finish get webpage contents", url)
 
 # function to get web page title from url    
-def GetWebpageTitle(contents, url):
+def get_web_title(contents, url):
     from urllib.parse import urlparse
     # print(datetime.now(), "start get webpage title", url)
     if contents is not None:
@@ -436,7 +436,7 @@ def GetWebpageTitle(contents, url):
     return title
 
 # function to get web page favicon from a url
-def GetWebpageFavicon(contents, url, download_path='./', checksum='na'):
+def get_web_favicon(contents, url, download_path='./', checksum='na'):
     LFAVICON = r"<link\srel\=\"(apple-touch-icon-precomposed|apple-touch-icon)\"\s(.*(\/.*)+?|href)\=\".*(\/.*)+?\""
     SFAVICON = r"<link\srel\=\"(icon|shortcut icon)\"\s(.*(\/.*)+?|href)\=\".*(\/.*)+?\""
     
@@ -446,7 +446,7 @@ def GetWebpageFavicon(contents, url, download_path='./', checksum='na'):
 
     # print(datetime.now(), "start downloading favicon", url)
 
-    domain = GetDomain(url)
+    domain = get_domain(url)
     icon_name = download_path + '/' + domain + '-' + checksum + '.ico'    
 
     regex_result1 = re.search(LFAVICON, contents)
@@ -476,12 +476,12 @@ def GetWebpageFavicon(contents, url, download_path='./', checksum='na'):
         # print(datetime.now(), "finish downloading favicon", url)
         return icon_name
 
-def GetWebpageData(url, file_path=None, download_path='./', checksum='na'):
+def get_web_data(url, file_path=None, download_path='./', checksum='na'):
     # print(datetime.now(), "start get webpage data", url)
     
-    contents = GetWebpageContents(url)
-    title = GetWebpageTitle(contents, url)
-    icon_name = GetWebpageFavicon(contents, url, download_path, checksum)
+    contents = get_web_contents(url)
+    title = get_web_title(contents, url)
+    icon_name = get_web_favicon(contents, url, download_path, checksum)
 
     if file_path is not None:
         with open(file_path, "a") as file:
@@ -489,56 +489,50 @@ def GetWebpageData(url, file_path=None, download_path='./', checksum='na'):
             file.close
 
     # print(datetime.now(), "finish get webpage data", url)
-
+    print(get_fuzzy_timestamp(datetime.now()))
     return title, icon_name
 
-def GetWebpageThread(url, file_path, download_path='./'):
-    import concurrent.futures
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        future = executor.submit(GetWebpageData, url, file_path, download_path)
-        return_value = future.result()
-        # print(return_value)
+# def GetWebpageThread(url, file_path, download_path='./'):
+#     import concurrent.futures
+#     with concurrent.futures.ThreadPoolExecutor() as executor:
+#         future = executor.submit(get_web_data, url, file_path, download_path)
+#         return_value = future.result()
+#         # print(return_value)
+#         print(get_fuzzy_timestamp(datetime.now()))
 
-# url = "https://gmail.com"
-# # # # GetWebpageThread(url)
-# GetWebpageData(url)
+# print("Testing GetWebpageThread...")
+# url = "https://netflix.com"
+# # GetWebpageThread(url, "./")
+# get_web_data(url)
+# print("Finish  GetWebpageThread...")
 
 #-------------------------------------------------------------------------------------------------------
 
-# function to check valid internet URL
-# https://stackoverflow.com/a/60267538/14741406
-# https://urlregex.com/
-URL = r"(^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$)"
-def isValidURL(str):
+def is_valid_url(str):
+    # https://stackoverflow.com/a/60267538/14741406
+    # https://urlregex.com/
+    URL = r"(^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$)"
     regex = URL
-    return validateStr(str, regex)
-
-# url1 = "https://gmail.com"
-# url2 = "mailto:hezral@gmail.com"
-
-# print(url1, isValidURL(url1))
-# print(url2, isValidURL(url2))
+    return validate_string_with_regex(str, regex)
 
 #-------------------------------------------------------------------------------------------------------
 
-# function to check valid file manager path
-# https://stackoverflow.com/a/38521489/14741406
-UNIXPATH = r"^(\/[\w^ ]+)+\/?([\w.])+[^.]$"
-def isValidUnixPath(str):
+def is_valid_unix_uri(str):
+    # https://stackoverflow.com/a/38521489/14741406
+    UNIXPATH = r"^(\/[\w^ ]+)+\/?([\w.])+[^.]$"
     regex = UNIXPATH
-    return validateStr(str, regex)
+    return validate_string_with_regex(str, regex)
 
 #-------------------------------------------------------------------------------------------------------
 
-# function to check email address
-EMAIL = r"(^(mailto\:)?[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)"
-def isEmaild(str):
+def is_valid_email(str):
+    EMAIL = r"(^(mailto\:)?[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)"
     regex = EMAIL
-    return validateStr(str, regex)
+    return validate_string_with_regex(str, regex)
 
 #-------------------------------------------------------------------------------------------------------
 
-def CopyToClipboard(clipboard_target, file, type=None):
+def copy_to_clipboard(clipboard_target, file, type=None):
     from subprocess import Popen, PIPE
 
     if "url" in type:
@@ -548,4 +542,47 @@ def CopyToClipboard(clipboard_target, file, type=None):
     else:
         Popen(['xclip', '-selection', 'clipboard', '-target', clipboard_target, '-i', file])
 
+#-------------------------------------------------------------------------------------------------------
 
+def get_fuzzy_timestamp(time=False):
+    """
+    Get a datetime object or a int() Epoch self.timestamp and return a
+    pretty string like 'an hour ago', 'Yesterday', '3 months ago',
+    'just now', etc
+    """
+    now = datetime.now()
+    if type(time) is int:
+        diff = now - datetime.fromself.timestamp(time)
+    elif isinstance(time,datetime):
+        diff = now - time
+    elif not time:
+        diff = now - now
+
+    second_diff = diff.seconds
+    day_diff = diff.days
+
+    if day_diff < 0:
+        return ''
+
+    if day_diff == 0:
+        if second_diff < 10:
+            return "just now"
+        if second_diff < 60:
+            return str(second_diff) + "s ago"
+        if second_diff < 120:
+            return "a minute ago"
+        if second_diff < 3600:
+            return str(round(second_diff / 60)) + "m ago"
+        if second_diff < 7200:
+            return "an hour ago"
+        if second_diff < 86400:
+            return str(round(second_diff / 3600)) + "hrs ago"
+    if day_diff == 1:
+        return "Yesterday"
+    if day_diff < 7:
+        return str(round(day_diff, 1)) + " days ago"
+    if day_diff < 31:
+        return str(round(day_diff / 7, 1)) + " weeks ago"
+    if day_diff < 365:
+        return str(round(day_diff / 30, 1)) + " months ago!"
+    return str(round(day_diff / 365, 1)) + " years ago!!"
