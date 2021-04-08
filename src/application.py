@@ -162,7 +162,7 @@ class Clips(Gtk.Application):
 
             self.running = True
 
-    @utils.RunAsync
+    @utils.run_async
     def load_clips_fromdb(self, clips):
         app_startup = True
 
@@ -176,7 +176,7 @@ class Clips(Gtk.Application):
 
         # selects the first flowboxchild
         self.main_window.clips_view.flowbox.select_child(self.main_window.clips_view.flowbox.get_child_at_index(0))
-        self.main_window.clips_view.flowbox.get_child_at_index(0).grab_focus()
+        # self.main_window.clips_view.flowbox.get_child_at_index(0).grab_focus()
         print(datetime.now(), "finish load_clips")
 
     def do_command_line(self, command_line):

@@ -16,7 +16,7 @@
 '''
 
 import gi
-from utils import ConvertToRGB
+from utils import to_rgb
 gi.require_version('Gtk', '3.0')
 gi.require_version('WebKit2', '4.0')
 from gi.repository import Gtk, WebKit2, GdkPixbuf, Pango, Gdk, Gio
@@ -159,6 +159,7 @@ class ClipsContainer(Gtk.EventBox):
         self.created = datetime.strptime(clip[2], '%Y-%m-%d %H:%M:%S.%f')
         self.created_short = datetime.strptime(clip[2], '%Y-%m-%d %H:%M:%S.%f')
         self.created_short = self.created_short.strftime('%a, %b %d %Y, %H:%M:%S')
+        self.fuzzytimestamp = self.app.utils.get_fuzzy_timestamp(self.created)
         self.source = clip[3]
         self.source_app = clip[4]
         self.source_icon = clip[5]
@@ -199,6 +200,8 @@ class ClipsContainer(Gtk.EventBox):
         else:
             print("clips_view.py:", "FallbackContainer:", self.cache_file, self.type)
             self.content = FallbackContainer(self.cache_file, self.type, app)
+
+        self.extended_info = self.content.label
 
         # print(self.cache_file, self.type)
         # self.clip_info = self.generate_clip_info(utils)
@@ -368,18 +371,22 @@ class ClipsContainer(Gtk.EventBox):
 
         icon = self.generate_source_icon_overlay()
 
+        self.fuzzytimestamp_label = self.generate_fuzzytimestamp_label()
+
         # clip_action.attach(protect_action, 0, 0, 1, 1)
         clip_action.attach(reveal_action, 0, 0, 1, 1)
         # clip_action.attach(info_action, 1, 0, 1, 1)
         clip_action.attach(view_action, 2, 0, 1, 1)
         clip_action.attach(copy_action, 3, 0, 1, 1)
         clip_action.attach(delete_action, 5, 0, 1, 1)
+        clip_action.attach(self.fuzzytimestamp_label, 6, 0, 1, 1)
 
         grid = Gtk.Grid()
         grid.props.expand = True
         grid.props.halign = grid.props.valign = Gtk.Align.FILL
         grid.attach(icon, 0, 0, 1, 1)
-        grid.attach(clip_action, 0, 1, 1, 1)
+        # grid.attach(self.fuzzytimestamp_label, 1, 0, 1, 1)
+        grid.attach(clip_action, 0, 1, 2, 1)
 
         clip_overlay_revealer = Gtk.Revealer()
         clip_overlay_revealer.props.name = "clip-action-revealer"    
@@ -389,8 +396,18 @@ class ClipsContainer(Gtk.EventBox):
         
         return clip_overlay_revealer
 
+    def generate_fuzzytimestamp_label(self):
+        fuzzytimestamp_label = Gtk.Label(self.fuzzytimestamp)
+        fuzzytimestamp_label.props.halign = Gtk.Align.END
+        fuzzytimestamp_label.props.valign = Gtk.Align.START
+        fuzzytimestamp_label.props.hexpand = True
+        fuzzytimestamp_label.props.margin = 12
+        fuzzytimestamp_label.props.margin_right = 8
+        fuzzytimestamp_label.props.name = "clips-fuzzytimestamp"
+        return fuzzytimestamp_label
+
     def generate_source_icon_overlay(self):
-        app_name, app_icon = self.app.utils.GetAppInfo(self.source_app)
+        app_name, app_icon = self.app.utils.get_appinfo(self.source_app)
         icon_size = 32 * self.scale
         if app_icon == "application-default-icon":
             source_icon_cache = os.path.join(self.cache_filedir[:-6],"icon", self.source_app.replace(" ",".").lower() + ".png")
@@ -426,8 +443,8 @@ class ClipsContainer(Gtk.EventBox):
         main_window = self.get_toplevel()
         app = main_window.props.application
         utils = app.utils
-        clip_container_overlay = utils.GetWidgetByName(widget=flowboxchild, child_name="clip-container-overlay", level=0)
-        # utils.GetWidgetByName not working for some widget class like Gtk.Overlay
+        clip_container_overlay = utils.get_widget_by_name(widget=flowboxchild, child_name="clip-container-overlay", level=0)
+        # utils.get_widget_by_name not working for some widget class like Gtk.Overlay
         clip_overlay_revealer = [child for child in clip_container_overlay.get_children() if child.props.name == "clip-action-revealer"][0]
         clip_select_revealer = [child for child in clip_container_overlay.get_children() if child.props.name == "clip-select-revealer"][0]
 
@@ -435,7 +452,7 @@ class ClipsContainer(Gtk.EventBox):
         clip_select_revealer.set_reveal_child(True)
 
         # add zoom effect on hovering an image container
-        # content = utils.GetWidgetByName(widget=flowboxchild, child_name="image-container", level=0)
+        # content = utils.get_widget_by_name(widget=flowboxchild, child_name="image-container", level=0)
         # if content is not None:
         #     content.hover()
 
@@ -447,8 +464,8 @@ class ClipsContainer(Gtk.EventBox):
         main_window = self.get_toplevel()
         app = main_window.props.application
         utils = app.utils
-        clip_container_overlay = utils.GetWidgetByName(widget=flowboxchild, child_name="clip-container-overlay", level=0)
-        # utils.GetWidgetByName not working for some widget class like Gtk.Overlay
+        clip_container_overlay = utils.get_widget_by_name(widget=flowboxchild, child_name="clip-container-overlay", level=0)
+        # utils.get_widget_by_name not working for some widget class like Gtk.Overlay
         clip_overlay_revealer = [child for child in clip_container_overlay.get_children() if child.props.name == "clip-action-revealer"][0]
         clip_action_notify_revealer = [child for child in clip_container_overlay.get_children() if child.props.name == "clip-action-notify-revealer"][0]
         # clip_info_revealer = [child for child in clip_container_overlay.get_children() if child.props.name == "clip-info-revealer"][0]
@@ -491,7 +508,7 @@ class ClipsContainer(Gtk.EventBox):
             self.clip_action_notify_revealer.set_reveal_child(True)
 
         elif action == "reveal":
-            self.app.utils.RevealFile(self.cache_file)
+            self.app.utils.reveal_file_gio(self.cache_file)
             
         elif action == "info":
             self.clip_info_revealer.set_reveal_child(True)
@@ -500,15 +517,15 @@ class ClipsContainer(Gtk.EventBox):
             if "url" in self.type:
                 with open(self.cache_file) as file:
                     lines = file.readlines()
-                self.app.utils.ViewUrl(lines[0].replace('\n',''))
+                self.app.utils.open_url_gtk(lines[0].replace('\n',''))
             if "files" in self.type:
                 with open(self.cache_file) as file:
                     lines = file.readlines()
                     # .replace("copyfile://", ""))
                 print(lines)
-                self.app.utils.ViewFileGio(self.cache_file)
+                self.app.utils.open_file_gio(self.cache_file)
             else:
-                self.app.utils.ViewFileGio(self.cache_file)
+                self.app.utils.open_file_gio(self.cache_file)
 
         elif action == "copy":
             icon = Gtk.Image().new_from_icon_name("process-completed", Gtk.IconSize.SMALL_TOOLBAR)
@@ -518,7 +535,7 @@ class ClipsContainer(Gtk.EventBox):
             action_notify_box.show_all()
 
             self.clip_action_notify_revealer.set_reveal_child(True)
-            self.app.utils.CopyToClipboard(self.target, self.cache_file, self.type)
+            self.app.utils.copy_to_clipboard(self.target, self.cache_file, self.type)
             self.app.cache_manager.update_cache_on_recopy(self.cache_file)
             
         elif action == "force_delete":
@@ -553,16 +570,55 @@ class ClipsContainer(Gtk.EventBox):
             print(action)
             pass
 
+    def update_timestamp_on_clips(self, datetime):
+        self.created = datetime
+        self.created_short = datetime.strftime('%a, %b %d %Y, %H:%M:%S')
+        self.fuzzytimestamp = self.app.utils.get_fuzzy_timestamp(datetime)
+        self.fuzzytimestamp_label.props.label = self.fuzzytimestamp
+
     def on_tooltip(self, widget, x, y, keyboard_mode, tooltip):
-        app_name, app_icon = self.app.utils.GetAppInfo(self.source_app)
-        text = str(self.id) + " :" + app_name
-        grid = Gtk.Box()
-        label = Gtk.Label(text)
-        icon = Gtk.Image().new_from_icon_name(app_icon, Gtk.IconSize.LARGE_TOOLBAR)
+        app_name, app_icon = self.app.utils.get_appinfo(self.source_app)
+
+        id = Gtk.Label(self.id)
+        id.props.hexpand = True
+        id.props.halign = Gtk.Align.START
+        id_icon = Gtk.Image().new_from_icon_name("com.github.hezral.clips", Gtk.IconSize.LARGE_TOOLBAR)
+
+        source_app = Gtk.Label(self.source_app)
+        source_app.props.hexpand = True
+        source_app.props.halign = Gtk.Align.START
+        source_app_icon = Gtk.Image().new_from_icon_name("application-default-icon", Gtk.IconSize.LARGE_TOOLBAR)
+
+        created = Gtk.Label(self.created_short)
+        created.props.hexpand = True
+        created.props.halign = Gtk.Align.START        
+        created_icon = Gtk.Image().new_from_icon_name("preferences-system-time", Gtk.IconSize.LARGE_TOOLBAR)
+
+        type = Gtk.Label(self.type)
+        type.props.hexpand = True
+        type.props.halign = Gtk.Align.START          
+        type_icon = Gtk.Image().new_from_icon_name("mail-sent", Gtk.IconSize.LARGE_TOOLBAR)
+
+        extended_info = Gtk.Label(self.extended_info)
+        extended_info.props.hexpand = True
+        extended_info.props.halign = Gtk.Align.START    
+        extended_icon = Gtk.Image().new_from_icon_name("tag", Gtk.IconSize.LARGE_TOOLBAR)
 
         grid = Gtk.Grid()
-        grid.attach(icon, 0, 0, 1, 1)
-        grid.attach(label, 1, 0, 1, 1)
+        grid.props.margin = 6
+        grid.props.row_spacing = 6
+        grid.props.column_spacing = 6
+
+        grid.attach(id_icon, 0, 0, 1, 1)
+        grid.attach(id, 1, 0, 1, 1)
+        grid.attach(source_app_icon, 0, 1, 1, 1)
+        grid.attach(source_app, 1, 1, 1, 1)
+        grid.attach(created_icon, 0, 2, 1, 1)
+        grid.attach(created, 1, 2, 1, 1)
+        grid.attach(type_icon, 0, 3, 1, 1)
+        grid.attach(type, 1, 3, 1, 1)
+        grid.attach(extended_icon, 0, 4, 1, 1)
+        grid.attach(extended_info, 1, 4, 1, 1)
         grid.show_all()
 
         tooltip.set_custom(None)
@@ -573,49 +629,6 @@ class ClipsContainer(Gtk.EventBox):
     def on_notify_action_hide(self, clip_action_notify, event):
         clip_action_notify.set_reveal_child(False)
         clip_action_notify.props.can_focus = False
-
-    def generate_friendly_timestamp(self, time=False):
-        """
-        Get a datetime object or a int() Epoch self.timestamp and return a
-        pretty string like 'an hour ago', 'Yesterday', '3 months ago',
-        'just now', etc
-        """
-        now = datetime.now()
-        if type(time) is int:
-            diff = now - datetime.fromself.timestamp(time)
-        elif isinstance(time,datetime):
-            diff = now - time
-        elif not time:
-            diff = now - now
-
-        second_diff = diff.seconds
-        day_diff = diff.days
-
-        if day_diff < 0:
-            return ''
-
-        if day_diff == 0:
-            if second_diff < 10:
-                return "just now"
-            if second_diff < 60:
-                return str(second_diff) + " seconds ago"
-            if second_diff < 120:
-                return "a minute ago"
-            if second_diff < 3600:
-                return str(round(second_diff / 60)) + " minutes ago"
-            if second_diff < 7200:
-                return "an hour ago"
-            if second_diff < 86400:
-                return str(round(second_diff / 3600)) + " hours ago"
-        if day_diff == 1:
-            return "Yesterday"
-        if day_diff < 7:
-            return str(round(day_diff, 1)) + " days ago"
-        if day_diff < 31:
-            return str(round(day_diff / 7, 1)) + " weeks ago"
-        if day_diff < 365:
-            return str(round(day_diff / 30, 1)) + " months ago"
-        return str(round(day_diff / 365, 1)) + " years ago (wow!)"
 
 # ----------------------------------------------------------------------------------------------------
 
@@ -737,11 +750,11 @@ class ColorContainer(DefaultContainer):
         self.content = open(filepath, "r")
         self.content = self.content.read()
 
-        rgb, a = app.utils.ConvertToRGB(self.content)
+        rgb, a = app.utils.to_rgb(self.content)
 
         color_code = "rgba({red},{green},{blue},{alpha})".format(red=str(rgb[0]),green=str(rgb[1]),blue=str(rgb[2]),alpha=str(a))
 
-        if app.utils.isLightOrDark(rgb) == "light":
+        if app.utils.is_light_color(rgb) == "light":
             font_color = "rgba(0,0,0,0.85)"
         else:
             font_color = "rgba(255,255,255,0.85)"
@@ -820,12 +833,13 @@ class HtmlContainer(DefaultContainer):
         webview.props.zoom_level = 0.85
         webview.load_html(self.content)
         webview.props.expand = True
+        webview.props.can_focus = False
         # webview.props.sensitive = False
 
-        css_bg_color = app.utils.GetCssBackgroundColor(self.content)
+        css_bg_color = app.utils.get_css_background_color(self.content)
 
         if css_bg_color is not None:
-            rgb, a = app.utils.ConvertToRGB(css_bg_color)
+            rgb, a = app.utils.to_rgb(css_bg_color)
             color_code = "rgba({red},{green},{blue},{alpha})".format(red=str(rgb[0]),green=str(rgb[1]),blue=str(rgb[2]),alpha=str(a))
             webview_bg_color = Gdk.RGBA(red=float(rgb[0] / 255), green=float(rgb[1] / 255), blue=float(rgb[2] / 255), alpha=1)
             webview.set_background_color(webview_bg_color)
@@ -998,7 +1012,7 @@ class UrlContainer(DefaultContainer):
         with open(filepath) as file:
             self.content  = file.readlines()
 
-        domain = app.utils.GetDomain(self.content[0].replace("\n",""))
+        domain = app.utils.get_domain(self.content[0].replace("\n",""))
         checksum = os.path.splitext(filepath)[0].split("/")[-1]
         
         icon_size = 48 * self.get_scale_factor()
@@ -1019,8 +1033,9 @@ class UrlContainer(DefaultContainer):
         title = Gtk.Label(self.title)
         title.props.name = "url-container-title"
         title.props.wrap_mode = Pango.WrapMode.WORD
-        title.props.max_width_chars = 20
+        title.props.max_width_chars = 40
         title.props.wrap = True
+        title.props.hexpand = True
         title.props.justify = Gtk.Justification.CENTER
         title.props.lines = 3
         title.props.ellipsize = Pango.EllipsizeMode.END
@@ -1034,7 +1049,8 @@ class UrlContainer(DefaultContainer):
         self.attach(title, 0, 1, 1, 1)
         self.attach(domain, 0, 2, 1, 1)
 
-        self.props.halign = self.props.valign = Gtk.Align.CENTER
+        self.props.valign = Gtk.Align.CENTER
+        self.props.halign = Gtk.Align.FILL
         self.props.name = "url-container"
 
         self.label = "Internet URL"
@@ -1089,6 +1105,7 @@ class EmailContainer(DefaultContainer):
         self.attach(title, 0, 1, 1, 1)
         self.attach(domain, 0, 2, 1, 1)
 
-        self.props.halign = self.props.valign = Gtk.Align.CENTER
+        self.props.valign = Gtk.Align.CENTER
+        self.props.halign = Gtk.Align.FILL
 
 # ----------------------------------------------------------------------------------------------------

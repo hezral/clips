@@ -216,9 +216,9 @@ class SettingsView(Gtk.Grid):
             if name == "persistent-mode":
                 if switch.get_active():
                     # print('state-flags-on')
-                    main_window.disconnect_by_func(window.on_persistent_mode)
+                    main_window.disconnect_by_func(main_window.on_persistent_mode)
                 else:
-                    main_window.connect("state-flags-changed", window.on_persistent_mode)
+                    main_window.connect("state-flags-changed", main_window.on_persistent_mode)
                     # print('state-flags-off')
 
             if name == "sticky-mode":
@@ -252,8 +252,8 @@ class SettingsView(Gtk.Grid):
     def on_min_column_number_changed(self, value):
         main_window = self.get_toplevel()
         main_window.set_main_window_size(column_number=value)
-        clips_flowbox = self.app.utils.GetWidgetByName(widget=main_window, child_name="flowbox", level=0)
-        help_flowbox = self.app.utils.GetWidgetByName(widget=main_window, child_name="help-flowbox", level=0)
+        clips_flowbox = self.app.utils.get_widget_by_name(widget=main_window, child_name="flowbox", level=0)
+        help_flowbox = self.app.utils.get_widget_by_name(widget=main_window, child_name="help-flowbox", level=0)
         clips_flowbox.props.min_children_per_line = value
         if help_flowbox is not None:
             help_flowbox.props.min_children_per_line = value
@@ -359,7 +359,7 @@ class SubSettings(Gtk.Grid):
             icon = None
             if params is not None:
                 for app in params[0]:
-                    app_name, icon_name = utils.GetAppInfo(app)
+                    app_name, icon_name = utils.get_appinfo(app)
                     self.add_listboxrow(app_name, icon_name)
 
             scrolled_window = Gtk.ScrolledWindow()

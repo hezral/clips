@@ -219,7 +219,7 @@ class ClipsWindow(Gtk.ApplicationWindow):
     def on_searchbar_activate(self, searchentry, event, type):
 
         searchbar = self.searchentry.get_parent()
-        # revealer = self.utils.GetWidgetByName(widget=searchbar, child_name="search-revealer", level=0)
+        # revealer = self.utils.get_widget_by_name(widget=searchbar, child_name="search-revealer", level=0)
 
         # if type == "in" and revealer.get_child_revealed() is False:
         if type == "in":
@@ -380,7 +380,7 @@ class ClipsSourceAppListBox(Gtk.ListBox):
 
         for source_app in source_apps:
             print(source_app[0])
-            app_name, icon_name = self.app.utils.GetAppInfo(source_app[0])
+            app_name, icon_name = self.app.utils.get_appinfo(source_app[0])
             self.add(ClipsSourceAppListBoxRow(app_name, icon_name))
 
         self.props.name = "app-listbox"

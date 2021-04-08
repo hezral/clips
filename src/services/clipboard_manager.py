@@ -83,7 +83,7 @@ class ClipboardManager():
             self.proceed = True
 
         # exclude apps
-        active_app, active_app_icon = self.app.utils.GetActiveAppWindow()
+        active_app, active_app_icon = self.app.utils.get_active_app_window()
 
         if active_app != "Clips":
             if active_app not in self.get_settings("excluded-apps"):
@@ -141,21 +141,21 @@ class ClipboardManager():
 
                         if "text/plain;charset=utf-8" in supported_target[0] and "color" in supported_target[3]:
                             if clipboard.wait_for_contents(target).get_text() is not None:
-                                if self.app.utils.isValidColorCode(clipboard.wait_for_contents(target).get_text().strip()):
-                                    content_type = "color/" + self.app.utils.isValidColorCode(content.get_text().strip())[1]
+                                if self.app.utils.is_valid_color_code(clipboard.wait_for_contents(target).get_text().strip()):
+                                    content_type = "color/" + self.app.utils.is_valid_color_code(content.get_text().strip())[1]
                                 else:
                                     proceed = False
 
                         if ("text/plain;charset=utf-8" in supported_target[0] or "text/plain" in supported_target[0]) and "url" in supported_target[3]:
                             if clipboard.wait_for_contents(target).get_text() is not None:
-                                if self.app.utils.isValidURL(clipboard.wait_for_contents(target).get_text().strip()):
+                                if self.app.utils.is_valid_url(clipboard.wait_for_contents(target).get_text().strip()):
                                     content_type = "url/" + clipboard.wait_for_contents(target).get_text().split(":")[0]
                                 else:
                                     proceed = False
 
                         if ("text/plain;charset=utf-8" in supported_target[0] or "text/plain" in supported_target[0]) and "mail" in supported_target[3]:
                             if clipboard.wait_for_contents(target).get_text() is not None:
-                                if self.app.utils.isEmaild(clipboard.wait_for_contents(target).get_text().strip()):
+                                if self.app.utils.is_valid_email(clipboard.wait_for_contents(target).get_text().strip()):
                                     content_type = "mail"
                                 else:
                                     proceed = False

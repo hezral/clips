@@ -253,7 +253,7 @@ class CacheManager():
 
         last_run = datetime.now()
         last_run_short = datetime.strftime(last_run, '%a, %d %B %Y, %-I:%M:%S %p')
-        run_autohousekeeping= self.app.utils.GetWidgetByName(widget=self.main_window.settings_view, child_name="run-housekeeping-now", level=0)
+        run_autohousekeeping= self.app.utils.get_widget_by_name(widget=self.main_window.settings_view, child_name="run-housekeeping-now", level=0)
         run_autohousekeeping.sublabel_text.props.label = last_run_short
 
     def select_record(self, id):
@@ -280,7 +280,7 @@ class CacheManager():
             with open(cache_file) as file:
                 content  = file.readlines()[0] # returns a list with 1 item
             checksum = os.path.splitext(cache_file)[0].split("/")[-1]
-            domain = self.app.utils.GetDomain(content)
+            domain = self.app.utils.get_domain(content)
             favicon_file = self.icon_cache_filedir + '/' + domain + '-' + checksum + '.ico'
             try:
                 os.remove(favicon_file)
@@ -369,16 +369,16 @@ class CacheManager():
             
             from datetime import datetime
             if "http" in type:
-                # GLib.idle_add(self.app.utils.GetWebpageFavicon, content.get_text(), self.icon_cache_filedir, cache_uri)
+                # GLib.idle_add(self.app.utils.get_web_favicon, content.get_text(), self.icon_cache_filedir, cache_uri)
                 # with open(cache_uri, "a") as file:
-                #     file.write("\n"+self.app.utils.GetWebpageTitle(content.get_text()))
+                #     file.write("\n"+self.app.utils.get_web_title(content.get_text()))
                 url = content.get_text()
-                self.app.utils.GetWebpageData(url, cache_uri, self.icon_cache_filedir, checksum)
+                self.app.utils.get_web_data(url, cache_uri, self.icon_cache_filedir, checksum)
 
             if "mail" in type:
                 url = "https://" + content.get_text().split("@")[-1]
                 print(url)
-                self.app.utils.GetWebpageData(url, cache_uri, self.icon_cache_filedir, checksum)
+                self.app.utils.get_web_data(url, cache_uri, self.icon_cache_filedir, checksum)
 
                 
             # fallback for source_icon
@@ -433,12 +433,10 @@ class CacheManager():
         protected = clip[8]
         created_short = created_updated.strftime('%a, %b %d %Y, %H:%M:%S')
         
-        # get the flowboxchild
+        # update timestamp
         flowboxchild_updated = [child for child in self.main_window.clips_view.flowbox.get_children() if child.get_children()[0].id == id][0]
-
-        # update the timestamp
-        flowboxchild_updated.get_children()[0].created = created_updated
-        flowboxchild_updated.get_children()[0].created_short = created_updated.strftime('%a, %b %d %Y, %H:%M:%S')
+        clips_container = flowboxchild_updated.get_children()[0]
+        clips_container.update_timestamp_on_clips(created_updated)
         
         self.main_window.clips_view.flowbox.invalidate_sort()
 
@@ -491,4 +489,10 @@ class CacheManager():
         records = self.db_cursor.fetchall()
         return records
 
-            
+    def get_data_for_liststore(self):
+        sqlite_with_param = '''
+            SELECT distinct type FROM 'ClipsDB'
+            '''
+        self.db_cursor.execute(sqlite_with_param)
+        records = self.db_cursor.fetchall()
+        return records
