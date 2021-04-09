@@ -96,15 +96,6 @@ supported_targets = (spreadsheet_libreoffice_target,
 
 thumbnail_target = ("text/plain;charset=utf-8", "txt", "Color Codes", "color", False)
 
-url_target_template = """
-[Desktop Entry]
-Encoding=UTF-8
-Name={domain}
-Type=Application
-Icon={source_icon}
-MimeType=application/x-mswinurl
-Exec=xdg-open {url}
-"""
 
 
 def get_active_app():
