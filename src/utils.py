@@ -309,7 +309,11 @@ def to_rgb(color_string):
     
     # print(type(rgb), type(float(a)))
 
-    return rgb, float(a)
+    if a == 1.0:
+        a = 1
+        return rgb, a
+    else:
+        return rgb, float(a)
 
 #-------------------------------------------------------------------------------------------------------
 
