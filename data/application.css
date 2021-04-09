@@ -194,6 +194,19 @@ flowbox {
     padding: 10px;
 }
 
+grid#clips-multi-delete {
+    background-color: alpha(@theme_base_color, 0.85);
+}
+
+/* button#clip-select {
+    color: white;
+} */
+
+.clip-selected {
+    color: rgba(125, 48, 232, 1);
+}
+
+
 /* flowboxchild {
     transition: all 150ms ease-in-out;
 } */
