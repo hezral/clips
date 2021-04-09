@@ -19,7 +19,7 @@
 <rect x="13.75" y="17.75" width="100.5" height="100.5" rx="6.25" stroke="#66635D" stroke-opacity="0.2" stroke-width="0.5"/>
 <rect x="13.5" y="17.5" width="101" height="101" rx="6.5" stroke="#66635D" stroke-opacity="0.5"/>
 <rect opacity="0.3" x="14.5" y="18.5" width="99" height="99" rx="5.5" stroke="url(#paint11_linear)" stroke-linecap="round" stroke-linejoin="round"/>
-<g filter="url(#filter0_f)">
+<g opacity="0.5" filter="url(#filter0_f)">
 <rect x="20" y="24" width="88" height="88" rx="2" fill="url(#paint12_radial)"/>
 <rect x="19.75" y="23.75" width="88.5" height="88.5" rx="2.25" stroke="#84817D" stroke-opacity="0.2" stroke-width="0.5"/>
 <rect opacity="0.2" x="20" y="24" width="88" height="88" rx="2" fill="#84817D"/>

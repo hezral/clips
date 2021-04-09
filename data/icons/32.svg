@@ -19,16 +19,16 @@
 <path opacity="0.4" d="M1 31H4.94737V28H1V31Z" fill="url(#paint10_radial)"/>
 <path opacity="0.4" d="M27.0526 28H4.94737V31H27.0526V28Z" fill="url(#paint11_linear)"/>
 </g>
-<rect x="3" y="3" width="26" height="26" rx="1" fill="url(#paint12_radial)"/>
-<rect x="2.75" y="2.75" width="26.5" height="26.5" rx="1.25" stroke="#66635D" stroke-opacity="0.2" stroke-width="0.5"/>
-<rect x="2.5" y="2.5" width="27" height="27" rx="1.5" stroke="#66635D" stroke-opacity="0.5"/>
-<rect opacity="0.3" x="3.5" y="3.5" width="25" height="25" rx="0.5" stroke="url(#paint13_linear)" stroke-linecap="round" stroke-linejoin="round"/>
-<g filter="url(#filter0_f)">
-<rect x="6" y="6" width="20" height="20" rx="1" fill="url(#paint14_radial)"/>
-<rect x="5.75" y="5.75" width="20.5" height="20.5" rx="1.25" stroke="#66635D" stroke-opacity="0.2" stroke-width="0.5"/>
-<rect x="5.5" y="5.5" width="21" height="21" rx="1.5" stroke="#84817D" stroke-opacity="0.5"/>
-<rect opacity="0.2" x="6" y="6" width="20" height="20" rx="1" fill="#84817D"/>
-<rect opacity="0.3" x="6.5" y="6.5" width="19" height="19" rx="0.5" stroke="url(#paint15_linear)" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="3" y="3" width="26" height="26" rx="1.5" fill="url(#paint12_radial)"/>
+<rect x="2.75" y="2.75" width="26.5" height="26.5" rx="1.75" stroke="#66635D" stroke-opacity="0.2" stroke-width="0.5"/>
+<rect x="2.5" y="2.5" width="27" height="27" rx="2" stroke="#66635D" stroke-opacity="0.5"/>
+<rect opacity="0.3" x="3.5" y="3.5" width="25" height="25" rx="1" stroke="url(#paint13_linear)" stroke-linecap="round" stroke-linejoin="round"/>
+<g opacity="0.3" filter="url(#filter0_f)">
+<rect x="5" y="5" width="22" height="22" rx="1" fill="url(#paint14_radial)"/>
+<rect x="4.75" y="4.75" width="22.5" height="22.5" rx="1.25" stroke="#66635D" stroke-opacity="0.2" stroke-width="0.5"/>
+<rect x="4.5" y="4.5" width="23" height="23" rx="1.5" stroke="#84817D" stroke-opacity="0.5"/>
+<rect opacity="0.2" x="5" y="5" width="22" height="22" rx="1" fill="#84817D"/>
+<rect opacity="0.3" x="5.5" y="5.5" width="21" height="21" rx="0.5" stroke="url(#paint15_linear)" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
 <g opacity="0.5" filter="url(#filter1_f)">
 <rect x="18" y="25" width="6" height="1" rx="0.5" fill="url(#paint16_radial)"/>
@@ -51,7 +51,7 @@
 <rect x="18" y="24.5" width="6" height="1" rx="0.5" fill="white" fill-opacity="0.6" style="mix-blend-mode:soft-light"/>
 </g>
 <g filter="url(#filter4_f)">
-<rect x="5" y="4.66666" width="22" height="1.33334" rx="0.666672" fill="white" style="mix-blend-mode:soft-light"/>
+<rect x="5" y="3.66666" width="22" height="1.33334" rx="0.666672" fill="white" style="mix-blend-mode:soft-light"/>
 </g>
 <path d="M25 16.4049C24.8167 14.2319 23.2667 13 21.1167 13C18.8167 13 17 14.5741 17 17.5C17 20.413 18.7667 22 21.1167 22C23.6167 22 24.8833 20.2205 25 18.7319L22.65 18.7148C22.5333 19.4634 22.0167 19.9297 21.1667 19.9297C20.0375 19.9297 19.3833 19.1084 19.3833 17.5C19.3833 15.9772 20.0167 15.0703 21.1833 15.0703C22.075 15.0703 22.5833 15.6093 22.65 16.4049H25Z" fill="#7D30E8"/>
 <g filter="url(#filter5_f)">
@@ -71,7 +71,7 @@
 <filter id="filter0_f" x="3" y="3" width="26" height="26" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
 <feFlood flood-opacity="0" result="BackgroundImageFix"/>
 <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
-<feGaussianBlur stdDeviation="1" result="effect1_foregroundBlur"/>
+<feGaussianBlur stdDeviation="0.5" result="effect1_foregroundBlur"/>
 </filter>
 <filter id="filter1_f" x="16.5" y="23.5" width="9" height="4" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
 <feFlood flood-opacity="0" result="BackgroundImageFix"/>
@@ -88,7 +88,7 @@
 <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
 <feGaussianBlur stdDeviation="0.125" result="effect1_foregroundBlur"/>
 </filter>
-<filter id="filter4_f" x="4" y="3.66666" width="24" height="3.33334" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<filter id="filter4_f" x="4" y="2.66666" width="24" height="3.33334" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
 <feFlood flood-opacity="0" result="BackgroundImageFix"/>
 <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
 <feGaussianBlur stdDeviation="0.5" result="effect1_foregroundBlur"/>
@@ -177,13 +177,13 @@
 <stop offset="0.950563" stop-color="white" stop-opacity="0.156863"/>
 <stop offset="1" stop-color="white" stop-opacity="0.392157"/>
 </linearGradient>
-<radialGradient id="paint14_radial" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(16.4262 2.2) rotate(90) scale(47.6 58.4376)">
+<radialGradient id="paint14_radial" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(16.4688 0.820005) rotate(90) scale(52.36 64.2813)">
 <stop stop-color="#F2F0EE"/>
 <stop offset="0.26238" stop-color="#E5E3DF"/>
 <stop offset="0.704952" stop-color="#BFBDB8"/>
 <stop offset="1" stop-color="#989898"/>
 </radialGradient>
-<linearGradient id="paint15_linear" x1="16" y1="5.72973" x2="16" y2="26.2703" gradientUnits="userSpaceOnUse">
+<linearGradient id="paint15_linear" x1="16" y1="4.7027" x2="16" y2="27.2973" gradientUnits="userSpaceOnUse">
 <stop stop-color="white"/>
 <stop offset="0.0631645" stop-color="white" stop-opacity="0.235294"/>
 <stop offset="0.950563" stop-color="white" stop-opacity="0.156863"/>

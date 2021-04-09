@@ -23,7 +23,7 @@
 <rect x="6.75" y="8.75" width="50.5" height="50.5" rx="3.25" stroke="#66635D" stroke-opacity="0.2" stroke-width="0.5"/>
 <rect x="6.5" y="8.5" width="51" height="51" rx="3.5" stroke="#66635D" stroke-opacity="0.5"/>
 <rect opacity="0.3" x="7.5" y="9.5" width="49" height="49" rx="2.5" stroke="url(#paint13_linear)" stroke-linecap="round" stroke-linejoin="round"/>
-<g filter="url(#filter0_f)">
+<g opacity="0.5" filter="url(#filter0_f)">
 <rect x="10" y="12" width="44" height="44" rx="2" fill="url(#paint14_radial)"/>
 <rect x="9.75" y="11.75" width="44.5" height="44.5" rx="2.25" stroke="#84817D" stroke-opacity="0.2" stroke-width="0.5"/>
 <rect x="9.5" y="11.5" width="45" height="45" rx="1.5" stroke="#84817D" stroke-opacity="0.5"/>

@@ -23,7 +23,7 @@
 <rect x="1.75" y="1.75" width="20.5" height="20.5" rx="1.25" stroke="#66635D" stroke-opacity="0.2" stroke-width="0.5"/>
 <rect x="1.5" y="1.5" width="21" height="21" rx="1.5" stroke="#66635D" stroke-opacity="0.5"/>
 <rect opacity="0.3" x="2.5" y="2.5" width="19" height="19" rx="0.5" stroke="url(#paint13_linear)" stroke-linecap="round" stroke-linejoin="round"/>
-<g filter="url(#filter0_f)">
+<g opacity="0.2" filter="url(#filter0_f)">
 <rect x="4" y="4" width="16" height="16" rx="1" fill="url(#paint14_radial)"/>
 <rect x="3.75" y="3.75" width="16.5" height="16.5" rx="1.25" stroke="#66635D" stroke-opacity="0.2" stroke-width="0.5"/>
 <rect x="3.5" y="3.5" width="17" height="17" rx="1.5" stroke="#84817D" stroke-opacity="0.5"/>
@@ -51,7 +51,7 @@
 <rect x="13.5" y="18.375" width="4.5" height="0.75" rx="0.375" fill="white" fill-opacity="0.6" style="mix-blend-mode:soft-light"/>
 </g>
 <g filter="url(#filter4_f)">
-<rect x="3" y="3.5" width="18" height="1.00001" rx="0.500004" fill="white" style="mix-blend-mode:soft-light"/>
+<rect x="3" y="2.5" width="18" height="1.00001" rx="0.500004" fill="white" style="mix-blend-mode:soft-light"/>
 </g>
 <path d="M18.75 12.3037C18.6125 10.674 17.45 9.75 15.8375 9.75C14.1125 9.75 12.75 10.9306 12.75 13.125C12.75 15.3098 14.075 16.5 15.8375 16.5C17.7125 16.5 18.6625 15.1654 18.75 14.049L16.9875 14.0361C16.9 14.5976 16.5125 14.9472 15.875 14.9472C15.0281 14.9472 14.5375 14.3313 14.5375 13.125C14.5375 11.9829 15.0125 11.3028 15.8875 11.3028C16.5562 11.3028 16.9375 11.707 16.9875 12.3037H18.75Z" fill="#7D30E8"/>
 <g filter="url(#filter5_f)">
@@ -68,10 +68,10 @@
 <path d="M8.82011 8.23429L6.8 10.3275L6.34744 9.85855L9 7.11001L11.6526 9.85855L11.2 10.3275L9.17989 8.23429L9 8.04789L8.82011 8.23429Z" stroke="url(#paint23_linear)" stroke-width="0.5"/>
 </g>
 <defs>
-<filter id="filter0_f" x="1" y="1" width="22" height="22" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<filter id="filter0_f" x="2" y="2" width="20" height="20" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
 <feFlood flood-opacity="0" result="BackgroundImageFix"/>
 <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
-<feGaussianBlur stdDeviation="1" result="effect1_foregroundBlur"/>
+<feGaussianBlur stdDeviation="0.5" result="effect1_foregroundBlur"/>
 </filter>
 <filter id="filter1_f" x="12.5" y="17.75" width="6.5" height="2.75" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
 <feFlood flood-opacity="0" result="BackgroundImageFix"/>
@@ -88,7 +88,7 @@
 <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
 <feGaussianBlur stdDeviation="0.125" result="effect1_foregroundBlur"/>
 </filter>
-<filter id="filter4_f" x="2" y="2.5" width="20" height="3.00001" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<filter id="filter4_f" x="2" y="1.5" width="20" height="3.00001" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
 <feFlood flood-opacity="0" result="BackgroundImageFix"/>
 <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
 <feGaussianBlur stdDeviation="0.5" result="effect1_foregroundBlur"/>
