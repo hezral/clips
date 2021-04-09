@@ -34,7 +34,6 @@ class ClipsView(Gtk.Grid):
 
         self.app = app
 
-        #------ flowbox ----#
         self.flowbox = Gtk.FlowBox()
         self.flowbox.props.name = "flowbox"
         self.flowbox.props.homogeneous = False
@@ -45,19 +44,58 @@ class ClipsView(Gtk.Grid):
         self.flowbox.props.valign = Gtk.Align.START
         self.flowbox.props.halign = Gtk.Align.FILL
         self.flowbox.set_sort_func(self.sort_flowbox)
-        self.flowbox.connect("child-activated", self.on_child_activated)
+        self.flowbox.on_child_activated_handler_id = self.flowbox.connect("child-activated", self.on_child_activated)
+        
+        # self.flowbox.connect("selected-children-changed", self.on_selected_children_changed)
 
-        #------ scrolled_window ----#
         scrolled_window = Gtk.ScrolledWindow()
         scrolled_window.props.expand = True
         scrolled_window.props.hscrollbar_policy = Gtk.PolicyType.NEVER
         scrolled_window.add(self.flowbox)
         scrolled_window.connect("edge-reached", self.on_edge_reached)
-        
-        #------ construct ----#
+
+        self.multi_delete_revealer = self.generate_multi_delete_revealer()
+
+        self.clips_view_overlay = Gtk.Overlay()
+        self.clips_view_overlay.add(scrolled_window)
+        self.clips_view_overlay.add_overlay(self.multi_delete_revealer)
+        self.clips_view_overlay.set_overlay_pass_through(self.multi_delete_revealer, True)
+
         self.props.name = "clips-view"
         self.props.expand = True
-        self.attach(scrolled_window, 0, 0, 1, 1)
+        self.attach(self.clips_view_overlay, 0, 0, 1, 1)
+
+    def generate_multi_delete_revealer(self):
+        self.delete_selected_button = Gtk.Button(label="Delete", image=Gtk.Image().new_from_icon_name("dialog-warning", Gtk.IconSize.SMALL_TOOLBAR))
+        self.delete_selected_button.props.always_show_image = True
+        self.delete_selected_button.get_style_context().add_class("destructive-action")
+        label = [child for child in self.delete_selected_button.get_children()[0].get_child() if isinstance(child, Gtk.Label)][0]
+        label.props.valign = Gtk.Align.CENTER
+        self.delete_selected_button.connect("clicked", self.on_delete_selected)
+
+        cancel_multi_delete_button = Gtk.Button(label="Cancel")
+        cancel_multi_delete_button.connect("clicked", self.on_cancel_multi_delete)
+
+        button_grid = Gtk.Grid()
+        button_grid.props.halign = Gtk.Align.END
+        button_grid.props.hexpand = True
+        button_grid.props.margin = 6
+        button_grid.props.row_spacing = button_grid.props.column_spacing = 6
+        button_grid.attach(self.delete_selected_button, 0, 0, 1, 1)
+        button_grid.attach(cancel_multi_delete_button, 1, 0, 1, 1)
+
+        grid_multi_delete = Gtk.Grid()
+        grid_multi_delete.props.name = "clips-multi-delete"
+        grid_multi_delete.props.hexpand = True
+        grid_multi_delete.attach(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL), 0, 0, 1, 1)
+        grid_multi_delete.attach(button_grid, 0, 1, 1, 1)
+
+        multi_delete_revealer = Gtk.Revealer()
+        multi_delete_revealer.props.halign = Gtk.Align.FILL
+        multi_delete_revealer.props.valign = Gtk.Align.END
+        multi_delete_revealer.props.hexpand = True
+        multi_delete_revealer.add(grid_multi_delete)
+        return multi_delete_revealer
 
     def flowbox_filter_func(self, search_entry):
         def filter_func(flowboxchild, search_text):
@@ -123,23 +161,94 @@ class ClipsView(Gtk.Grid):
             print(datetime.now(), "loading next items")
 
     def on_child_activated(self, flowbox, flowboxchild):
-        # print("activate: current_selected_flowboxchild_index", self.current_selected_flowboxchild_index)
+        selected = len(flowbox.get_selected_children())
+
+        if selected == 1:
+            print("on_child_activated triggered")
+            if self.current_selected_flowboxchild_index is not None:
+                last_selected_flowboxchild = flowbox.get_child_at_index(self.current_selected_flowboxchild_index)
+                last_selected_flowboxchild.get_children()[0].clip_overlay_revealer.set_reveal_child(False)
+                last_selected_flowboxchild.get_children()[0].clip_action_notify_revealer.set_reveal_child(False)
+                flowbox.unselect_child(last_selected_flowboxchild)
         
-        if self.current_selected_flowboxchild_index is not None:
-            # print("activate: current_selected_flowboxchild_index is None")
-            last_selected_flowboxchild = flowbox.get_child_at_index(self.current_selected_flowboxchild_index)
-            last_selected_flowboxchild.get_children()[0].clip_overlay_revealer.set_reveal_child(False)
-            last_selected_flowboxchild.get_children()[0].clip_action_notify_revealer.set_reveal_child(False)
+            self.current_selected_flowboxchild_index = flowboxchild.get_index()
+            flowboxchild.get_children()[0].clip_overlay_revealer.set_reveal_child(True)
+            flowboxchild.grab_focus()
+
+    def on_child_multi_selected(self, flowbox, flowboxchild):
+        selected = len(flowbox.get_selected_children())
+
+        for flowboxchild in self.flowbox.get_selected_children():
+            clips_container = flowboxchild.get_children()[0]
+            clips_container.clip_overlay_revealer.set_reveal_child(True)
+            clips_container.clip_action_revealer.set_reveal_child(False)
+            clips_container.source_icon_revealer.set_reveal_child(False)
+            clips_container.select_button.get_style_context().add_class("clip-selected")
+
+        self.delete_selected_button.props.label = "Delete ({count})".format(count=str(selected))
+
+    def on_selected_children_changed(self, flowbox):
+        # print("on-selected-children-changed", len(flowbox.get_selected_children()))
+        selected = len(flowbox.get_selected_children())
+
+        if selected == 0:
+            pass
+
+        if selected == 1:
+            pass
+
+        if selected > 1:
+            self.multi_delete_revealer.set_reveal_child(True)
+
+            flowbox.handler_block(flowbox.on_child_activated_handler_id)
+            
+            for child in flowbox.get_children():
+                clips_container = child.get_children()[0]
+                clips_container.handler_block(clips_container.on_cursor_entering_clip_handler_id)
+                clips_container.handler_block(clips_container.on_cursor_leaving_clip_handler_id)
+                clips_container.handler_block(clips_container.on_double_clicked_clip_handler_id)
+                clips_container.clip_action_notify_revealer.set_reveal_child(False)
+                clips_container.clip_overlay_revealer.set_reveal_child(False)
+
+    def on_delete_selected(self, button):
+        selected = self.flowbox.get_selected_children()
+        for flowboxchild in self.flowbox.get_selected_children():
+            clips_container = flowboxchild.get_children()[0]
+            clips_container.on_clip_action(action="multi-delete")
+            flowboxchild.destroy()
+        self.off_multi_select()
+
+    def on_cancel_multi_delete(self, button):
+        self.off_multi_select()
+        self.flowbox.unselect_all()
+    
+    def on_multi_select(self):
+        self.flowbox.on_multi_select_handler_id = self.flowbox.connect("child-activated", self.on_child_multi_selected)
+
+        self.app.main_window.clips_view.multi_delete_revealer.set_reveal_child(True)
+        self.app.main_window.clips_view.flowbox.props.selection_mode = Gtk.SelectionMode.MULTIPLE
+        self.app.main_window.clips_view.flowbox.handler_block(self.app.main_window.clips_view.flowbox.on_child_activated_handler_id)
         
-        self.current_selected_flowboxchild_index = flowboxchild.get_index()
-        # self.current_selected_flowboxchild_index = 0
-        # print("activate: current_selected_flowboxchild_index", self.current_selected_flowboxchild_index)
-        # if flowboxchild.is_selected():
-        #     flowboxchild.get_children()[0].clip_overlay_revealer.set_reveal_child(False)
-        # else:
-        flowboxchild.get_children()[0].clip_overlay_revealer.set_reveal_child(True)
-        flowboxchild.grab_focus()
+        for flowboxchild in self.app.main_window.clips_view.flowbox.get_children():
+            clips_container = flowboxchild.get_children()[0]
+            clips_container.handler_block(clips_container.on_cursor_entering_clip_handler_id)
+            clips_container.handler_block(clips_container.on_cursor_leaving_clip_handler_id)
+            clips_container.handler_block(clips_container.on_double_clicked_clip_handler_id)
+
+    def off_multi_select(self):
+        self.flowbox.disconnect(self.flowbox.on_multi_select_handler_id)
+
+        self.app.main_window.clips_view.multi_delete_revealer.set_reveal_child(False)
+        self.app.main_window.clips_view.flowbox.props.selection_mode = Gtk.SelectionMode.SINGLE
+        self.app.main_window.clips_view.flowbox.handler_unblock(self.app.main_window.clips_view.flowbox.on_child_activated_handler_id)
         
+        for flowboxchild in self.app.main_window.clips_view.flowbox.get_children():
+            clips_container = flowboxchild.get_children()[0]
+            clips_container.handler_unblock(clips_container.on_cursor_entering_clip_handler_id)
+            clips_container.handler_unblock(clips_container.on_cursor_leaving_clip_handler_id)
+            clips_container.handler_unblock(clips_container.on_double_clicked_clip_handler_id)
+            clips_container.select_button.get_style_context().remove_class("clip-selected")
+            clips_container.clip_overlay_revealer.set_reveal_child(False)
 
 # ----------------------------------------------------------------------------------------------------
 
@@ -150,9 +259,7 @@ class ClipsContainer(Gtk.EventBox):
         self.props.name = "clip-container"
 
         self.app = app
-        # get widget scale factor for redraw event
         self.scale = self.get_scale_factor()
-
         self.cache_filedir = cache_filedir
         self.id = clip[0]
         self.target = clip[1]
@@ -167,11 +274,7 @@ class ClipsContainer(Gtk.EventBox):
         self.type = clip[7]
         self.protected = clip[8]
         self.info_text = "id: {id}\nformat: {format}\ntype: {type}".format(id=self.id, format=self.target, type=self.type)
-
-        # initialize cache file with full path        
         self.cache_file = os.path.join(self.cache_filedir, self.cache_file)
-
-        # initialize empty variable
         self.content = None
 
         #------ container types, refer to clips_supported.py ----#
@@ -203,11 +306,8 @@ class ClipsContainer(Gtk.EventBox):
 
         self.extended_info = self.content.label
 
-        # print(self.cache_file, self.type)
-        # self.clip_info = self.generate_clip_info(utils)
         self.clip_action_notify_revealer = self.generate_clip_action_notify()
         self.clip_overlay_revealer = self.generate_clip_overlay()
-        self.clip_select_revealer = self.generate_clip_select()
 
         #------ construct ----#
         self.container_overlay = Gtk.Overlay()
@@ -217,41 +317,34 @@ class ClipsContainer(Gtk.EventBox):
         self.container_overlay.set_overlay_pass_through(self.clip_action_notify_revealer, True)
         self.container_overlay.add_overlay(self.clip_overlay_revealer)
         self.container_overlay.set_overlay_pass_through(self.clip_overlay_revealer, True)
-        # self.container_overlay.add_overlay(self.clip_info_revealer)
-        # self.container_overlay.set_overlay_pass_through(self.clip_info_revealer, True)
-        self.container_overlay.add_overlay(self.clip_select_revealer)
 
         self.container_grid = Gtk.Grid()
         self.container_grid.props.name = "clip-container-grid"
         self.container_grid.attach(self.container_overlay, 0, 0, 1, 1)
 
         self.add(self.container_grid)
-
         self.set_size_request(200, 160)
-        
         self.props.expand = True
 
         # handle mouse enter/leave events on the flowboxchild
-        self.connect("enter-notify-event", self.on_cursor_entering_clip)
-        self.connect("leave-notify-event", self.on_cursor_leaving_clip)
-        self.connect("button-press-event", self.on_double_clicked_clip)
+        self.on_cursor_entering_clip_handler_id = self.connect("enter-notify-event", self.on_cursor_entering_clip)
+        self.on_cursor_leaving_clip_handler_id = self.connect("leave-notify-event", self.on_cursor_leaving_clip)
+        self.on_double_clicked_clip_handler_id = self.connect("button-press-event", self.on_double_clicked_clip)
 
-    def on_focus_event(self, *args):
-        print(locals())
+    def generate_clip_select_button(self):
+        button = Gtk.Button(image=Gtk.Image().new_from_icon_name("com.github.hezral.clips-select-symbolic", Gtk.IconSize.SMALL_TOOLBAR))
+        button.set_size_request(32, 32)
+        button.props.name = "clip-select"
+        button.props.halign = Gtk.Align.END
+        button.props.valign = Gtk.Align.START
+        button.connect("clicked", self.on_clip_select)
+        return button
 
-    def generate_clip_select(self):
-        clip_select_button = self.generate_action_button("com.github.hezral.clips-select-symbolic", "Select", "select")
-        clip_select_button.props.halign = clip_select_button.props.valign = Gtk.Align.CENTER
-        clip_select_button.set_size_request(32, 32)
-
-        clip_select_revealer = Gtk.Revealer()
-        clip_select_revealer.props.name = "clip-select-revealer"
-        clip_select_revealer.props.halign = Gtk.Align.END
-        clip_select_revealer.props.valign = Gtk.Align.START
-        clip_select_revealer.props.transition_type = Gtk.RevealerTransitionType.CROSSFADE
-        # clip_select_revealer.add(clip_select_button)
-
-        return clip_select_revealer
+    def on_clip_select(self, button):
+        button.get_style_context().add_class("clip-selected")
+        self.clip_action_revealer.set_reveal_child(False)
+        self.source_icon_revealer.set_reveal_child(False)
+        self.app.main_window.clips_view.on_multi_select()
 
     def generate_action_button(self, iconname, tooltiptext, actionname):
         icon = Gtk.Image().new_from_icon_name(iconname, Gtk.IconSize.SMALL_TOOLBAR)
@@ -362,6 +455,12 @@ class ClipsContainer(Gtk.EventBox):
         clip_action.props.hexpand = True
         clip_action.props.can_focus = False
         clip_action.props.row_spacing = clip_action.props.column_spacing = 4
+
+        self.clip_action_revealer = Gtk.Revealer()
+        self.clip_action_revealer.props.name = "clip-action-revealer"    
+        self.clip_action_revealer.props.transition_type = Gtk.RevealerTransitionType.CROSSFADE
+        self.clip_action_revealer.add(clip_action)
+        self.clip_action_revealer.props.can_focus = False
         
         if "color" in self.type or "spreadsheet" in self.type or "presentation" in self.type:
             # protect_action.props.sensitive = False
@@ -370,7 +469,11 @@ class ClipsContainer(Gtk.EventBox):
             view_action.get_style_context().add_class("clip-action-disabled")
 
         icon = self.generate_source_icon_overlay()
+        self.source_icon_revealer = Gtk.Revealer()
+        self.source_icon_revealer.add(icon)
+        self.source_icon_revealer.props.can_focus = False
 
+        self.select_button = self.generate_clip_select_button()
         self.fuzzytimestamp_label = self.generate_fuzzytimestamp_label()
 
         # clip_action.attach(protect_action, 0, 0, 1, 1)
@@ -384,9 +487,9 @@ class ClipsContainer(Gtk.EventBox):
         grid = Gtk.Grid()
         grid.props.expand = True
         grid.props.halign = grid.props.valign = Gtk.Align.FILL
-        grid.attach(icon, 0, 0, 1, 1)
-        # grid.attach(self.fuzzytimestamp_label, 1, 0, 1, 1)
-        grid.attach(clip_action, 0, 1, 2, 1)
+        grid.attach(self.source_icon_revealer, 0, 0, 1, 1)
+        grid.attach(self.select_button, 1, 0, 1, 1)
+        grid.attach(self.clip_action_revealer, 0, 1, 2, 1)
 
         clip_overlay_revealer = Gtk.Revealer()
         clip_overlay_revealer.props.name = "clip-action-revealer"    
@@ -436,20 +539,11 @@ class ClipsContainer(Gtk.EventBox):
             self.on_clip_action(button=None, action="copy")        
 
     def on_cursor_entering_clip(self, widget, eventcrossing):
-        # add css class for hover event
         self.get_parent().get_style_context().add_class("hover")
         
-        flowboxchild = self.get_parent()
-        main_window = self.get_toplevel()
-        app = main_window.props.application
-        utils = app.utils
-        clip_container_overlay = utils.get_widget_by_name(widget=flowboxchild, child_name="clip-container-overlay", level=0)
-        # utils.get_widget_by_name not working for some widget class like Gtk.Overlay
-        clip_overlay_revealer = [child for child in clip_container_overlay.get_children() if child.props.name == "clip-action-revealer"][0]
-        clip_select_revealer = [child for child in clip_container_overlay.get_children() if child.props.name == "clip-select-revealer"][0]
-
-        clip_overlay_revealer.set_reveal_child(True)
-        clip_select_revealer.set_reveal_child(True)
+        self.clip_overlay_revealer.set_reveal_child(True)
+        self.clip_action_revealer.set_reveal_child(True)
+        self.source_icon_revealer.set_reveal_child(True)
 
         # add zoom effect on hovering an image container
         # content = utils.get_widget_by_name(widget=flowboxchild, child_name="image-container", level=0)
@@ -457,36 +551,20 @@ class ClipsContainer(Gtk.EventBox):
         #     content.hover()
 
     def on_cursor_leaving_clip(self, widget, eventcrossing):
-        # remove css class for hover event
         self.get_parent().get_style_context().remove_class("hover")
 
         flowboxchild = self.get_parent()
-        main_window = self.get_toplevel()
-        app = main_window.props.application
-        utils = app.utils
-        clip_container_overlay = utils.get_widget_by_name(widget=flowboxchild, child_name="clip-container-overlay", level=0)
-        # utils.get_widget_by_name not working for some widget class like Gtk.Overlay
-        clip_overlay_revealer = [child for child in clip_container_overlay.get_children() if child.props.name == "clip-action-revealer"][0]
-        clip_action_notify_revealer = [child for child in clip_container_overlay.get_children() if child.props.name == "clip-action-notify-revealer"][0]
-        # clip_info_revealer = [child for child in clip_container_overlay.get_children() if child.props.name == "clip-info-revealer"][0]
-        # clip_select_revealer = [child for child in clip_container_overlay.get_children() if child.props.name == "clip-select-revealer"][0]
 
         if flowboxchild.is_selected():
-            clip_overlay_revealer.set_reveal_child(True)
-            clip_overlay_revealer.grab_focus()
+            self.clip_overlay_revealer.set_reveal_child(True)
+            self.clip_overlay_revealer.grab_focus()
         else: 
-            clip_overlay_revealer.set_reveal_child(False)
+            self.clip_overlay_revealer.set_reveal_child(False)
         
-        if clip_action_notify_revealer.get_child_revealed():
-            clip_action_notify_revealer.set_reveal_child(False)
+        if self.clip_action_notify_revealer.get_child_revealed():
+            self.clip_action_notify_revealer.set_reveal_child(False)
 
-        # if clip_info_revealer.get_child_revealed():
-        #     clip_info_revealer.set_reveal_child(False)
-
-        # if clip_select_revealer.get_child_revealed():
-        #     clip_select_revealer.set_reveal_child(False)
-
-        flowboxchild_selected = main_window.clips_view.flowbox.get_selected_children()
+        flowboxchild_selected = self.app.main_window.clips_view.flowbox.get_selected_children()
 
         if len(flowboxchild_selected) != 0:
             if flowboxchild_selected[0].get_children()[0].clip_action_notify_revealer.get_child_revealed():
@@ -565,6 +643,11 @@ class ClipsContainer(Gtk.EventBox):
                 self.app.cache_manager.delete_record(self.id, self.cache_file, self.type)
                 self.app.main_window.update_total_clips_label("delete")
             dialog.destroy()
+
+        elif action == "multi-delete":
+            flowboxchild.destroy()
+            self.app.cache_manager.delete_record(self.id, self.cache_file, self.type)
+            self.app.main_window.update_total_clips_label("delete")
 
         else:
             print(action)
