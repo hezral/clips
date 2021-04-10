@@ -94,6 +94,7 @@ class Clips(Gtk.Application):
 
         # selected clip actions
         # self.setup_action("protect", self.on_clip_actions, "<Alt>P")
+        self.setup_action("multi-select", self.on_clip_actions, "<Alt>M")
         self.setup_action("reveal", self.on_clip_actions, "<Alt>R")
         self.setup_action("info", self.on_clip_actions, "<Alt>I")
         self.setup_action("view", self.on_clip_actions, "<Alt>V")
@@ -174,9 +175,8 @@ class Clips(Gtk.Application):
             GLib.idle_add(self.main_window.clips_view.new_clip, clip, app_startup)
             time.sleep(0.01)
 
-        # selects the first flowboxchild
         self.main_window.clips_view.flowbox.select_child(self.main_window.clips_view.flowbox.get_child_at_index(0))
-        # self.main_window.clips_view.flowbox.get_child_at_index(0).grab_focus()
+        self.main_window.clips_view.flowbox.get_child_at_index(0).grab_focus()
         print(datetime.now(), "finish load_clips")
 
     def do_command_line(self, command_line):
@@ -221,6 +221,13 @@ class Clips(Gtk.Application):
                 if flowboxchild.is_selected():
                     clips_container = flowboxchild.get_children()[0]
                     clips_container.on_clip_action(action="copy")
+            
+            elif action.props.name == "multi-select":
+                if self.main_window.clips_view.multi_select_mode:
+                    self.main_window.clips_view.off_multi_select()
+                else:
+                    self.main_window.clips_view.on_multi_select()
+
             else:
                 flowboxchild = self.main_window.clips_view.flowbox.get_selected_children()[0]
                 if flowboxchild.is_selected():
