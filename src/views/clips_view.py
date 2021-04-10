@@ -45,10 +45,8 @@ class ClipsView(Gtk.Grid):
         self.flowbox.props.valign = Gtk.Align.START
         self.flowbox.props.halign = Gtk.Align.FILL
         self.flowbox.set_sort_func(self.sort_flowbox)
-        self.flowbox.on_child_activated_handler_id = self.flowbox.connect("child-activated", self.on_child_activated)
+        self.flowbox.connect("child-activated", self.on_child_activated)
         
-        # self.flowbox.connect("selected-children-changed", self.on_selected_children_changed)
-
         scrolled_window = Gtk.ScrolledWindow()
         scrolled_window.props.expand = True
         scrolled_window.props.hscrollbar_policy = Gtk.PolicyType.NEVER
@@ -95,6 +93,7 @@ class ClipsView(Gtk.Grid):
         multi_delete_revealer.props.halign = Gtk.Align.FILL
         multi_delete_revealer.props.valign = Gtk.Align.END
         multi_delete_revealer.props.hexpand = True
+        multi_delete_revealer.props.can_focus = False
         multi_delete_revealer.add(grid_multi_delete)
         return multi_delete_revealer
 
@@ -170,8 +169,10 @@ class ClipsView(Gtk.Grid):
                 last_selected_flowboxchild = flowbox.get_child_at_index(self.current_selected_flowboxchild_index)
                 last_selected_flowboxchild.get_children()[0].clip_overlay_revealer.set_reveal_child(False)
                 last_selected_flowboxchild.get_children()[0].clip_action_notify_revealer.set_reveal_child(False)
-                flowbox.unselect_child(last_selected_flowboxchild)
-        
+
+                if self.current_selected_flowboxchild_index != flowboxchild.get_index():
+                    flowbox.unselect_child(last_selected_flowboxchild)
+
             self.current_selected_flowboxchild_index = flowboxchild.get_index()
             flowboxchild.get_children()[0].clip_overlay_revealer.set_reveal_child(True)
             flowboxchild.grab_focus()
@@ -193,7 +194,6 @@ class ClipsView(Gtk.Grid):
         self.app.main_window.clips_view.flowbox.unselect_child(clips_container.get_parent())
         selected = len(self.flowbox.get_selected_children())
         self.delete_selected_button.props.label = "Delete ({count})".format(count=str(selected)) 
-
 
     def on_selected_children_changed(self, flowbox):
         # print("on-selected-children-changed", len(flowbox.get_selected_children()))
@@ -231,36 +231,40 @@ class ClipsView(Gtk.Grid):
         self.flowbox.unselect_all()
     
     def on_multi_select(self):
-        self.flowbox.on_multi_select_handler_id = self.flowbox.connect("child-activated", self.on_child_multi_selected)
+        self.flowbox.connect("child-activated", self.on_child_multi_selected)
 
-        self.app.main_window.clips_view.multi_delete_revealer.set_reveal_child(True)
-        self.app.main_window.clips_view.flowbox.props.selection_mode = Gtk.SelectionMode.MULTIPLE
-        self.app.main_window.clips_view.flowbox.handler_block(self.app.main_window.clips_view.flowbox.on_child_activated_handler_id)
+        self.multi_delete_revealer.set_reveal_child(True)
+        self.flowbox.props.selection_mode = Gtk.SelectionMode.MULTIPLE
+
+        self.flowbox.disconnect_by_func(self.on_child_activated)
         
         for flowboxchild in self.app.main_window.clips_view.flowbox.get_children():
             clips_container = flowboxchild.get_children()[0]
-            clips_container.handler_block(clips_container.on_cursor_entering_clip_handler_id)
-            clips_container.handler_block(clips_container.on_cursor_leaving_clip_handler_id)
-            clips_container.handler_block(clips_container.on_double_clicked_clip_handler_id)
+            clips_container.disconnect_by_func(clips_container.on_cursor_entering_clip)
+            clips_container.disconnect_by_func(clips_container.on_cursor_leaving_clip)
+            clips_container.disconnect_by_func(clips_container.on_double_clicked_clip)
         
         self.multi_select_mode = True
 
     def off_multi_select(self):
-        self.flowbox.disconnect(self.flowbox.on_multi_select_handler_id)
+        self.flowbox.disconnect_by_func(self.on_child_multi_selected)
 
-        self.app.main_window.clips_view.multi_delete_revealer.set_reveal_child(False)
-        self.app.main_window.clips_view.flowbox.props.selection_mode = Gtk.SelectionMode.SINGLE
-        self.app.main_window.clips_view.flowbox.handler_unblock(self.app.main_window.clips_view.flowbox.on_child_activated_handler_id)
+        self.multi_delete_revealer.set_reveal_child(False)
+        self.flowbox.props.selection_mode = Gtk.SelectionMode.SINGLE
+
+        self.flowbox.connect("child-activated", self.on_child_activated)
         
         for flowboxchild in self.app.main_window.clips_view.flowbox.get_children():
             clips_container = flowboxchild.get_children()[0]
-            clips_container.handler_unblock(clips_container.on_cursor_entering_clip_handler_id)
-            clips_container.handler_unblock(clips_container.on_cursor_leaving_clip_handler_id)
-            clips_container.handler_unblock(clips_container.on_double_clicked_clip_handler_id)
+            clips_container.connect("enter-notify-event", clips_container.on_cursor_entering_clip)
+            clips_container.connect("leave-notify-event", clips_container.on_cursor_leaving_clip)
+            clips_container.connect("button-press-event", clips_container.on_double_clicked_clip)
+
             clips_container.select_button.get_style_context().remove_class("clip-selected")
+            clips_container.select_button.get_style_context().add_class("clip-select")
             clips_container.clip_overlay_revealer.set_reveal_child(False)
 
-        self.multi_select_mode = True
+        self.multi_select_mode = False
 
 # ----------------------------------------------------------------------------------------------------
 
@@ -345,24 +349,15 @@ class ClipsContainer(Gtk.EventBox):
 
     def generate_clip_select_button(self):
         button = Gtk.Button(image=Gtk.Image().new_from_icon_name("com.github.hezral.clips-select-symbolic", Gtk.IconSize.SMALL_TOOLBAR))
-        button.set_size_request(32, 32)
+        button.set_size_request(30, 30)
         button.props.name = "clip-select"
         button.props.halign = Gtk.Align.END
         button.props.valign = Gtk.Align.START
+        button.props.can_focus = False
         button.connect("clicked", self.on_clip_select)
+        button.get_style_context().add_class("clip-select")
         return button
-
-    def on_clip_select(self, button):
-        if self.app.main_window.clips_view.multi_select_mode:
-            button.get_style_context().remove_class("clip-selected")
-            self.app.main_window.clips_view.on_child_multi_unselected(self)
-        else:
-            button.get_style_context().add_class("clip-selected")
-            self.clip_action_revealer.set_reveal_child(False)
-            self.source_icon_revealer.set_reveal_child(False)
-            self.app.main_window.clips_view.on_multi_select()
-            
-
+           
     def generate_action_button(self, iconname, tooltiptext, actionname):
         icon = Gtk.Image().new_from_icon_name(iconname, Gtk.IconSize.SMALL_TOOLBAR)
         button = Gtk.Button(image=icon)
@@ -453,6 +448,7 @@ class ClipsContainer(Gtk.EventBox):
 
         clip_action_notify_revealer = Gtk.Revealer()
         clip_action_notify_revealer.props.name = "clip-action-notify-revealer"
+        clip_action_notify_revealer.props.can_focus = False
         clip_action_notify_revealer.props.transition_type = Gtk.RevealerTransitionType.CROSSFADE
         clip_action_notify_revealer.add(action_notify_box)
         return clip_action_notify_revealer
@@ -550,6 +546,18 @@ class ClipsContainer(Gtk.EventBox):
         icon.connect("query-tooltip", self.on_tooltip)
 
         return icon
+
+    def on_clip_select(self, button):
+        if self.app.main_window.clips_view.multi_select_mode:
+            button.get_style_context().remove_class("clip-selected")
+            button.get_style_context().add_class("clip-select")
+            self.app.main_window.clips_view.on_child_multi_unselected(self)
+        else:
+            button.get_style_context().remove_class("clip-select")
+            button.get_style_context().add_class("clip-selected")
+            self.clip_action_revealer.set_reveal_child(False)
+            self.source_icon_revealer.set_reveal_child(False)
+            self.app.main_window.clips_view.on_multi_select()
 
     def on_double_clicked_clip(self, widget, eventbutton):
         if eventbutton.type.value_name == "GDK_2BUTTON_PRESS":
@@ -682,27 +690,51 @@ class ClipsContainer(Gtk.EventBox):
     def on_tooltip(self, widget, x, y, keyboard_mode, tooltip):
         app_name, app_icon = self.app.utils.get_appinfo(self.source_app)
 
-        id = Gtk.Label(self.id)
+        id = Gtk.Label("ID: " + str(self.id))
         id.props.hexpand = True
         id.props.halign = Gtk.Align.START
         id_icon = Gtk.Image().new_from_icon_name("com.github.hezral.clips", Gtk.IconSize.LARGE_TOOLBAR)
 
-        source_app = Gtk.Label(self.source_app)
+        source_app = Gtk.Label("Source: " + self.source_app)
         source_app.props.hexpand = True
         source_app.props.halign = Gtk.Align.START
         source_app_icon = Gtk.Image().new_from_icon_name("application-default-icon", Gtk.IconSize.LARGE_TOOLBAR)
 
-        created = Gtk.Label(self.created_short)
+        created = Gtk.Label("Created: " + self.created_short)
         created.props.hexpand = True
         created.props.halign = Gtk.Align.START        
         created_icon = Gtk.Image().new_from_icon_name("preferences-system-time", Gtk.IconSize.LARGE_TOOLBAR)
 
-        type = Gtk.Label(self.type)
+        type = Gtk.Label("Format: " + self.type)
         type.props.hexpand = True
-        type.props.halign = Gtk.Align.START          
-        type_icon = Gtk.Image().new_from_icon_name("mail-sent", Gtk.IconSize.LARGE_TOOLBAR)
+        type.props.halign = Gtk.Align.START
+        if "office/spreadsheet" in self.type:
+            type_icon = "x-office-spreadsheet"
+        elif "office/presentation" in self.type:
+            type_icon = "x-office-presentation"
+        elif "office/word" in self.type:
+            type_icon = "x-office-document"
+        elif "files" in self.type:
+            type_icon = "folder-documents"
+        elif "image" in self.type:
+            type_icon = "image-x-generic"
+        elif "html" in self.type:
+            type_icon = "text-html"
+        elif "richtext" in self.type:
+            type_icon = "x-office-document"
+        elif "plaintext" in self.type:
+            type_icon = "text-x-generic"
+        elif "color" in self.type:
+            type_icon = "preferences-color"
+        elif "url" in self.type:
+            type_icon = "applications-internet"
+        elif "mail" in self.type:
+            type_icon = "mail-sent"
+        else:
+            type_icon = "application-octet-stream"
+        type_icon = Gtk.Image().new_from_icon_name(type_icon, Gtk.IconSize.LARGE_TOOLBAR)
 
-        extended_info = Gtk.Label(self.extended_info)
+        extended_info = Gtk.Label("Extended Info: " + self.extended_info)
         extended_info.props.hexpand = True
         extended_info.props.halign = Gtk.Align.START    
         extended_icon = Gtk.Image().new_from_icon_name("tag", Gtk.IconSize.LARGE_TOOLBAR)
