@@ -198,12 +198,17 @@ grid#clips-multi-delete {
     background-color: alpha(@theme_base_color, 0.85);
 }
 
-/* button#clip-select {
-    color: white;
-} */
+.clip-select {
+    opacity: 0.35;
+}
+
+.clip-select:hover {
+    opacity: 1;
+}
 
 .clip-selected {
     color: rgba(125, 48, 232, 1);
+    opacity: 1;
 }
 
 
