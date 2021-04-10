@@ -28,6 +28,7 @@ import time
 class ClipsView(Gtk.Grid):
 
     current_selected_flowboxchild_index = None
+    multi_select_mode = False
 
     def __init__(self, app, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -185,7 +186,14 @@ class ClipsView(Gtk.Grid):
             clips_container.source_icon_revealer.set_reveal_child(False)
             clips_container.select_button.get_style_context().add_class("clip-selected")
 
-        self.delete_selected_button.props.label = "Delete ({count})".format(count=str(selected))
+        self.delete_selected_button.props.label = "Delete ({count})".format(count=str(selected)) 
+
+    def on_child_multi_unselected(self, clips_container):
+        clips_container.clip_overlay_revealer.set_reveal_child(False)
+        self.app.main_window.clips_view.flowbox.unselect_child(clips_container.get_parent())
+        selected = len(self.flowbox.get_selected_children())
+        self.delete_selected_button.props.label = "Delete ({count})".format(count=str(selected)) 
+
 
     def on_selected_children_changed(self, flowbox):
         # print("on-selected-children-changed", len(flowbox.get_selected_children()))
@@ -234,6 +242,8 @@ class ClipsView(Gtk.Grid):
             clips_container.handler_block(clips_container.on_cursor_entering_clip_handler_id)
             clips_container.handler_block(clips_container.on_cursor_leaving_clip_handler_id)
             clips_container.handler_block(clips_container.on_double_clicked_clip_handler_id)
+        
+        self.multi_select_mode = True
 
     def off_multi_select(self):
         self.flowbox.disconnect(self.flowbox.on_multi_select_handler_id)
@@ -249,6 +259,8 @@ class ClipsView(Gtk.Grid):
             clips_container.handler_unblock(clips_container.on_double_clicked_clip_handler_id)
             clips_container.select_button.get_style_context().remove_class("clip-selected")
             clips_container.clip_overlay_revealer.set_reveal_child(False)
+
+        self.multi_select_mode = True
 
 # ----------------------------------------------------------------------------------------------------
 
@@ -341,10 +353,15 @@ class ClipsContainer(Gtk.EventBox):
         return button
 
     def on_clip_select(self, button):
-        button.get_style_context().add_class("clip-selected")
-        self.clip_action_revealer.set_reveal_child(False)
-        self.source_icon_revealer.set_reveal_child(False)
-        self.app.main_window.clips_view.on_multi_select()
+        if self.app.main_window.clips_view.multi_select_mode:
+            button.get_style_context().remove_class("clip-selected")
+            self.app.main_window.clips_view.on_child_multi_unselected(self)
+        else:
+            button.get_style_context().add_class("clip-selected")
+            self.clip_action_revealer.set_reveal_child(False)
+            self.source_icon_revealer.set_reveal_child(False)
+            self.app.main_window.clips_view.on_multi_select()
+            
 
     def generate_action_button(self, iconname, tooltiptext, actionname):
         icon = Gtk.Image().new_from_icon_name(iconname, Gtk.IconSize.SMALL_TOOLBAR)
@@ -468,7 +485,7 @@ class ClipsContainer(Gtk.EventBox):
             # protect_action.get_style_context().add_class("clip-action-disabled")
             view_action.get_style_context().add_class("clip-action-disabled")
 
-        icon = self.generate_source_icon_overlay()
+        icon = self.generate_source_icon()
         self.source_icon_revealer = Gtk.Revealer()
         self.source_icon_revealer.add(icon)
         self.source_icon_revealer.props.can_focus = False
@@ -509,7 +526,7 @@ class ClipsContainer(Gtk.EventBox):
         fuzzytimestamp_label.props.name = "clips-fuzzytimestamp"
         return fuzzytimestamp_label
 
-    def generate_source_icon_overlay(self):
+    def generate_source_icon(self):
         app_name, app_icon = self.app.utils.get_appinfo(self.source_app)
         icon_size = 32 * self.scale
         if app_icon == "application-default-icon":
@@ -536,6 +553,9 @@ class ClipsContainer(Gtk.EventBox):
 
     def on_double_clicked_clip(self, widget, eventbutton):
         if eventbutton.type.value_name == "GDK_2BUTTON_PRESS":
+            # if self.app.main_window.clips_view.multi_select_mode:
+            #     self.app.main_window.clips_view.flowbox.unselect_child(self.get_parent())
+            # else:
             self.on_clip_action(button=None, action="copy")        
 
     def on_cursor_entering_clip(self, widget, eventcrossing):
