@@ -307,8 +307,6 @@ def to_rgb(color_string):
         rgb = None
         a = None
     
-    # print(type(rgb), type(float(a)))
-
     if a == 1.0:
         a = 1
         return rgb, a
