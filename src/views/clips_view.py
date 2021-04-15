@@ -16,7 +16,6 @@
 '''
 
 import gi
-from utils import to_rgb
 gi.require_version('Gtk', '3.0')
 gi.require_version('WebKit2', '4.0')
 from gi.repository import Gtk, WebKit2, GdkPixbuf, Pango, Gdk, Gio
@@ -1076,10 +1075,9 @@ class FilesContainer(DefaultContainer):
 
 # ----------------------------------------------------------------------------------------------------
 
-class SpreadsheetContainer(ImageContainer):
+class SpreadsheetContainer(HtmlContainer):
     def __init__(self, filepath, type, app, *args, **kwargs):
-        thumbnail = os.path.splitext(filepath)[0]+'-thumb.png'
-        super().__init__(thumbnail, type, app)
+        super().__init__(filepath, type, app)
 
         self.props.name = "spreadsheet-container"
 
