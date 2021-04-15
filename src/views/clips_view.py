@@ -166,8 +166,9 @@ class ClipsView(Gtk.Grid):
             print("on_child_activated triggered")
             if self.current_selected_flowboxchild_index is not None:
                 last_selected_flowboxchild = flowbox.get_child_at_index(self.current_selected_flowboxchild_index)
-                last_selected_flowboxchild.get_children()[0].clip_overlay_revealer.set_reveal_child(False)
-                last_selected_flowboxchild.get_children()[0].clip_action_notify_revealer.set_reveal_child(False)
+                if last_selected_flowboxchild is not None:
+                    last_selected_flowboxchild.get_children()[0].clip_overlay_revealer.set_reveal_child(False)
+                    last_selected_flowboxchild.get_children()[0].clip_action_notify_revealer.set_reveal_child(False)
 
                 if self.current_selected_flowboxchild_index != flowboxchild.get_index():
                     flowbox.unselect_child(last_selected_flowboxchild)
