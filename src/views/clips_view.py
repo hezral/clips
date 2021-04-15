@@ -370,7 +370,7 @@ class ClipsContainer(Gtk.EventBox):
         button.connect("clicked", self.on_clip_action, actionname)
         return button
     
-    def generate_clip_info(self, utils):
+    def generate_clip_infobar(self, utils):
         if self.content.label is None:
             self.content_label = Gtk.Label("Clip")
         else:
@@ -439,7 +439,78 @@ class ClipsContainer(Gtk.EventBox):
         # clip_info_revealer.add(clip_info)
 
         return clip_info
-        
+
+    def generate_clip_info(self):
+        # app_name, app_icon = self.app.utils.get_appinfo(self.source_app)
+
+        id = Gtk.Label("ID: " + str(self.id))
+        id.props.hexpand = True
+        id.props.halign = Gtk.Align.START
+        id_icon = Gtk.Image().new_from_icon_name("com.github.hezral.clips", Gtk.IconSize.LARGE_TOOLBAR)
+
+        source_app = Gtk.Label("Source: " + self.source_app)
+        source_app.props.hexpand = True
+        source_app.props.halign = Gtk.Align.START
+        source_app_icon = Gtk.Image().new_from_icon_name("application-default-icon", Gtk.IconSize.LARGE_TOOLBAR)
+
+        created = Gtk.Label("Created: " + self.created_short)
+        created.props.hexpand = True
+        created.props.halign = Gtk.Align.START        
+        created_icon = Gtk.Image().new_from_icon_name("preferences-system-time", Gtk.IconSize.LARGE_TOOLBAR)
+
+        type = Gtk.Label("Format: " + self.type)
+        type.props.hexpand = True
+        type.props.halign = Gtk.Align.START
+        if "office/spreadsheet" in self.type:
+            type_icon = "x-office-spreadsheet"
+        elif "office/presentation" in self.type:
+            type_icon = "x-office-presentation"
+        elif "office/word" in self.type:
+            type_icon = "x-office-document"
+        elif "files" in self.type:
+            type_icon = "folder-documents"
+        elif "image" in self.type:
+            type_icon = "image-x-generic"
+        elif "html" in self.type:
+            type_icon = "text-html"
+        elif "richtext" in self.type:
+            type_icon = "x-office-document"
+        elif "plaintext" in self.type:
+            type_icon = "text-x-generic"
+        elif "color" in self.type:
+            type_icon = "preferences-color"
+        elif "url" in self.type:
+            type_icon = "applications-internet"
+        elif "mail" in self.type:
+            type_icon = "mail-sent"
+        else:
+            type_icon = "application-octet-stream"
+        type_icon = Gtk.Image().new_from_icon_name(type_icon, Gtk.IconSize.LARGE_TOOLBAR)
+
+        extended_info = Gtk.Label("Extended Info: " + self.extended_info)
+        extended_info.props.hexpand = True
+        extended_info.props.halign = Gtk.Align.START    
+        extended_icon = Gtk.Image().new_from_icon_name("tag", Gtk.IconSize.LARGE_TOOLBAR)
+
+        grid = Gtk.Grid()
+        grid.props.margin = 6
+        grid.props.row_spacing = 6
+        grid.props.column_spacing = 6
+
+        grid.attach(id_icon, 0, 0, 1, 1)
+        grid.attach(id, 1, 0, 1, 1)
+        grid.attach(source_app_icon, 0, 1, 1, 1)
+        grid.attach(source_app, 1, 1, 1, 1)
+        grid.attach(created_icon, 0, 2, 1, 1)
+        grid.attach(created, 1, 2, 1, 1)
+        grid.attach(type_icon, 0, 3, 1, 1)
+        grid.attach(type, 1, 3, 1, 1)
+        grid.attach(extended_icon, 0, 4, 1, 1)
+        grid.attach(extended_info, 1, 4, 1, 1)
+        grid.show_all()
+
+        return grid
+
     def generate_clip_action_notify(self):
         action_notify_box = Gtk.Grid()
         action_notify_box.props.name = "clip-action-notify"
@@ -659,10 +730,11 @@ class ClipsContainer(Gtk.EventBox):
             dialog.add_action_widget(btn_ok, Gtk.ResponseType.OK)
             dialog.add_action_widget(btn_cancel, Gtk.ResponseType.CANCEL)
             dialog.set_default_size(150, 100)
-            label = Gtk.Label(label="Delete this clip?\n\n{details}\n".format(details=self.info_text))
+            # label = Gtk.Label(label="Delete this clip?\n\n{details}\n".format(details=self.info_text))
+            
             box = dialog.get_content_area()
             box.props.margin = 10
-            box.add(label)
+            box.add(self.generate_clip_info())
             dialog.show_all()
             btn_cancel.grab_focus()
             response = dialog.run()
@@ -688,77 +760,8 @@ class ClipsContainer(Gtk.EventBox):
         self.fuzzytimestamp_label.props.label = self.fuzzytimestamp
 
     def on_tooltip(self, widget, x, y, keyboard_mode, tooltip):
-        app_name, app_icon = self.app.utils.get_appinfo(self.source_app)
-
-        id = Gtk.Label("ID: " + str(self.id))
-        id.props.hexpand = True
-        id.props.halign = Gtk.Align.START
-        id_icon = Gtk.Image().new_from_icon_name("com.github.hezral.clips", Gtk.IconSize.LARGE_TOOLBAR)
-
-        source_app = Gtk.Label("Source: " + self.source_app)
-        source_app.props.hexpand = True
-        source_app.props.halign = Gtk.Align.START
-        source_app_icon = Gtk.Image().new_from_icon_name("application-default-icon", Gtk.IconSize.LARGE_TOOLBAR)
-
-        created = Gtk.Label("Created: " + self.created_short)
-        created.props.hexpand = True
-        created.props.halign = Gtk.Align.START        
-        created_icon = Gtk.Image().new_from_icon_name("preferences-system-time", Gtk.IconSize.LARGE_TOOLBAR)
-
-        type = Gtk.Label("Format: " + self.type)
-        type.props.hexpand = True
-        type.props.halign = Gtk.Align.START
-        if "office/spreadsheet" in self.type:
-            type_icon = "x-office-spreadsheet"
-        elif "office/presentation" in self.type:
-            type_icon = "x-office-presentation"
-        elif "office/word" in self.type:
-            type_icon = "x-office-document"
-        elif "files" in self.type:
-            type_icon = "folder-documents"
-        elif "image" in self.type:
-            type_icon = "image-x-generic"
-        elif "html" in self.type:
-            type_icon = "text-html"
-        elif "richtext" in self.type:
-            type_icon = "x-office-document"
-        elif "plaintext" in self.type:
-            type_icon = "text-x-generic"
-        elif "color" in self.type:
-            type_icon = "preferences-color"
-        elif "url" in self.type:
-            type_icon = "applications-internet"
-        elif "mail" in self.type:
-            type_icon = "mail-sent"
-        else:
-            type_icon = "application-octet-stream"
-        type_icon = Gtk.Image().new_from_icon_name(type_icon, Gtk.IconSize.LARGE_TOOLBAR)
-
-        extended_info = Gtk.Label("Extended Info: " + self.extended_info)
-        extended_info.props.hexpand = True
-        extended_info.props.halign = Gtk.Align.START    
-        extended_icon = Gtk.Image().new_from_icon_name("tag", Gtk.IconSize.LARGE_TOOLBAR)
-
-        grid = Gtk.Grid()
-        grid.props.margin = 6
-        grid.props.row_spacing = 6
-        grid.props.column_spacing = 6
-
-        grid.attach(id_icon, 0, 0, 1, 1)
-        grid.attach(id, 1, 0, 1, 1)
-        grid.attach(source_app_icon, 0, 1, 1, 1)
-        grid.attach(source_app, 1, 1, 1, 1)
-        grid.attach(created_icon, 0, 2, 1, 1)
-        grid.attach(created, 1, 2, 1, 1)
-        grid.attach(type_icon, 0, 3, 1, 1)
-        grid.attach(type, 1, 3, 1, 1)
-        grid.attach(extended_icon, 0, 4, 1, 1)
-        grid.attach(extended_info, 1, 4, 1, 1)
-        grid.show_all()
-
         tooltip.set_custom(None)
-        tooltip.set_custom(grid)
-        
+        tooltip.set_custom(self.generate_clip_info())
         return True
 
     def on_notify_action_hide(self, clip_action_notify, event):
