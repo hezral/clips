@@ -140,11 +140,15 @@ class SettingsView(Gtk.Grid):
         view_guides.button.connect("clicked", self.on_button_clicked)
         view_guides.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
         
-        report_issue = SubSettings(type="button", name="report-issue", label="Have a feature or issue?", sublabel="Report and help make Clips better", separator=False, params=("Report issue", Gtk.Image().new_from_icon_name("help-faq", Gtk.IconSize.LARGE_TOOLBAR),))
+        report_issue = SubSettings(type="button", name="report-issue", label="Have a feature or issue?", sublabel="Report and help make Clips better", separator=True, params=("Report issue", Gtk.Image().new_from_icon_name("help-faq", Gtk.IconSize.LARGE_TOOLBAR),))
         report_issue.button.connect("clicked", self.on_button_clicked)
         report_issue.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
 
-        help = SettingsGroup("Help", (view_guides, report_issue, ))
+        # buyme_coffee = SubSettings(type="button", name="buy-me-coffee", label="Buy me a coffee", sublabel="Thanks for supporting me!", separator=False, params=("Show support", Gtk.Image().new_from_icon_name("help-faq", Gtk.IconSize.LARGE_TOOLBAR),))
+        # buyme_coffee.button.connect("clicked", self.on_button_clicked)
+        # buyme_coffee.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
+
+        help = SettingsGroup("Support", (view_guides, report_issue, ))
         self.flowbox.add(help)
 
         # disable focus on flowboxchilds
