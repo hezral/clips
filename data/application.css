@@ -145,7 +145,7 @@ grid#plaintext-container {
     font-size: 95%;
 }
 
-grid#html-container {
+grid#html-container, grid#spreadsheet-container {
     padding: 4px;
 }
 
