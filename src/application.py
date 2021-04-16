@@ -60,61 +60,11 @@ class Clips(Gtk.Application):
         self.icon_theme = Gtk.IconTheme.get_default()
         self.icon_theme.prepend_search_path(os.path.join(os.path.dirname(__file__), "..", "data", "icons"))
 
-        # Set shortcut
-        if self.gio_settings.get_boolean("first-run"):
-            SHORTCUT = "<Super><Control>c"
-            ID = "gtk-launch" + " " + self.props.application_id
-            setup_shortcut = CustomShortcutSettings()
-            has_shortcut = False
-            for shortcut in setup_shortcut.list_custom_shortcuts():
-                if shortcut[1] == ID:
-                    has_shortcut = True
-
-            if has_shortcut is False:
-                shortcut = setup_shortcut.create_shortcut()
-                if shortcut is not None:
-                    setup_shortcut.edit_shortcut(shortcut, SHORTCUT)
-                    setup_shortcut.edit_command(shortcut, ID)
-                    self.gio_settings.set_boolean("first-run", False)
-
-            
-  
     def do_startup(self):
         Gtk.Application.do_startup(self)
 
-        # app actions
-        self.setup_action("hide", self.on_hide_action, "Escape")
-        self.setup_action("quit", self.on_quit_action, "<Ctrl>Q")
-        self.setup_action("search", self.on_search_action, "<Ctrl>F")
-        self.setup_action("enable_app", self.on_clipsapp_action, "<Ctrl>period")
-        self.setup_action("settings-view", self.on_switch_views, "<Alt>Right")
-        self.setup_action("clips-view", self.on_switch_views, "<Alt>Left")
-        self.setup_action("add-column", self.on_column_number_action, "<Alt>Up")
-        self.setup_action("del-column", self.on_column_number_action, "<Alt>Down")
-
-        # selected clip actions
-        # self.setup_action("protect", self.on_clip_actions, "<Alt>P")
-        self.setup_action("multi-select", self.on_clip_actions, "<Alt>M")
-        self.setup_action("reveal", self.on_clip_actions, "<Alt>R")
-        self.setup_action("info", self.on_clip_actions, "<Alt>I")
-        self.setup_action("view", self.on_clip_actions, "<Alt>V")
-        self.setup_action("copy", self.on_clip_actions, "<Alt>C")
-        self.setup_action("delete", self.on_clip_actions, "<Alt>D")
-        self.setup_action("force_delete", self.on_clip_actions, "<Alt>F")
-        self.setup_action("quick_copy1", self.on_clip_actions, "<Alt>1")
-        self.setup_action("quick_copy2", self.on_clip_actions, "<Alt>2")
-        self.setup_action("quick_copy3", self.on_clip_actions, "<Alt>3")
-        self.setup_action("quick_copy4", self.on_clip_actions, "<Alt>4")
-        self.setup_action("quick_copy5", self.on_clip_actions, "<Alt>5")
-        self.setup_action("quick_copy6", self.on_clip_actions, "<Alt>6")
-        self.setup_action("quick_copy7", self.on_clip_actions, "<Alt>7")
-        self.setup_action("quick_copy8", self.on_clip_actions, "<Alt>8")
-        self.setup_action("quick_copy9", self.on_clip_actions, "<Alt>9")
-        
-
-        # #applicationwindow theme
-        settings = Gtk.Settings.get_default()
-        settings.set_property("gtk-application-prefer-dark-theme", False)
+        self.create_app_shortcut()
+        self.create_app_actions()
 
         # set CSS provider
         provider = Gtk.CssProvider()        
@@ -136,12 +86,9 @@ class Clips(Gtk.Application):
         else:
             self.main_window.present()
 
-        # link to cache_manager
         self.cache_manager.main_window = self.main_window
 
-        # check if already running
         if self.running is False:
-
             # check for auto housekeeping
             if self.gio_settings.get_value("auto-housekeeping"):
                 print(datetime.now(), "start auto-housekeeping")
@@ -150,10 +97,7 @@ class Clips(Gtk.Application):
 
             print(datetime.now(), "start load_clips")
 
-            # load clips
             clips = self.cache_manager.load_clips()
-
-            # update total_clips_label
             self.main_window.total_clips_label.props.label = "Clips: {total}".format(total=len(clips))
             
             if len(clips) != 0:
@@ -175,8 +119,9 @@ class Clips(Gtk.Application):
             GLib.idle_add(self.main_window.clips_view.new_clip, clip, app_startup)
             time.sleep(0.01)
 
-        self.main_window.clips_view.flowbox.select_child(self.main_window.clips_view.flowbox.get_child_at_index(0))
-        self.main_window.clips_view.flowbox.get_child_at_index(0).grab_focus()
+        if self.main_window.clips_view.flowbox.get_child_at_index(0) is not None:
+            self.main_window.clips_view.flowbox.select_child(self.main_window.clips_view.flowbox.get_child_at_index(0))
+            self.main_window.clips_view.flowbox.get_child_at_index(0).grab_focus()
         print(datetime.now(), "finish load_clips")
 
     def do_command_line(self, command_line):
@@ -191,20 +136,64 @@ class Clips(Gtk.Application):
         self.activate()
         return 0
 
-    def setup_action(self, name, callback, shortcutkey):
+    def create_app_shortcut(self):
+        if self.gio_settings.get_boolean("first-run"):
+            SHORTCUT = "<Super><Control>c"
+            ID = "gtk-launch" + " " + self.props.application_id
+            setup_shortcut = CustomShortcutSettings()
+            has_shortcut = False
+            for shortcut in setup_shortcut.list_custom_shortcuts():
+                if shortcut[1] == ID:
+                    has_shortcut = True
+
+            if has_shortcut is False:
+                shortcut = setup_shortcut.create_shortcut()
+                if shortcut is not None:
+                    setup_shortcut.edit_shortcut(shortcut, SHORTCUT)
+                    setup_shortcut.edit_command(shortcut, ID)
+                    self.gio_settings.set_boolean("first-run", False)
+
+    def create_app_actions(self):
+        # app actions
+        self.create_action("hide", self.on_hide_action, "Escape")
+        self.create_action("quit", self.on_quit_action, "<Ctrl>Q")
+        self.create_action("search", self.on_search_action, "<Ctrl>F")
+        self.create_action("enable_app", self.on_clipsapp_action, "<Ctrl>period")
+        self.create_action("settings-view", self.on_switch_views, "<Alt>Right")
+        self.create_action("clips-view", self.on_switch_views, "<Alt>Left")
+        self.create_action("add-column", self.on_column_number_action, "<Alt>Up")
+        self.create_action("del-column", self.on_column_number_action, "<Alt>Down")
+
+        # selected clip actions
+        # self.create_action("protect", self.on_clip_actions, "<Alt>P")
+        self.create_action("multi-select", self.on_clip_actions, "<Alt>M")
+        self.create_action("reveal", self.on_clip_actions, "<Alt>R")
+        self.create_action("info", self.on_clip_actions, "<Alt>I")
+        self.create_action("view", self.on_clip_actions, "<Alt>V")
+        self.create_action("copy", self.on_clip_actions, "<Alt>C")
+        self.create_action("delete", self.on_clip_actions, "<Alt>D")
+        self.create_action("force_delete", self.on_clip_actions, "<Alt>F")
+        self.create_action("quick_copy1", self.on_clip_actions, "<Alt>1")
+        self.create_action("quick_copy2", self.on_clip_actions, "<Alt>2")
+        self.create_action("quick_copy3", self.on_clip_actions, "<Alt>3")
+        self.create_action("quick_copy4", self.on_clip_actions, "<Alt>4")
+        self.create_action("quick_copy5", self.on_clip_actions, "<Alt>5")
+        self.create_action("quick_copy6", self.on_clip_actions, "<Alt>6")
+        self.create_action("quick_copy7", self.on_clip_actions, "<Alt>7")
+        self.create_action("quick_copy8", self.on_clip_actions, "<Alt>8")
+        self.create_action("quick_copy9", self.on_clip_actions, "<Alt>9")
+
+    def create_action(self, name, callback, shortcutkey):
         action = Gio.SimpleAction.new(name, None)
         action.connect("activate", callback)
         self.add_action(action)
         self.set_accels_for_action("app.{name}".format(name=name), [shortcutkey])
 
     def on_search_action(self, action, param):
-        # focus on searchentry
-        if self.main_window is not None and self.main_window.is_visible() and self.main_window.searchentry.has_focus() is False:
+        if self.main_window is not None and self.main_window.is_visible() and self.main_window.searchentry.has_focus() is False and self.main_window.clips_view in self.main_window.stack.get_visible_child():
             self.main_window.searchentry.grab_focus()
-        # focus back on first flowboxchild
         else:
             self.main_window.clips_view.flowbox.get_selected_children()[0].grab_focus()
-
     
     def on_clip_actions(self, action, param):
         if len(self.main_window.clips_view.flowbox.get_selected_children()) != 0:
@@ -234,17 +223,22 @@ class Clips(Gtk.Application):
                     clips_container = flowboxchild.get_children()[0]
                     clips_container.on_clip_action(action=action.props.name)
 
-
     def on_switch_views(self, action, param):
         if self.main_window is not None:
             if action.props.name == "settings-view":
                 self.main_window.settings_view.show_all()
+                # self.main_window.clips_view.hide()
+                # self.main_window.info_view.hide()
                 self.main_window.stack.set_visible_child_name("settings-view")
                 self.main_window.view_switch.props.active = True
+                self.main_window.view_switch.set_property("active", True)
             if action.props.name == "clips-view":
                 self.main_window.clips_view.show_all()
+                # self.main_window.settings_view.hide()
+                # self.main_window.info_view.hide()
                 self.main_window.stack.set_visible_child_name("clips-view")
                 self.main_window.view_switch.props.active = False
+                self.main_window.view_switch.set_property("active", False)
 
     def on_column_number_action(self, action, param):
         if self.main_window is not None:
