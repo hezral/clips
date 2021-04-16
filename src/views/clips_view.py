@@ -1105,7 +1105,7 @@ class FilesContainerPopover(Gtk.Popover):
 
         self.app = app
         scale = self.get_scale_factor()
-        self.icon_size = 32 * scale
+        self.icon_size = 48 * scale
         self.icon_theme = Gtk.IconTheme.get_default()
         icon = None
         
