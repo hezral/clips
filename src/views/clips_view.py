@@ -15,6 +15,7 @@
     along with this Application.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+from os.path import basename
 import gi
 gi.require_version('Gtk', '3.0')
 gi.require_version('WebKit2', '4.0')
@@ -170,8 +171,8 @@ class ClipsView(Gtk.Grid):
                     last_selected_flowboxchild.get_children()[0].clip_overlay_revealer.set_reveal_child(False)
                     last_selected_flowboxchild.get_children()[0].clip_action_notify_revealer.set_reveal_child(False)
 
-                if self.current_selected_flowboxchild_index != flowboxchild.get_index():
-                    flowbox.unselect_child(last_selected_flowboxchild)
+                    if self.current_selected_flowboxchild_index != flowboxchild.get_index():
+                        flowbox.unselect_child(last_selected_flowboxchild)
 
             self.current_selected_flowboxchild_index = flowboxchild.get_index()
             flowboxchild.get_children()[0].clip_overlay_revealer.set_reveal_child(True)
@@ -697,10 +698,14 @@ class ClipsContainer(Gtk.EventBox):
                 self.app.utils.open_url_gtk(lines[0].replace('\n',''))
             if "files" in self.type:
                 with open(self.cache_file) as file:
-                    lines = file.readlines()
-                    # .replace("copyfile://", ""))
-                print(lines)
-                self.app.utils.open_file_gio(self.cache_file)
+                    file_content = file.readlines()
+                if len(file_content) == 1:
+                    file_path = file_content[0].replace("copy","").replace("file://","").strip().replace("%20", " ")
+                    self.app.utils.reveal_file_gio(file_path)
+                else:
+                    files_popover = FilesContainerPopover(self.cache_file, self.type, self.app, button)
+                    files_popover.show_all()
+                    files_popover.popup()
             else:
                 self.app.utils.open_file_gio(self.cache_file)
 
@@ -1005,19 +1010,22 @@ class FilesContainer(DefaultContainer):
         super().__init__(*args, **kwargs)
 
         scale = self.get_scale_factor()
-        self.icon_size = 48 * scale
+        self.icon_size = 72 * scale
         self.icon_theme = Gtk.IconTheme.get_default()
         icon = None
 
         self.flowbox = Gtk.FlowBox()
         self.flowbox.props.expand = True
         self.flowbox.props.homogeneous = True
-        self.flowbox.props.row_spacing = 4
-        self.flowbox.props.column_spacing = 4
+        self.flowbox.props.row_spacing = self.flowbox.props.column_spacing = 4
         self.flowbox.props.max_children_per_line = 4
         self.flowbox.props.min_children_per_line = 2
-        self.flowbox.props.valign = Gtk.Align.CENTER
-        self.flowbox.props.halign = Gtk.Align.CENTER
+        self.flowbox.props.valign = self.flowbox.props.halign = Gtk.Align.CENTER
+
+        self.iconstack_overlay = Gtk.Overlay()
+        self.iconstack_overlay.props.expand = True
+        self.iconstack_overlay.props.valign = self.flowbox.props.halign = Gtk.Align.CENTER
+        
 
         with open(filepath) as file:
             file_content = file.readlines()
@@ -1027,6 +1035,7 @@ class FilesContainer(DefaultContainer):
         with open(filepath) as file:
             i = 0
             for line_number, line_content in enumerate(file):
+                # if i <= 4:
                 line_content = line_content.replace("copy","").replace("file://","").strip().replace("%20", " ")
                 if os.path.exists(line_content):
                     if os.path.isdir(line_content):  
@@ -1044,38 +1053,152 @@ class FilesContainer(DefaultContainer):
                 for icon_name in icons.to_string().split():
                     if icon_name != "." and icon_name != "GThemedIcon":
                         try:
-                            if i == 7:
-                                more_label = Gtk.Label("+" + str(file_count - 7))
+                            icon_pixbuf = self.icon_theme.load_icon(icon_name, self.icon_size, 0)
+                            icon = Gtk.Image().new_from_pixbuf(icon_pixbuf)
+                            icon.props.halign = Gtk.Align.CENTER
+
+                            if i == 0:
+                                self.iconstack_overlay.add(icon)
+                            elif i >= 1 and i <= 4:
+                                self.iconstack_overlay.add_overlay(icon)
+                            else:
+                                pass
+
+                            if i == 0 and file_count > 1:
+                                icon.props.margin_bottom = 24
+                            if i == 1:
+                                icon.props.margin_left = 24
+                            if i == 2:
+                                icon.props.margin_top = 24
+                            if i == 3:
+                                icon.props.margin_right = 24
+
+                            if i == 4:
+                                more_label = Gtk.Label(" " + str(file_count) + " ")
                                 more_label.props.name = "files-container-more"
                                 more_label.props.valign = Gtk.Align.END
-                                more_label.props.margin_bottom = 4
-                                self.flowbox.add(more_label)
-                            elif i > 7 :
+                                more_label.props.halign = Gtk.Align.CENTER
+                                # more_label.props.margin_bottom = 4
+                                more_label.props.margin_left = 60
+                                more_label.props.hexpand = False
+                                self.iconstack_overlay.add_overlay(more_label)
+
+                            elif i > 4 :
                                 pass
-                            else:
-                                icon_pixbuf = self.icon_theme.load_icon(icon_name, self.icon_size, 0)
-                                icon = Gtk.Image().new_from_pixbuf(icon_pixbuf)
-                                # icon.props.has_tooltip = True
-                                # icon.props.tooltip_text = line_content
-                                self.flowbox.add(icon)
+
                             i += 1
                             break
                         except:
                             pass # file not exist for this entry
 
-                        
-            
-            if len(file_content) < 4:
-                self.flowbox.props.max_children_per_line = len(file_content)
+        self.props.name = "files-container"
+        # self.attach(self.flowbox, 0, 0, 1, 1)
+        self.attach(self.iconstack_overlay, 0, 0, 1, 1)
+
+        self.label = str(len(file_content)) + " files"
+
+# ----------------------------------------------------------------------------------------------------
+
+class FilesContainerPopover(Gtk.Popover):
+    def __init__(self, filepath, type, app, parent, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.app = app
+        scale = self.get_scale_factor()
+        self.icon_size = 32 * scale
+        self.icon_theme = Gtk.IconTheme.get_default()
+        icon = None
         
+        self.flowbox = Gtk.FlowBox()
+        self.flowbox.props.name = "files-popover-flowbox"
+        self.flowbox.props.expand = True
+        self.flowbox.props.homogeneous = False
+        self.flowbox.props.row_spacing = 8
+        self.flowbox.props.column_spacing = 4
+        self.flowbox.props.max_children_per_line = 3
+        self.flowbox.props.min_children_per_line = 3
+        self.flowbox.props.valign = self.flowbox.props.halign = Gtk.Align.FILL
+        self.flowbox.connect("child-activated", self.on_files_activated)
+
+        with open(filepath) as file:
+            for line_number, line_content in enumerate(file):
+                line_content = line_content.replace("copy","").replace("file://","").strip().replace("%20", " ")
+                if os.path.exists(line_content):
+                    if os.path.isdir(line_content):  
+                        mime_type = "inode/directory"
+                    elif os.path.isfile(line_content):  
+                        mime_type, val = Gio.content_type_guess(line_content, data=None)
+                    else:
+                        print(line_content, ": special file (socket, FIFO, device file)" )
+                        pass
+                else:
+                    mime_type = "application/octet-stream"
+                
+                icons = Gio.content_type_get_icon(mime_type)
+                
+                for icon_name in icons.to_string().split():
+                    if icon_name != "." and icon_name != "GThemedIcon":
+                        try:
+                            self.flowbox.add(self.generate_file_grid(icon_name, line_content))
+                            break
+                        except:
+                            pass
+
         # disable focus on flowboxchild items
         for child in self.flowbox.get_children():
             child.props.can_focus = False
 
-        self.props.name = "files-container"
-        self.attach(self.flowbox, 0, 0, 1, 1)
+        scrolled_window = Gtk.ScrolledWindow()
+        scrolled_window.props.name = "files-popover-scrolledwindow"
+        scrolled_window.props.expand = True
+        scrolled_window.add(self.flowbox)
 
-        self.label = str(len(file_content)) + " files"
+        grid = Gtk.Grid()
+        grid.props.expand = True
+        grid.props.name = "files-popover-main-grid"
+        grid.props.margin = 4
+        grid.attach(scrolled_window, 0, 0, 1, 1)
+        
+        self.props.name = "files-popover"
+        if len(self.flowbox.get_children()) > 3:
+            self.set_size_request(320, 240)
+        else:
+            self.set_size_request(320, 120)
+        self.set_relative_to(parent)
+        self.add(grid)
+        self.connect("closed", self.on_closed)
+
+    def on_closed(self, *args):
+        self.destroy()
+
+    def on_files_activated(self, flowbox, flowboxchild):
+        flowboxchild.grab_focus()
+        file_grid = [child for child in flowboxchild.get_children() if isinstance(child, Gtk.Grid)][0]
+        self.app.utils.reveal_file_gio(file_grid.props.name)
+        
+    def generate_file_grid(self, icon_name, file_path):
+        icon_pixbuf = self.icon_theme.load_icon(icon_name, self.icon_size, 0)
+        icon = Gtk.Image().new_from_pixbuf(icon_pixbuf)
+        
+        label = Gtk.Label(os.path.basename(file_path))
+        label.props.wrap_mode = Pango.WrapMode.CHAR
+        label.props.max_width_chars = 10
+        label.props.wrap = True
+        label.props.hexpand = True
+        label.props.justify = Gtk.Justification.CENTER
+        label.props.lines = 2
+        label.props.ellipsize = Pango.EllipsizeMode.END
+
+        file_grid = Gtk.Grid()
+        file_grid.props.expand = True
+        file_grid.props.name = file_path
+        file_grid.props.has_tooltip = True
+        file_grid.props.tooltip_text = os.path.basename(file_path)
+        file_grid.props.halign = file_grid.props.valign = Gtk.Align.CENTER
+        file_grid.attach(icon, 0, 0, 1, 1)
+        file_grid.attach(label, 0, 1, 1, 1)
+
+        return file_grid
 
 # ----------------------------------------------------------------------------------------------------
 
