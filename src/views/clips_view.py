@@ -371,76 +371,6 @@ class ClipsContainer(Gtk.EventBox):
         button.connect("clicked", self.on_clip_action, actionname)
         return button
     
-    def generate_clip_infobar(self, utils):
-        if self.content.label is None:
-            self.content_label = Gtk.Label("Clip")
-        else:
-            self.content_label = Gtk.Label(self.content.label)
-        self.content_label.props.name = "clip-content-label"
-        self.content_label.props.halign = Gtk.Align.START
-        self.content_label.props.valign = Gtk.Align.END
-        self.content_label.props.margin_bottom = 9
-        self.content_label.props.expand = True
-
-        # #------ source_icon / application icon ----#
-        # try:
-        #     source_icon = Gtk.Image().new_from_icon_name(self.source_icon, Gtk.IconSize.LARGE_TOOLBAR)
-        #     source_icon.set_pixel_size(24 * self.scale)
-        # except:
-        #     source_icon_cache = os.path.join(self.cache_filedir[:-6],"icon", self.source_app.replace(" ",".").lower() + ".png")
-        #     if os.path.exists(source_icon_cache):
-        #         pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(source_icon_cache, 24 * self.scale, 24 * self.scale, True)
-        #         source_icon = Gtk.Image().new_from_pixbuf(pixbuf)
-        #     else:
-        #         source_icon = Gtk.Image().new_from_icon_name("image-missing", Gtk.IconSize.LARGE_TOOLBAR)
-        #         source_icon.set_pixel_size(24 * self.scale)
-
-        # source_icon.props.halign = Gtk.Align.START
-        # source_icon.props.valign = Gtk.Align.END
-        # source_icon.props.margin = 4
-        # source_icon.props.has_tooltip = True
-        # source_icon.props.tooltip_text = self.source_app
-
-        #------ timestamp ----#
-        self.created_short = datetime.strptime(self.created, '%Y-%m-%d %H:%M:%S.%f')
-        self.created_short = self.created_short.strftime('%a, %b %d %Y, %H:%M:%S')
-        self.created = datetime.strptime(self.created, '%Y-%m-%d %H:%M:%S.%f')
-        self.timestamp = self.generate_friendly_timestamp(self.created)
-        self.timestamp = Gtk.Label(self.timestamp)
-        self.timestamp.props.name = "clip-timestamp"
-        self.timestamp.props.halign = self.timestamp.props.valign = Gtk.Align.END
-        self.timestamp.props.margin = 4
-        self.timestamp.props.margin_right = 6
-        self.timestamp.props.margin_bottom = 10
-        self.timestamp.props.has_tooltip = True
-        self.timestamp.props.tooltip_text = self.created_short
-
-        # print("clips_view.py:", type(self.created_short), self.created_short, type(self.created), self.created)
-
-        self.info_text = "id: {id}\nformat: {format}\ntype: {type}".format(id=self.id, format=self.target, type=self.type)
-        
-        clip_info = Gtk.Grid()
-        clip_info.props.name = "clip-info"
-        clip_info.props.halign = Gtk.Align.FILL
-        clip_info.props.valign = Gtk.Align.START
-        clip_info.props.hexpand = True
-        clip_info.props.can_focus = False
-        # clip_info.props.has_tooltip = True
-        # clip_info.props.tooltip_text = self.info_text
-        clip_info.set_size_request(-1, 32)
-        clip_info.attach(source_icon, 0, 0, 1, 1)
-        clip_info.attach(self.content_label, 1, 0, 1, 1)
-        clip_info.attach(self.timestamp, 2, 0, 1, 1)
-
-        # clip_info_revealer = Gtk.Revealer()
-        # clip_info_revealer.props.name = "clip-info-revealer"
-        # clip_info_revealer.props.halign = Gtk.Align.FILL
-        # clip_info_revealer.props.valign = Gtk.Align.START
-        # clip_info_revealer.props.transition_type = Gtk.RevealerTransitionType.CROSSFADE
-        # clip_info_revealer.add(clip_info)
-
-        return clip_info
-
     def generate_clip_info(self):
         # app_name, app_icon = self.app.utils.get_appinfo(self.source_app)
 
@@ -696,7 +626,7 @@ class ClipsContainer(Gtk.EventBox):
                 with open(self.cache_file) as file:
                     lines = file.readlines()
                 self.app.utils.open_url_gtk(lines[0].replace('\n',''))
-            if "files" in self.type:
+            elif "files" in self.type:
                 with open(self.cache_file) as file:
                     file_content = file.readlines()
                 if len(file_content) == 1:
