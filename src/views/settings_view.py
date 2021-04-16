@@ -511,6 +511,10 @@ class AppChooserPopover(Gtk.Popover):
         self.props.name = "app-chooser"
         self.set_size_request(260, -1)
         self.add(grid)
+        self.connect("closed", self.on_closed)
+
+    def on_closed(self, *args):
+        self.destroy()
 
     def on_row_selected(self, *args):
         self.choose_button.props.sensitive = True
