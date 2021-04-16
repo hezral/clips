@@ -527,7 +527,7 @@ class ClipsContainer(Gtk.EventBox):
 
     def generate_clip_overlay(self):
         # protect_action = self.generate_action_button("com.github.hezral.clips-protect-symbolic", "Protect Content", "protect")
-        reveal_action = self.generate_action_button("document-open-symbolic", "Reveal files", "reveal")
+        reveal_action = self.generate_action_button("document-open-symbolic", "Reveal Cache File", "reveal")
         # info_action = self.generate_action_button("com.github.hezral.clips-info-symbolic", "Show Info", "info")
         view_action = self.generate_action_button("com.github.hezral.clips-view-symbolic", "View", "view")
         copy_action = self.generate_action_button("edit-copy-symbolic", "Copy to Clipboard", "copy")
@@ -1076,7 +1076,7 @@ class FilesContainer(DefaultContainer):
                             if i == 4:
                                 more_label = Gtk.Label(" " + str(file_count) + " ")
                                 more_label.props.name = "files-container-more"
-                                more_label.props.valign = Gtk.Align.END
+                                more_label.props.valign = Gtk.Align.START
                                 more_label.props.halign = Gtk.Align.CENTER
                                 # more_label.props.margin_bottom = 4
                                 more_label.props.margin_left = 60
