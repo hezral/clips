@@ -1093,7 +1093,7 @@ class FilesContainerPopover(Gtk.Popover):
         if len(self.flowbox.get_children()) > 3:
             self.set_size_request(320, 240)
         else:
-            self.set_size_request(320, 120)
+            self.set_size_request(320, 160)
         self.set_relative_to(parent)
         self.add(grid)
         self.connect("closed", self.on_closed)
