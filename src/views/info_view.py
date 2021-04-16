@@ -17,7 +17,7 @@
 
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, GdkPixbuf
+from gi.repository import Gtk, GdkPixbuf, Gio
 
 import os
 resource_path = os.path.join(os.path.dirname(__file__), "..", "..", "data", "images")
@@ -50,13 +50,11 @@ class InfoView(Gtk.Grid):
 
         self.props.column_spacing = 0
         self.props.row_spacing = 0
-        self.set_halign(Gtk.Align.CENTER)
-        self.set_valign(Gtk.Align.CENTER)
         self.props.expand = True
-        # self.props.margin = 10
-        # self.attach(icon_box, 0, 1, 1, 1)
-        # self.attach(title_label, 0, 2, 1, 1)
-        # self.attach(description_label, 0, 3, 1, 1)
+
+        # drawing_area = Gtk.DrawingArea()
+        # drawing_area.props.expand = True
+        # drawing_area.connect("draw", self.draw)
 
         # flowbox
         self.flowbox = Gtk.FlowBox()
@@ -64,36 +62,82 @@ class InfoView(Gtk.Grid):
         self.flowbox.props.homogeneous = False
         self.flowbox.props.row_spacing = 2
         self.flowbox.props.column_spacing = 2
-        self.flowbox.props.max_children_per_line = 4
+        self.flowbox.props.max_children_per_line = 9
         self.flowbox.props.min_children_per_line = app.gio_settings.get_int("min-column-number")
         # self.flowbox.props.margin = 2
         self.flowbox.props.valign = Gtk.Align.START
         self.flowbox.props.halign = Gtk.Align.FILL
         self.flowbox.props.selection_mode = Gtk.SelectionMode.NONE
-            
-        self.attach(self.flowbox, 0, 0, 1, 1)
+
+        scrolled_window = Gtk.ScrolledWindow()
+        scrolled_window.props.hscrollbar_policy = Gtk.PolicyType.NEVER
+        scrolled_window.add(self.flowbox)
+
+        # self.attach(drawing_area, 0, 0, 1, 1)
+        self.attach(scrolled_window, 0, 0, 1, 1)
+        
+
+    # def draw(self, drawing_area, cairo_context):
+    #     print(self.get_scale_factor())
 
     def generate_welcome_view(self):
         print("welcome-view")
 
     def generate_help_view(self):
+        print("help-view")
 
         if self.help_view is None:
+
+            # resource_directory = Gio.file_new_for_path(resource_path)
+            # enum = resource_directory.enumerate_children(Gio.FILE_ATTRIBUTE_STANDARD_CONTENT_TYPE, 0)
+            # for info in enum:
+            #     content_type = info.get_content_type()
+            #     fullpath = f'{PICTURES}/{info.get_name()}'
+            #     pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(fullpath, 100, 100, True)
+            #     image = Gtk.Image(pixbuf=pixbuf)
+            #     flowbox.add(image)
+
             prefer_dark_style = self.app.gio_settings.get_boolean("prefer-dark-style")
+
             help_switch_views = HelpSubView(prefer_dark_style, image_name="help_switch_views", subtitle_text="Switch between views")
+
             help_search = HelpSubView(prefer_dark_style, image_name="help_search", subtitle_text="Search with multi keyword")
-            help_clip_actions = HelpSubView(prefer_dark_style, image_name="help_clip_actions", subtitle_text="Actions on clips")
+            
+            help_settings = HelpSubView(prefer_dark_style, image_name="help_settings", subtitle_text="Explore availble settings")
+            
+            help_run_clips = HelpSubView(prefer_dark_style, image_name="help_run_clips", subtitle_text="Fast app launch")
+
+            help_quick_copy = HelpSubView(prefer_dark_style, image_name="help_quick_copy", subtitle_text="Quick copy first 9 clips")
+
+            help_multiselect = HelpSubView(prefer_dark_style, image_name="help_multiselect", subtitle_text="Delete multi clips")
+
             help_hide_clips = HelpSubView(prefer_dark_style, image_name="help_hide_clips", subtitle_text="Run in background")
-            help_clipsapp_toggle = HelpSubView(prefer_dark_style, image_name="help_clipsapp_toggle", subtitle_text="Toggle clipboard monitoring")
+            
+            help_doubleclick_copy = HelpSubView(prefer_dark_style, image_name="help_doubleclick_copy", subtitle_text="Double click to copy")
+            
             help_column_number = HelpSubView(prefer_dark_style, image_name="help_column_number", subtitle_text="Adjust columns display")
 
+            help_clipsapp_toggle = HelpSubView(prefer_dark_style, image_name="help_clipsapp_toggle", subtitle_text="Toggle clipboard monitoring")
+
+            help_clip_info = HelpSubView(prefer_dark_style, image_name="help_clip_info", subtitle_text="Additional info")
+            
+            help_clip_actions = HelpSubView(prefer_dark_style, image_name="help_clip_actions", subtitle_text="Actions on clips")
+            
+            self.flowbox.add(help_run_clips)
+            self.flowbox.add(help_hide_clips)
             self.flowbox.add(help_switch_views)
             self.flowbox.add(help_column_number)
-            self.flowbox.add(help_clip_actions)
-            self.flowbox.add(help_hide_clips)
-            self.flowbox.add(help_clipsapp_toggle)
-            self.flowbox.add(help_search)
             
+            self.flowbox.add(help_clip_actions)
+            self.flowbox.add(help_quick_copy)
+            self.flowbox.add(help_doubleclick_copy)
+            self.flowbox.add(help_multiselect)
+
+            self.flowbox.add(help_clip_info)
+            self.flowbox.add(help_search)
+            self.flowbox.add(help_clipsapp_toggle)
+            self.flowbox.add(help_settings)
+
 
             for child in self.flowbox.get_children():
                 child.props.can_focus = False
@@ -104,16 +148,19 @@ class InfoView(Gtk.Grid):
 
         else:
             pass
-        
+
+
+    def generate_noclips_view(self):
+        print("welcome-view")
         
 
 # ----------------------------------------------------------------------------------------------------
 
-class HelpSubView(Gtk.Grid):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+# class HelpSubView(Gtk.Grid):
+#     def __init__(self, *args, **kwargs):
+#         super().__init__(*args, **kwargs)
 
-        self.props.name = "help-view"
+#         self.props.name = "help-view"
 
 # ----------------------------------------------------------------------------------------------------
 
