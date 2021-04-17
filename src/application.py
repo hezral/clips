@@ -33,6 +33,7 @@ import threading, time
 class Clips(Gtk.Application):
 
     running = False
+    app_startup = True
 
     def __init__(self):
         super().__init__()
@@ -102,21 +103,23 @@ class Clips(Gtk.Application):
             
             if len(clips) != 0:
                 self.load_clips_fromdb(clips)
-            else:
-                self.main_window.stack.set_visible_child_name("info-view")
+
+            self.main_window.on_view_visible()
 
             self.running = True
+            self.app_startup = False
+            
 
     @utils.run_async
     def load_clips_fromdb(self, clips):
-        app_startup = True
+        
 
         for clip in reversed(clips[-10:]):
-            GLib.idle_add(self.main_window.clips_view.new_clip, clip, app_startup)
+            GLib.idle_add(self.main_window.clips_view.new_clip, clip, self.app_startup)
             time.sleep(0.02)
 
         for clip in reversed(clips[:-10]):
-            GLib.idle_add(self.main_window.clips_view.new_clip, clip, app_startup)
+            GLib.idle_add(self.main_window.clips_view.new_clip, clip, self.app_startup)
             time.sleep(0.01)
 
         if self.main_window.clips_view.flowbox.get_child_at_index(0) is not None:
