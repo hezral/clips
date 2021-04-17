@@ -334,6 +334,15 @@ label#files-container-more {
     color: white;
 }
 
+label#welcome-view {
+    color: alpha(@theme_text_color, 0.2);
+    animation: crossfader 1.0s ease-in-out forwards;
+}
+
+label#noclips-view {
+    color: alpha(@theme_text_color, 0.2);
+    animation: crossfader 0.25s ease-in-out forwards;
+}
 
 /* ------------------------------ */
 
