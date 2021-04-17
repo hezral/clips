@@ -36,7 +36,7 @@ class ClipsWindow(Gtk.ApplicationWindow):
         #------ views ----#
         self.clips_view = ClipsView(self.app)
         self.settings_view = SettingsView(self.app)
-        self.settings_view.connect("notify::visible", self.on_view_visible)
+        # self.settings_view.connect("notify::visible", self.on_view_visible)
         self.info_view = InfoView(self.app, "No Clips Found","Start Copying Stuffs", "system-os-installer")
 
         #------ stack ----#
@@ -58,7 +58,7 @@ class ClipsWindow(Gtk.ApplicationWindow):
         self.main_view.attach(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL), 0, 1, 3, 1)
         self.main_view.attach(self.generate_actionbar(), 0, 2, 1, 1)
         self.main_view.attach(self.generate_statusbar(), 1, 2, 1, 1)
-        self.main_view.attach(self.generate_viewswitch(settings_view_obj=self.settings_view), 2, 2, 1, 1)
+        self.main_view.attach(self.generate_viewswitch(), 2, 2, 1, 1)
 
         #------ construct ----#
         self.props.title = "Clips"
@@ -71,6 +71,8 @@ class ClipsWindow(Gtk.ApplicationWindow):
         self.set_display_settings()
         self.add(self.main_view)
         self.show_all()
+
+        self.on_view_visible()
 
     def set_display_settings(self):
         # this is for tracking window state flags for persistent mode
@@ -201,13 +203,14 @@ class ClipsWindow(Gtk.ApplicationWindow):
         # actionbar.attach(self.passwordprotect_toggle, 1, 0, 1, 1)
         return actionbar
 
-    def generate_viewswitch(self, settings_view_obj):
+    def generate_viewswitch(self):
         self.view_switch = Granite.ModeSwitch.from_icon_name("com.github.hezral.clips-flowbox-symbolic", "com.github.hezral.clips-settings-symbolic")
         self.view_switch.props.valign = Gtk.Align.CENTER
         self.view_switch.props.halign = Gtk.Align.END
         self.view_switch.props.margin = 4
         self.view_switch.props.name = "view-switch"
-        self.view_switch.bind_property("active", settings_view_obj, "visible", GObject.BindingFlags.BIDIRECTIONAL)
+        # self.view_switch.bind_property("active", settings_view_obj, "visible", GObject.BindingFlags.BIDIRECTIONAL)
+        self.view_switch.connect_after("notify::active", self.on_view_visible)
         return self.view_switch
 
     def on_sourceapp_filter(self, button, popover):
@@ -248,45 +251,72 @@ class ClipsWindow(Gtk.ApplicationWindow):
 
     def on_search_entry_changed(self, search_entry):
         self.searchentry.props.primary_icon_name = "system-search-symbolic"
-        self.clips_view.flowbox.invalidate_filter()
-        self.clips_view.flowbox_filter_func(search_entry)
+        if self.stack.get_visible_child() == self.clips_view:
+            self.clips_view.flowbox.invalidate_filter()
+            self.clips_view.flowbox_filter_func(search_entry)
 
-    def on_view_visible(self, view, gparam=None):
-        if view.is_visible():
-            self.current_view = "settings-view"
-            print("on:settings")
-            self.clips_view.hide()
-            self.settings_view.show_all()
+    def on_view_visible(self, view_switch=None, gparam=None, action=None):
 
-        else:
-            view.hide()
-            self.settings_view.hide()
-            self.info_view.hide()
+        total_clips_in_db = self.app.cache_manager.get_total_clips()[0][0]
 
-            total_clips_in_db = self.app.cache_manager.get_total_clips()[0][0]
+        self.info_view.clear_info_view()
 
-            if total_clips_in_db == 0:
-                self.current_view = "info-view"
-                if self.info_view.help_view is None:
-                    self.info_view.help_view = self.info_view.generate_help_view()
-                self.info_view.show_all()
-                print("on:settings-view > info-view > clips-view")
-
+        if view_switch is not None and gparam is not None:
+            if view_switch.props.active:
+                self.stack.set_visible_child(self.settings_view)
             else:
-                self.info_view.hide()
-                self.current_view = "clips-view"
-                self.clips_view.show_all()
-                print("on:settings-view > clips-view1")
-
-        # toggle css styling
-        if self.current_view == "settings-view":
-            self.stack.get_style_context().add_class("stack-settings")
-            self.main_view.get_style_context().add_class("main_view-settings")
+                if total_clips_in_db == 0:
+                    self.info_view.noclips_view = self.info_view.generate_noclips_view()
+                    self.stack.set_visible_child(self.info_view)
+                elif total_clips_in_db > 0:
+                    self.stack.set_visible_child(self.clips_view)
+                else:
+                    pass
         else:
-            self.stack.get_style_context().remove_class("stack-settings")
-            self.main_view.get_style_context().remove_class("main_view-settings")
+            # app startup
+            # first-run: welcome_view + help_view
+            # normal-run: 0 clips:  no_clips_view
+            # normal-run: >0 clips: clips_view
 
-        self.stack.set_visible_child_name(self.current_view)
+            # app running
+            # 0 clips: clips_view >> no_clips_view
+            # >0 clips: no_clips_view >> clips_view
+            # open settings_view from clips_view: clips_view >> settings_view
+
+            if self.gio_settings.get_boolean("first-run") is True:
+                self.info_view.welcome_view = self.info_view.generate_welcome_view()
+                self.stack.set_visible_child(self.info_view)
+                self.gio_settings.set_boolean("first-run", False)
+            
+            elif self.gio_settings.get_boolean("first-run") is False or self.app.running is True:
+                if total_clips_in_db == 0:
+                    self.info_view.noclips_view = self.info_view.generate_noclips_view()
+                    self.stack.set_visible_child(self.info_view)
+                elif total_clips_in_db > 0:
+                    self.stack.set_visible_child(self.clips_view)
+                else:
+                    pass
+            
+            # open settings_view from welcome_view: no_clips_view >> settings_view
+            # open settings_view from no_clips_view: no_clips_view >> settings_view
+            # open settings_view from help_view: no_clips_view >> settings_view
+            # open help_view from settings: settings_view >> help_view
+            # shortcut based switching
+
+        if action == "settings-view":
+            self.settings_view.show_all()
+            self.stack.set_visible_child(self.settings_view)
+            self.view_switch.props.active = True
+        if action == "clips-view":
+            self.clips_view.show_all()
+            self.stack.set_visible_child(self.clips_view)
+            self.view_switch.props.active = False
+        if action == "help-view":
+            self.info_view.generate_help_view()
+            self.stack.set_visible_child(self.info_view)
+
+        if self.stack.get_visible_child != self.clips_view:
+            self.searchentry.props.sensitive = False
 
     def update_total_clips_label(self, event, count=1):
         total_clips = int(self.total_clips_label.props.label.split(": ")[1])

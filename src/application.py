@@ -151,14 +151,13 @@ class Clips(Gtk.Application):
                 if shortcut is not None:
                     setup_shortcut.edit_shortcut(shortcut, SHORTCUT)
                     setup_shortcut.edit_command(shortcut, ID)
-                    self.gio_settings.set_boolean("first-run", False)
-
+            
     def create_app_actions(self):
         # app actions
         self.create_action("hide", self.on_hide_action, "Escape")
         self.create_action("quit", self.on_quit_action, "<Ctrl>Q")
         self.create_action("search", self.on_search_action, "<Ctrl>F")
-        self.create_action("enable_app", self.on_clipsapp_action, "<Ctrl>period")
+        self.create_action("enable_app", self.on_clipsapp_action, "<Alt>period")
         self.create_action("settings-view", self.on_switch_views, "<Alt>Right")
         self.create_action("clips-view", self.on_switch_views, "<Alt>Left")
         self.create_action("add-column", self.on_column_number_action, "<Alt>Up")
@@ -225,20 +224,7 @@ class Clips(Gtk.Application):
 
     def on_switch_views(self, action, param):
         if self.main_window is not None:
-            if action.props.name == "settings-view":
-                self.main_window.settings_view.show_all()
-                # self.main_window.clips_view.hide()
-                # self.main_window.info_view.hide()
-                self.main_window.stack.set_visible_child_name("settings-view")
-                self.main_window.view_switch.props.active = True
-                self.main_window.view_switch.set_property("active", True)
-            if action.props.name == "clips-view":
-                self.main_window.clips_view.show_all()
-                # self.main_window.settings_view.hide()
-                # self.main_window.info_view.hide()
-                self.main_window.stack.set_visible_child_name("clips-view")
-                self.main_window.view_switch.props.active = False
-                self.main_window.view_switch.set_property("active", False)
+            self.main_window.on_view_visible(action=action.props.name)
 
     def on_column_number_action(self, action, param):
         if self.main_window is not None:
