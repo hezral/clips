@@ -1090,11 +1090,14 @@ class FilesContainerPopover(Gtk.Popover):
         grid.attach(scrolled_window, 0, 0, 1, 1)
         
         self.props.name = "files-popover"
+        self.props.position = Gtk.PositionType.BOTTOM
+        self.props.relative_to = parent
+
         if len(self.flowbox.get_children()) > 3:
             self.set_size_request(320, 240)
         else:
             self.set_size_request(320, 160)
-        self.set_relative_to(parent)
+        
         self.add(grid)
         self.connect("closed", self.on_closed)
 
