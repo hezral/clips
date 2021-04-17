@@ -115,9 +115,9 @@ class SettingsView(Gtk.Grid):
         excluded_apps_list_values = self.gio_settings.get_value("excluded-apps").get_strv()
         excluded_apps_list = SubSettings(type="listbox", name="excluded-apps", label=None, sublabel=None, separator=False, params=(excluded_apps_list_values, ), utils=self.app.utils)
 
-        excluded_appchooser_popover = AppChooserPopover(params=(excluded_apps_list, ))
+        # excluded_appchooser_popover = AppChooserPopover(params=(excluded_apps_list, ))
         excluded_apps = SubSettings(type="button", name="excluded-apps", label="Exclude apps", sublabel="Copy events are excluded for apps selected", separator=False, params=("Select app", Gtk.Image().new_from_icon_name("application-default-icon", Gtk.IconSize.LARGE_TOOLBAR), ))
-        excluded_apps.button.connect("clicked", self.on_button_clicked, (excluded_appchooser_popover, ))
+        excluded_apps.button.connect("clicked", self.on_button_clicked, (excluded_apps_list, ))
         excluded_apps.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
 
         excluded = SettingsGroup("Excluded Apps", (excluded_apps, excluded_apps_list, ))
@@ -129,7 +129,7 @@ class SettingsView(Gtk.Grid):
 
         # protected_appchooser_popover = AppChooserPopover(params=(protected_apps_list, ))
         # protected_apps = SubSettings(type="button", name="protected-apps", label="Protected apps", sublabel="Contents copied will be protected", separator=False, params=("Select app", Gtk.Image().new_from_icon_name("application-default-icon", Gtk.IconSize.LARGE_TOOLBAR), ))
-        # protected_apps.button.connect("clicked", self.on_button_clicked, (protected_appchooser_popover, ))
+        # protected_apps.button.connect("clicked", self.on_button_clicked, (protected_apps_list, ))
         # protected_apps.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
 
         # protected = SettingsGroup("Protected Apps", (protected_apps, protected_apps_list, ))
@@ -159,7 +159,9 @@ class SettingsView(Gtk.Grid):
         name = button.get_name()
 
         if name == "excluded-apps" or name == "protected-apps":
-            app_chooser_popover = params[0]
+            
+            # app_chooser_popover = params[0]
+            app_chooser_popover = AppChooserPopover(params=(params[0], ))
             app_chooser_popover.set_relative_to(button)
             app_chooser_popover.show_all()
             app_chooser_popover.popup()
@@ -194,7 +196,7 @@ class SettingsView(Gtk.Grid):
             self.app.cache_manager.auto_housekeeping(self.gio_settings.get_int("auto-retention-period"), manual_run=True)
 
         if name == "view-help":
-            print("view-help")
+            self.app.main_window.on_view_visible(action="help-view")
 
         if name == "report-issue":
             print("view-help")
@@ -402,6 +404,7 @@ class SubSettings(Gtk.Grid):
         return settings_values, gio_settings
 
     def add_listboxrow(self, app_name, icon_name, add_new=False):
+        skip_add = False
         key_name = self.listbox.props.name
 
         if add_new:
@@ -412,39 +415,41 @@ class SubSettings(Gtk.Grid):
                 print(app_name, "added in {name} list".format(name=key_name))
             else:
                 print(app_name, "already in {name} list".format(name=key_name))
+                skip_add = True
 
-        app_label = Gtk.Label(app_name)
-        icon_size = 32 * self.get_scale_factor()
-        app_icon = Gtk.Image().new_from_icon_name(icon_name, Gtk.IconSize.LARGE_TOOLBAR)
-        app_icon.set_pixel_size(icon_size)
+        if skip_add is False:
+            app_label = Gtk.Label(app_name)
+            icon_size = 32 * self.get_scale_factor()
+            app_icon = Gtk.Image().new_from_icon_name(icon_name, Gtk.IconSize.LARGE_TOOLBAR)
+            app_icon.set_pixel_size(icon_size)
 
-        grid = Gtk.Grid()
-        grid.props.column_spacing = 10
-        grid.props.margin = 6
-        grid.attach(app_icon, 0, 0, 1, 1)
-        grid.attach(app_label, 1, 0, 1, 1)
+            grid = Gtk.Grid()
+            grid.props.column_spacing = 10
+            grid.props.margin = 6
+            grid.attach(app_icon, 0, 0, 1, 1)
+            grid.attach(app_label, 1, 0, 1, 1)
 
-        delete_row_button = Gtk.Button(image=Gtk.Image().new_from_icon_name("list-remove", Gtk.IconSize.MENU))
-        delete_row_button.props.always_show_image = True
-        delete_row_button.props.halign = Gtk.Align.END
-        delete_row_button.props.margin_right = 10
-        delete_row_button.connect("clicked", self.delete_listboxrow)
+            delete_row_button = Gtk.Button(image=Gtk.Image().new_from_icon_name("list-remove", Gtk.IconSize.MENU))
+            delete_row_button.props.always_show_image = True
+            delete_row_button.props.halign = Gtk.Align.END
+            delete_row_button.props.margin_right = 10
+            delete_row_button.connect("clicked", self.delete_listboxrow)
 
-        delete_row_revealer = Gtk.Revealer()
-        delete_row_revealer.props.transition_type = Gtk.RevealerTransitionType.CROSSFADE
-        delete_row_revealer.props.transition_duration = 250
-        delete_row_revealer.add(delete_row_button)
+            delete_row_revealer = Gtk.Revealer()
+            delete_row_revealer.props.transition_type = Gtk.RevealerTransitionType.CROSSFADE
+            delete_row_revealer.props.transition_duration = 250
+            delete_row_revealer.add(delete_row_button)
 
-        overlay = Gtk.Overlay()
-        overlay.add(grid)
-        overlay.add_overlay(delete_row_revealer)
+            overlay = Gtk.Overlay()
+            overlay.add(grid)
+            overlay.add_overlay(delete_row_revealer)
 
-        row = Gtk.ListBoxRow()
-        row.app_name = app_name
-        row.add(overlay)
+            row = Gtk.ListBoxRow()
+            row.app_name = app_name
+            row.add(overlay)
 
-        self.listbox.add(row)
-        self.listbox.show_all()
+            self.listbox.add(row)
+            self.listbox.show_all()
 
     def delete_listboxrow(self, button):
         selected_row = self.listbox.get_selected_row()        
