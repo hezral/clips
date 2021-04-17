@@ -199,7 +199,6 @@ class SettingsView(Gtk.Grid):
             self.app.main_window.on_view_visible(action="help-view")
 
         if name == "report-issue":
-            print("view-help")
             Gtk.show_uri_on_window(None, "https://github.com/hezral/clips/issues/new", Gdk.CURRENT_TIME)
 
     def on_spinbutton_activated(self, spinbutton):        
