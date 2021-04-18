@@ -587,9 +587,26 @@ def get_fuzzy_timestamp(time=False):
     if day_diff == 1:
         return "Yesterday"
     if day_diff < 7:
-        return str(round(day_diff, 1)) + " days ago"
+        return str(round(day_diff, 1)) + " days"
     if day_diff < 31:
-        return str(round(day_diff / 7, 1)) + " weeks ago"
+        weeks = day_diff / 7
+        if weeks.is_integer():
+            weeks = int(weeks)
+        else:
+            weeks = round(weeks, 1)
+        if weeks == 1:
+            return str(weeks) + " week"
+        else:
+            return str(weeks) + " weeks"
     if day_diff < 365:
-        return str(round(day_diff / 30, 1)) + " months ago!"
-    return str(round(day_diff / 365, 1)) + " years ago!!"
+        months = day_diff / 30
+        if months.is_integer():
+            months = int(months)
+        else:
+            months = round(months, 1)
+        if months == 1:
+            return str(months) + " month"
+        else:
+            return str(months) + " months"
+    
+    return str(round(day_diff / 365, 1)) + " years!!"
