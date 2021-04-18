@@ -99,7 +99,7 @@ class Clips(Gtk.Application):
             print(datetime.now(), "start load_clips")
 
             clips = self.cache_manager.load_clips()
-            self.main_window.total_clips_label.props.label = "Clips: {total}".format(total=len(clips))
+            self.main_window.total_clips_label.props.label = "Clips: {total}".format(total=0)
             
             if len(clips) != 0:
                 self.load_clips_fromdb(clips)
@@ -113,7 +113,6 @@ class Clips(Gtk.Application):
     @utils.run_async
     def load_clips_fromdb(self, clips):
         
-
         for clip in reversed(clips[-10:]):
             GLib.idle_add(self.main_window.clips_view.new_clip, clip, self.app_startup)
             time.sleep(0.02)
@@ -125,6 +124,7 @@ class Clips(Gtk.Application):
         if self.main_window.clips_view.flowbox.get_child_at_index(0) is not None:
             self.main_window.clips_view.flowbox.select_child(self.main_window.clips_view.flowbox.get_child_at_index(0))
             self.main_window.clips_view.flowbox.get_child_at_index(0).grab_focus()
+
         print(datetime.now(), "finish load_clips")
 
     def do_command_line(self, command_line):
