@@ -36,21 +36,10 @@ class InfoView(Gtk.Grid):
         self.app = app
         self.gio_settings = self.app.gio_settings
 
-        title_label = Gtk.Label(title)
-        title_label.get_style_context().add_class("h1")
-        description_label = Gtk.Label(description)
-        icon_image = Gtk.Image()
-        
-        icon_image.set_from_icon_name(icon, Gtk.IconSize.DIALOG)
-        icon_image.set_pixel_size(96)
-
-        icon_box = Gtk.EventBox()
-        icon_box.set_valign(Gtk.Align.START)
-        icon_box.add(icon_image)
-
         self.props.column_spacing = 0
-        self.props.row_spacing = 0
+        self.props.row_spacing = 10
         self.props.expand = True
+        self.props.valign = self.props.halign = Gtk.Align.FILL
 
         # drawing_area = Gtk.DrawingArea()
         # drawing_area.props.expand = True
@@ -59,17 +48,56 @@ class InfoView(Gtk.Grid):
     # def draw(self, drawing_area, cairo_context):
     #     print(self.get_scale_factor())
 
+    def on_button_clicked(self, button):
+        if button.props.name == "getstarted":
+            self.get_style_context().add_class("info-view-fader")
+            self.app.main_window.on_view_visible(action="help-view")
+            # startcopying_button = Gtk.Button("Start Copying!")
+            # startcopying_button.props.name = "startcopying"
+            # startcopying_button.props.expand = False
+            # startcopying_button.props.margin = 10
+            # startcopying_button.props.valign = Gtk.Align.START
+            # startcopying_button.props.halign = Gtk.Align.CENTER
+            # startcopying_button.connect("clicked", self.on_button_clicked)
+            # startcopying_button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
+            # startcopying_button.show_all()
+            # self.attach(startcopying_button, 0, 0, 1, 1)
+        # else:
+        #     self.app.main_window.on_view_visible()
+
     def generate_welcome_view(self):
         self.clear_info_view()
-        # self.app.main_window.on_view_visible(action="help-view")
-        # view_guides.button.connect("clicked", self.on_button_clicked)
-        # view_guides.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
+
+        grid = Gtk.Grid()
+        grid.props.halign = grid.props.valign = Gtk.Align.CENTER
+        grid.props.expand = True
+        grid.props.row_spacing = 10
+
+        getstarted_button = Gtk.Button("Quick Start Guide")
+        getstarted_button.props.name = "getstarted"
+        getstarted_button.props.expand = False
+        getstarted_button.props.margin = 20
+        getstarted_button.props.valign = getstarted_button.props.halign = Gtk.Align.CENTER
+        getstarted_button.connect("clicked", self.on_button_clicked)
+        getstarted_button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
+
+        sublabel = Gtk.Label("Continue copying stuff (Ctrl+C) or view Quick Start Guide")
+        sublabel.props.name = "welcome-view-sublabel"
+        sublabel.props.expand = True
+        sublabel.props.halign = sublabel.props.valign = Gtk.Align.CENTER
+        sublabel.get_style_context().add_class("h3")
+
         label = Gtk.Label("Welcome")
-        label.props.name = "welcome-view"
+        label.props.name = "welcome-view-title"
         label.props.expand = True
         label.props.halign = label.props.valign = Gtk.Align.CENTER
         label.get_style_context().add_class("h1")
-        self.attach(label, 0, 0, 1, 1)
+
+        grid.attach(label, 0, 0, 1, 1)
+        grid.attach(sublabel, 0, 1, 1, 1)
+        grid.attach(getstarted_button, 0, 2, 1, 1)
+
+        self.attach(grid, 0, 0, 1, 1)
         self.show_all()
 
     def generate_help_view(self):
@@ -137,12 +165,28 @@ class InfoView(Gtk.Grid):
 
     def generate_noclips_view(self):
         self.clear_info_view()
-        label = Gtk.Label("No Clips")
-        label.props.name = "noclips-view"
+
+        grid = Gtk.Grid()
+        grid.props.halign = grid.props.valign = Gtk.Align.CENTER
+        grid.props.expand = True
+        grid.props.row_spacing = 10
+
+        sublabel = Gtk.Label("Try copying something (Ctrl+C)")
+        sublabel.props.name = "noclips-view-sublabel"
+        sublabel.props.expand = True
+        sublabel.props.halign = sublabel.props.valign = Gtk.Align.CENTER
+        sublabel.get_style_context().add_class("h3")
+
+        label = Gtk.Label("No clips")
+        label.props.name = "noclips-view-title"
         label.props.expand = True
         label.props.halign = label.props.valign = Gtk.Align.CENTER
         label.get_style_context().add_class("h1")
-        self.attach(label, 0, 0, 1, 1)
+
+        grid.attach(label, 0, 0, 1, 1)
+        grid.attach(sublabel, 0, 1, 1, 1)
+
+        self.attach(grid, 0, 0, 1, 1)
         self.show_all()
     
     def clear_info_view(self):
