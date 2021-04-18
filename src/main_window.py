@@ -96,30 +96,30 @@ class ClipsWindow(Gtk.ApplicationWindow):
     def set_main_window_size(self, column_number=None):
         if column_number is None:
             column_number = self.gio_settings.get_int("min-column-number")
+        
         default_height = 450
         default_width = 340
         min_width = 340
         proceed = True
 
         if column_number == 1:
-            default_width = 340
-            min_width = 340
+            default_width = min_width = 360
 
         elif column_number == 2:
-            default_width = 560
-            min_width = 560
+            default_width = min_width = 600
 
         elif column_number == 3:
-            default_width = 800
-            min_width = 800
+            default_width = min_width = 800
 
         elif column_number == 4:
-            default_width = 958
-            min_width = 958
+            default_width = min_width = 958
         
-        elif column_number > 3:
+        elif column_number == 5:
             default_width = 1100
             min_width = 958
+
+        # elif column_number > 5:
+        #     proceed = False
         
         if proceed:
             self.resize(default_width, default_height)
@@ -267,30 +267,28 @@ class ClipsWindow(Gtk.ApplicationWindow):
         # open help_view from settings: settings_view >> help_view
         # shortcut based switching
 
+        self.info_view.show_all()
+        self.settings_view.show_all()
+        self.clips_view.show_all()
+
         total_clips_in_db = self.app.cache_manager.get_total_clips()[0][0]
-
-        # self.info_view.clear_info_view()
-
-        # print("")
-        # print(view_switch, gparam, action)
-        # print("visible", self.stack.get_visible_child().get_name())
 
         if view_switch == gparam == action == None:
             if self.gio_settings.get_boolean("first-run") is True and view_switch is None and gparam is None and action is None:  
                 self.info_view.welcome_view = self.info_view.generate_welcome_view()
-                self.stack.set_visible_child(self.info_view)
                 self.info_view.show_all()
                 self.settings_view.hide()
                 self.clips_view.hide()
+                self.stack.set_visible_child(self.info_view)
                 self.gio_settings.set_boolean("first-run", False)
             
             elif self.gio_settings.get_boolean("first-run") is False and view_switch is None and gparam is None and action is None:
                 if total_clips_in_db == 0:
                     self.info_view.noclips_view = self.info_view.generate_noclips_view()
-                    self.stack.set_visible_child(self.info_view)
                     self.info_view.show_all()
                     self.settings_view.hide()
                     self.clips_view.hide()
+                    self.stack.set_visible_child(self.info_view)
                 elif total_clips_in_db > 0:
                     self.stack.set_visible_child(self.clips_view)
                     self.clips_view.show_all()
@@ -309,6 +307,9 @@ class ClipsWindow(Gtk.ApplicationWindow):
             if action == "help-view":
                 self.info_view.generate_help_view()
                 self.stack.set_visible_child(self.info_view)
+                self.info_view.show_all()
+                self.settings_view.hide()
+                self.clips_view.hide()
 
         if view_switch is not None:
             if view_switch.props.active:
