@@ -334,15 +334,30 @@ label#files-container-more {
     color: white;
 }
 
-label#welcome-view {
-    color: alpha(@theme_text_color, 0.2);
+.info-view-fader {
+    animation: crossfader 0.5s ease-in-out forwards;
+}
+
+label#welcome-view-title {
+    color: alpha(@theme_text_color, 0.5);
     animation: crossfader 1.0s ease-in-out forwards;
 }
 
-label#noclips-view {
-    color: alpha(@theme_text_color, 0.2);
-    animation: crossfader 0.25s ease-in-out forwards;
+label#welcome-view-sublabel {
+    color: alpha(@theme_text_color, 0.35);
+    animation: crossfader 1.25s ease-in-out forwards;
 }
+
+label#noclips-view-title {
+    color: alpha(@theme_text_color, 0.5);
+    animation: crossfader 1.0s ease-in-out forwards;
+}
+
+label#noclips-view-sublabel {
+    color: alpha(@theme_text_color, 0.35);
+    animation: crossfader 1.25s ease-in-out forwards;
+}
+
 
 /* ------------------------------ */
 
