@@ -517,10 +517,11 @@ class ClipsContainer(Gtk.EventBox):
     def generate_fuzzytimestamp_label(self):
         fuzzytimestamp_label = Gtk.Label(self.fuzzytimestamp)
         fuzzytimestamp_label.props.halign = Gtk.Align.END
-        fuzzytimestamp_label.props.valign = Gtk.Align.START
+        fuzzytimestamp_label.props.valign = Gtk.Align.CENTER
         fuzzytimestamp_label.props.hexpand = True
-        fuzzytimestamp_label.props.margin = 12
+        # fuzzytimestamp_label.props.margin = 10
         fuzzytimestamp_label.props.margin_right = 8
+        fuzzytimestamp_label.props.margin_left = 8
         fuzzytimestamp_label.props.name = "clips-fuzzytimestamp"
         return fuzzytimestamp_label
 
