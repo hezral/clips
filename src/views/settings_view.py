@@ -144,11 +144,11 @@ class SettingsView(Gtk.Grid):
         report_issue.button.connect("clicked", self.on_button_clicked)
         report_issue.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
 
-        # buyme_coffee = SubSettings(type="button", name="buy-me-coffee", label="Buy me a coffee", sublabel="Thanks for supporting me!", separator=False, params=("Show support", Gtk.Image().new_from_icon_name("help-faq", Gtk.IconSize.LARGE_TOOLBAR),))
-        # buyme_coffee.button.connect("clicked", self.on_button_clicked)
-        # buyme_coffee.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
+        buyme_coffee = SubSettings(type="button", name="buy-me-coffee", label="Show Support", sublabel="Thanks for supporting me!", separator=False, params=("Coffee Time", Gtk.Image().new_from_icon_name("face-smile", Gtk.IconSize.LARGE_TOOLBAR), ))
+        buyme_coffee.button.connect("clicked", self.on_button_clicked)
+        buyme_coffee.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
 
-        help = SettingsGroup("Support", (view_guides, report_issue, ))
+        help = SettingsGroup("Support", (view_guides, report_issue, buyme_coffee))
         self.flowbox.add(help)
 
         # disable focus on flowboxchilds
@@ -200,6 +200,9 @@ class SettingsView(Gtk.Grid):
 
         if name == "report-issue":
             Gtk.show_uri_on_window(None, "https://github.com/hezral/clips/issues/new", Gdk.CURRENT_TIME)
+
+        if name == "buy-me-coffee":
+            Gtk.show_uri_on_window(None, "https://www.buymeacoffee.com/hezral", Gdk.CURRENT_TIME)
 
     def on_spinbutton_activated(self, spinbutton):        
         name = spinbutton.get_name()
@@ -352,8 +355,9 @@ class SubSettings(Gtk.Grid):
             self.button.props.name = name
             self.button.props.hexpand = False
             self.button.props.always_show_image = True
-            label = [child for child in self.button.get_children()[0].get_child() if isinstance(child, Gtk.Label)][0]
-            label.props.valign = Gtk.Align.CENTER
+            if len(params) >1:
+                label = [child for child in self.button.get_children()[0].get_child() if isinstance(child, Gtk.Label)][0]
+                label.props.valign = Gtk.Align.CENTER
             self.attach(self.button, 1, 0, 1, 2)
 
         if type == "listbox" and "-apps" in name:
