@@ -101,11 +101,10 @@ class ClipsView(Gtk.Grid):
         def filter_func(flowboxchild, search_text):
             clips_container = flowboxchild.get_children()[0]
 
-            if clips_container.type in ("plaintext", "html", "url", "mail", "files"):
+            if clips_container.type in ("plaintext", "html", "url/https", "url/http", "mail", "files"):
                 with open(clips_container.cache_file) as file:
                     lines = file.readlines()
                 contents = ''.join(lines)
-
                 contents_single_keyword = [str(clips_container.id), clips_container.type.lower(), clips_container.target.lower(), clips_container.source_app.lower(), clips_container.created_short.lower(), contents.lower()]
                 contents_multi_keyword = ' '.join(contents_single_keyword)
             else:
