@@ -101,8 +101,16 @@ class ClipsView(Gtk.Grid):
         def filter_func(flowboxchild, search_text):
             clips_container = flowboxchild.get_children()[0]
 
-            contents_single_keyword = [str(clips_container.id), clips_container.type.lower(), clips_container.target.lower(), clips_container.source_app.lower(), clips_container.created_short.lower()]
-            contents_multi_keyword = ' '.join(contents_single_keyword)
+            if clips_container.type in ("plaintext", "html", "url", "mail", "files"):
+                with open(clips_container.cache_file) as file:
+                    lines = file.readlines()
+                contents = ''.join(lines)
+
+                contents_single_keyword = [str(clips_container.id), clips_container.type.lower(), clips_container.target.lower(), clips_container.source_app.lower(), clips_container.created_short.lower(), contents.lower()]
+                contents_multi_keyword = ' '.join(contents_single_keyword)
+            else:
+                contents_single_keyword = [str(clips_container.id), clips_container.type.lower(), clips_container.target.lower(), clips_container.source_app.lower(), clips_container.created_short.lower()]
+                contents_multi_keyword = ' '.join(contents_single_keyword)
 
             # check if multi keyword search
             if "," in search_text:
@@ -363,7 +371,7 @@ class ClipsContainer(Gtk.EventBox):
         icon = Gtk.Image().new_from_icon_name(iconname, Gtk.IconSize.SMALL_TOOLBAR)
         button = Gtk.Button(image=icon)
         button.props.name = "clip-action-button"
-        button.props.hexpand = True
+        button.props.hexpand = False
         button.props.has_tooltip = True
         button.props.tooltip_text = tooltiptext
         button.props.can_focus = False
@@ -456,9 +464,8 @@ class ClipsContainer(Gtk.EventBox):
         return clip_action_notify_revealer
 
     def generate_clip_overlay(self):
-        # protect_action = self.generate_action_button("com.github.hezral.clips-protect-symbolic", "Protect Content", "protect")
+        protect_action = self.generate_action_button("com.github.hezral.clips-unprotect-symbolic", "Protect Content", "protect")
         reveal_action = self.generate_action_button("document-open-symbolic", "Reveal Cache File", "reveal")
-        # info_action = self.generate_action_button("com.github.hezral.clips-info-symbolic", "Show Info", "info")
         view_action = self.generate_action_button("com.github.hezral.clips-view-symbolic", "View", "view")
         copy_action = self.generate_action_button("edit-copy-symbolic", "Copy to Clipboard", "copy")
         delete_action = self.generate_action_button("edit-delete-symbolic", "Delete", "delete")
@@ -469,7 +476,7 @@ class ClipsContainer(Gtk.EventBox):
         clip_action.props.valign = Gtk.Align.END
         clip_action.props.hexpand = True
         clip_action.props.can_focus = False
-        clip_action.props.row_spacing = clip_action.props.column_spacing = 4
+        clip_action.props.row_spacing = clip_action.props.column_spacing = 2
 
         self.clip_action_revealer = Gtk.Revealer()
         self.clip_action_revealer.props.name = "clip-action-revealer"    
@@ -478,10 +485,12 @@ class ClipsContainer(Gtk.EventBox):
         self.clip_action_revealer.props.can_focus = False
         
         if "color" in self.type or "spreadsheet" in self.type or "presentation" in self.type:
-            # protect_action.props.sensitive = False
             view_action.props.sensitive = False
-            # protect_action.get_style_context().add_class("clip-action-disabled")
             view_action.get_style_context().add_class("clip-action-disabled")
+
+        if "no" in self.protected:
+            protect_action.props.sensitive = False
+            protect_action.get_style_context().add_class("clip-action-disabled")
 
         icon = self.generate_source_icon()
         self.source_icon_revealer = Gtk.Revealer()
@@ -491,13 +500,12 @@ class ClipsContainer(Gtk.EventBox):
         self.select_button = self.generate_clip_select_button()
         self.fuzzytimestamp_label = self.generate_fuzzytimestamp_label()
 
-        # clip_action.attach(protect_action, 0, 0, 1, 1)
         clip_action.attach(reveal_action, 0, 0, 1, 1)
-        # clip_action.attach(info_action, 1, 0, 1, 1)
-        clip_action.attach(view_action, 2, 0, 1, 1)
-        clip_action.attach(copy_action, 3, 0, 1, 1)
-        clip_action.attach(delete_action, 5, 0, 1, 1)
-        clip_action.attach(self.fuzzytimestamp_label, 6, 0, 1, 1)
+        clip_action.attach(view_action, 1, 0, 1, 1)
+        clip_action.attach(copy_action, 2, 0, 1, 1)
+        clip_action.attach(delete_action, 3, 0, 1, 1)
+        clip_action.attach(protect_action, 4, 0, 1, 1)
+        clip_action.attach(self.fuzzytimestamp_label, 5, 0, 1, 1)
 
         grid = Gtk.Grid()
         grid.props.expand = True
@@ -1203,6 +1211,8 @@ class UrlContainer(DefaultContainer):
     def __init__(self, filepath, type, app, cache_filedir, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        self.props.name = "url-container"
+
         with open(filepath) as file:
             self.content  = file.readlines()
 
@@ -1236,17 +1246,14 @@ class UrlContainer(DefaultContainer):
         
         domain = Gtk.Label(domain)
 
-        self.props.margin = 10
-        self.props.name = "url-container"
 
         self.attach(favicon, 0, 0, 1, 1)
         self.attach(title, 0, 1, 1, 1)
         self.attach(domain, 0, 2, 1, 1)
-
+        self.props.margin = 10
         self.props.valign = Gtk.Align.CENTER
         self.props.halign = Gtk.Align.FILL
-        self.props.name = "url-container"
-
+        
         self.label = "Internet URL"
 
 # ----------------------------------------------------------------------------------------------------
@@ -1262,7 +1269,7 @@ class EmailContainer(DefaultContainer):
         with open(filepath) as file:
             self.content  = file.readlines()
 
-        domain = self.content[0].split("@")[-1]
+        domain = self.content[0].split("@")[-1].replace("\n","")
         checksum = os.path.splitext(filepath)[0].split("/")[-1]
         
         icon_size = 48 * self.get_scale_factor()
@@ -1273,7 +1280,7 @@ class EmailContainer(DefaultContainer):
             favicon_pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_size(favicon_file, icon_size, icon_size)
             favicon.props.pixbuf = favicon_pixbuf
         except:
-            favicon = Gtk.Image().new_from_icon_name("applications-internet", Gtk.IconSize.LARGE_TOOLBAR)
+            favicon = Gtk.Image().new_from_icon_name("mail-send", Gtk.IconSize.LARGE_TOOLBAR)
             favicon.set_pixel_size(icon_size)
             
         favicon.props.margin_bottom = 10
@@ -1283,23 +1290,32 @@ class EmailContainer(DefaultContainer):
         title = Gtk.Label(self.title)
         title.props.name = "mail-container-title"
         title.props.wrap_mode = Pango.WrapMode.WORD
-        title.props.max_width_chars = 30
+        title.props.max_width_chars = 40
         title.props.wrap = True
+        title.props.hexpand = True
         title.props.justify = Gtk.Justification.CENTER
         title.props.lines = 3
         title.props.ellipsize = Pango.EllipsizeMode.END
-        title.props.valign = Gtk.Align.CENTER
 
         domain = Gtk.Label(domain)
-
-        self.props.margin = 10
-        self.props.name = "mail-container"
 
         self.attach(favicon, 0, 0, 1, 1)
         self.attach(title, 0, 1, 1, 1)
         self.attach(domain, 0, 2, 1, 1)
-
+        self.props.margin = 10
         self.props.valign = Gtk.Align.CENTER
         self.props.halign = Gtk.Align.FILL
 
 # ----------------------------------------------------------------------------------------------------
+
+class PasswordContainer(DefaultContainer):
+    def __init__(self, filepath, type, app, cache_filedir, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.props.name = "password-container"
+
+        self.label = "Email"
+ 
+        self.props.margin = 10
+        self.props.valign = Gtk.Align.CENTER
+        self.props.halign = Gtk.Align.FILL
