@@ -192,7 +192,7 @@ class Clips(Gtk.Application):
         self.set_accels_for_action("app.{name}".format(name=name), [shortcutkey])
 
     def on_search_action(self, action, param):
-        if self.main_window is not None and self.main_window.is_visible() and self.main_window.searchentry.has_focus() is False and self.main_window.clips_view in self.main_window.stack.get_visible_child():
+        if self.main_window is not None and self.main_window.is_visible() and self.main_window.searchentry.has_focus() is False:
             self.main_window.searchentry.grab_focus()
         else:
             self.main_window.clips_view.flowbox.get_selected_children()[0].grab_focus()
