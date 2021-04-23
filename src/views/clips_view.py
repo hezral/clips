@@ -362,6 +362,7 @@ class ClipsContainer(Gtk.EventBox):
         button.props.halign = Gtk.Align.END
         button.props.valign = Gtk.Align.START
         button.props.can_focus = False
+        button.props.margin_right = 4
         button.connect("clicked", self.on_clip_select)
         button.get_style_context().add_class("clip-select")
         return button
@@ -913,7 +914,7 @@ class HtmlContainer(DefaultContainer):
         webview = WebKit2.WebView()
         webview.props.zoom_level = 0.85
         webview.load_html(self.content)
-        webview.props.expand = True
+        webview.props.vexpand = True
         webview.props.can_focus = False
         # webview.props.sensitive = False
 
