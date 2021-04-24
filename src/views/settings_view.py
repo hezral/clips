@@ -145,7 +145,7 @@ class SettingsView(Gtk.Grid):
         report_issue.button.connect("clicked", self.on_button_clicked)
         report_issue.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
 
-        buyme_coffee = SubSettings(type="button", name="buy-me-coffee", label="Show Support", sublabel="Thanks for supporting me!", separator=False, params=("Coffee Time", Gtk.Image().new_from_icon_name("face-smile", Gtk.IconSize.LARGE_TOOLBAR), ))
+        buyme_coffee = SubSettings(type="button", name="buy-me-coffee", label="Show Support", sublabel="Thanks for supporting me!", separator=False, params=("Coffee Time", Gtk.Image().new_from_icon_name("com.github.hezral.clips-coffee", Gtk.IconSize.LARGE_TOOLBAR), ))
         buyme_coffee.button.connect("clicked", self.on_button_clicked)
         buyme_coffee.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
 

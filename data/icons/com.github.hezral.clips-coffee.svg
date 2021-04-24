@@ -1,0 +1,52 @@
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0)">
+<g opacity="0.4">
+<path opacity="0.4" d="M18 21H16.4211V23H18V21Z" fill="url(#paint0_radial)"/>
+<path opacity="0.4" d="M6.00001 23H7.57895V21H6.00001V23Z" fill="url(#paint1_radial)"/>
+<path opacity="0.4" d="M16.4211 21H7.57895V23H16.4211V21Z" fill="url(#paint2_linear)"/>
+</g>
+<path d="M6.91667 2.25H17.0833C17.4167 2.25 17.71 2.47 17.8033 2.79L18.6667 5.75H5.33333L6.19667 2.79C6.29 2.47 6.58333 2.25 6.91667 2.25Z" fill="url(#paint3_linear)" stroke="#66635D" stroke-width="0.5"/>
+<path d="M6.91667 2.5H17.0833C17.3056 2.5 17.5011 2.64667 17.5633 2.86L18.3333 5.5H5.66667L6.43667 2.86C6.49889 2.64667 6.69444 2.5 6.91667 2.5Z" stroke="#66635D" stroke-opacity="0.25"/>
+<path d="M15.8102 21.75H8.1898C7.8201 21.75 7.50554 21.4806 7.44872 21.1153L5.2919 7.25L18.7081 7.25L16.5513 21.1153C16.4945 21.4806 16.1799 21.75 15.8102 21.75Z" fill="url(#paint4_linear)" stroke="#66635D" stroke-width="0.5"/>
+<path d="M15.8102 21.5H8.1898C7.94333 21.5 7.73363 21.3204 7.69575 21.0769L5.58379 7.5L18.4162 7.5L16.3043 21.0769C16.2664 21.3204 16.0567 21.5 15.8102 21.5Z" stroke="#66635D" stroke-opacity="0.5"/>
+<path d="M17.9726 17.1644C17.8922 17.6466 17.475 18 16.9862 18L7.0138 18C6.52496 18 6.10777 17.6466 6.0274 17.1644L5.19407 12.1644C5.09248 11.5549 5.56252 11 6.18046 11L17.8195 11C18.4375 11 18.9075 11.5549 18.8059 12.1644L17.9726 17.1644Z" fill="url(#paint5_linear)"/>
+<path d="M16.9862 17.5L7.0138 17.5C6.76938 17.5 6.56078 17.3233 6.5206 17.0822L5.68726 12.0822C5.63647 11.7774 5.87149 11.5 6.18046 11.5L17.8195 11.5C18.1285 11.5 18.3635 11.7774 18.3127 12.0822L17.4794 17.0822C17.4392 17.3233 17.2306 17.5 16.9862 17.5Z" stroke="#A7A7A7" stroke-opacity="0.5"/>
+<path d="M16.9862 17.75L7.0138 17.75C6.64717 17.75 6.33427 17.4849 6.274 17.1233L5.44067 12.1233C5.36447 11.6662 5.71701 11.25 6.18046 11.25L17.8195 11.25C18.283 11.25 18.6355 11.6662 18.5593 12.1233L17.726 17.1233C17.6657 17.4849 17.3528 17.75 16.9862 17.75Z" stroke="#66635D" stroke-width="0.5"/>
+<path d="M4.25 6C4.25 5.58579 4.58579 5.25 5 5.25H19C19.4142 5.25 19.75 5.58579 19.75 6V8C19.75 8.41421 19.4142 8.75 19 8.75H5C4.58579 8.75 4.25 8.41421 4.25 8V6Z" fill="url(#paint6_linear)" stroke="#66635D" stroke-width="0.5"/>
+<rect x="4.5" y="5.5" width="15" height="3" rx="0.5" stroke="#66635D" stroke-opacity="0.25"/>
+</g>
+<defs>
+<radialGradient id="paint0_radial" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(16.4188 22) scale(1.58193 1)">
+<stop stop-color="#181818"/>
+<stop offset="1" stop-color="#181818" stop-opacity="0"/>
+</radialGradient>
+<radialGradient id="paint1_radial" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(7.58117 22) rotate(180) scale(1.58193 1)">
+<stop stop-color="#181818"/>
+<stop offset="1" stop-color="#181818" stop-opacity="0"/>
+</radialGradient>
+<linearGradient id="paint2_linear" x1="12.3341" y1="23.0079" x2="12.3341" y2="20.9998" gradientUnits="userSpaceOnUse">
+<stop stop-color="#181818" stop-opacity="0"/>
+<stop offset="0.5" stop-color="#181818"/>
+<stop offset="1" stop-color="#181818" stop-opacity="0"/>
+</linearGradient>
+<linearGradient id="paint3_linear" x1="5.875" y1="4" x2="12.4375" y2="4" gradientUnits="userSpaceOnUse">
+<stop stop-color="#C7BDAE"/>
+<stop offset="1" stop-color="white"/>
+</linearGradient>
+<linearGradient id="paint4_linear" x1="12.5" y1="11" x2="6" y2="11" gradientUnits="userSpaceOnUse">
+<stop stop-color="#CEACA4"/>
+<stop offset="1" stop-color="#9A807A"/>
+</linearGradient>
+<linearGradient id="paint5_linear" x1="12.5" y1="12" x2="5" y2="12" gradientUnits="userSpaceOnUse">
+<stop stop-color="#E46D5F"/>
+<stop offset="1" stop-color="#B44639"/>
+</linearGradient>
+<linearGradient id="paint6_linear" x1="5" y1="7" x2="12.5" y2="7" gradientUnits="userSpaceOnUse">
+<stop stop-color="#C7BDAE"/>
+<stop offset="1" stop-color="white"/>
+</linearGradient>
+<clipPath id="clip0">
+<rect width="24" height="24" fill="white"/>
+</clipPath>
+</defs>
+</svg>
