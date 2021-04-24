@@ -535,8 +535,16 @@ class ClipsContainer(Gtk.EventBox):
         return fuzzytimestamp_label
 
     def generate_source_icon(self):
-        app_name, app_icon = self.app.utils.get_appinfo(self.source_app)
         icon_size = 32 * self.scale
+        
+        # try: 
+        # icon_pixbuf = icon_theme.load_icon("hezral", 32, 0)
+        # # print(icon_pixbuf)
+
+        # icon = Gtk.Image().new_from_pixbuf(icon_pixbuf)
+
+        app_name, app_icon = self.app.utils.get_appinfo(self.source_app)
+        
         if app_icon == "application-default-icon":
             source_icon_cache = os.path.join(self.cache_filedir[:-6],"icon", self.source_app.replace(" ",".").lower() + ".png")
             try:
@@ -950,9 +958,9 @@ class FilesContainer(DefaultContainer):
     def __init__(self, filepath, type, app, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        self.app = app
         scale = self.get_scale_factor()
         self.icon_size = 72 * scale
-        self.icon_theme = Gtk.IconTheme.get_default()
         icon = None
 
         self.flowbox = Gtk.FlowBox()
@@ -994,7 +1002,7 @@ class FilesContainer(DefaultContainer):
                 for icon_name in icons.to_string().split():
                     if icon_name != "." and icon_name != "GThemedIcon":
                         try:
-                            icon_pixbuf = self.icon_theme.load_icon(icon_name, self.icon_size, 0)
+                            icon_pixbuf = self.app.icon_theme.load_icon(icon_name, self.icon_size, 0)
                             icon = Gtk.Image().new_from_pixbuf(icon_pixbuf)
                             icon.props.halign = Gtk.Align.CENTER
 
@@ -1047,7 +1055,6 @@ class FilesContainerPopover(Gtk.Popover):
         self.app = app
         scale = self.get_scale_factor()
         self.icon_size = 48 * scale
-        self.icon_theme = Gtk.IconTheme.get_default()
         icon = None
         
         self.flowbox = Gtk.FlowBox()
@@ -1121,7 +1128,7 @@ class FilesContainerPopover(Gtk.Popover):
         self.app.utils.reveal_file_gio(file_grid.props.name)
         
     def generate_file_grid(self, icon_name, file_path):
-        icon_pixbuf = self.icon_theme.load_icon(icon_name, self.icon_size, 0)
+        icon_pixbuf = self.app.icon_theme.load_icon(icon_name, self.icon_size, 0)
         icon = Gtk.Image().new_from_pixbuf(icon_pixbuf)
         
         label = Gtk.Label(os.path.basename(file_path))
@@ -1171,9 +1178,9 @@ class WordContainer(DefaultContainer):
     def __init__(self, filepath, type, app, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        self.app = app
         scale = self.get_scale_factor()
         self.icon_size = 64 * scale
-        self.icon_theme = Gtk.IconTheme.get_default()
         icon = None
 
         if os.path.isdir(filepath):  
@@ -1191,7 +1198,7 @@ class WordContainer(DefaultContainer):
         for icon_name in icons.to_string().split():
             if icon_name != "." and icon_name != "GThemedIcon":
                 try:
-                    icon_pixbuf = self.icon_theme.load_icon(icon_name, self.icon_size, 0)
+                    icon_pixbuf = self.app.icon_theme.load_icon(icon_name, self.icon_size, 0)
                     icon = Gtk.Image().new_from_pixbuf(icon_pixbuf)
                     self.attach(icon, 0, 0, 1, 1)
                     break

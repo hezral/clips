@@ -383,7 +383,7 @@ class CacheManager():
                 
             # fallback for source_icon
             # save a copy of the icon in case the app is uninstalled and no icon to use
-            icon_theme = Gtk.IconTheme.get_default()
+            icon_theme = self.app.icon_theme
             try:
                 if source_icon.find("/") != -1:
                     pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(source_icon, 64, 64, True) # load from path for non-theme icons
