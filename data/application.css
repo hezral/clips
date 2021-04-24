@@ -199,7 +199,7 @@ grid#clips-multi-delete {
 }
 
 .clip-select {
-    opacity: 0.35;
+    opacity: 0.5;
 }
 
 .clip-select:hover {
@@ -207,7 +207,7 @@ grid#clips-multi-delete {
 }
 
 .clip-selected {
-    color: rgba(125, 48, 232, 1);
+    /* color: rgba(125, 48, 232, 1); */
     opacity: 1;
 }
 

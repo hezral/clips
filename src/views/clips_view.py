@@ -252,6 +252,7 @@ class ClipsView(Gtk.Grid):
             clips_container.disconnect_by_func(clips_container.on_cursor_leaving_clip)
             clips_container.disconnect_by_func(clips_container.on_double_clicked_clip)
         
+        self.delete_selected_button.props.label = "Delete ({count})".format(count=str(1))
         self.multi_select_mode = True
 
     def off_multi_select(self):
@@ -272,6 +273,7 @@ class ClipsView(Gtk.Grid):
             clips_container.select_button.get_style_context().add_class("clip-select")
             clips_container.clip_overlay_revealer.set_reveal_child(False)
 
+        self.delete_selected_button.props.label = "Delete ({count})".format(count=str(0)) 
         self.multi_select_mode = False
 
 # ----------------------------------------------------------------------------------------------------
@@ -356,13 +358,13 @@ class ClipsContainer(Gtk.EventBox):
         self.on_double_clicked_clip_handler_id = self.connect("button-press-event", self.on_double_clicked_clip)
 
     def generate_clip_select_button(self):
-        button = Gtk.Button(image=Gtk.Image().new_from_icon_name("com.github.hezral.clips-select-symbolic", Gtk.IconSize.SMALL_TOOLBAR))
+        button = Gtk.Button(image=Gtk.Image().new_from_icon_name("com.github.hezral.clips-select", Gtk.IconSize.SMALL_TOOLBAR))
         button.set_size_request(30, 30)
         button.props.name = "clip-select"
         button.props.halign = Gtk.Align.END
         button.props.valign = Gtk.Align.START
         button.props.can_focus = False
-        button.props.margin_right = 4
+        button.props.margin_right = 3
         button.connect("clicked", self.on_clip_select)
         button.get_style_context().add_class("clip-select")
         return button
