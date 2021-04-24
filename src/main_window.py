@@ -132,8 +132,9 @@ class ClipsWindow(Gtk.ApplicationWindow):
     def generate_headerbar(self):
         self.searchentry = Gtk.SearchEntry()
         self.searchentry.props.placeholder_text = "Search Clips" #"Search Clips\u2026"
-        self.searchentry.props.hexpand = True
+        self.searchentry.props.hexpand = False
         self.searchentry.props.name = "search-entry"
+        
 
         self.searchentry.connect("focus-in-event", self.on_searchbar_activate, "in")
         self.searchentry.connect("focus-out-event", self.on_searchbar_activate, "out")
@@ -151,6 +152,8 @@ class ClipsWindow(Gtk.ApplicationWindow):
         #------ searchbar ----#
         searchbar = Gtk.Grid()
         searchbar.props.name = "search-bar"
+        searchbar.props.hexpand = True
+        searchbar.props.halign = Gtk.Align.START
         searchbar.attach(self.searchentry, 0, 0, 1, 1)
 
         overlay = Gtk.Overlay()
@@ -218,10 +221,13 @@ class ClipsWindow(Gtk.ApplicationWindow):
     def on_searchbar_activate(self, searchentry, event, type):
 
         searchbar = self.searchentry.get_parent()
+
         # revealer = self.utils.get_widget_by_name(widget=searchbar, child_name="search-revealer", level=0)
 
         # if type == "in" and revealer.get_child_revealed() is False:
         if type == "in":
+            self.searchentry.props.hexpand = True
+            searchbar.props.halign = Gtk.Align.FILL
             self.searchentry.props.primary_icon_name = "quick-search"
             self.searchentry.props.primary_icon_tooltip_text = "Use quick search tags"
             self.searchentry.props.name = "search-entry-active"
@@ -230,6 +236,8 @@ class ClipsWindow(Gtk.ApplicationWindow):
             # searchbar.props.has_tooltip = True
             # searchbar.props.tooltip_text = "Try these quick search tags"
         elif type == "out":
+            self.searchentry.props.hexpand = False
+            searchbar.props.halign = Gtk.Align.START
             self.searchentry.props.primary_icon_name = "system-search-symbolic"
             self.searchentry.props.name = "search-entry"
 
