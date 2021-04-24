@@ -40,7 +40,7 @@ class ClipsView(Gtk.Grid):
         self.flowbox.props.homogeneous = False
         self.flowbox.props.row_spacing = 10
         self.flowbox.props.column_spacing = 10
-        self.flowbox.props.max_children_per_line = 9
+        self.flowbox.props.max_children_per_line = 8
         self.flowbox.props.min_children_per_line = app.gio_settings.get_int("min-column-number")
         self.flowbox.props.valign = Gtk.Align.START
         self.flowbox.props.halign = Gtk.Align.FILL
@@ -914,10 +914,11 @@ class HtmlContainer(DefaultContainer):
         webview = WebKit2.WebView()
         webview.props.zoom_level = 0.85
         webview.load_html(self.content)
-        webview.props.vexpand = True
+        webview.props.expand = True
         webview.props.can_focus = False
-        # webview.props.sensitive = False
+        # webview.props.sensitive = True
 
+        # print(webview.get_child())
         css_bg_color = app.utils.get_css_background_color(self.content)
 
         if css_bg_color is not None:
