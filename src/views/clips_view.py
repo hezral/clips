@@ -537,24 +537,21 @@ class ClipsContainer(Gtk.EventBox):
     def generate_source_icon(self):
         icon_size = 32 * self.scale
         
-        # try: 
-        # icon_pixbuf = icon_theme.load_icon("hezral", 32, 0)
-        # # print(icon_pixbuf)
-
-        # icon = Gtk.Image().new_from_pixbuf(icon_pixbuf)
-
-        app_name, app_icon = self.app.utils.get_appinfo(self.source_app)
-        
-        if app_icon == "application-default-icon":
-            source_icon_cache = os.path.join(self.cache_filedir[:-6],"icon", self.source_app.replace(" ",".").lower() + ".png")
-            try:
-                if os.path.exists(source_icon_cache):
-                    pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(source_icon_cache, icon_size, icon_size, True)
-                    icon = Gtk.Image().new_from_pixbuf(pixbuf)
-            except:
-                icon = Gtk.Image().new_from_icon_name("application-default-icon", Gtk.IconSize.LARGE_TOOLBAR)
-        else:
-            icon = Gtk.Image().new_from_icon_name(app_icon, Gtk.IconSize.LARGE_TOOLBAR)
+        try: 
+            icon_pixbuf = self.app.icon_theme.load_icon(self.source_icon, icon_size, 0)
+            icon = Gtk.Image().new_from_pixbuf(icon_pixbuf)
+        except:
+            app_name, app_icon = self.app.utils.get_appinfo(self.source_app)
+            if app_icon == "application-default-icon":
+                source_icon_cache = os.path.join(self.cache_filedir[:-6],"icon", self.source_app.replace(" ",".").lower() + ".png")
+                try:
+                    if os.path.exists(source_icon_cache):
+                        pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(source_icon_cache, icon_size, icon_size, True)
+                        icon = Gtk.Image().new_from_pixbuf(pixbuf)
+                except:
+                    icon = Gtk.Image().new_from_icon_name("application-default-icon", Gtk.IconSize.LARGE_TOOLBAR)
+            else:
+                icon = Gtk.Image().new_from_icon_name(app_icon, Gtk.IconSize.LARGE_TOOLBAR)
         
         icon.set_pixel_size(icon_size)
         icon.props.halign = Gtk.Align.START
@@ -652,7 +649,6 @@ class ClipsContainer(Gtk.EventBox):
                     self.app.utils.reveal_file_gio(file_path)
                 else:
                     files_popover = FilesContainerPopover(self.cache_file, self.type, self.app, button)
-                    files_popover.show_all()
                     files_popover.popup()
             else:
                 self.app.utils.open_file_gio(self.cache_file)
@@ -1118,6 +1114,7 @@ class FilesContainerPopover(Gtk.Popover):
         
         self.add(grid)
         self.connect("closed", self.on_closed)
+        self.show_all()
 
     def on_closed(self, *args):
         self.destroy()
