@@ -73,19 +73,16 @@ class Clips(Gtk.Application):
         Gtk.StyleContext.add_provider_for_screen(Gdk.Screen.get_default(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
 
     def do_activate(self):
-        # We only allow a single window and raise any existing ones
         if not self.main_window:
-            # Windows are associated with the application when the last one is closed the application shuts down
             self.main_window = ClipsWindow(application=self)
             self.add_window(self.main_window)
             
-        # present the window if its hidden
-        self.main_window.present()
-
         if self.gio_settings.get_value("hide-on-startup") and self.running is False:
             self.main_window.hide()
         else:
+            self.main_window.set_keep_above(True)
             self.main_window.present()
+            GLib.timeout_add(100, self.main_window.set_keep_above, False) # need to put time gap else won't work to bring window front
 
         self.cache_manager.main_window = self.main_window
 
