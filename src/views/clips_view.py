@@ -539,7 +539,8 @@ class ClipsContainer(Gtk.EventBox):
         
         try: 
             icon_pixbuf = self.app.icon_theme.load_icon(self.source_icon, icon_size, 0)
-            icon = Gtk.Image().new_from_pixbuf(icon_pixbuf)
+            pixbuf = icon_pixbuf.scale_simple(icon_size, icon_size, True)
+            icon = Gtk.Image().new_from_pixbuf(pixbuf)
         except:
             app_name, app_icon = self.app.utils.get_appinfo(self.source_app)
             if app_icon == "application-default-icon":
