@@ -176,7 +176,6 @@ def get_widget_by_focus_state(widget, focus_state, level, doPrint=False):
                 if found: return found
 
 #-------------------------------------------------------------------------------------------------------
-
 # function to validate string using regex
 def validate_string_with_regex(str, regex):
     import re
@@ -194,8 +193,6 @@ def validate_string_with_regex(str, regex):
 
 #-------------------------------------------------------------------------------------------------------
 # Color Validation Functions
-
-
 # Regex Pattern for Rgb, Rgba, Hsl, Hsla color coding
 # convert and test regex at https://regex101.com/
 # https://www.regexpal.com/97509 this one is better
@@ -222,8 +219,9 @@ def is_valid_color_code(str):
             pass
 
 # Function to convert hsl string to RGB color code
-import colorsys
+
 def hsl_to_rgb(hslcode):
+    import colorsys
     h, s, l = hslcode
     r, g, b = colorsys.hls_to_rgb(h, l, s)
     rgb = (int(r*255), int(g*255), int(b*255))
@@ -374,10 +372,8 @@ def reveal_file_gio(files):
 # reveal_file_gio(file1)
 
 #-------------------------------------------------------------------------------------------------------
-
 # function to check distro since platform.linux_distribution() is deprecated since 3.7
 # https://majornetwork.net/2019/11/get-linux-distribution-name-and-version-with-python/
-
 def GetOsDistroName():
     import csv
 
@@ -494,13 +490,13 @@ def get_web_data(url, file_path=None, download_path='./', checksum='na'):
     print(get_fuzzy_timestamp(datetime.now()))
     return title, icon_name
 
-# def GetWebpageThread(url, file_path, download_path='./'):
-#     import concurrent.futures
-#     with concurrent.futures.ThreadPoolExecutor() as executor:
-#         future = executor.submit(get_web_data, url, file_path, download_path)
-#         return_value = future.result()
-#         # print(return_value)
-#         print(get_fuzzy_timestamp(datetime.now()))
+def get_web_data_threaded(url, file_path, download_path='./'):
+    import concurrent.futures
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        future = executor.submit(get_web_data, url, file_path, download_path)
+        return_value = future.result()
+        # print(return_value)
+        print(get_fuzzy_timestamp(datetime.now()))
 
 # print("Testing GetWebpageThread...")
 # url = "https://netflix.com"
@@ -575,15 +571,15 @@ def get_fuzzy_timestamp(time=False):
         if second_diff < 10:
             return "just now"
         if second_diff < 60:
-            return str(second_diff) + "s ago"
+            return str(second_diff) + " s ago"
         if second_diff < 120:
             return "a minute ago"
         if second_diff < 3600:
-            return str(round(second_diff / 60)) + "m ago"
+            return str(round(second_diff / 60)) + " m ago"
         if second_diff < 7200:
             return "an hour ago"
         if second_diff < 86400:
-            return str(round(second_diff / 3600)) + "hrs ago"
+            return str(round(second_diff / 3600)) + " hrs ago"
     if day_diff == 1:
         return "Yesterday"
     if day_diff < 7:
@@ -610,3 +606,82 @@ def get_fuzzy_timestamp(time=False):
             return str(months) + " months"
     
     return str(round(day_diff / 365, 1)) + " years!!"
+
+#-------------------------------------------------------------------------------------------------------
+# functions to encrypt or decrypt files
+def do_encryption(action, passphrase, filepath):
+    import cryptography
+    from cryptography.fernet import Fernet
+    from cryptography.hazmat.backends import default_backend
+    from cryptography.hazmat.primitives import hashes
+    from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+    from hashlib import sha1
+    import base64
+    import os
+
+    def key_func(passphrase, filepath):
+        # makes the string readable for fernet.
+        password = passphrase.encode()
+        if filepath is None:
+            salt = os.urandom(16)
+        else:
+            with open(filepath, 'rb') as file:
+                salt = file.read(16)
+        kdf = PBKDF2HMAC(
+            algorithm=hashes.SHA256(),
+            length=32,
+            salt=salt,
+            iterations=100000,
+            backend=default_backend()
+        )
+        key = base64.urlsafe_b64encode(kdf.derive(password))
+        return key, salt
+
+    def encrypt(key, salt, filepath):
+        fernet = Fernet(key)
+        file, ext = os.path.splitext(filepath)
+        file = file.split('\\' or '/')[-1]
+        encrypted_name = file + "_enc" + ext
+
+        with open(filepath, 'rb') as file:
+            original = file.read()
+
+        try:
+            encrypted = fernet.encrypt(original)
+            os.remove(filepath)
+            with open(encrypted_name, 'wb') as file:
+                file.write(salt)
+                file.write(encrypted)
+            return True
+        except:
+            print("Encryption failed")
+            return False
+        
+
+    def decrypt(key, filepath):
+        fernet = Fernet(key)
+        file, ext = os.path.splitext(filepath)
+        file = file.split('\\' or '/')[-1]
+        # decrypted_name = file + "_dec" + ext
+
+        with open(filepath, 'rb') as file:
+            encrypted_file = file.read()
+        encrypted_file = encrypted_file[16:]
+
+        try:
+            decrypted = fernet.decrypt(encrypted_file)
+            print(decrypted.decode('utf-8'))
+            # with open(decrypted_name, 'wb') as file:
+            #     file.write(decrypted)
+            return True
+        except cryptography.fernet.InvalidToken:
+            print("Decryption failed")
+            return False
+
+    if action == "encrypt":
+        encryption_key = key_func(passphrase, filepath)
+        encrypt(encryption_key, filepath)
+
+    if action == "decrypt":
+        encryption_key = key_func(passphrase)
+        decrypt(encryption_key, filepath)
