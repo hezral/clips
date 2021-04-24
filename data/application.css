@@ -246,6 +246,7 @@ button#clip-action-button {
     border-style: none;
     padding: 4px;
     color: white;
+    background: none;
 }
 
 .clip-action-disabled {
