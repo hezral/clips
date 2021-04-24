@@ -27,7 +27,7 @@ import time
 
 class ClipsView(Gtk.Grid):
 
-    current_selected_flowboxchild_index = None
+    current_selected_flowboxchild_index = 0
     multi_select_mode = False
 
     def __init__(self, app, *args, **kwargs):
@@ -182,7 +182,10 @@ class ClipsView(Gtk.Grid):
                         flowbox.unselect_child(last_selected_flowboxchild)
 
             self.current_selected_flowboxchild_index = flowboxchild.get_index()
+        
             flowboxchild.get_children()[0].clip_overlay_revealer.set_reveal_child(True)
+            flowboxchild.get_children()[0].clip_action_revealer.set_reveal_child(True)
+            flowboxchild.get_children()[0].source_icon_revealer.set_reveal_child(True)
             flowboxchild.grab_focus()
 
     def on_child_multi_selected(self, flowbox, flowboxchild):
