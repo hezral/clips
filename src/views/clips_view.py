@@ -397,7 +397,8 @@ class ClipsContainer(Gtk.EventBox):
         created.props.halign = Gtk.Align.START        
         created_icon = Gtk.Image().new_from_icon_name("preferences-system-time", Gtk.IconSize.LARGE_TOOLBAR)
 
-        type = Gtk.Label("Format: " + self.type)
+        type = Gtk.Label()
+        type.props.label = "Type (Format): {type} ({target})".format(type=self.type, target=self.target)
         type.props.hexpand = True
         type.props.halign = Gtk.Align.START
         if "office/spreadsheet" in self.type:
