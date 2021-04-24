@@ -309,6 +309,7 @@ class ClipsWindow(Gtk.ApplicationWindow):
             if action == "settings-view":
                 self.stack.set_visible_child(self.settings_view)
                 self.view_switch.props.active = True
+                self.settings_view.scrolled_window.grab_focus()
             if action == "clips-view":
                 self.stack.set_visible_child(self.clips_view)
                 self.view_switch.props.active = False

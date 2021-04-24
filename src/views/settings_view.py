@@ -34,9 +34,10 @@ class SettingsView(Gtk.Grid):
         self.get_style_context().add_class(self.props.name)
         self.props.expand = True
 
-        scrolled_window = Gtk.ScrolledWindow()
-        scrolled_window.props.expand = True
-        scrolled_window.props.hscrollbar_policy = Gtk.PolicyType.NEVER
+        self.scrolled_window = Gtk.ScrolledWindow()
+        self.scrolled_window.props.expand = True
+        self.scrolled_window.props.can_focus = True
+        self.scrolled_window.props.hscrollbar_policy = Gtk.PolicyType.NEVER
 
         self.flowbox = Gtk.FlowBox()
         self.flowbox.props.name = "settings-flowbox"
@@ -45,8 +46,8 @@ class SettingsView(Gtk.Grid):
         self.flowbox.props.column_spacing = 20
         self.flowbox.props.margin = 10
         self.flowbox.props.selection_mode = Gtk.SelectionMode.NONE
-        scrolled_window.add(self.flowbox)
-        self.attach(scrolled_window, 0, 0, 1, 1)
+        self.scrolled_window.add(self.flowbox)
+        self.attach(self.scrolled_window, 0, 0, 1, 1)
 
 
         # display behaviour -------------------------------------------------
@@ -371,11 +372,11 @@ class SubSettings(Gtk.Grid):
                     app_name, icon_name = utils.get_appinfo(app)
                     self.add_listboxrow(app_name, icon_name)
 
-            scrolled_window = Gtk.ScrolledWindow()
-            scrolled_window.props.shadow_type = Gtk.ShadowType.ETCHED_IN
-            scrolled_window.add(self.listbox)
-            scrolled_window.set_size_request(-1, 150)
-            self.attach(scrolled_window, 0, 1, 1, 1)
+            self.scrolled_window = Gtk.ScrolledWindow()
+            self.scrolled_window.props.shadow_type = Gtk.ShadowType.ETCHED_IN
+            self.scrolled_window.add(self.listbox)
+            self.scrolled_window.set_size_request(-1, 150)
+            self.attach(self.scrolled_window, 0, 1, 1, 1)
 
         # separator ---
         if separator:
@@ -497,11 +498,11 @@ class AppChooserPopover(Gtk.Popover):
         self.app_listbox.connect("row-selected", self.on_row_selected)
         self.app_listbox.connect("row-activated", self.on_row_activated)
 
-        scrolled_window = Gtk.ScrolledWindow()
-        scrolled_window.set_size_request(-1, 300)
-        scrolled_window.props.expand = True
-        scrolled_window.add(self.app_listbox)
-        # scrolled_window.connect("edge-overshot", self.on_edget_overshot)
+        self.scrolled_window = Gtk.ScrolledWindow()
+        self.scrolled_window.set_size_request(-1, 300)
+        self.scrolled_window.props.expand = True
+        self.scrolled_window.add(self.app_listbox)
+        # self.scrolled_window.connect("edge-overshot", self.on_edget_overshot)
 
         self.search_entry = Gtk.SearchEntry()
         self.search_entry.props.placeholder_text = "Search..."
@@ -512,7 +513,7 @@ class AppChooserPopover(Gtk.Popover):
         grid = Gtk.Grid()
         grid.attach(self.search_entry, 0, 0, 1, 1)
         grid.attach(Gtk.Separator(), 0, 1, 1, 1)
-        grid.attach(scrolled_window, 0, 2, 1, 1)
+        grid.attach(self.scrolled_window, 0, 2, 1, 1)
         grid.attach(Gtk.Separator(), 0, 3, 1, 1)
         grid.attach(self.choose_button, 0, 4, 1, 1)
 
