@@ -57,7 +57,9 @@ image_svg_target = ("image/x-inkscape-svg", "svg", "SVG Format", "image", False)
 
 # file manager types
 uri_files_target = ("x-special/gnome-copied-files", "uri", "elementary Files Format", "files", False)
+uri_nautilus_target = ("text/plain;charset=utf-8", "uri", "Nautilus Format", "files", False)
 uri_dolphin_target = ("text/uri-list", "uri", "Dolphin Format", "files", False)
+
 
 # text types
 richtext_target = ("text/richtext", "rtf", "Rich Text Format", "richtext", False)
@@ -79,6 +81,7 @@ supported_targets = (spreadsheet_libreoffice_target,
                     word_wpsoffice_target,
                     slidepage_wpsoffice_target, 
                     uri_files_target, 
+                    uri_nautilus_target,
                     uri_dolphin_target,
                     image_svg_target,
                     image_png_target,
