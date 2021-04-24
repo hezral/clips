@@ -57,7 +57,7 @@ image_svg_target = ("image/x-inkscape-svg", "svg", "SVG Format", "image", False)
 
 # file manager types
 uri_files_target = ("x-special/gnome-copied-files", "uri", "elementary Files Format", "files", False)
-uri_dolphin_target = ("application/x-kde4-urilist", "uri", "Dolphin Format", "files", False)
+uri_dolphin_target = ("text/uri-list", "uri", "Dolphin Format", "files", False)
 
 # text types
 richtext_target = ("text/richtext", "rtf", "Rich Text Format", "richtext", False)
@@ -107,11 +107,6 @@ def get_active_app():
     matcher = Bamf.Matcher()
     screen = Wnck.Screen.get_default()
     screen.force_update()
-
-    # if matcher.get_active_window() is None:
-    #     active_win = screen.get_active_window()
-    # else:
-    #     active_win = matcher.get_active_window()
 
     active_win = matcher.get_active_window()
     if active_win is not None:
