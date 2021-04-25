@@ -171,7 +171,6 @@ class ClipsView(Gtk.Grid):
         selected = len(flowbox.get_selected_children())
 
         if selected == 1:
-            print("on_child_activated triggered")
             if self.current_selected_flowboxchild_index is not None:
                 last_selected_flowboxchild = flowbox.get_child_at_index(self.current_selected_flowboxchild_index)
                 if last_selected_flowboxchild is not None:

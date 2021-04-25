@@ -134,11 +134,10 @@ class ClipsWindow(Gtk.ApplicationWindow):
         self.searchentry.props.placeholder_text = "Search Clips" #"Search Clips\u2026"
         self.searchentry.props.hexpand = False
         self.searchentry.props.name = "search-entry"
-        
 
         self.searchentry.connect("focus-in-event", self.on_searchbar_activate, "in")
         self.searchentry.connect("focus-out-event", self.on_searchbar_activate, "out")
-        # self.searchentry.connect_after("delete-text", self.on_delete_text, "delete")
+        # self.searchentry.connect_after("delete-text", self.on_searchbar_activate, "delete")
         # self.searchentry.connect("icon-press", self.on_quicksearch_activate)
         
         self.searchentry.connect("search-changed", self.on_search_entry_changed)
@@ -222,36 +221,22 @@ class ClipsWindow(Gtk.ApplicationWindow):
 
         searchbar = self.searchentry.get_parent()
 
-        # revealer = self.utils.get_widget_by_name(widget=searchbar, child_name="search-revealer", level=0)
-
-        # if type == "in" and revealer.get_child_revealed() is False:
         if type == "in":
-            self.searchentry.props.hexpand = True
             searchbar.props.halign = Gtk.Align.FILL
+            self.searchentry.props.hexpand = True
             self.searchentry.props.primary_icon_name = "quick-search"
-            self.searchentry.props.primary_icon_tooltip_text = "Use quick search tags"
             self.searchentry.props.name = "search-entry-active"
             self.searchentry.props.primary_icon_activatable = True
             self.searchentry.props.primary_icon_sensitive = True
-            # searchbar.props.has_tooltip = True
-            # searchbar.props.tooltip_text = "Try these quick search tags"
         elif type == "out":
-            self.searchentry.props.hexpand = False
-            searchbar.props.halign = Gtk.Align.START
-            self.searchentry.props.primary_icon_name = "system-search-symbolic"
-            self.searchentry.props.name = "search-entry"
+            if self.searchentry.props.text != "":
+                self.searchentry.props.name = "search-entry-active"
+            else:
+                searchbar.props.halign = Gtk.Align.START
+                self.searchentry.props.hexpand = False
+                self.searchentry.props.primary_icon_name = "system-search-symbolic"
+                self.searchentry.props.name = "search-entry"
 
-        # if revealer.get_child_revealed():
-        #     revealer.set_reveal_child(False)
-        #     #searchbar.props.has_tooltip = False
-
-        # elif revealer.get_child_revealed() and type == "search":
-        #     revealer.set_reveal_child(False)
-        #     #searchbar.props.has_tooltip = False
-        # else:
-        #     revealer.set_reveal_child(True)
-        #     #searchbar.props.has_tooltip = True
-        #     #searchbar.props.tooltip_text = "Try these quick search tags"
 
     def on_search_entry_changed(self, search_entry):
         self.searchentry.props.primary_icon_name = "system-search-symbolic"
