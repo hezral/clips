@@ -528,11 +528,6 @@ def copy_to_clipboard(clipboard_target, file, type=None):
         with open(file) as _file:
             data = Popen(['echo', _file.readlines()[0].rstrip("\n").rstrip("\n")], stdout=PIPE)
             Popen(['xclip', '-selection', 'clipboard', '-target', clipboard_target], stdin=data.stdout)
-    # elif "html" in type:
-    #     try:
-    #         Popen(['xclip', '-selection', 'clipboard', '-target', 'text/plain;charset=utf-8', '-i', file])
-    #     except:
-    #         Popen(['xclip', '-selection', 'clipboard', '-target', 'text/plain', '-i', file])
     else:
         Popen(['xclip', '-selection', 'clipboard', '-target', clipboard_target, '-i', file])
 
