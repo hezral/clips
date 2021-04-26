@@ -359,6 +359,12 @@ label#noclips-view-sublabel {
     animation: crossfader 1.25s ease-in-out forwards;
 }
 
+grid#protected-container {
+    font-size: 150%;
+    font-weight: bold;
+    letter-spacing: 2px;
+    color: alpha(red, 0.75);
+}
 
 /* ------------------------------ */
 
