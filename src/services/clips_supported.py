@@ -96,31 +96,34 @@ supported_targets = (spreadsheet_libreoffice_target,
                     utf8text_target, 
                     plaintext_target, )
 
-
-thumbnail_target = ("text/plain;charset=utf-8", "txt", "Color Codes", "color", False)
-
-
-
 def get_active_app():
     import gi
     gi.require_version("Wnck", "3.0")
     gi.require_version("Bamf", "3")
-    from gi.repository import Bamf, Wnck
-    # using Bamf
+    from gi.repository import Bamf, Wnck, Gio
+   
     matcher = Bamf.Matcher()
     screen = Wnck.Screen.get_default()
     screen.force_update()
+    all_apps = Gio.AppInfo.get_all()
 
-    active_win = matcher.get_active_window()
-    if active_win is not None:
-        active_app = matcher.get_application_for_window(active_win)
-        if active_app is not None:
-            source_app = active_app.get_name().split(" – ")[-1] #some app's name are shown with current document name so we split it and get the last part only
-            source_icon = active_app.get_icon()
+    bamf_active_win = matcher.get_active_window() 
+    bamf_active_app = matcher.get_active_application()
+    wnck_active_win = screen.get_active_window()
+    wnck_active_app = wnck_active_win.get_application()
+
+    if bamf_active_app is not None and wnck_active_app is not None:
+        try:
+            appinfo = [child for child in all_apps if bamf_active_app.get_name().lower() in child.get_name().lower() or bamf_active_app.get_name().lower() in child.get_display_name().lower()][0]
+        except:
+            appinfo = [child for child in all_apps if wnck_active_app.get_name().lower() in child.get_name().lower() or wnck_active_app.get_name().lower() in child.get_display_name().lower()][0]
+
+        source_app = appinfo.get_name()
+        source_icon = appinfo.get_icon().to_string()
 
     else: 
         source_app = screen.get_active_workspace().get_name() # if no active window, fallback to workspace name
-        source_icon = 'preferences-desktop-wallpaper' 
+        source_icon = "preferences-desktop-wallpaper"
 
     return source_app, source_icon
 
@@ -162,7 +165,7 @@ def debug():
     
     # create clipboard and connect to event
     clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
-    clipboard.connect('owner_change', get_clipboard_contents, True)
+    clipboard.connect('owner_change', get_clipboard_contents, False)
 
     print("running in debug mode")
     print("waiting for clipboard event")

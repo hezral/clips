@@ -53,36 +53,30 @@ def get_active_app_window():
     import gi
     gi.require_version("Wnck", "3.0")
     gi.require_version("Bamf", "3")
-    from gi.repository import Bamf, Wnck
-
+    from gi.repository import Bamf, Wnck, Gio
+   
     matcher = Bamf.Matcher()
     screen = Wnck.Screen.get_default()
     screen.force_update()
+    all_apps = Gio.AppInfo.get_all()
 
-    # if matcher.get_active_window() is None:
-    #     active_win = screen.get_active_window()
-    # else:
-    #     active_win = matcher.get_active_window()
+    bamf_active_win = matcher.get_active_window() 
+    bamf_active_app = matcher.get_active_application()
+    wnck_active_win = screen.get_active_window()
+    wnck_active_app = wnck_active_win.get_application()
 
-    active_win = matcher.get_active_window()
+    if bamf_active_app is not None and wnck_active_app is not None:
+        try:
+            appinfo = [child for child in all_apps if bamf_active_app.get_name().lower() in child.get_name().lower() or bamf_active_app.get_name().lower() in child.get_display_name().lower()][0]
+        except:
+            appinfo = [child for child in all_apps if wnck_active_app.get_name().lower() in child.get_name().lower() or wnck_active_app.get_name().lower() in child.get_display_name().lower()][0]
 
-    if active_win is not None:
-        active_app = matcher.get_application_for_window(active_win)
+        source_app = appinfo.get_name()
+        source_icon = appinfo.get_icon().to_string()
 
-        # print("get_active_app:", active_app.get_desktop_file())
-
-        # from gi.repository import Gio
-
-        # desktopapp_info = Gio.DesktopAppInfo.new_from_filename(active_app.get_desktop_file())
-
-        # print("get_active_app:", desktopapp_info.get_name())
-
-        if active_app is not None:
-            source_app = active_app.get_name().split(" – ")[-1] #some app's name are shown with current document name so we split it and get the last part only
-            source_icon = active_app.get_icon()
     else: 
         source_app = screen.get_active_workspace().get_name() # if no active window, fallback to workspace name
-        source_icon = 'preferences-desktop-wallpaper' 
+        source_icon = "preferences-desktop-wallpaper"
 
     return source_app, source_icon
 
@@ -485,9 +479,6 @@ def get_web_data(url, file_path=None, download_path='./', checksum='na'):
         with open(file_path, "a") as file:
             file.write("\n"+title)
             file.close
-
-    # print(datetime.now(), "finish get webpage data", url)
-    print(get_fuzzy_timestamp(datetime.now()))
     return title, icon_name
 
 def get_web_data_threaded(url, file_path, download_path='./'):
