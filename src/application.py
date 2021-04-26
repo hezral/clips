@@ -110,13 +110,13 @@ class Clips(Gtk.Application):
     @utils.run_async
     def load_clips_fromdb(self, clips):
         
-        for clip in reversed(clips[-10:]):
-            GLib.idle_add(self.main_window.clips_view.new_clip, clip, self.app_startup)
-            time.sleep(0.02)
-
-        for clip in reversed(clips[:-10]):
+        for clip in reversed(clips[-25:]):
             GLib.idle_add(self.main_window.clips_view.new_clip, clip, self.app_startup)
             time.sleep(0.01)
+
+        for clip in reversed(clips[:-25]):
+            GLib.idle_add(self.main_window.clips_view.new_clip, clip, self.app_startup)
+            time.sleep(0.05)
 
         if self.main_window.clips_view.flowbox.get_child_at_index(0) is not None:
             self.main_window.clips_view.flowbox.select_child(self.main_window.clips_view.flowbox.get_child_at_index(0))
