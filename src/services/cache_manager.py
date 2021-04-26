@@ -377,10 +377,8 @@ class CacheManager():
 
             if "mail" in type:
                 url = "https://" + content.get_text().split("@")[-1]
-                print(url)
                 self.app.utils.get_web_data(url, cache_uri, self.icon_cache_filedir, checksum)
 
-                
             # fallback for source_icon
             # save a copy of the icon in case the app is uninstalled and no icon to use
             icon_theme = self.app.icon_theme

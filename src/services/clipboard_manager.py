@@ -95,6 +95,7 @@ class ClipboardManager():
                         source_app = active_app
                         source_icon = active_app_icon
 
+                        print("clipboard_manager.py, line:98:", source_app, self.get_settings("protected-apps"))
                         if source_app not in self.get_settings("protected-apps"):
                             protected = "no"
                         else:
