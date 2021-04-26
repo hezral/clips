@@ -123,7 +123,7 @@ frame#settings-group-frame {
     06.66% { opacity: 0; }
     09.99% { opacity: 0; }
     13.33% { opacity: 0; }
-    16.65% { opacity: 0.5; }
+    16.65% { opacity: 0.75; }
     100% { opacity: 1; }	
 }
 
@@ -133,7 +133,7 @@ grid#clip-container-grid {
     border-color: rgba(0, 0, 0, 0.3);
     border-radius: 5px;
     background-color: transparent;
-    animation: crossfader 0.5s ease-in-out forwards;
+    animation: crossfader 0.25s ease-in-out forwards;
 }
 
 .clip-containers {
