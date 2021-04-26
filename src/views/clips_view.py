@@ -105,10 +105,10 @@ class ClipsView(Gtk.Grid):
                 with open(clips_container.cache_file) as file:
                     lines = file.readlines()
                 contents = ''.join(lines)
-                contents_single_keyword = [str(clips_container.id), clips_container.type.lower(), clips_container.target.lower(), clips_container.source_app.lower(), clips_container.created_short.lower(), contents.lower()]
+                contents_single_keyword = [str(clips_container.id), clips_container.type.lower(), clips_container.target.lower(), clips_container.source_app.lower(), clips_container.created_short.lower(), clips_container.extended_info.lower(), contents.lower()]
                 contents_multi_keyword = ' '.join(contents_single_keyword)
             else:
-                contents_single_keyword = [str(clips_container.id), clips_container.type.lower(), clips_container.target.lower(), clips_container.source_app.lower(), clips_container.created_short.lower()]
+                contents_single_keyword = [str(clips_container.id), clips_container.type.lower(), clips_container.target.lower(), clips_container.source_app.lower(), clips_container.created_short.lower(), clips_container.extended_info.lower()]
                 contents_multi_keyword = ' '.join(contents_single_keyword)
 
             # check if multi keyword search
@@ -301,7 +301,7 @@ class ClipsContainer(Gtk.EventBox):
         self.cache_file = clip[6]
         self.type = clip[7]
         self.protected = clip[8]
-        self.info_text = "id: {id}\nformat: {format}\ntype: {type}".format(id=self.id, format=self.target, type=self.type)
+        # self.info_text = "id: {id}\nformat: {format}\ntype: {type}".format(id=self.id, format=self.target, type=self.type)
         self.cache_file = os.path.join(self.cache_filedir, self.cache_file)
         self.content = None
 
@@ -626,7 +626,7 @@ class ClipsContainer(Gtk.EventBox):
 
     def on_clip_action(self, button=None, action=None):
         flowboxchild = self.get_parent()
-        flowbox = flowboxchild.get_parent()
+        flowbox = self.app.main_window.clips_view.flowbox
     
         flowbox.select_child(flowboxchild)
 
@@ -680,8 +680,7 @@ class ClipsContainer(Gtk.EventBox):
             self.app.main_window.update_total_clips_label("delete")
             flowbox.select_child(flowbox.get_child_at_index(current_flowbox_index))
             flowbox.get_child_at_index(current_flowbox_index).grab_focus()
-            flowbox.get_child_at_index(current_flowbox_index).do_activate()
-            flowbox.on_child_activated(flowbox, flowbox.get_child_at_index(current_flowbox_index))
+            self.app.main_window.clips_view.on_child_activated(flowbox, flowbox.get_child_at_index(current_flowbox_index))
 
         elif action == "delete":
             dialog = Gtk.Dialog.new()
@@ -708,8 +707,7 @@ class ClipsContainer(Gtk.EventBox):
                 self.app.main_window.update_total_clips_label("delete")
                 flowbox.select_child(flowbox.get_child_at_index(current_flowbox_index))
                 flowbox.get_child_at_index(current_flowbox_index).grab_focus()
-                flowbox.get_child_at_index(current_flowbox_index).do_activate()
-                flowbox.on_child_activated(flowbox, flowbox.get_child_at_index(current_flowbox_index))
+                self.app.main_window.clips_view.on_child_activated(flowbox, flowbox.get_child_at_index(current_flowbox_index))
             dialog.destroy()
 
         elif action == "multi-delete":
@@ -1330,38 +1328,11 @@ class EmailContainer(DefaultContainer):
 
 # ----------------------------------------------------------------------------------------------------
 
-class ProtectedContainer(DefaultContainer):
+class ProtectedContainer(PlainTextContainer):
     def __init__(self, filepath, type, app, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(filepath, type, app)
 
         self.props.name = "protected-container"
         self.label = "Protected Clips"
-        self.props.margin = 10
-        self.props.valign = Gtk.Align.CENTER
-        self.props.halign = Gtk.Align.FILL
 
-        with open(filepath) as file:
-            firstNlines = file.readlines()[0:10] #put here the interval you want
-        self.content = ''.join(firstNlines)
-
-        self.content = Gtk.Label(self.content)
-        self.content.props.wrap_mode = Pango.WrapMode.CHAR
-        self.content.props.max_width_chars = 23
-        self.content.props.wrap = True
-        self.content.props.selectable = False
-        self.content.props.expand = True
-        self.content.props.ellipsize = Pango.EllipsizeMode.END
-
-        self.props.margin = 10
-        self.props.margin_left = self.props.margin_right = 10
-        self.props.name = "plaintext-container"
-        self.attach(self.content, 0, 0, 1, 1)
-
-        with open(filepath) as file:
-            for i, l in enumerate(file):
-                pass
-
-        if not i+1 < 10:
-            lines = Gtk.Label(str(i+1-10) + " lines more...")
-            lines.props.halign = Gtk.Align.END
-            self.attach(lines, 0, 1, 1, 1)
+        self.content.props.label = type + "\n" + self.content.props.label
