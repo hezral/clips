@@ -124,17 +124,17 @@ class SettingsView(Gtk.Grid):
         excluded = SettingsGroup("Excluded Apps", (excluded_apps, excluded_apps_list, ))
         self.flowbox.add(excluded)
 
-        # # protected app -------------------------------------------------
-        # protected_apps_list_values = self.gio_settings.get_value("protected-apps").get_strv()
-        # protected_apps_list = SubSettings(type="listbox", name="protected-apps", label=None, sublabel=None, separator=False, params=(protected_apps_list_values, ))
+        # protected app -------------------------------------------------
+        protected_apps_list_values = self.gio_settings.get_value("protected-apps").get_strv()
+        protected_apps_list = SubSettings(type="listbox", name="protected-apps", label=None, sublabel=None, separator=False, params=(protected_apps_list_values, ), utils=self.app.utils)
 
-        # protected_appchooser_popover = AppChooserPopover(params=(protected_apps_list, ))
-        # protected_apps = SubSettings(type="button", name="protected-apps", label="Protected apps", sublabel="Contents copied will be protected", separator=False, params=("Select app", Gtk.Image().new_from_icon_name("application-default-icon", Gtk.IconSize.LARGE_TOOLBAR), ))
-        # protected_apps.button.connect("clicked", self.on_button_clicked, (protected_apps_list, ))
-        # protected_apps.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
+        protected_appchooser_popover = AppChooserPopover(params=(protected_apps_list, ))
+        protected_apps = SubSettings(type="button", name="protected-apps", label="Protected apps", sublabel="Contents copied will be protected", separator=False, params=("Select app", Gtk.Image().new_from_icon_name("application-default-icon", Gtk.IconSize.LARGE_TOOLBAR), ))
+        protected_apps.button.connect("clicked", self.on_button_clicked, (protected_apps_list, ))
+        protected_apps.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
 
-        # protected = SettingsGroup("Protected Apps", (protected_apps, protected_apps_list, ))
-        # self.flowbox.add(protected)
+        protected = SettingsGroup("Protected Apps", (protected_apps, protected_apps_list, ))
+        self.flowbox.add(protected)
 
         # help -------------------------------------------------
         view_guides = SubSettings(type="button", name="view-help", label="Guides", sublabel="Guides on how to use Clips", separator=True, params=("View Guides", Gtk.Image().new_from_icon_name("help-contents", Gtk.IconSize.LARGE_TOOLBAR),))
