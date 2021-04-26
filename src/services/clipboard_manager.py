@@ -161,6 +161,13 @@ class ClipboardManager():
                                 else:
                                     proceed = False
 
+                        if ("text/plain;charset=utf-8" in supported_target[0] or "text/plain" in supported_target[0]) and "files" in supported_target[3]:
+                            if clipboard.wait_for_contents(target).get_text() is not None:
+                                if self.app.utils.is_valid_unix_uri(clipboard.wait_for_contents(target).get_text().strip().splitlines()[-1].replace("file://","")):
+                                    content_type = "files"
+                                else:
+                                    proceed = False
+
                         if proceed:
                             if thumbnail:
                                 thumbnail = clipboard.wait_for_contents(Gdk.Atom.intern('image/png', False))
