@@ -320,7 +320,7 @@ class ClipsContainer(Gtk.EventBox):
             self.content = HtmlContainer(self.cache_file, self.type, app)
         elif "richtext" in self.type:
             self.content = FilesContainer(self.cache_file, self.type, app)
-        elif "plaintext" in self.type:
+        elif "plaintext" in self.type and self.protected == "no":
             self.content = PlainTextContainer(self.cache_file, self.type, app)
         elif "color" in self.type:
             self.content = ColorContainer(self.cache_file, self.type, app)
@@ -328,6 +328,8 @@ class ClipsContainer(Gtk.EventBox):
             self.content = UrlContainer(self.cache_file, self.type, app, self.cache_filedir)
         elif "mail" in self.type:
             self.content = EmailContainer(self.cache_file, self.type, app, self.cache_filedir)
+        elif "plaintext" in self.type and self.protected == "yes":
+            self.content = ProtectedContainer(self.cache_file, self.type, app)
         else:
             print("clips_view.py:", "FallbackContainer:", self.cache_file, self.type)
             self.content = FallbackContainer(self.cache_file, self.type, app)
@@ -673,6 +675,10 @@ class ClipsContainer(Gtk.EventBox):
             flowboxchild.destroy()
             self.app.cache_manager.delete_record(self.id, self.cache_file, self.type)
             self.app.main_window.update_total_clips_label("delete")
+            flowbox.select_child(flowbox.get_child_at_index(0))
+            flowbox.get_child_at_index(0).grab_focus()
+            flowbox.get_child_at_index(0).do_activate()
+            flowbox.on_child_activated(flowbox, flowbox.get_child_at_index(0))
 
         elif action == "delete":
             dialog = Gtk.Dialog.new()
@@ -696,6 +702,10 @@ class ClipsContainer(Gtk.EventBox):
                 flowboxchild.destroy()
                 self.app.cache_manager.delete_record(self.id, self.cache_file, self.type)
                 self.app.main_window.update_total_clips_label("delete")
+                flowbox.select_child(flowbox.get_child_at_index(0))
+                flowbox.get_child_at_index(0).grab_focus()
+                flowbox.get_child_at_index(0).do_activate()
+                flowbox.on_child_activated(flowbox, flowbox.get_child_at_index(0))
             dialog.destroy()
 
         elif action == "multi-delete":
@@ -880,8 +890,6 @@ class PlainTextContainer(DefaultContainer):
     def __init__(self, filepath, type, app, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # print("parent", parent_container)
-
         with open(filepath) as file:
             firstNlines = file.readlines()[0:10] #put here the interval you want
         self.content = ''.join(firstNlines)
@@ -893,8 +901,6 @@ class PlainTextContainer(DefaultContainer):
         self.content.props.selectable = False
         self.content.props.expand = True
         self.content.props.ellipsize = Pango.EllipsizeMode.END
-        # self.content.props.justify = Gtk.Justification.LEFT
-        # self.content.props.halign = Gtk.Align.FILL
 
         self.props.margin = 10
         self.props.margin_left = self.props.margin_right = 10
@@ -985,61 +991,61 @@ class FilesContainer(DefaultContainer):
         with open(filepath) as file:
             i = 0
             for line_number, line_content in enumerate(file):
-                # if i <= 4:
-                line_content = line_content.replace("copy","").replace("file://","").strip().replace("%20", " ")
-                if os.path.exists(line_content):
-                    if os.path.isdir(line_content):  
-                        mime_type = "inode/directory"
-                    elif os.path.isfile(line_content):  
-                        mime_type, val = Gio.content_type_guess(line_content, data=None)
+                if "file://" in line_content:
+                    line_content = line_content.replace("copy","").replace("file://","").strip().replace("%20", " ")
+                    if os.path.exists(line_content):
+                        if os.path.isdir(line_content):  
+                            mime_type = "inode/directory"
+                        elif os.path.isfile(line_content):  
+                            mime_type, val = Gio.content_type_guess(line_content, data=None)
+                        else:
+                            print(line_content, ": special file (socket, FIFO, device file)" )
+                            pass
                     else:
-                        print(line_content, ": special file (socket, FIFO, device file)" )
-                        pass
-                else:
-                    mime_type = "application/octet-stream"
-                                
-                icons = Gio.content_type_get_icon(mime_type)
-                
-                for icon_name in icons.to_string().split():
-                    if icon_name != "." and icon_name != "GThemedIcon":
-                        try:
-                            icon_pixbuf = self.app.icon_theme.load_icon(icon_name, self.icon_size, 0)
-                            icon = Gtk.Image().new_from_pixbuf(icon_pixbuf)
-                            icon.props.halign = Gtk.Align.CENTER
+                        mime_type = "application/octet-stream"
+                                    
+                    icons = Gio.content_type_get_icon(mime_type)
+                    
+                    for icon_name in icons.to_string().split():
+                        if icon_name != "." and icon_name != "GThemedIcon":
+                            try:
+                                icon_pixbuf = self.app.icon_theme.load_icon(icon_name, self.icon_size, 0)
+                                icon = Gtk.Image().new_from_pixbuf(icon_pixbuf)
+                                icon.props.halign = Gtk.Align.CENTER
 
-                            if i == 0:
-                                self.iconstack_overlay.add(icon)
-                            elif i >= 1 and i <= 4:
-                                self.iconstack_overlay.add_overlay(icon)
-                            else:
-                                pass
+                                if i == 0:
+                                    self.iconstack_overlay.add(icon)
+                                elif i >= 1 and i <= 4:
+                                    self.iconstack_overlay.add_overlay(icon)
+                                else:
+                                    pass
 
-                            if i == 0 and file_count > 1:
-                                icon.props.margin_bottom = 24
-                            if i == 1:
-                                icon.props.margin_left = 24
-                            if i == 2:
-                                icon.props.margin_top = 24
-                            if i == 3:
-                                icon.props.margin_right = 24
+                                if i == 0 and file_count > 1:
+                                    icon.props.margin_bottom = 24
+                                if i == 1:
+                                    icon.props.margin_left = 24
+                                if i == 2:
+                                    icon.props.margin_top = 24
+                                if i == 3:
+                                    icon.props.margin_right = 24
 
-                            if i == 4:
-                                more_label = Gtk.Label(" " + str(file_count) + " ")
-                                more_label.props.name = "files-container-more"
-                                more_label.props.valign = Gtk.Align.START
-                                more_label.props.halign = Gtk.Align.CENTER
-                                # more_label.props.margin_bottom = 4
-                                more_label.props.margin_left = 60
-                                more_label.props.hexpand = False
-                                self.iconstack_overlay.add_overlay(more_label)
+                                if i == 4:
+                                    more_label = Gtk.Label(" " + str(file_count) + " ")
+                                    more_label.props.name = "files-container-more"
+                                    more_label.props.valign = Gtk.Align.START
+                                    more_label.props.halign = Gtk.Align.CENTER
+                                    # more_label.props.margin_bottom = 4
+                                    more_label.props.margin_left = 60
+                                    more_label.props.hexpand = False
+                                    self.iconstack_overlay.add_overlay(more_label)
 
-                            elif i > 4 :
-                                pass
+                                elif i > 4 :
+                                    pass
 
-                            i += 1
-                            break
-                        except:
-                            pass # file not exist for this entry
+                                i += 1
+                                break
+                            except:
+                                pass # file not exist for this entry
 
         self.props.name = "files-container"
         # self.attach(self.flowbox, 0, 0, 1, 1)
@@ -1071,27 +1077,28 @@ class FilesContainerPopover(Gtk.Popover):
 
         with open(filepath) as file:
             for line_number, line_content in enumerate(file):
-                line_content = line_content.replace("copy","").replace("file://","").strip().replace("%20", " ")
-                if os.path.exists(line_content):
-                    if os.path.isdir(line_content):  
-                        mime_type = "inode/directory"
-                    elif os.path.isfile(line_content):  
-                        mime_type, val = Gio.content_type_guess(line_content, data=None)
-                    else:
-                        print(line_content, ": special file (socket, FIFO, device file)" )
-                        pass
-                else:
-                    mime_type = "application/octet-stream"
-                
-                icons = Gio.content_type_get_icon(mime_type)
-                
-                for icon_name in icons.to_string().split():
-                    if icon_name != "." and icon_name != "GThemedIcon":
-                        try:
-                            self.flowbox.add(self.generate_file_grid(icon_name, line_content))
-                            break
-                        except:
+                if "file://" in line_content:
+                    line_content = line_content.replace("copy","").replace("file://","").strip().replace("%20", " ")
+                    if os.path.exists(line_content):
+                        if os.path.isdir(line_content):  
+                            mime_type = "inode/directory"
+                        elif os.path.isfile(line_content):  
+                            mime_type, val = Gio.content_type_guess(line_content, data=None)
+                        else:
+                            print(line_content, ": special file (socket, FIFO, device file)" )
                             pass
+                    else:
+                        mime_type = "application/octet-stream"
+                    
+                    icons = Gio.content_type_get_icon(mime_type)
+                    
+                    for icon_name in icons.to_string().split():
+                        if icon_name != "." and icon_name != "GThemedIcon":
+                            try:
+                                self.flowbox.add(self.generate_file_grid(icon_name, line_content))
+                                break
+                            except:
+                                pass
 
         # disable focus on flowboxchild items
         for child in self.flowbox.get_children():
@@ -1319,14 +1326,38 @@ class EmailContainer(DefaultContainer):
 
 # ----------------------------------------------------------------------------------------------------
 
-class PasswordContainer(DefaultContainer):
-    def __init__(self, filepath, type, app, cache_filedir, *args, **kwargs):
+class ProtectedContainer(DefaultContainer):
+    def __init__(self, filepath, type, app, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.props.name = "password-container"
-
-        self.label = "Email"
- 
+        self.props.name = "protected-container"
+        self.label = "Protected Clips"
         self.props.margin = 10
         self.props.valign = Gtk.Align.CENTER
         self.props.halign = Gtk.Align.FILL
+
+        with open(filepath) as file:
+            firstNlines = file.readlines()[0:10] #put here the interval you want
+        self.content = ''.join(firstNlines)
+
+        self.content = Gtk.Label(self.content)
+        self.content.props.wrap_mode = Pango.WrapMode.CHAR
+        self.content.props.max_width_chars = 23
+        self.content.props.wrap = True
+        self.content.props.selectable = False
+        self.content.props.expand = True
+        self.content.props.ellipsize = Pango.EllipsizeMode.END
+
+        self.props.margin = 10
+        self.props.margin_left = self.props.margin_right = 10
+        self.props.name = "plaintext-container"
+        self.attach(self.content, 0, 0, 1, 1)
+
+        with open(filepath) as file:
+            for i, l in enumerate(file):
+                pass
+
+        if not i+1 < 10:
+            lines = Gtk.Label(str(i+1-10) + " lines more...")
+            lines.props.halign = Gtk.Align.END
+            self.attach(lines, 0, 1, 1, 1)
