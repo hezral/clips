@@ -60,7 +60,6 @@ uri_files_target = ("x-special/gnome-copied-files", "uri", "elementary Files For
 uri_nautilus_target = ("text/plain;charset=utf-8", "uri", "Nautilus Format", "files", False)
 uri_dolphin_target = ("text/uri-list", "uri", "Dolphin Format", "files", False)
 
-
 # text types
 richtext_target = ("text/richtext", "rtf", "Rich Text Format", "richtext", False)
 utf8text_target = ("text/plain;charset=utf-8", "txt", "Plain Text Format", "plaintext", False)
