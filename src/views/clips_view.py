@@ -316,10 +316,10 @@ class ClipsContainer(Gtk.EventBox):
             self.content = FilesContainer(self.cache_file, self.type, app)
         elif "image" in self.type:
             self.content = ImageContainer(self.cache_file, self.type, app)
-        elif "html" in self.type and self.protected == "no":
+        elif "html" in self.type:
             self.content = HtmlContainer(self.cache_file, self.type, app)
-        elif "html" in self.type and self.protected == "yes":
-            self.content = ProtectedContainer(self.cache_file, self.type, app)
+        # elif "html" in self.type and self.protected == "yes":
+        #     self.content = ProtectedContainer(self.cache_file, self.type, app)
         elif "richtext" in self.type:
             self.content = FilesContainer(self.cache_file, self.type, app)
         elif "plaintext" in self.type and self.protected == "no":
@@ -674,13 +674,14 @@ class ClipsContainer(Gtk.EventBox):
             self.app.cache_manager.update_cache_on_recopy(self.cache_file)
             
         elif action == "force_delete":
-            current_flowbox_index = flowboxchild.get_index()
-            flowboxchild.destroy()
+            current_flowbox_index = flowboxchild.get_index() - 1
             self.app.cache_manager.delete_record(self.id, self.cache_file, self.type)
             self.app.main_window.update_total_clips_label("delete")
-            flowbox.select_child(flowbox.get_child_at_index(current_flowbox_index))
-            flowbox.get_child_at_index(current_flowbox_index).grab_focus()
-            self.app.main_window.clips_view.on_child_activated(flowbox, flowbox.get_child_at_index(current_flowbox_index))
+            if len(flowbox.get_children()) - 1 != 0:
+                flowbox.select_child(flowbox.get_child_at_index(current_flowbox_index))
+                flowbox.get_child_at_index(current_flowbox_index).grab_focus()
+                self.app.main_window.clips_view.on_child_activated(flowbox, flowbox.get_child_at_index(current_flowbox_index))
+            flowboxchild.destroy()
 
         elif action == "delete":
             dialog = Gtk.Dialog.new()
@@ -701,13 +702,14 @@ class ClipsContainer(Gtk.EventBox):
             btn_cancel.grab_focus()
             response = dialog.run()
             if response == Gtk.ResponseType.OK:
-                current_flowbox_index = flowboxchild.get_index()
-                flowboxchild.destroy()
+                current_flowbox_index = flowboxchild.get_index() - 1
                 self.app.cache_manager.delete_record(self.id, self.cache_file, self.type)
                 self.app.main_window.update_total_clips_label("delete")
-                flowbox.select_child(flowbox.get_child_at_index(current_flowbox_index))
-                flowbox.get_child_at_index(current_flowbox_index).grab_focus()
-                self.app.main_window.clips_view.on_child_activated(flowbox, flowbox.get_child_at_index(current_flowbox_index))
+                if len(flowbox.get_children()) - 1 != 0:
+                    flowbox.select_child(flowbox.get_child_at_index(current_flowbox_index))
+                    flowbox.get_child_at_index(current_flowbox_index).grab_focus()
+                    self.app.main_window.clips_view.on_child_activated(flowbox, flowbox.get_child_at_index(current_flowbox_index))
+                flowboxchild.destroy()
             dialog.destroy()
 
         elif action == "multi-delete":
