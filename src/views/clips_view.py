@@ -51,7 +51,7 @@ class ClipsView(Gtk.Grid):
         scrolled_window.props.expand = True
         scrolled_window.props.hscrollbar_policy = Gtk.PolicyType.NEVER
         scrolled_window.add(self.flowbox)
-        scrolled_window.connect("edge-reached", self.on_edge_reached)
+        # scrolled_window.connect("edge-reached", self.on_edge_reached)
 
         self.multi_delete_revealer = self.generate_multi_delete_revealer()
 
@@ -1335,4 +1335,14 @@ class ProtectedContainer(PlainTextContainer):
         self.props.name = "protected-container"
         self.label = "Protected Clips"
 
-        self.content.props.label = type + "\n" + self.content.props.label
+        self.content.props.label = "*********"
+        self.content.props.hexpand = False
+        self.content.props.max_width_chars = 40
+        self.content.props.wrap = False
+        self.content.props.expand = False
+        self.content.props.ellipsize = Pango.EllipsizeMode.NONE
+
+        self.props.halign = self.props.valign = Gtk.Align.CENTER
+        self.props.expand = False
+        self.props.hexpand = True
+
