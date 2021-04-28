@@ -46,6 +46,8 @@ class SettingsView(Gtk.Grid):
         self.flowbox.props.column_spacing = 20
         self.flowbox.props.margin = 10
         self.flowbox.props.selection_mode = Gtk.SelectionMode.NONE
+        self.flowbox.props.valign = Gtk.Align.START
+        self.flowbox.props.halign = Gtk.Align.FILL
         self.scrolled_window.add(self.flowbox)
         self.attach(self.scrolled_window, 0, 0, 1, 1)
 
@@ -89,12 +91,10 @@ class SettingsView(Gtk.Grid):
 
         # auto housekeeping
         autopurge_mode = SubSettings(type="switch", name="auto-housekeeping", label="Auto housekeeping clips", sublabel="Automatic housekeeping Clips after retention period", separator=True)
-        # autopurge_mode.switch.connect_after("notify::active", self.on_switch_activated)
         self.gio_settings.bind("auto-housekeeping", autopurge_mode.switch, "active", Gio.SettingsBindFlags.DEFAULT)
 
         # auto retention period
         auto_retention_period = SubSettings(type="spinbutton", name="auto-retention-period", label="Rentention period", sublabel="Days to retain clips before house keeping", separator=True, params=(0,365,5))
-        # auto_retention_period.spinbutton.connect_after("value-changed", self.on_spinbutton_activated)
         self.gio_settings.bind("auto-retention-period", auto_retention_period.spinbutton, "value", Gio.SettingsBindFlags.DEFAULT)
 
         # run housekeeping now
@@ -135,6 +135,14 @@ class SettingsView(Gtk.Grid):
 
         protected = SettingsGroup("Protected Apps", (protected_apps, protected_apps_list, ))
         self.flowbox.add(protected)
+
+        # others -------------------------------------------------
+        reset_password = SubSettings(type="button", name="reset-password", label="Reset Password", sublabel="All protected clips will be changed", separator=False, params=(" Reset", Gtk.Image().new_from_icon_name("preferences-system-privacy", Gtk.IconSize.LARGE_TOOLBAR),))
+        reset_password.button.connect("clicked", self.on_button_clicked)
+        reset_password.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
+
+        others = SettingsGroup("Other", (reset_password, ))
+        self.flowbox.add(others)
 
         # help -------------------------------------------------
         view_guides = SubSettings(type="button", name="view-help", label="Guides", sublabel="Guides on how to use Clips", separator=True, params=("View Guides", Gtk.Image().new_from_icon_name("help-contents", Gtk.IconSize.LARGE_TOOLBAR),))
@@ -205,6 +213,9 @@ class SettingsView(Gtk.Grid):
         if name == "buy-me-coffee":
             Gtk.show_uri_on_window(None, "https://www.buymeacoffee.com/hezral", Gdk.CURRENT_TIME)
 
+        if name == "reset-password":
+            print("reset-password")
+
     def on_spinbutton_activated(self, spinbutton):        
         name = spinbutton.get_name()
         main_window = self.get_toplevel()
@@ -248,12 +259,10 @@ class SettingsView(Gtk.Grid):
                         headerbar.show_all()
 
             if name == "auto-housekeeping":
-                print("auto-housekeeping")
+                print("auto-housekeeping enabled")
 
             if name == "theme-switch":
-                print("theme-switch")
                 if main_window.info_view.help_view:
-                    print("three")
                     for child in main_window.info_view.flowbox.get_children():
                         child.destroy()
                     main_window.info_view.help_view = main_window.info_view.generate_help_view()
