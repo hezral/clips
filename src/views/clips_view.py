@@ -677,10 +677,13 @@ class ClipsContainer(Gtk.EventBox):
             current_flowbox_index = flowboxchild.get_index() - 1
             self.app.cache_manager.delete_record(self.id, self.cache_file, self.type)
             self.app.main_window.update_total_clips_label("delete")
-            if len(flowbox.get_children()) - 1 != 0:
-                flowbox.select_child(flowbox.get_child_at_index(current_flowbox_index))
-                flowbox.get_child_at_index(current_flowbox_index).grab_focus()
-                self.app.main_window.clips_view.on_child_activated(flowbox, flowbox.get_child_at_index(current_flowbox_index))
+            if len(flowbox.get_children()) - 1 != 0 and current_flowbox_index >= 0:
+                pass
+            elif current_flowbox_index == -1:
+                current_flowbox_index = 0
+            flowbox.select_child(flowbox.get_child_at_index(current_flowbox_index))
+            flowbox.get_child_at_index(current_flowbox_index).grab_focus()
+            self.app.main_window.clips_view.on_child_activated(flowbox, flowbox.get_child_at_index(current_flowbox_index))
             flowboxchild.destroy()
 
         elif action == "delete":
@@ -705,10 +708,13 @@ class ClipsContainer(Gtk.EventBox):
                 current_flowbox_index = flowboxchild.get_index() - 1
                 self.app.cache_manager.delete_record(self.id, self.cache_file, self.type)
                 self.app.main_window.update_total_clips_label("delete")
-                if len(flowbox.get_children()) - 1 != 0:
-                    flowbox.select_child(flowbox.get_child_at_index(current_flowbox_index))
-                    flowbox.get_child_at_index(current_flowbox_index).grab_focus()
-                    self.app.main_window.clips_view.on_child_activated(flowbox, flowbox.get_child_at_index(current_flowbox_index))
+                if len(flowbox.get_children()) - 1 != 0 and current_flowbox_index >= 0:
+                    pass
+                elif current_flowbox_index == -1:
+                    current_flowbox_index = 0
+                flowbox.select_child(flowbox.get_child_at_index(current_flowbox_index))
+                flowbox.get_child_at_index(current_flowbox_index).grab_focus()
+                self.app.main_window.clips_view.on_child_activated(flowbox, flowbox.get_child_at_index(current_flowbox_index))
                 flowboxchild.destroy()
             dialog.destroy()
 
