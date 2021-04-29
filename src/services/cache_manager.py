@@ -200,7 +200,7 @@ class CacheManager():
         for flowboxchild in self.app.main_window.clips_view.flowbox.get_children():
             flowboxchild.destroy()
 
-        # self.check_total_clips()
+        self.check_total_clips()
         self.main_window.update_total_clips_label("delete", count)
 
     def auto_housekeeping(self, days, manual_run=False):
