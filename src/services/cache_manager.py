@@ -66,7 +66,6 @@ class CacheManager():
                 self.create_table_hash(self.db_cursor)
         except (OSError, sqlite3.Error) as error:
             print("Exception: ", error)
-        
 
     def open_db(self, database_file):
         connection = sqlite3.connect(database_file) 
@@ -147,9 +146,7 @@ class CacheManager():
             # database_cursor.close()
         except sqlite3.Error as error:
             print("Exception sqlite3.Error: ", error) #add logging
-        finally:
-            pass
-    
+
     def update_record(self, checksum):
         data_param = (str(checksum + "%"),) #pass in a sequence ie list
         sqlite_with_param = '''
@@ -465,27 +462,58 @@ class CacheManager():
         records = self.db_cursor.fetchall()
         return records
 
-    def add_password(self, user, password):
-        # #Hash the user's password
-        # currentPassword = hashlib.sha256(txtPassword.encode('utf-8')).hexdigest()
+    def set_password(self, password):
+        user = "clips"
+        hash = hashlib.sha256(password.encode('utf-8')).hexdigest()
+        
+        data_param = (user, )
+        sqlite_with_param = '''
+            SELECT user FROM 'HashDB'
+            '''
+        self.db_cursor.execute(sqlite_with_param)
+        row = self.db_cursor.fetchall()
+        data_param = (datetime.now(), user, hash)
+        if row is not None and len(row) == 0:
+            sqlite_with_param = '''
+                INSERT INTO 'HashDB'
+                ('created', 'user', 'hash') 
+                VALUES
+                (?, ?, ?);
+                '''
+        else:
+            data_param = (datetime.now(), hash, user)
+            sqlite_with_param = '''
+                UPDATE 'HashDB'
+                SET created = ?, hash = ?
+                WHERE
+                user = ?;
+                '''
+        try:
+            self.db_cursor.execute(sqlite_with_param, data_param)
+            self.db_connection.commit()
+            return True
+        except sqlite3.Error as error:
+            return "sqlite3.Error: " + error
 
-        # data_param = (user, passwordhash) #pass in a sequence ie list
-        # sqlite_with_param = '''
-        #     SELECT created, cache_file FROM 'ClipsDB'
-        #     WHERE
-        #     cache_file LIKE ?;
-        #     '''
-        # self.db_cursor.execute(sqlite_with_param, data_param)
-        # records = self.db_cursor.fetchall()
+    def verify_password(self, password):
+        user = "clips"
+        hash = hashlib.sha256(password.encode('utf-8')).hexdigest()
 
-
-
-        # #Write entry to database table and commit
-        # c.execute("insert into Hashes values (?, ?)", (currentUser, currentPassword))
-        # conn.commit()
-
-        # print("Password added.")
-
-        # #Close connection to database
-        # conn.close()
-        print("add_password")
+        data_param = (user, )
+        sqlite_with_param = '''
+            SELECT hash FROM 'HashDB'
+            WHERE
+            user = ?;
+            '''
+        try:
+            self.db_cursor.execute(sqlite_with_param, data_param)
+            row = self.db_cursor.fetchone()
+            if row is not None:
+                returned_hash = row[0]
+                if returned_hash == hash:
+                    verify_password_result = "Account/Password is correct"
+            else:
+                verify_password_result = "Account/Password is incorrect"
+            return verify_password_result
+        except sqlite3.Error as error:
+            return "sqlite3.Error: " + error
