@@ -288,6 +288,7 @@ class ClipsWindow(Gtk.ApplicationWindow):
                     self.clips_view.show_all()
                     self.settings_view.hide()
                     self.info_view.hide()
+                    self.view_switch.props.active = False
                 else:
                     pass
 
