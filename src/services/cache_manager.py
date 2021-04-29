@@ -63,6 +63,7 @@ class CacheManager():
             else:
                 self.db_connection, self.db_cursor = self.open_db(db_file)
                 self.create_table(self.db_cursor)
+                self.create_table_hash(self.db_cursor)
         except (OSError, sqlite3.Error) as error:
             print("Exception: ", error)
         
@@ -95,15 +96,13 @@ class CacheManager():
     def create_table_hash(self, database_cursor):
         # Initializes the database with the hash table
         database_cursor.execute('''
-            CREATE TABLE hash (
+            CREATE TABLE HashDB (
                 id          INTEGER     PRIMARY KEY     NOT NULL,
                 created     TEXT        NOT NULL        DEFAULT (STRFTIME('%Y-%m-%d %H:%M:%S.%f', 'NOW', 'localtime')),
                 user        TEXT,
                 hash        TEXT
             );
             ''')
-
-    
 
     def load_clips(self):
         # get lastrow id
@@ -465,3 +464,28 @@ class CacheManager():
         self.db_cursor.execute(sqlite_with_param)
         records = self.db_cursor.fetchall()
         return records
+
+    def add_password(self, user, password):
+        # #Hash the user's password
+        # currentPassword = hashlib.sha256(txtPassword.encode('utf-8')).hexdigest()
+
+        # data_param = (user, passwordhash) #pass in a sequence ie list
+        # sqlite_with_param = '''
+        #     SELECT created, cache_file FROM 'ClipsDB'
+        #     WHERE
+        #     cache_file LIKE ?;
+        #     '''
+        # self.db_cursor.execute(sqlite_with_param, data_param)
+        # records = self.db_cursor.fetchall()
+
+
+
+        # #Write entry to database table and commit
+        # c.execute("insert into Hashes values (?, ?)", (currentUser, currentPassword))
+        # conn.commit()
+
+        # print("Password added.")
+
+        # #Close connection to database
+        # conn.close()
+        print("add_password")
