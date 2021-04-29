@@ -268,18 +268,14 @@ class InfoView(Gtk.Grid):
 
         if button.props.name == "setpassword":
             if entry.props.text != "":
-                try:
-                    set_password = self.app.cache_manager.set_password(entry.props.text)
-                except:
-                    print("info_view.py, line:214, setpassword error")
-                    
-                if set_password:
+                set_password_result = self.app.cache_manager.set_password(entry.props.text)
+                if set_password_result:
                     button2.props.label = "Get Started"
                     self.timeout_on_setpassword(label)
                     self.app.on_clipsapp_action()
                 else:
-                    label.set_text("Password set failed")
-
+                    label.set_text("Password set failed: {error}".format(error=set_password_result))
+                self.app.cache_manager.verify_password(entry.props.text)
 
         if button.props.name == "revealpassword":
             if entry.props.text != "":

@@ -511,9 +511,9 @@ class CacheManager():
             if row is not None:
                 returned_hash = row[0]
                 if returned_hash == hash:
-                    verify_password_result = "Account/Password is correct"
+                    verify_password_result = (True, "Account/Password is correct")
             else:
-                verify_password_result = "Account/Password is incorrect"
+                verify_password_result = (False, "Account/Password is incorrect")
             return verify_password_result
         except sqlite3.Error as error:
             return "sqlite3.Error: " + error
