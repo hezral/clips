@@ -267,14 +267,15 @@ class ClipsWindow(Gtk.ApplicationWindow):
         total_clips_in_db = self.app.cache_manager.get_total_clips()[0][0]
 
         if view_switch == gparam == action == None:
-            if self.gio_settings.get_boolean("first-run") is True and view_switch is None and gparam is None and action is None:  
+            if self.gio_settings.get_boolean("first-run") is True and view_switch is None and gparam is None and action is None:
+                self.app.on_clipsapp_action()
                 self.info_view.welcome_view = self.info_view.generate_welcome_view()
                 self.info_view.show_all()
                 self.settings_view.hide()
                 self.clips_view.hide()
                 self.stack.set_visible_child(self.info_view)
                 self.gio_settings.set_boolean("first-run", False)
-            
+                
             elif self.gio_settings.get_boolean("first-run") is False and view_switch is None and gparam is None and action is None:
                 if total_clips_in_db == 0:
                     self.info_view.noclips_view = self.info_view.generate_noclips_view()
