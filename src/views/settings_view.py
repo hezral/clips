@@ -18,6 +18,7 @@
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gio, Pango, GObject, Gdk
+from .custom_dialog import *
 
 # ----------------------------------------------------------------------------------------------------
 
@@ -181,8 +182,8 @@ class SettingsView(Gtk.Grid):
                 self.app.cache_manager.delete_all_record()
                 self.delete_all_dialog.destroy()
             else:
-                self.delete_all_dialog = self.generate_custom_dialog("Delete All Clips", label, "Delete All", "delete-all", self.on_button_clicked, (True, ))
-            
+                # self.delete_all_dialog = self.generate_custom_dialog("Delete All Clips", label, "Delete All", "delete-all", self.on_button_clicked, (True, ))
+                self.delete_all_dialog = generate_custom_dialog(self, "Delete All Clips", label, "Delete All", "delete-all", self.on_button_clicked, (True, ))
 
         if name == "run-housekeeping-now":
             self.app.cache_manager.auto_housekeeping(self.gio_settings.get_int("auto-retention-period"), manual_run=True)
@@ -211,13 +212,14 @@ class SettingsView(Gtk.Grid):
             revealpassword_button.props.name = "revealpassword"
             revealpassword_button.props.halign = Gtk.Align.END
             revealpassword_button.props.valign = Gtk.Align.CENTER
-            revealpassword_button.connect("clicked", self.on_button_clicked, setpassword_entry)
             grid = Gtk.Grid()
             grid.props.row_spacing = 10
             grid.attach(label, 0, 0, 2, 1)
             grid.attach(revealpassword_button, 0, 1, 1, 1)
             grid.attach(setpassword_entry, 0, 1, 1, 1)
-            self.generate_custom_dialog("Reset Password", grid, "Reset", "setpassword", self.on_button_clicked, (setpassword_entry, label))
+            generate_custom_dialog(self, "Reset Password", grid, "Reset", "setpassword", self.on_button_clicked, (setpassword_entry, label))
+            revealpassword_button.connect("clicked", self.on_button_clicked, setpassword_entry)
+            setpassword_entry.connect("activate", self.on_setpassword_entry_activated)
 
         if button.props.name == "revealpassword":
             if params.props.text != "":
@@ -233,8 +235,10 @@ class SettingsView(Gtk.Grid):
                 set_password_result = self.app.cache_manager.set_password(params[0][0].props.text)
                 if set_password_result:
                     params[0][1].set_text("Password set successfull")
+                    params[0][0].props.sensitive = False
                     button.destroy()
                     params[1].props.label = "Close"
+
                 else:
                     params[0][1].set_text("Password set failed: {error}".format(error=set_password_result))
 
@@ -298,57 +302,9 @@ class SettingsView(Gtk.Grid):
         if help_flowbox is not None:
             help_flowbox.props.min_children_per_line = value
         self.gio_settings.set_int(key="min-column-number", value=value)
-    
-    def generate_custom_dialog(self, title, content_widget, action_label, action_name, callback, data=None):
 
-        parent = self.get_toplevel()
-        def close_dialog(button):
-            custom_window.destroy()
-
-        header = Gtk.HeaderBar()
-        header.props.show_close_button = True
-        header.props.decoration_layout = "close:"
-        header.props.title = title
-        header.get_style_context().add_class("default-decoration")
-        header.get_style_context().add_class(Gtk.STYLE_CLASS_FLAT)
-
-        ok_button = Gtk.Button(label=action_label)
-        ok_button.props.name = action_name
-        ok_button.props.hexpand = True
-        ok_button.props.halign = Gtk.Align.END
-        ok_button.set_size_request(65,25)
-        ok_button.get_style_context().add_class("destructive-action")
-
-        cancel_button = Gtk.Button(label="Cancel")
-        cancel_button.props.expand = False
-        cancel_button.props.halign = Gtk.Align.END
-        cancel_button.set_size_request(65,25)
-
-        ok_button.connect("clicked", callback, (data, cancel_button))
-        cancel_button.connect("clicked", close_dialog)
-
-        grid = Gtk.Grid()
-        grid.props.expand = True
-        grid.props.margin = 10
-        grid.props.row_spacing = 10
-        grid.props.column_spacing = 10
-        grid.attach(content_widget, 0, 0, 2, 1)
-        grid.attach(ok_button, 0, 1, 1, 1)
-        grid.attach(cancel_button, 1, 1, 1, 1)
-
-        custom_window = Gtk.Window()
-        custom_window.set_size_request(150,100)
-        custom_window.get_style_context().add_class("rounded")
-        custom_window.set_titlebar(header)
-        custom_window.props.transient_for = parent
-        custom_window.props.modal = True
-        custom_window.add(grid)
-        custom_window.show_all()
-        custom_window.connect("destroy", close_dialog)
-
-        cancel_button.grab_focus()
-
-        return custom_window
+    def on_setpassword_entry_activated(self, entry):
+        self.ok_button.emit("clicked")
 
 # ----------------------------------------------------------------------------------------------------
 

@@ -20,6 +20,7 @@ import gi
 gi.require_version('Gtk', '3.0')
 gi.require_version('WebKit2', '4.0')
 from gi.repository import Gtk, WebKit2, GdkPixbuf, Pango, Gdk, Gio
+from .custom_dialog import *
 
 import os
 from datetime import datetime
@@ -690,7 +691,7 @@ class ClipsContainer(Gtk.EventBox):
             self.delete_all_dialog.destroy()
 
         elif action == "delete":
-            self.delete_all_dialog = self.app.main_window.settings_view.generate_custom_dialog("Delete action", self.generate_clip_info(), "Delete", "delete", self.on_clip_action, "force_delete")
+            self.delete_all_dialog = generate_custom_dialog(self, "Delete action", self.generate_clip_info(), "Delete", "delete", self.on_clip_action, "force_delete")
 
         elif action == "multi-delete":
             flowboxchild.destroy()
