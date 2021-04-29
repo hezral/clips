@@ -627,7 +627,6 @@ class ClipsContainer(Gtk.EventBox):
     def on_clip_action(self, button=None, action=None):
         flowboxchild = self.get_parent()
         flowbox = self.app.main_window.clips_view.flowbox
-    
         flowbox.select_child(flowboxchild)
 
         action_notify_box = self.clip_action_notify_revealer.get_children()[0]
@@ -673,50 +672,25 @@ class ClipsContainer(Gtk.EventBox):
             self.app.utils.copy_to_clipboard(self.target, self.cache_file, self.type)
             self.app.cache_manager.update_cache_on_recopy(self.cache_file)
             
-        elif action == "force_delete":
+        elif action == "force_delete" or action[0] == "force_delete":
             current_flowbox_index = flowboxchild.get_index() - 1
             self.app.cache_manager.delete_record(self.id, self.cache_file, self.type)
             self.app.main_window.update_total_clips_label("delete")
             if len(flowbox.get_children()) - 1 != 0 and current_flowbox_index >= 0:
                 pass
+            elif len(flowbox.get_children()) == 1:
+                current_flowbox_index = 0
             else:
                 current_flowbox_index = 1
-            flowbox.select_child(flowbox.get_child_at_index(current_flowbox_index))
-            flowbox.get_child_at_index(current_flowbox_index).grab_focus()
-            self.app.main_window.clips_view.on_child_activated(flowbox, flowbox.get_child_at_index(current_flowbox_index))
-            flowboxchild.destroy()
-
-        elif action == "delete":
-            dialog = Gtk.Dialog.new()
-            dialog.props.title="Confirm delete action"
-            dialog.props.transient_for = self.app.main_window
-            btn_ok = Gtk.Button(label="OK")
-            btn_ok.get_style_context().add_class("destructive-action")
-            btn_cancel = Gtk.Button(label="Cancel")
-            dialog.add_action_widget(btn_ok, Gtk.ResponseType.OK)
-            dialog.add_action_widget(btn_cancel, Gtk.ResponseType.CANCEL)
-            dialog.set_default_size(150, 100)
-            # label = Gtk.Label(label="Delete this clip?\n\n{details}\n".format(details=self.info_text))
-            
-            box = dialog.get_content_area()
-            box.props.margin = 10
-            box.add(self.generate_clip_info())
-            dialog.show_all()
-            btn_cancel.grab_focus()
-            response = dialog.run()
-            if response == Gtk.ResponseType.OK:
-                current_flowbox_index = flowboxchild.get_index() - 1
-                self.app.cache_manager.delete_record(self.id, self.cache_file, self.type)
-                self.app.main_window.update_total_clips_label("delete")
-                if len(flowbox.get_children()) - 1 != 0 and current_flowbox_index >= 0:
-                    pass
-                else:
-                    current_flowbox_index = 1
+            if len(flowbox.get_children()) > 0:
                 flowbox.select_child(flowbox.get_child_at_index(current_flowbox_index))
                 flowbox.get_child_at_index(current_flowbox_index).grab_focus()
                 self.app.main_window.clips_view.on_child_activated(flowbox, flowbox.get_child_at_index(current_flowbox_index))
-                flowboxchild.destroy()
-            dialog.destroy()
+            flowboxchild.destroy()
+            self.delete_all_dialog.destroy()
+
+        elif action == "delete":
+            self.delete_all_dialog = self.app.main_window.settings_view.generate_custom_dialog("Delete action", self.generate_clip_info(), "Delete", "delete", self.on_clip_action, "force_delete")
 
         elif action == "multi-delete":
             flowboxchild.destroy()
@@ -724,7 +698,8 @@ class ClipsContainer(Gtk.EventBox):
             self.app.main_window.update_total_clips_label("delete")
 
         else:
-            print(action)
+            print(action[0])
+            print(action[1])
             pass
 
     def update_timestamp_on_clips(self, datetime):

@@ -176,32 +176,15 @@ class SettingsView(Gtk.Grid):
             app_chooser_popover.popup()
 
         if name == "delete-all":
-            window = self.get_toplevel()
-            dialog = Gtk.Dialog.new()
-            dialog.props.title="Confirm Delete All"
-            dialog.props.transient_for = window
-            btn_ok = Gtk.Button(label="Delete all", image=Gtk.Image().new_from_icon_name("dialog-warning", Gtk.IconSize.MENU))
-            btn_ok.props.always_show_image = True
-            btn_ok.get_style_context().add_class("destructive-action")
-            btn_cancel = Gtk.Button(label="Cancel")
-            dialog.add_action_widget(btn_ok, Gtk.ResponseType.OK)
-            dialog.add_action_widget(btn_cancel, Gtk.ResponseType.CANCEL)
-            dialog.set_default_size(150, 100)
             label = Gtk.Label(label="Attention! This action will delete all clips from the cache and no recovery")
-            box = dialog.get_content_area()
-            box.props.margin = 10
-            box.add(label)
-            dialog.show_all()
-            btn_cancel.grab_focus()
-            response = dialog.run()
-            if response == Gtk.ResponseType.OK:
-                window.props.application.cache_manager.delete_all_record()
-            dialog.destroy()
+            if params:
+                self.app.cache_manager.delete_all_record()
+                self.delete_all_dialog.destroy()
+            else:
+                self.delete_all_dialog = self.generate_custom_dialog("Delete All Clips", label, "Delete All", "delete-all", self.on_button_clicked, (True, ))
+            
 
         if name == "run-housekeeping-now":
-            # from datetime import datetime
-            # # main_window = self.get_toplevel()
-            # # sublabel_text = params.sublabel_text          
             self.app.cache_manager.auto_housekeeping(self.gio_settings.get_int("auto-retention-period"), manual_run=True)
 
         if name == "view-help":
@@ -214,7 +197,46 @@ class SettingsView(Gtk.Grid):
             Gtk.show_uri_on_window(None, "https://www.buymeacoffee.com/hezral", Gdk.CURRENT_TIME)
 
         if name == "reset-password":
-            print("reset-password")
+            label = Gtk.Label(label="This will reset the password and also all protected clips")
+            setpassword_entry = Gtk.Entry()
+            setpassword_entry.props.input_purpose = Gtk.InputPurpose.PASSWORD
+            setpassword_entry.props.visibility = False
+            setpassword_entry.props.hexpand = True
+            setpassword_entry.props.placeholder_text = " type in password"
+            setpassword_entry.props.halign = Gtk.Align.FILL
+            setpassword_entry.props.valign = Gtk.Align.CENTER
+            setpassword_entry.set_size_request(280,32)
+            revealpassword_button = Gtk.Button(image=Gtk.Image().new_from_icon_name("com.github.hezral.clips-hidepswd", Gtk.IconSize.LARGE_TOOLBAR))
+            revealpassword_button.props.hexpand = True
+            revealpassword_button.props.name = "revealpassword"
+            revealpassword_button.props.halign = Gtk.Align.END
+            revealpassword_button.props.valign = Gtk.Align.CENTER
+            revealpassword_button.connect("clicked", self.on_button_clicked, setpassword_entry)
+            grid = Gtk.Grid()
+            grid.props.row_spacing = 10
+            grid.attach(label, 0, 0, 2, 1)
+            grid.attach(revealpassword_button, 0, 1, 1, 1)
+            grid.attach(setpassword_entry, 0, 1, 1, 1)
+            self.generate_custom_dialog("Reset Password", grid, "Reset", "setpassword", self.on_button_clicked, (setpassword_entry, label))
+
+        if button.props.name == "revealpassword":
+            if params.props.text != "":
+                if params.props.visibility:
+                    params.props.visibility = False
+                    button.set_image(Gtk.Image().new_from_icon_name("com.github.hezral.clips-hidepswd", Gtk.IconSize.LARGE_TOOLBAR))
+                else:
+                    params.props.visibility = True
+                    button.set_image(Gtk.Image().new_from_icon_name("com.github.hezral.clips-revealpswd", Gtk.IconSize.LARGE_TOOLBAR))
+
+        if button.props.name == "setpassword":
+            if params[0][0].props.text != "":
+                set_password_result = self.app.cache_manager.set_password(params[0][0].props.text)
+                if set_password_result:
+                    params[0][1].set_text("Password set successfull")
+                    button.destroy()
+                    params[1].props.label = "Close"
+                else:
+                    params[0][1].set_text("Password set failed: {error}".format(error=set_password_result))
 
     def on_spinbutton_activated(self, spinbutton):        
         name = spinbutton.get_name()
@@ -276,6 +298,57 @@ class SettingsView(Gtk.Grid):
         if help_flowbox is not None:
             help_flowbox.props.min_children_per_line = value
         self.gio_settings.set_int(key="min-column-number", value=value)
+    
+    def generate_custom_dialog(self, title, content_widget, action_label, action_name, callback, data=None):
+
+        parent = self.get_toplevel()
+        def close_dialog(button):
+            custom_window.destroy()
+
+        header = Gtk.HeaderBar()
+        header.props.show_close_button = True
+        header.props.decoration_layout = "close:"
+        header.props.title = title
+        header.get_style_context().add_class("default-decoration")
+        header.get_style_context().add_class(Gtk.STYLE_CLASS_FLAT)
+
+        ok_button = Gtk.Button(label=action_label)
+        ok_button.props.name = action_name
+        ok_button.props.hexpand = True
+        ok_button.props.halign = Gtk.Align.END
+        ok_button.set_size_request(65,25)
+        ok_button.get_style_context().add_class("destructive-action")
+
+        cancel_button = Gtk.Button(label="Cancel")
+        cancel_button.props.expand = False
+        cancel_button.props.halign = Gtk.Align.END
+        cancel_button.set_size_request(65,25)
+
+        ok_button.connect("clicked", callback, (data, cancel_button))
+        cancel_button.connect("clicked", close_dialog)
+
+        grid = Gtk.Grid()
+        grid.props.expand = True
+        grid.props.margin = 10
+        grid.props.row_spacing = 10
+        grid.props.column_spacing = 10
+        grid.attach(content_widget, 0, 0, 2, 1)
+        grid.attach(ok_button, 0, 1, 1, 1)
+        grid.attach(cancel_button, 1, 1, 1, 1)
+
+        custom_window = Gtk.Window()
+        custom_window.set_size_request(150,100)
+        custom_window.get_style_context().add_class("rounded")
+        custom_window.set_titlebar(header)
+        custom_window.props.transient_for = parent
+        custom_window.props.modal = True
+        custom_window.add(grid)
+        custom_window.show_all()
+        custom_window.connect("destroy", close_dialog)
+
+        cancel_button.grab_focus()
+
+        return custom_window
 
 # ----------------------------------------------------------------------------------------------------
 
