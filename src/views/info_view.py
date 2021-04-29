@@ -275,7 +275,6 @@ class InfoView(Gtk.Grid):
                     self.app.on_clipsapp_action()
                 else:
                     label.set_text("Password set failed: {error}".format(error=set_password_result))
-                self.app.cache_manager.verify_password(entry.props.text)
 
         if button.props.name == "revealpassword":
             if entry.props.text != "":
