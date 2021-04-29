@@ -339,24 +339,18 @@ label#files-container-more {
     animation: crossfader 0.5s ease-in-out forwards;
 }
 
-label#welcome-view-title {
-    color: alpha(@theme_text_color, 0.5);
+label#welcome-view-title, label#noclips-view-title {
+    color: alpha(@theme_text_color, 0.6);
     animation: crossfader 1.0s ease-in-out forwards;
 }
 
-label#welcome-view-sublabel {
-    color: alpha(@theme_text_color, 0.35);
-    animation: crossfader 1.25s ease-in-out forwards;
-}
-
-label#noclips-view-title {
+label#welcome-view-sublabel, label#noclips-view-sublabel {
     color: alpha(@theme_text_color, 0.5);
-    animation: crossfader 1.0s ease-in-out forwards;
+    animation: crossfader 1.25s ease-in-out forwards;
 }
 
-label#noclips-view-sublabel {
-    color: alpha(@theme_text_color, 0.35);
-    animation: crossfader 1.25s ease-in-out forwards;
+grid#setpassword {
+    animation: crossfader 1.5s ease-in-out forwards;
 }
 
 grid#protected-container {
@@ -364,6 +358,44 @@ grid#protected-container {
     font-weight: bold;
     letter-spacing: 2px;
     color: alpha(red, 0.75);
+}
+
+button#setpassword, button#revealpassword {
+    outline-style: none;
+}
+  
+button#setpassword:active, button#revealpassword:active {
+    opacity: 0.75;
+}
+
+@keyframes fade-in {
+    0% { opacity: 0.35; } 
+    03.33% { opacity: 0.35; }
+    06.66% { opacity: 0.35; }
+    09.99% { opacity: 0.35; }
+    13.33% { opacity: 0.35; }
+    16.65% { opacity: 0.5; }
+    100% { opacity: 1; }	
+}
+
+@keyframes fade-out {
+    0% { opacity: 1; } 
+    03.33% { opacity: 1; }
+    06.66% { opacity: 1; }
+    09.99% { opacity: 1; }
+    13.33% { opacity: 1; }
+    16.65% { opacity: 0.5; }
+    100% { opacity: 0.35; }	
+}
+
+.setpassword-waiting {
+    opacity: 0.35;
+    animation: fade-out 0.2s ease-in-out forwards;
+}
+  
+.setpassword-ready {
+    animation: fade-in 0.2s ease-in-out forwards;
+    opacity: 1;
 }
 
 /* ------------------------------ */

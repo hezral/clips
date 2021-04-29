@@ -15,6 +15,7 @@
     along with this Application.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+from typing import overload
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GdkPixbuf, Gio
@@ -48,56 +49,105 @@ class InfoView(Gtk.Grid):
     # def draw(self, drawing_area, cairo_context):
     #     print(self.get_scale_factor())
 
-    def on_button_clicked(self, button):
-        if button.props.name == "getstarted":
-            self.get_style_context().add_class("info-view-fader")
-            self.app.main_window.on_view_visible(action="help-view")
-            # startcopying_button = Gtk.Button("Start Copying!")
-            # startcopying_button.props.name = "startcopying"
-            # startcopying_button.props.expand = False
-            # startcopying_button.props.margin = 10
-            # startcopying_button.props.valign = Gtk.Align.START
-            # startcopying_button.props.halign = Gtk.Align.CENTER
-            # startcopying_button.connect("clicked", self.on_button_clicked)
-            # startcopying_button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
-            # startcopying_button.show_all()
-            # self.attach(startcopying_button, 0, 0, 1, 1)
-        # else:
-        #     self.app.main_window.on_view_visible()
-
     def generate_welcome_view(self):
         self.clear_info_view()
+
+        skippassword_button = Gtk.Button("Skip protection")
+        skippassword_button.props.name = "skippassword"
+        skippassword_button.props.expand = False
+        skippassword_button.props.margin_top = 10
+        skippassword_button.props.valign = skippassword_button.props.halign = Gtk.Align.CENTER
+        skippassword_button.connect("clicked", self.on_button_clicked)
+
+        setpassword_entry = Gtk.Entry()
+        setpassword_entry.props.input_purpose = Gtk.InputPurpose.PASSWORD
+        setpassword_entry.props.visibility = False
+        setpassword_entry.props.hexpand = True
+        setpassword_entry.props.placeholder_text = " type in password"
+        setpassword_entry.props.halign = Gtk.Align.CENTER
+        setpassword_entry.props.valign = Gtk.Align.CENTER
+        setpassword_entry.set_size_request(280,32)
+
+        setpassword_button = Gtk.Button(image=Gtk.Image().new_from_icon_name("process-completed", Gtk.IconSize.LARGE_TOOLBAR))
+        setpassword_button.props.expand = False
+        setpassword_button.props.name = "setpassword"
+        setpassword_button.props.halign = Gtk.Align.END
+        setpassword_button.props.valign = Gtk.Align.CENTER
+        setpassword_button.get_style_context().add_class("setpassword-waiting")
+
+        revealpassword_button = Gtk.Button(image=Gtk.Image().new_from_icon_name("com.github.hezral.clips-hidepswd", Gtk.IconSize.LARGE_TOOLBAR))
+        revealpassword_button.props.hexpand = True
+        revealpassword_button.props.name = "revealpassword"
+        revealpassword_button.props.halign = Gtk.Align.END
+        revealpassword_button.props.valign = Gtk.Align.CENTER
+        revealpassword_button.get_style_context().add_class("setpassword-waiting")
+
+        setpassword_entry.connect("focus-in-event", self.on_setpassword_entry, setpassword_button, revealpassword_button)
+        setpassword_entry.connect("focus-out-event", self.on_setpassword_entry, setpassword_button, revealpassword_button)
+        setpassword_button.connect("clicked", self.on_button_clicked, setpassword_entry)
+        revealpassword_button.connect("clicked", self.on_button_clicked, setpassword_entry)
+
+        setpassword_label = Gtk.Label("Before you start copying stuff\nset a password to protect sensitive data")
+        setpassword_label.props.name = "welcome-view-sublabel"
+        setpassword_label.props.expand = True
+        setpassword_label.props.justify = Gtk.Justification.CENTER
+        setpassword_label.props.halign = setpassword_label.props.valign = Gtk.Align.CENTER
+        setpassword_label.get_style_context().add_class("h3")
+
+        setpassword_grid = Gtk.Grid()
+        setpassword_grid.props.name = "setpassword"
+        setpassword_grid.props.row_spacing = 10
+        setpassword_grid.props.margin = 2
+        setpassword_grid.attach(setpassword_label, 0, 0, 3, 1)
+        setpassword_grid.attach(setpassword_button, 2, 1, 1, 1)
+        setpassword_grid.attach(revealpassword_button, 1, 1, 1, 1)
+        setpassword_grid.attach(setpassword_entry, 0, 1, 3, 1)
+        setpassword_grid.attach(skippassword_button, 0, 2, 3, 1)
+
+        getstarted_button = Gtk.Button("Quick Start Guide")
+        getstarted_button.props.name = "getstarted"
+        getstarted_button.props.expand = False
+        getstarted_button.props.margin = 10
+        getstarted_button.props.valign = getstarted_button.props.halign = Gtk.Align.CENTER
+        getstarted_button.connect("clicked", self.on_button_clicked)
+        getstarted_button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
+
+        getstarted_label = Gtk.Label("Continue copying stuff (Ctrl+C)\nor view Quick Start Guide")
+        getstarted_label.props.name = "welcome-view-sublabel"
+        getstarted_label.props.expand = True
+        getstarted_label.props.justify = Gtk.Justification.CENTER
+        getstarted_label.props.halign = getstarted_label.props.valign = Gtk.Align.CENTER
+        getstarted_label.get_style_context().add_class("h3")
+
+        getstarted_grid = Gtk.Grid()
+        getstarted_grid.props.name = "getstarted"
+        getstarted_grid.props.row_spacing = 10
+        getstarted_grid.props.margin = 2
+        getstarted_grid.attach(getstarted_label, 0, 0, 3, 1)
+        getstarted_grid.attach(getstarted_button, 0, 1, 3, 1)
+
+        self.welcome_view_stack = Gtk.Stack()
+        self.welcome_view_stack.props.name = "welcome-view-stack"
+        self.welcome_view_stack.props.transition_type = Gtk.StackTransitionType.SLIDE_LEFT
+        self.welcome_view_stack.props.transition_duration = 250
+        self.welcome_view_stack.add_named(setpassword_grid, setpassword_grid.get_name())
+        self.welcome_view_stack.add_named(getstarted_grid, getstarted_grid.get_name())
+
+        title_label = Gtk.Label("Welcome to Clips")
+        title_label.props.name = "welcome-view-title"
+        title_label.props.expand = True
+        title_label.props.halign = title_label.props.valign = Gtk.Align.CENTER
+        title_label.get_style_context().add_class("h1")
 
         grid = Gtk.Grid()
         grid.props.halign = grid.props.valign = Gtk.Align.CENTER
         grid.props.expand = True
         grid.props.row_spacing = 10
-
-        getstarted_button = Gtk.Button("Quick Start Guide")
-        getstarted_button.props.name = "getstarted"
-        getstarted_button.props.expand = False
-        getstarted_button.props.margin = 20
-        getstarted_button.props.valign = getstarted_button.props.halign = Gtk.Align.CENTER
-        getstarted_button.connect("clicked", self.on_button_clicked)
-        getstarted_button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
-
-        sublabel = Gtk.Label("Continue copying stuff (Ctrl+C) or view Quick Start Guide")
-        sublabel.props.name = "welcome-view-sublabel"
-        sublabel.props.expand = True
-        sublabel.props.halign = sublabel.props.valign = Gtk.Align.CENTER
-        sublabel.get_style_context().add_class("h3")
-
-        label = Gtk.Label("Welcome")
-        label.props.name = "welcome-view-title"
-        label.props.expand = True
-        label.props.halign = label.props.valign = Gtk.Align.CENTER
-        label.get_style_context().add_class("h1")
-
-        grid.attach(label, 0, 0, 1, 1)
-        grid.attach(sublabel, 0, 1, 1, 1)
-        grid.attach(getstarted_button, 0, 2, 1, 1)
+        grid.attach(title_label, 0, 0, 2, 1)
+        grid.attach(self.welcome_view_stack, 0, 1, 2, 1)
 
         self.attach(grid, 0, 0, 1, 1)
+        
         self.show_all()
 
     def generate_help_view(self):
@@ -192,6 +242,54 @@ class InfoView(Gtk.Grid):
     def clear_info_view(self):
         for child in self.get_children():
             child.destroy()
+
+    def on_button_clicked(self, button, entry=None):
+        if button.props.name == "getstarted":
+            self.get_style_context().add_class("info-view-fader")
+            self.app.main_window.on_view_visible(action="help-view")
+
+        if button.props.name == "skippassword":
+            print("info_view.py, line:214, setpassword_button")
+            self.welcome_view_stack.set_visible_child_name("getstarted")
+            self.app.on_clipsapp_action()
+
+        if button.props.name == "setpassword":
+            if entry.props.text != "":
+                print("info_view.py, line:214, setpassword_button")
+                self.welcome_view_stack.set_visible_child_name("getstarted")
+                self.app.on_clipsapp_action()
+
+        if button.props.name == "revealpassword":
+            if entry.props.text != "":
+                print("info_view.py, line:214, setpassword_button")
+                if entry.props.visibility:
+                    entry.props.visibility = False
+                    button.set_image(Gtk.Image().new_from_icon_name("com.github.hezral.clips-hidepswd", Gtk.IconSize.LARGE_TOOLBAR))
+                else:
+                    entry.props.visibility = True
+                    button.set_image(Gtk.Image().new_from_icon_name("com.github.hezral.clips-revealpswd", Gtk.IconSize.LARGE_TOOLBAR))
+    
+    def on_setpassword_entry(self, entry, eventfocus, button1, button2):
+        if eventfocus.in_ == 1:
+            button1.get_style_context().add_class("setpassword-ready")
+            button1.get_style_context().remove_class("setpassword-waiting")
+            button2.get_style_context().add_class("setpassword-ready")
+            button2.get_style_context().remove_class("setpassword-waiting")
+        if eventfocus.in_ == 0 and entry.props.text == "":
+            button1.get_style_context().add_class("setpassword-waiting")
+            button1.get_style_context().remove_class("setpassword-ready")
+            button2.get_style_context().add_class("setpassword-waiting")
+            button2.get_style_context().remove_class("setpassword-ready")
+            entry.props.placeholder_text = "no password entered"
+        if eventfocus.in_ == 0 and entry.props.text != "":
+            button1.get_style_context().remove_class("setpassword-waiting")
+            button1.get_style_context().remove_class("setpassword-ready")
+            button2.get_style_context().remove_class("setpassword-waiting")
+            button2.get_style_context().remove_class("setpassword-ready")
+            print(entry.props.text)
+            button2.set_image(Gtk.Image().new_from_icon_name("com.github.hezral.clips-hidepswd", Gtk.IconSize.LARGE_TOOLBAR))
+            
+            pass
 
 # ----------------------------------------------------------------------------------------------------
 
