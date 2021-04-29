@@ -149,7 +149,7 @@ class SettingsView(Gtk.Grid):
         view_guides.button.connect("clicked", self.on_button_clicked)
         view_guides.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
         
-        report_issue = SubSettings(type="button", name="report-issue", label="Have a feature or issue?", sublabel="Report and help make Clips better", separator=True, params=("Report issue", Gtk.Image().new_from_icon_name("help-faq", Gtk.IconSize.LARGE_TOOLBAR),))
+        report_issue = SubSettings(type="button", name="report-issue", label="Have a feature request or issue?", sublabel="Report and help make Clips better", separator=True, params=("Report issue", Gtk.Image().new_from_icon_name("help-faq", Gtk.IconSize.LARGE_TOOLBAR),))
         report_issue.button.connect("clicked", self.on_button_clicked)
         report_issue.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
 
