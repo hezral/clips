@@ -90,6 +90,7 @@ class InfoView(Gtk.Grid):
 
         setpassword_entry.connect("focus-in-event", self.on_setpassword_entry, setpassword_button, revealpassword_button)
         setpassword_entry.connect("focus-out-event", self.on_setpassword_entry, setpassword_button, revealpassword_button)
+        setpassword_entry.connect("activate", self.on_setpassword_entry_activated, setpassword_button)
         setpassword_button.connect("clicked", self.on_button_clicked, setpassword_entry, setpassword_label, skippassword_button)
         revealpassword_button.connect("clicked", self.on_button_clicked, setpassword_entry)
 
@@ -242,7 +243,7 @@ class InfoView(Gtk.Grid):
         for child in self.get_children():
             child.destroy()
 
-    def timeout_on_setpassword(self, label):
+    def timeout_on_setpassword(self, label, entry):
 
         def update_label(timeout):
             label.set_text("Password succesfully added ({i})\n".format(i=timeout))
@@ -254,10 +255,10 @@ class InfoView(Gtk.Grid):
                 GLib.idle_add(update_label, (i))
                 time.sleep(1)
             self.welcome_view_stack.set_visible_child_name("getstarted")
-        
+        entry.props.sensitive = False
         timeout_label(self, label)
 
-    def on_button_clicked(self, button, entry=None, label=None, button2=None):
+    def on_button_clicked(self, button=None, entry=None, label=None, button2=None):
         if button.props.name == "getstarted":
             self.get_style_context().add_class("info-view-fader")
             self.app.main_window.on_view_visible(action="help-view")
@@ -271,7 +272,7 @@ class InfoView(Gtk.Grid):
                 set_password_result = self.app.cache_manager.set_password(entry.props.text)
                 if set_password_result:
                     button2.props.label = "Get Started"
-                    self.timeout_on_setpassword(label)
+                    self.timeout_on_setpassword(label, entry)
                     self.app.on_clipsapp_action()
                 else:
                     label.set_text("Password set failed: {error}".format(error=set_password_result))
@@ -304,6 +305,9 @@ class InfoView(Gtk.Grid):
             button2.get_style_context().remove_class("setpassword-ready")
             button2.set_image(Gtk.Image().new_from_icon_name("com.github.hezral.clips-hidepswd", Gtk.IconSize.LARGE_TOOLBAR))
             pass
+    
+    def on_setpassword_entry_activated(self, entry, button):
+        button.emit("clicked")
 
 # ----------------------------------------------------------------------------------------------------
 
