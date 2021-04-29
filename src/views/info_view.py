@@ -18,8 +18,7 @@
 from typing import overload
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, GdkPixbuf, Gio
-
+from gi.repository import Gtk, GdkPixbuf, Gio, GLib
 import os
 resource_path = os.path.join(os.path.dirname(__file__), "..", "..", "data", "images")
 
@@ -82,17 +81,17 @@ class InfoView(Gtk.Grid):
         revealpassword_button.props.valign = Gtk.Align.CENTER
         revealpassword_button.get_style_context().add_class("setpassword-waiting")
 
-        setpassword_entry.connect("focus-in-event", self.on_setpassword_entry, setpassword_button, revealpassword_button)
-        setpassword_entry.connect("focus-out-event", self.on_setpassword_entry, setpassword_button, revealpassword_button)
-        setpassword_button.connect("clicked", self.on_button_clicked, setpassword_entry)
-        revealpassword_button.connect("clicked", self.on_button_clicked, setpassword_entry)
-
         setpassword_label = Gtk.Label("Before you start copying stuff\nset a password to protect sensitive data")
         setpassword_label.props.name = "welcome-view-sublabel"
         setpassword_label.props.expand = True
         setpassword_label.props.justify = Gtk.Justification.CENTER
         setpassword_label.props.halign = setpassword_label.props.valign = Gtk.Align.CENTER
         setpassword_label.get_style_context().add_class("h3")
+
+        setpassword_entry.connect("focus-in-event", self.on_setpassword_entry, setpassword_button, revealpassword_button)
+        setpassword_entry.connect("focus-out-event", self.on_setpassword_entry, setpassword_button, revealpassword_button)
+        setpassword_button.connect("clicked", self.on_button_clicked, setpassword_entry, setpassword_label, skippassword_button)
+        revealpassword_button.connect("clicked", self.on_button_clicked, setpassword_entry)
 
         setpassword_grid = Gtk.Grid()
         setpassword_grid.props.name = "setpassword"
@@ -243,25 +242,47 @@ class InfoView(Gtk.Grid):
         for child in self.get_children():
             child.destroy()
 
-    def on_button_clicked(self, button, entry=None):
+    def timeout_on_setpassword(self, label):
+
+        def update_label(timeout):
+            label.set_text("Password succesfully added ({i})\n".format(i=timeout))
+
+        @self.app.utils.run_async
+        def timeout_label(self, label):
+            import time
+            for i in reversed(range(5)):
+                GLib.idle_add(update_label, (i))
+                time.sleep(1)
+            self.welcome_view_stack.set_visible_child_name("getstarted")
+        
+        timeout_label(self, label)
+
+    def on_button_clicked(self, button, entry=None, label=None, button2=None):
         if button.props.name == "getstarted":
             self.get_style_context().add_class("info-view-fader")
             self.app.main_window.on_view_visible(action="help-view")
 
         if button.props.name == "skippassword":
-            print("info_view.py, line:214, setpassword_button")
             self.welcome_view_stack.set_visible_child_name("getstarted")
             self.app.on_clipsapp_action()
 
         if button.props.name == "setpassword":
             if entry.props.text != "":
-                print("info_view.py, line:214, setpassword_button")
-                self.welcome_view_stack.set_visible_child_name("getstarted")
-                self.app.on_clipsapp_action()
+                try:
+                    set_password = self.app.cache_manager.set_password(entry.props.text)
+                except:
+                    print("info_view.py, line:214, setpassword error")
+                    
+                if set_password:
+                    button2.props.label = "Get Started"
+                    self.timeout_on_setpassword(label)
+                    self.app.on_clipsapp_action()
+                else:
+                    label.set_text("Password set failed")
+
 
         if button.props.name == "revealpassword":
             if entry.props.text != "":
-                print("info_view.py, line:214, setpassword_button")
                 if entry.props.visibility:
                     entry.props.visibility = False
                     button.set_image(Gtk.Image().new_from_icon_name("com.github.hezral.clips-hidepswd", Gtk.IconSize.LARGE_TOOLBAR))
@@ -286,9 +307,7 @@ class InfoView(Gtk.Grid):
             button1.get_style_context().remove_class("setpassword-ready")
             button2.get_style_context().remove_class("setpassword-waiting")
             button2.get_style_context().remove_class("setpassword-ready")
-            print(entry.props.text)
             button2.set_image(Gtk.Image().new_from_icon_name("com.github.hezral.clips-hidepswd", Gtk.IconSize.LARGE_TOOLBAR))
-            
             pass
 
 # ----------------------------------------------------------------------------------------------------
