@@ -19,7 +19,7 @@ from os.path import basename
 import gi
 gi.require_version('Gtk', '3.0')
 gi.require_version('WebKit2', '4.0')
-from gi.repository import Gtk, WebKit2, GdkPixbuf, Pango, Gdk, Gio
+from gi.repository import Gtk, WebKit2, GdkPixbuf, Pango, Gdk, Gio, GLib
 from .custom_dialog import *
 
 import os
@@ -182,7 +182,6 @@ class ClipsView(Gtk.Grid):
                         flowbox.unselect_child(last_selected_flowboxchild)
 
             self.current_selected_flowboxchild_index = flowboxchild.get_index()
-        
             flowboxchild.get_children()[0].clip_overlay_revealer.set_reveal_child(True)
             flowboxchild.get_children()[0].clip_action_revealer.set_reveal_child(True)
             flowboxchild.get_children()[0].source_icon_revealer.set_reveal_child(True)
@@ -207,18 +206,14 @@ class ClipsView(Gtk.Grid):
         self.delete_selected_button.props.label = "Delete ({count})".format(count=str(selected)) 
 
     def on_selected_children_changed(self, flowbox):
-        # print("on-selected-children-changed", len(flowbox.get_selected_children()))
         selected = len(flowbox.get_selected_children())
 
         if selected == 0:
             pass
-
         if selected == 1:
             pass
-
         if selected > 1:
             self.multi_delete_revealer.set_reveal_child(True)
-
             flowbox.handler_block(flowbox.on_child_activated_handler_id)
             
             for child in flowbox.get_children():
@@ -243,10 +238,8 @@ class ClipsView(Gtk.Grid):
     
     def on_multi_select(self):
         self.flowbox.connect("child-activated", self.on_child_multi_selected)
-
         self.multi_delete_revealer.set_reveal_child(True)
         self.flowbox.props.selection_mode = Gtk.SelectionMode.MULTIPLE
-
         self.flowbox.disconnect_by_func(self.on_child_activated)
         
         for flowboxchild in self.app.main_window.clips_view.flowbox.get_children():
@@ -260,10 +253,8 @@ class ClipsView(Gtk.Grid):
 
     def off_multi_select(self):
         self.flowbox.disconnect_by_func(self.on_child_multi_selected)
-
         self.multi_delete_revealer.set_reveal_child(False)
         self.flowbox.props.selection_mode = Gtk.SelectionMode.SINGLE
-
         self.flowbox.connect("child-activated", self.on_child_activated)
         
         for flowboxchild in self.app.main_window.clips_view.flowbox.get_children():
@@ -271,7 +262,6 @@ class ClipsView(Gtk.Grid):
             clips_container.connect("enter-notify-event", clips_container.on_cursor_entering_clip)
             clips_container.connect("leave-notify-event", clips_container.on_cursor_leaving_clip)
             clips_container.connect("button-press-event", clips_container.on_double_clicked_clip)
-
             clips_container.select_button.get_style_context().remove_class("clip-selected")
             clips_container.select_button.get_style_context().add_class("clip-select")
             clips_container.clip_overlay_revealer.set_reveal_child(False)
@@ -474,7 +464,7 @@ class ClipsContainer(Gtk.EventBox):
         return clip_action_notify_revealer
 
     def generate_clip_overlay(self):
-        protect_action = self.generate_action_button("com.github.hezral.clips-unprotect-symbolic", "Protect Content", "protect")
+        protect_action = self.generate_action_button("com.github.hezral.clips-unprotect-symbolic", "Unprotect", "protect")
         reveal_action = self.generate_action_button("document-open-symbolic", "Reveal Cache File", "reveal")
         view_action = self.generate_action_button("com.github.hezral.clips-view-symbolic", "View", "view")
         copy_action = self.generate_action_button("edit-copy-symbolic", "Copy to Clipboard", "copy")
@@ -494,14 +484,6 @@ class ClipsContainer(Gtk.EventBox):
         self.clip_action_revealer.add(clip_action)
         self.clip_action_revealer.props.can_focus = False
         
-        if "color" in self.type or "spreadsheet" in self.type or "presentation" in self.type:
-            view_action.props.sensitive = False
-            view_action.get_style_context().add_class("clip-action-disabled")
-
-        if "no" in self.protected:
-            protect_action.props.sensitive = False
-            protect_action.get_style_context().add_class("clip-action-disabled")
-
         icon = self.generate_source_icon()
         self.source_icon_revealer = Gtk.Revealer()
         self.source_icon_revealer.add(icon)
@@ -514,8 +496,16 @@ class ClipsContainer(Gtk.EventBox):
         clip_action.attach(view_action, 1, 0, 1, 1)
         clip_action.attach(copy_action, 2, 0, 1, 1)
         clip_action.attach(delete_action, 3, 0, 1, 1)
-        clip_action.attach(protect_action, 4, 0, 1, 1)
         clip_action.attach(self.fuzzytimestamp_label, 5, 0, 1, 1)
+
+        if "color" in self.type or "spreadsheet" in self.type or "presentation" in self.type:
+            view_action.props.sensitive = False
+            view_action.get_style_context().add_class("clip-action-disabled")
+
+        if "yes" in self.protected:
+            # protect_action.props.sensitive = False
+            # protect_action.get_style_context().add_class("clip-action-disabled")
+            clip_action.attach(protect_action, 4, 0, 1, 1)
 
         grid = Gtk.Grid()
         grid.props.expand = True
@@ -537,7 +527,6 @@ class ClipsContainer(Gtk.EventBox):
         fuzzytimestamp_label.props.halign = Gtk.Align.END
         fuzzytimestamp_label.props.valign = Gtk.Align.CENTER
         fuzzytimestamp_label.props.hexpand = True
-        # fuzzytimestamp_label.props.margin = 10
         fuzzytimestamp_label.props.margin_right = 8
         fuzzytimestamp_label.props.margin_left = 8
         fuzzytimestamp_label.props.name = "clips-fuzzytimestamp"
@@ -607,7 +596,6 @@ class ClipsContainer(Gtk.EventBox):
 
     def on_cursor_leaving_clip(self, widget, eventcrossing):
         self.get_parent().get_style_context().remove_class("hover")
-
         flowboxchild = self.get_parent()
 
         if flowboxchild.is_selected():
@@ -625,7 +613,7 @@ class ClipsContainer(Gtk.EventBox):
             if flowboxchild_selected[0].get_children()[0].clip_action_notify_revealer.get_child_revealed():
                 flowboxchild_selected[0].get_children()[0].clip_action_notify_revealer.set_reveal_child(False)
 
-    def on_clip_action(self, button=None, action=None):
+    def on_clip_action(self, button=None, action=None, validated=False):
         flowboxchild = self.get_parent()
         flowbox = self.app.main_window.clips_view.flowbox
         flowbox.select_child(flowboxchild)
@@ -637,7 +625,30 @@ class ClipsContainer(Gtk.EventBox):
             child.destroy()
  
         if action == "protect":
-            self.clip_action_notify_revealer.set_reveal_child(True)
+            protected_container = self.app.utils.get_widget_by_name(self, "protected-container", 0, doPrint=False)
+            content = protected_container.content
+            setpassword_entry = Gtk.Entry()
+            setpassword_entry.props.input_purpose = Gtk.InputPurpose.PASSWORD
+            setpassword_entry.props.visibility = False
+            setpassword_entry.props.hexpand = True
+            setpassword_entry.props.placeholder_text = " type in password"
+            setpassword_entry.props.halign = Gtk.Align.FILL
+            setpassword_entry.props.valign = Gtk.Align.CENTER
+            setpassword_entry.set_size_request(280,32)
+            revealpassword_button = Gtk.Button(image=Gtk.Image().new_from_icon_name("com.github.hezral.clips-hidepswd", Gtk.IconSize.LARGE_TOOLBAR))
+            revealpassword_button.props.hexpand = True
+            revealpassword_button.props.name = "revealpassword"
+            revealpassword_button.props.halign = Gtk.Align.END
+            revealpassword_button.props.valign = Gtk.Align.CENTER
+            grid = Gtk.Grid()
+            grid.props.row_spacing = 10
+            grid.attach(revealpassword_button, 0, 1, 1, 1)
+            grid.attach(setpassword_entry, 0, 1, 1, 1)
+            if button is None:
+                action = "copyprotected"
+            self.unprotect_dialog = generate_custom_dialog(self, "Reveal Content", grid, "Reveal", "revealcontent", self.on_button_clicked, (setpassword_entry, content, action))
+            revealpassword_button.connect("clicked", self.on_button_clicked, setpassword_entry)
+            setpassword_entry.connect("activate", self.on_setpassword_entry_activated)
 
         elif action == "reveal":
             self.app.utils.reveal_file_gio(self.cache_file)
@@ -667,11 +678,34 @@ class ClipsContainer(Gtk.EventBox):
             label = Gtk.Label("Copied to clipboard")
             action_notify_box.attach(icon, 0, 0, 1, 1)
             action_notify_box.attach(label, 1, 0, 1, 1)
-            action_notify_box.show_all()
+            copy_result = False
 
-            self.clip_action_notify_revealer.set_reveal_child(True)
-            self.app.utils.copy_to_clipboard(self.target, self.cache_file, self.type)
-            self.app.cache_manager.update_cache_on_recopy(self.cache_file)
+            if "yes" in self.protected:
+                if validated:
+                    hash, hash_value = self.app.cache_manager.get_passwordhash()
+                    if hash:
+                        decrypt, decrypted_data = self.app.utils.do_encryption("decrypt", hash_value, self.cache_file)
+                        if decrypt:
+                            import tempfile
+                            temp_filename = next(tempfile._get_candidate_names()) + tempfile.gettempprefix()
+                            with open(temp_filename, 'wb') as file:
+                                file.write(decrypted_data)
+                                file.close()
+                            copy_result = self.app.utils.copy_to_clipboard(self.target, temp_filename, self.type)
+                else:
+                    self.on_clip_action(button=None, action="protect")
+            else:
+               copy_result = self.app.utils.copy_to_clipboard(self.target, self.cache_file, self.type)
+
+            if copy_result:
+                action_notify_box.show_all()
+                self.clip_action_notify_revealer.set_reveal_child(True)
+                self.app.cache_manager.update_cache_on_recopy(self.cache_file)
+
+            if validated is False and copy_result is False and button is None:
+                label = Gtk.Label("Authentication failed")
+                action_notify_box.show_all()
+                self.clip_action_notify_revealer.set_reveal_child(True)
             
         elif action == "force_delete" or action[0] == "force_delete":
             current_flowbox_index = flowboxchild.get_index() - 1
@@ -720,6 +754,62 @@ class ClipsContainer(Gtk.EventBox):
     def on_notify_action_hide(self, clip_action_notify, event):
         clip_action_notify.set_reveal_child(False)
         clip_action_notify.props.can_focus = False
+
+    def on_button_clicked(self, button, params):
+        if button.props.name == "revealpassword":
+            entry = params
+            if entry.props.text != "":
+                if entry.props.visibility:
+                    entry.props.visibility = False
+                    button.set_image(Gtk.Image().new_from_icon_name("com.github.hezral.clips-hidepswd", Gtk.IconSize.LARGE_TOOLBAR))
+                else:
+                    entry.props.visibility = True
+                    button.set_image(Gtk.Image().new_from_icon_name("com.github.hezral.clips-revealpswd", Gtk.IconSize.LARGE_TOOLBAR))
+        
+        if button.props.name == "revealcontent":
+            entry = params[0][0]
+            label = params[0][1]
+            action = params[0][2]
+            ok_button = params[1]
+            if entry.props.text != "":
+                validate_result, validate_message = self.app.cache_manager.verify_password(entry.props.text)
+                if validate_result:
+                    if action == "copyprotected":
+                        self.on_clip_action(button=None, action="copy", validated=True)
+                    else:
+                        hash, hash_value = self.app.cache_manager.get_passwordhash()
+                        if hash:
+                            decrypt, decrypted_data = self.app.utils.do_encryption("decrypt", hash_value, self.cache_file)
+                            if decrypt:
+                                self.on_revealcontent_timeout(label, decrypted_data.decode("utf-8"))
+                    try:
+                        self.unprotect_dialog.destroy()
+                    except:
+                        pass
+                else:
+                    entry.props.text = ""
+                    entry.props.placeholder_text = validate_message
+                    ok_button.grab_focus()
+
+    def on_setpassword_entry_activated(self, entry):
+        self.ok_button.emit("clicked")
+
+    def on_revealcontent_timeout(self, label, content):
+
+        def update_label(timeout):
+            label.props.label = "{message} ({i})\n".format(message=content,i=timeout)
+
+        @self.app.utils.run_async
+        def timeout_label(self, label):
+            
+            import time
+            for i in reversed(range(1, self.app.gio_settings.get_int(key="unprotect-timeout"), 1)):
+                GLib.idle_add(update_label, (i))
+                time.sleep(1)
+            label.props.label = "*********"
+
+        timeout_label(self, label)
+        
 
 # ----------------------------------------------------------------------------------------------------
 
@@ -1315,21 +1405,29 @@ class EmailContainer(DefaultContainer):
 
 # ----------------------------------------------------------------------------------------------------
 
-class ProtectedContainer(PlainTextContainer):
+class ProtectedContainer(DefaultContainer):
     def __init__(self, filepath, type, app, *args, **kwargs):
-        super().__init__(filepath, type, app)
+        super().__init__(*args, **kwargs)
 
         self.props.name = "protected-container"
         self.label = "Protected Clips"
 
+        self.props.margin = 10
+        self.props.margin_left = self.props.margin_right = 10
+
+        self.content = Gtk.Label()
         self.content.props.label = "*********"
         self.content.props.hexpand = False
-        self.content.props.max_width_chars = 40
+        self.content.props.max_width_chars = 23
         self.content.props.wrap = False
         self.content.props.expand = False
         self.content.props.ellipsize = Pango.EllipsizeMode.NONE
+        self.content.props.wrap_mode = Pango.WrapMode.CHAR
+        self.content.props.max_width_chars = 23
 
         self.props.halign = self.props.valign = Gtk.Align.CENTER
         self.props.expand = False
         self.props.hexpand = True
+
+        self.attach(self.content, 0, 0, 1, 1)
 
