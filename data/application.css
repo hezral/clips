@@ -353,12 +353,11 @@ grid#setpassword {
     animation: crossfader 1.5s ease-in-out forwards;
 }
 
-grid#protected-container {
-    font-size: 150%;
+/* grid#protected-container {
     font-weight: bold;
     letter-spacing: 2px;
     color: alpha(red, 0.75);
-}
+} */
 
 button#setpassword, button#revealpassword {
     outline-style: none;
