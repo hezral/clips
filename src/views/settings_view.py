@@ -138,11 +138,16 @@ class SettingsView(Gtk.Grid):
         self.flowbox.add(protected)
 
         # others -------------------------------------------------
-        reset_password = SubSettings(type="button", name="reset-password", label="Reset Password", sublabel="All protected clips will be changed", separator=False, params=(" Reset", Gtk.Image().new_from_icon_name("preferences-system-privacy", Gtk.IconSize.LARGE_TOOLBAR),))
+    
+        reset_password = SubSettings(type="button", name="reset-password", label="Reset Password", sublabel="All protected clips will be changed", separator=True, params=(" Reset", Gtk.Image().new_from_icon_name("preferences-system-privacy", Gtk.IconSize.LARGE_TOOLBAR),))
         reset_password.button.connect("clicked", self.on_button_clicked)
         reset_password.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
 
-        others = SettingsGroup("Other", (reset_password, ))
+        unprotect_timeout = SubSettings(type="spinbutton", name="unprotect-timeout", label="Timeout", sublabel="Timeout (in seconds) after revealing protected clips", separator=False, params=(1,1800,1))
+        unprotect_timeout.spinbutton.connect("value-changed", self.on_spinbutton_activated)
+        self.gio_settings.bind("unprotect-timeout", unprotect_timeout.spinbutton, "value", Gio.SettingsBindFlags.DEFAULT)
+
+        others = SettingsGroup("Other", (reset_password, unprotect_timeout))
         self.flowbox.add(others)
 
         # help -------------------------------------------------
@@ -238,7 +243,6 @@ class SettingsView(Gtk.Grid):
                     params[0][0].props.sensitive = False
                     button.destroy()
                     params[1].props.label = "Close"
-
                 else:
                     params[0][1].set_text("Password set failed: {error}".format(error=set_password_result))
 
@@ -251,6 +255,9 @@ class SettingsView(Gtk.Grid):
                 self.on_min_column_number_changed(spinbutton.props.value)
                 
             if name == "auto-retention-period":
+                print("spin:", spinbutton, spinbutton.props.value, name)
+
+            if name == "unprotect-timeout":
                 print("spin:", spinbutton, spinbutton.props.value, name)
 
     def on_switch_activated(self, switch, gparam):
