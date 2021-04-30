@@ -96,7 +96,6 @@ class Clips(Gtk.Application):
             print(datetime.now(), "start load_clips")
 
             clips = self.cache_manager.load_clips()
-            self.main_window.total_clips_label.props.label = "Clips: {total}".format(total=0)
             
             if len(clips) != 0:
                 self.load_clips_fromdb(clips)
@@ -111,11 +110,11 @@ class Clips(Gtk.Application):
     def load_clips_fromdb(self, clips):
         
         for clip in reversed(clips[-25:]):
-            GLib.idle_add(self.main_window.clips_view.new_clip, clip, self.app_startup)
+            GLib.idle_add(self.main_window.clips_view.new_clip, clip)
             time.sleep(0.01)
 
         for clip in reversed(clips[:-25]):
-            GLib.idle_add(self.main_window.clips_view.new_clip, clip, self.app_startup)
+            GLib.idle_add(self.main_window.clips_view.new_clip, clip)
             time.sleep(0.05)
 
         if self.main_window.clips_view.flowbox.get_child_at_index(0) is not None:

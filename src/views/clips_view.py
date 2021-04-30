@@ -148,7 +148,7 @@ class ClipsView(Gtk.Grid):
         date2 = child2.get_children()[0].created
         return date1 < date2
 
-    def new_clip(self, clip, app_startup=False):
+    def new_clip(self, clip):
         app = self.get_toplevel().props.application
         main_window = self.get_toplevel()
         id = clip[0]
@@ -159,8 +159,8 @@ class ClipsView(Gtk.Grid):
         if os.path.exists(cache_file) and len(new_flowboxchild) == 0:
             self.flowbox.add(ClipsContainer(self.app, clip, app.cache_manager.cache_filedir, app.utils))
             
-            if app_startup is False:
-                main_window.update_total_clips_label("add")
+            # if app_startup is False:
+            main_window.update_total_clips_label("add")
 
             self.flowbox.show_all()
 
@@ -688,7 +688,10 @@ class ClipsContainer(Gtk.EventBox):
                 flowbox.get_child_at_index(current_flowbox_index).grab_focus()
                 self.app.main_window.clips_view.on_child_activated(flowbox, flowbox.get_child_at_index(current_flowbox_index))
             flowboxchild.destroy()
-            self.delete_all_dialog.destroy()
+            try:
+                self.delete_all_dialog.destroy()
+            except:
+                pass
 
         elif action == "delete":
             self.delete_all_dialog = generate_custom_dialog(self, "Delete action", self.generate_clip_info(), "Delete", "delete", self.on_clip_action, "force_delete")
