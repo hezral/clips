@@ -322,18 +322,10 @@ class CacheManager():
             target, content, source_app, source_icon, created, protected, thumbnail, file_extension, content_type = data_tuple
 
             temp_filename = next(tempfile._get_candidate_names()) + tempfile.gettempprefix()
-
-            # define type
             type = content_type
-
-            # define filetype/extension
             cache_filetype = file_extension
-
-            # # define temp cache file 
             temp_cache_uri = os.path.join(self.cache_filedir, temp_filename + cache_filetype)
             temp_cache_thumbnail_uri = os.path.join(self.cache_filedir, temp_filename + "-thumb" + ".png")
-
-            # define clip source
             if 'Workspace' in source_app:
                 source = 'screenshot'
             elif 'files' in content_type:
@@ -353,6 +345,14 @@ class CacheManager():
             cache_file = checksum + "." + cache_filetype      
             cache_uri = self.cache_filedir + '/' + cache_file
             os.renames(temp_cache_uri, cache_uri)
+
+            if "yes" in protected:
+                hash, hash_value = self.get_passwordhash()
+                if hash:
+                    encrypt, encrypted_file = self.app.utils.do_encryption("encrypt", hash_value, cache_uri)
+                    if encrypt:
+                        os.remove(cache_uri)
+                        cache_file = os.path.split(encrypted_file)[1]
 
             # save thumbnail if available
             if thumbnail is not None:
@@ -435,7 +435,7 @@ class CacheManager():
         self.main_window.clips_view.flowbox.invalidate_sort()
 
     def check_total_clips(self):
-        total = len(self.load_clips())
+        # total = len(self.load_clips())
         self.main_window.on_view_visible()
 
     def load_source_apps(self):
@@ -465,7 +465,6 @@ class CacheManager():
     def set_password(self, password):
         user = "clips"
         hash = hashlib.sha256(password.encode('utf-8')).hexdigest()
-        
         data_param = (user, )
         sqlite_with_param = '''
             SELECT user FROM 'HashDB'
@@ -496,9 +495,9 @@ class CacheManager():
             return "sqlite3.Error: " + error
 
     def verify_password(self, password):
+        verify_password_result = (False, "Account/Password is incorrect")
         user = "clips"
         hash = hashlib.sha256(password.encode('utf-8')).hexdigest()
-
         data_param = (user, )
         sqlite_with_param = '''
             SELECT hash FROM 'HashDB'
@@ -512,8 +511,24 @@ class CacheManager():
                 returned_hash = row[0]
                 if returned_hash == hash:
                     verify_password_result = (True, "Account/Password is correct")
-            else:
-                verify_password_result = (False, "Account/Password is incorrect")
+            # else:
+            #     verify_password_result = (False, "Account/Password is incorrect")
             return verify_password_result
         except sqlite3.Error as error:
             return "sqlite3.Error: " + error
+
+    def get_passwordhash(self):
+        user = "clips"
+        data_param = (user, )
+        sqlite_with_param = '''
+            SELECT hash FROM 'HashDB'
+            WHERE
+            user = ?;
+            '''
+        try:
+            self.db_cursor.execute(sqlite_with_param, data_param)
+            row = self.db_cursor.fetchone()
+            if row is not None:
+                return True, row[0]
+        except sqlite3.Error as error:
+            return False, "sqlite3.Error: " + error
