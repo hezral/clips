@@ -679,6 +679,7 @@ class ClipsContainer(Gtk.EventBox):
             action_notify_box.attach(icon, 0, 0, 1, 1)
             action_notify_box.attach(label, 1, 0, 1, 1)
             copy_result = False
+            temp_file_uri = ""
 
             if "yes" in self.protected:
                 if validated:
@@ -688,7 +689,8 @@ class ClipsContainer(Gtk.EventBox):
                         if decrypt:
                             import tempfile
                             temp_filename = next(tempfile._get_candidate_names()) + tempfile.gettempprefix()
-                            with open(temp_filename, 'wb') as file:
+                            temp_file_uri = os.path.join(tempfile.gettempdir(), temp_filename)
+                            with open(temp_file_uri, 'wb') as file:
                                 file.write(decrypted_data)
                                 file.close()
                             copy_result = self.app.utils.copy_to_clipboard(self.target, temp_filename, self.type)
@@ -701,6 +703,7 @@ class ClipsContainer(Gtk.EventBox):
                 action_notify_box.show_all()
                 self.clip_action_notify_revealer.set_reveal_child(True)
                 self.app.cache_manager.update_cache_on_recopy(self.cache_file)
+                os.remove(temp_file_uri)
 
             if validated is False and copy_result is False and button is None:
                 label = Gtk.Label("Authentication failed")
