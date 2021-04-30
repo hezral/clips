@@ -246,7 +246,7 @@ class InfoView(Gtk.Grid):
     def timeout_on_setpassword(self, label, entry):
 
         def update_label(timeout):
-            label.set_text("Password succesfully added ({i})\n".format(i=timeout))
+            label.props.text = "Password succesfully added ({i})\n".format(i=timeout)
 
         @self.app.utils.run_async
         def timeout_label(self, label):
@@ -275,7 +275,7 @@ class InfoView(Gtk.Grid):
                     self.timeout_on_setpassword(label, entry)
                     self.app.on_clipsapp_action()
                 else:
-                    label.set_text("Password set failed: {error}".format(error=set_password_result))
+                    label.props.text = "Password set failed: {error}".format(error=set_password_result)
 
         if button.props.name == "revealpassword":
             if entry.props.text != "":
