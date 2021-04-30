@@ -524,12 +524,16 @@ def is_valid_email(str):
 def copy_to_clipboard(clipboard_target, file, type=None):
     from subprocess import Popen, PIPE
 
-    if "url" in type:
-        with open(file) as _file:
-            data = Popen(['echo', _file.readlines()[0].rstrip("\n").rstrip("\n")], stdout=PIPE)
-            Popen(['xclip', '-selection', 'clipboard', '-target', clipboard_target], stdin=data.stdout)
-    else:
-        Popen(['xclip', '-selection', 'clipboard', '-target', clipboard_target, '-i', file])
+    try:
+        if "url" in type:
+            with open(file) as _file:
+                data = Popen(['echo', _file.readlines()[0].rstrip("\n").rstrip("\n")], stdout=PIPE)
+                Popen(['xclip', '-selection', 'clipboard', '-target', clipboard_target], stdin=data.stdout)
+        else:
+            Popen(['xclip', '-selection', 'clipboard', '-target', clipboard_target, '-i', file])
+        return True
+    except:
+        return False
 
 #-------------------------------------------------------------------------------------------------------
 
@@ -605,10 +609,9 @@ def do_encryption(action, passphrase, filepath):
     import base64
     import os
 
-    def key_func(passphrase, filepath):
-        # makes the string readable for fernet.
+    def key_func(action, passphrase, filepath):
         password = passphrase.encode()
-        if filepath is None:
+        if action == "encrypt":
             salt = os.urandom(16)
         else:
             with open(filepath, 'rb') as file:
@@ -627,47 +630,38 @@ def do_encryption(action, passphrase, filepath):
         fernet = Fernet(key)
         file, ext = os.path.splitext(filepath)
         file = file.split('\\' or '/')[-1]
-        encrypted_name = file + "_enc" + ext
+        encrypted_file = file + "_enc_" + ext
 
         with open(filepath, 'rb') as file:
             original = file.read()
 
         try:
-            encrypted = fernet.encrypt(original)
-            os.remove(filepath)
-            with open(encrypted_name, 'wb') as file:
+            data = fernet.encrypt(original)
+            with open(encrypted_file, 'wb') as file:
                 file.write(salt)
-                file.write(encrypted)
-            return True
+                file.write(data)
+            return True, encrypted_file
         except:
-            print("Encryption failed")
-            return False
+            return False, "encryption failed"
         
-
     def decrypt(key, filepath):
         fernet = Fernet(key)
         file, ext = os.path.splitext(filepath)
         file = file.split('\\' or '/')[-1]
-        # decrypted_name = file + "_dec" + ext
 
         with open(filepath, 'rb') as file:
-            encrypted_file = file.read()
-        encrypted_file = encrypted_file[16:]
+            data = file.read()
+        data = data[16:]
 
         try:
-            decrypted = fernet.decrypt(encrypted_file)
-            print(decrypted.decode('utf-8'))
-            # with open(decrypted_name, 'wb') as file:
-            #     file.write(decrypted)
-            return True
-        except cryptography.fernet.InvalidToken:
-            print("Decryption failed")
-            return False
+            return True, fernet.decrypt(data)
+        except cryptography.fernet.InvalidToken as error:
+            return False, "decryption failed {errormsg}".format(errormsg=error)
 
+    encryption_key, salt = key_func(action, passphrase, filepath)
+    
     if action == "encrypt":
-        encryption_key = key_func(passphrase, filepath)
-        encrypt(encryption_key, filepath)
+        return encrypt(encryption_key, salt, filepath)
 
     if action == "decrypt":
-        encryption_key = key_func(passphrase)
-        decrypt(encryption_key, filepath)
+        return decrypt(encryption_key, filepath)
