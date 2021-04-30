@@ -143,7 +143,7 @@ class SettingsView(Gtk.Grid):
         reset_password.button.connect("clicked", self.on_button_clicked)
         reset_password.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
 
-        unprotect_timeout = SubSettings(type="spinbutton", name="unprotect-timeout", label="Timeout", sublabel="Timeout (in seconds) after revealing protected clips", separator=False, params=(1,1800,1))
+        unprotect_timeout = SubSettings(type="spinbutton", name="unprotect-timeout", label="Timeout", sublabel="Timeout(sec) after revealing protected clips", separator=False, params=(1,1800,1))
         unprotect_timeout.spinbutton.connect("value-changed", self.on_spinbutton_activated)
         self.gio_settings.bind("unprotect-timeout", unprotect_timeout.spinbutton, "value", Gio.SettingsBindFlags.DEFAULT)
 
