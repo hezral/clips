@@ -58,5 +58,11 @@
             <summary>Set minimum number of columns</summary>
             <description>Set minimum number of columns</description>
         </key>
+        <key type="i" name="unprotect-timeout">
+            <default>15</default>
+            <range min="1" max="1800"/>
+            <summary>Timeout (in seconds) after revealing protected clips</summary>
+            <description>Timeout (in seconds) after revealing protected clips</description>
+        </key>
     </schema>
 </schemalist>
