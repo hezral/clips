@@ -17,13 +17,18 @@
 
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk
+from gi.repository import Gtk, Gdk
 
 def generate_custom_dialog(self, title, content_widget, action_label, action_name, callback, data=None):
 
     parent = self.get_toplevel()
+
     def close_dialog(button):
         custom_window.destroy()
+
+    def on_key_press(window, eventkey):
+        if eventkey.keyval == 65307: #63307 is esc key
+            custom_window.destroy()
 
     header = Gtk.HeaderBar()
     header.props.show_close_button = True
@@ -65,6 +70,7 @@ def generate_custom_dialog(self, title, content_widget, action_label, action_nam
     custom_window.add(grid)
     custom_window.show_all()
     custom_window.connect("destroy", close_dialog)
+    custom_window.connect("key-press-event", on_key_press)
 
     self.cancel_button.grab_focus()
 
