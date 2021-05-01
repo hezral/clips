@@ -203,7 +203,9 @@ class ClipsView(Gtk.Grid):
         clips_container.clip_overlay_revealer.set_reveal_child(False)
         self.app.main_window.clips_view.flowbox.unselect_child(clips_container.get_parent())
         selected = len(self.flowbox.get_selected_children())
-        self.delete_selected_button.props.label = "Delete ({count})".format(count=str(selected)) 
+        self.delete_selected_button.props.label = "Delete ({count})".format(count=str(selected))
+        if selected == 0:
+            self.off_multi_select()
 
     def on_selected_children_changed(self, flowbox):
         selected = len(flowbox.get_selected_children())
@@ -248,7 +250,7 @@ class ClipsView(Gtk.Grid):
             clips_container.disconnect_by_func(clips_container.on_cursor_leaving_clip)
             clips_container.disconnect_by_func(clips_container.on_double_clicked_clip)
         
-        self.delete_selected_button.props.label = "Delete ({count})".format(count=str(1))
+        self.delete_selected_button.props.label = "Delete ({count})".format(count=str(len(self.flowbox.get_selected_children())))
         self.multi_select_mode = True
 
     def off_multi_select(self):
@@ -268,6 +270,7 @@ class ClipsView(Gtk.Grid):
 
         self.delete_selected_button.props.label = "Delete ({count})".format(count=str(0)) 
         self.multi_select_mode = False
+        self.flowbox.select_child(self.flowbox.get_child_at_index(self.current_selected_flowboxchild_index))
 
 # ----------------------------------------------------------------------------------------------------
 
@@ -613,7 +616,7 @@ class ClipsContainer(Gtk.EventBox):
             if flowboxchild_selected[0].get_children()[0].clip_action_notify_revealer.get_child_revealed():
                 flowboxchild_selected[0].get_children()[0].clip_action_notify_revealer.set_reveal_child(False)
 
-    def on_clip_action(self, button=None, action=None, validated=False):
+    def on_clip_action(self, button=None, action=None, validated=False, data=None):
         flowboxchild = self.get_parent()
         flowbox = self.app.main_window.clips_view.flowbox
         flowbox.select_child(flowboxchild)
@@ -625,30 +628,17 @@ class ClipsContainer(Gtk.EventBox):
             child.destroy()
  
         if action == "protect":
-            protected_container = self.app.utils.get_widget_by_name(self, "protected-container", 0, doPrint=False)
-            content = protected_container.content
-            setpassword_entry = Gtk.Entry()
-            setpassword_entry.props.input_purpose = Gtk.InputPurpose.PASSWORD
-            setpassword_entry.props.visibility = False
-            setpassword_entry.props.hexpand = True
-            setpassword_entry.props.placeholder_text = " type in password"
-            setpassword_entry.props.halign = Gtk.Align.FILL
-            setpassword_entry.props.valign = Gtk.Align.CENTER
-            setpassword_entry.set_size_request(280,32)
-            revealpassword_button = Gtk.Button(image=Gtk.Image().new_from_icon_name("com.github.hezral.clips-hidepswd", Gtk.IconSize.LARGE_TOOLBAR))
-            revealpassword_button.props.hexpand = True
-            revealpassword_button.props.name = "revealpassword"
-            revealpassword_button.props.halign = Gtk.Align.END
-            revealpassword_button.props.valign = Gtk.Align.CENTER
-            grid = Gtk.Grid()
-            grid.props.row_spacing = 10
-            grid.attach(revealpassword_button, 0, 1, 1, 1)
-            grid.attach(setpassword_entry, 0, 1, 1, 1)
-            if button is None:
-                action = "copyprotected"
-            self.unprotect_dialog = generate_custom_dialog(self, "Reveal Content", grid, "Reveal", "revealcontent", self.on_button_clicked, (setpassword_entry, content, action))
-            revealpassword_button.connect("clicked", self.on_button_clicked, setpassword_entry)
-            setpassword_entry.connect("activate", self.on_setpassword_entry_activated)
+            if "yes" in self.protected:
+                protected_container = self.app.utils.get_widget_by_name(self, "protected-container", 0, doPrint=False)
+                content = protected_container.content
+                title = "Reveal Content"
+                callback = self.on_button_clicked
+                if validated:
+                    decrypt, decrypted_data = self.app.utils.do_encryption("decrypt", data, self.cache_file)
+                    if decrypt:
+                        self.on_revealcontent_timeout(content, decrypted_data.decode("utf-8"))
+                else:
+                    self.authenticate_dialog = self.on_authenticate(title, action, callback, content)
 
         elif action == "reveal":
             self.app.utils.reveal_file_gio(self.cache_file)
@@ -680,22 +670,22 @@ class ClipsContainer(Gtk.EventBox):
             action_notify_box.attach(label, 1, 0, 1, 1)
             copy_result = False
             temp_file_uri = ""
-
+            title = "Copy Content"
+            callback = self.on_button_clicked
+            
             if "yes" in self.protected:
                 if validated:
-                    hash, hash_value = self.app.cache_manager.get_passwordhash()
-                    if hash:
-                        decrypt, decrypted_data = self.app.utils.do_encryption("decrypt", hash_value, self.cache_file)
-                        if decrypt:
-                            import tempfile
-                            temp_filename = next(tempfile._get_candidate_names()) + tempfile.gettempprefix()
-                            temp_file_uri = os.path.join(tempfile.gettempdir(), temp_filename)
-                            with open(temp_file_uri, 'wb') as file:
-                                file.write(decrypted_data)
-                                file.close()
-                            copy_result = self.app.utils.copy_to_clipboard(self.target, temp_filename, self.type)
+                    decrypt, decrypted_data = self.app.utils.do_encryption("decrypt", data, self.cache_file)
+                    if decrypt:
+                        import tempfile
+                        temp_filename = next(tempfile._get_candidate_names()) + tempfile.gettempprefix()
+                        temp_file_uri = os.path.join(tempfile.gettempdir(), temp_filename)
+                        with open(temp_file_uri, 'wb') as file:
+                            file.write(decrypted_data)
+                            file.close()
+                        copy_result = self.app.utils.copy_to_clipboard(self.target, temp_file_uri, self.type)
                 else:
-                    self.on_clip_action(button=None, action="protect")
+                    self.authenticate_dialog = self.on_authenticate(title, action, callback)
             else:
                copy_result = self.app.utils.copy_to_clipboard(self.target, self.cache_file, self.type)
 
@@ -758,9 +748,51 @@ class ClipsContainer(Gtk.EventBox):
         clip_action_notify.set_reveal_child(False)
         clip_action_notify.props.can_focus = False
 
-    def on_button_clicked(self, button, params):
+    def on_authenticate(self, title, action, callback, data=None):
+
+        def reveal_entry_text(button, entry):
+            if button.props.name == "revealentry":
+                if entry.props.text != "":
+                    if entry.props.visibility:
+                        entry.props.visibility = False
+                        button.set_image(Gtk.Image().new_from_icon_name("com.github.hezral.clips-hidepswd", Gtk.IconSize.LARGE_TOOLBAR))
+                    else:
+                        entry.props.visibility = True
+                        button.set_image(Gtk.Image().new_from_icon_name("com.github.hezral.clips-revealpswd", Gtk.IconSize.LARGE_TOOLBAR))
+
+        def entry_activated(entry):
+            self.ok_button.emit("clicked")
+
+        setpassword_entry = Gtk.Entry()
+        setpassword_entry.props.input_purpose = Gtk.InputPurpose.PASSWORD
+        setpassword_entry.props.visibility = False
+        setpassword_entry.props.hexpand = True
+        setpassword_entry.props.placeholder_text = " type in password"
+        setpassword_entry.props.halign = Gtk.Align.FILL
+        setpassword_entry.props.valign = Gtk.Align.CENTER
+        setpassword_entry.set_size_request(280,32)
+
+        revealpassword_button = Gtk.Button(image=Gtk.Image().new_from_icon_name("com.github.hezral.clips-hidepswd", Gtk.IconSize.LARGE_TOOLBAR))
+        revealpassword_button.props.hexpand = True
+        revealpassword_button.props.name = "revealentry"
+        revealpassword_button.props.halign = Gtk.Align.END
+        revealpassword_button.props.valign = Gtk.Align.CENTER
+        
+        grid = Gtk.Grid()
+        grid.props.row_spacing = 10
+        grid.attach(revealpassword_button, 0, 1, 1, 1)
+        grid.attach(setpassword_entry, 0, 1, 1, 1)
+        
+        dialog = generate_custom_dialog(self, title, grid, "Authenticate", "authenticate", callback, (action, data, setpassword_entry))
+        
+        revealpassword_button.connect("clicked", reveal_entry_text, setpassword_entry)
+        setpassword_entry.connect("activate", entry_activated)
+
+        return dialog
+
+    def on_button_clicked(self, button=None, data=None):
         if button.props.name == "revealpassword":
-            entry = params
+            entry = data
             if entry.props.text != "":
                 if entry.props.visibility:
                     entry.props.visibility = False
@@ -769,30 +801,25 @@ class ClipsContainer(Gtk.EventBox):
                     entry.props.visibility = True
                     button.set_image(Gtk.Image().new_from_icon_name("com.github.hezral.clips-revealpswd", Gtk.IconSize.LARGE_TOOLBAR))
         
-        if button.props.name == "revealcontent":
-            entry = params[0][0]
-            label = params[0][1]
-            action = params[0][2]
-            ok_button = params[1]
+        if button.props.name == "authenticate":
+            action = data[0][0]
+            label = data[0][1]
+            entry = data[0][2]
+            button = data[1]
+            do_authenticate = decrypt = False
             if entry.props.text != "":
-                validate_result, validate_message = self.app.cache_manager.verify_password(entry.props.text)
-                if validate_result:
-                    if action == "copyprotected":
-                        self.on_clip_action(button=None, action="copy", validated=True)
-                    else:
-                        hash, hash_value = self.app.cache_manager.get_passwordhash()
-                        if hash:
-                            decrypt, decrypted_data = self.app.utils.do_encryption("decrypt", hash_value, self.cache_file)
-                            if decrypt:
-                                self.on_revealcontent_timeout(label, decrypted_data.decode("utf-8"))
+                do_authenticate, authenticated_data = self.app.utils.do_authentication("get")
+                if do_authenticate and authenticated_data == entry.props.text:
+                    self.on_clip_action(button=None, action=action, validated=True, data=authenticated_data)
                     try:
-                        self.unprotect_dialog.destroy()
+                        self.authenticate_dialog.destroy()
                     except:
                         pass
-                else:
+
+                if do_authenticate is False or authenticated_data != entry.props.text:
                     entry.props.text = ""
-                    entry.props.placeholder_text = validate_message
-                    ok_button.grab_focus()
+                    entry.props.placeholder_text = "Authentication failed!"
+                    button.grab_focus()
 
     def on_setpassword_entry_activated(self, entry):
         self.ok_button.emit("clicked")
@@ -812,7 +839,6 @@ class ClipsContainer(Gtk.EventBox):
             label.props.label = "*********"
 
         timeout_label(self, label)
-        
 
 # ----------------------------------------------------------------------------------------------------
 
