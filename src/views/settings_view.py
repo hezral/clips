@@ -17,7 +17,7 @@
 
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, Gio, Pango, GObject, Gdk
+from gi.repository import Gtk, Gio, Pango, GObject, Gdk, GLib
 from .custom_dialog import *
 
 # ----------------------------------------------------------------------------------------------------
@@ -174,8 +174,6 @@ class SettingsView(Gtk.Grid):
         name = button.get_name()
 
         if name == "excluded-apps" or name == "protected-apps":
-            
-            # app_chooser_popover = params[0]
             app_chooser_popover = AppChooserPopover(params=(params[0], ))
             app_chooser_popover.set_relative_to(button)
             app_chooser_popover.show_all()
@@ -187,7 +185,6 @@ class SettingsView(Gtk.Grid):
                 self.app.cache_manager.delete_all_record()
                 self.delete_all_dialog.destroy()
             else:
-                # self.delete_all_dialog = self.generate_custom_dialog("Delete All Clips", label, "Delete All", "delete-all", self.on_button_clicked, (True, ))
                 self.delete_all_dialog = generate_custom_dialog(self, "Delete All Clips", label, "Delete All", "delete-all", self.on_button_clicked, (True, ))
 
         if name == "run-housekeeping-now":
@@ -222,7 +219,7 @@ class SettingsView(Gtk.Grid):
             grid.attach(label, 0, 0, 2, 1)
             grid.attach(revealpassword_button, 0, 1, 1, 1)
             grid.attach(setpassword_entry, 0, 1, 1, 1)
-            generate_custom_dialog(self, "Reset Password", grid, "Reset", "setpassword", self.on_button_clicked, (setpassword_entry, label))
+            self.resetpassword_dialog = generate_custom_dialog(self, "Reset Password", grid, "Reset", "setpassword", self.on_button_clicked, (setpassword_entry, label))
             revealpassword_button.connect("clicked", self.on_button_clicked, setpassword_entry)
             setpassword_entry.connect("activate", self.on_setpassword_entry_activated)
 
@@ -236,15 +233,19 @@ class SettingsView(Gtk.Grid):
                     button.set_image(Gtk.Image().new_from_icon_name("com.github.hezral.clips-revealpswd", Gtk.IconSize.LARGE_TOOLBAR))
 
         if button.props.name == "setpassword":
-            if params[0][0].props.text != "":
-                set_password_result = self.app.cache_manager.set_password(params[0][0].props.text)
-                if set_password_result:
-                    params[0][1].set_text("Password set successfull")
-                    params[0][0].props.sensitive = False
+            entry = params[0][0]
+            label = params[0][1]
+            cancel_button = params[1]
+            if entry.props.text != "":
+                set_password, set_password_msg = self.app.utils.do_authentication("set", entry.props.text)
+                if set_password:
+                    label.set_text("Password set successfull")
+                    entry.props.sensitive = False
                     button.destroy()
-                    params[1].props.label = "Close"
+                    cancel_button.props.label = "Close"
+                    self.timeout_on_setpassword(label, entry)
                 else:
-                    params[0][1].set_text("Password set failed: {error}".format(error=set_password_result))
+                    label.set_text("Password set failed: {error}".format(error=set_password_msg))
 
     def on_spinbutton_activated(self, spinbutton):        
         name = spinbutton.get_name()
@@ -312,6 +313,25 @@ class SettingsView(Gtk.Grid):
 
     def on_setpassword_entry_activated(self, entry):
         self.ok_button.emit("clicked")
+
+    def timeout_on_setpassword(self, label, entry):
+
+        def update_label(timeout):
+            label.props.label = "Password succesfully added ({i})\n".format(i=timeout)
+
+        @self.app.utils.run_async
+        def timeout_label(self, label):
+            import time
+            for i in reversed(range(5)):
+                GLib.idle_add(update_label, (i))
+                time.sleep(1)
+            try:
+                self.resetpassword_dialog.destroy()
+            except:
+                pass
+        entry.props.sensitive = False
+        timeout_label(self, label)
+
 
 # ----------------------------------------------------------------------------------------------------
 
