@@ -349,6 +349,7 @@ def reveal_file_gio(files):
     app_info = Gio.AppInfo.get_default_for_type("inode/directory", True)
     # add check if file or files
     if isinstance(files, list):
+        print("files")
         try:
             app_info.launch_uris(files, None)
         except:
@@ -360,9 +361,6 @@ def reveal_file_gio(files):
         app_info.launch(files_list, None)
 
 # file1 = "/home/adi/Work/clips/colors.txt"
-# file2 = "/home/adi/Work/clips/setup.py"
-# files = [file1, file2]
-# reveal_file_gio(files)
 # reveal_file_gio(file1)
 
 #-------------------------------------------------------------------------------------------------------
@@ -665,3 +663,26 @@ def do_encryption(action, passphrase, filepath):
 
     if action == "decrypt":
         return decrypt(encryption_key, filepath)
+
+def do_authentication(action, password=None):
+
+    def set_password(password):
+        import keyring
+        try:
+            return True, keyring.set_password("com.github.hezral.clips", "clips", password)
+        except:
+            return False, keyring.errors
+
+    def get_password():
+        import keyring
+        try:
+            return True, keyring.get_password("com.github.hezral.clips", "clips")
+        except:
+            return False, keyring.errors
+
+    if action == "get":
+        return get_password()
+    elif action == "set":
+        return set_password(password)
+
+
