@@ -63,7 +63,6 @@ class CacheManager():
             else:
                 self.db_connection, self.db_cursor = self.open_db(db_file)
                 self.create_table(self.db_cursor)
-                self.create_table_hash(self.db_cursor)
         except (OSError, sqlite3.Error) as error:
             print("Exception: ", error)
 
@@ -89,17 +88,6 @@ class CacheManager():
                 cache_file      TEXT,
                 type            TEXT,
                 protected       TEXT
-            );
-            ''')
-
-    def create_table_hash(self, database_cursor):
-        # Initializes the database with the hash table
-        database_cursor.execute('''
-            CREATE TABLE HashDB (
-                id          INTEGER     PRIMARY KEY     NOT NULL,
-                created     TEXT        NOT NULL        DEFAULT (STRFTIME('%Y-%m-%d %H:%M:%S.%f', 'NOW', 'localtime')),
-                user        TEXT,
-                hash        TEXT
             );
             ''')
 
@@ -147,7 +135,7 @@ class CacheManager():
         except sqlite3.Error as error:
             print("Exception sqlite3.Error: ", error) #add logging
 
-    def update_record(self, checksum):
+    def update_record_on_recopy(self, checksum):
         data_param = (str(checksum + "%"),) #pass in a sequence ie list
         sqlite_with_param = '''
             SELECT created, cache_file FROM 'ClipsDB'
@@ -347,13 +335,7 @@ class CacheManager():
             os.renames(temp_cache_uri, cache_uri)
 
             if "yes" in protected:
-                if hash:
-                    do_authenticate, authenticate_data = self.app.utils.do_authentication("get")
-                    if do_authenticate:
-                        encrypt, encrypted_file = self.app.utils.do_encryption("encrypt", authenticate_data, cache_uri)
-                    if encrypt:
-                        os.remove(cache_uri)
-                        cache_file = os.path.split(encrypted_file)[1]
+                cache_file = self.encrypt_file(cache_uri)
 
             # save thumbnail if available
             if thumbnail is not None:
@@ -412,7 +394,7 @@ class CacheManager():
             checksum = os.path.splitext(cache_file)[0].split("/")[-1]
 
         # update db with new timestamp and get the timestamp
-        created_updated = self.update_record(checksum)
+        created_updated = self.update_record_on_recopy(checksum)
         
         # get the id for the clip that was updated
         clip = self.check_duplicate(checksum)[0]
@@ -463,18 +445,46 @@ class CacheManager():
         records = self.db_cursor.fetchall()
         return records
 
+    def encrypt_file(self, cache_uri, reencrypt=False, passphrase=None):
+        do_authenticate, authenticate_data = self.app.utils.do_authentication("get")
+        if do_authenticate:
+            if reencrypt:
+                decrypt, decrypted_data = self.app.utils.do_encryption("decrypt", passphrase, cache_uri)
+                if decrypt:
+                    import tempfile
+                    temp_filename = next(tempfile._get_candidate_names()) + tempfile.gettempprefix()
+                    temp_file_uri = os.path.join(tempfile.gettempdir(), temp_filename)
+                    with open(temp_file_uri, 'wb') as file:
+                        file.write(decrypted_data)
+                        file.close()
+                    os.remove(cache_uri)
+                    os.renames(temp_file_uri, cache_uri)
+                    self.encrypt_file(cache_uri)
+            else:
+                encrypt, encrypted_file = self.app.utils.do_encryption("encrypt", authenticate_data, cache_uri)
+                if encrypt:
+                    os.remove(cache_uri)
+                    cache_file = encrypted_file.replace("_enc__enc_","_enc_")
+                    os.renames(encrypted_file, cache_file)
+                    return os.path.split(cache_file)[1]
+
+
     def reset_protected_clips(self, password):
         protected = "yes"
         data_param = (protected, )
         sqlite_with_param = '''
-            SELECT hash FROM 'HashDB'
+            SELECT id, cache_file FROM 'ClipsDB'
             WHERE
             protected = ?;
             '''
         try:
             self.db_cursor.execute(sqlite_with_param, data_param)
-            row = self.db_cursor.fetchoall()
-            if row is not None:
-                return True, row
+            rows = self.db_cursor.fetchall()
+            if rows is not None:
+                # print(rows)
+                for row in rows:
+                    id = row[0]
+                    cache_file_uri = os.path.join(self.cache_filedir,row[1])
+                    self.encrypt_file(cache_file_uri, reencrypt=True, passphrase=password)
         except sqlite3.Error as error:
-            return False, "sqlite3.Error: " + error
+            return False, str(error)
