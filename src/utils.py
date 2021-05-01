@@ -684,5 +684,7 @@ def do_authentication(action, password=None):
         return get_password()
     elif action == "set":
         return set_password(password)
+    elif action == "reset":
+        return get_password(), set_password(password)
 
 
