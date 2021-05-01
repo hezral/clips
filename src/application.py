@@ -163,7 +163,7 @@ class Clips(Gtk.Application):
         self.create_action("del-column", self.on_column_number_action, "<Alt>Down")
 
         # selected clip actions
-        # self.create_action("protect", self.on_clip_actions, "<Alt>P")
+        self.create_action("protect", self.on_clip_actions, "<Alt>P")
         self.create_action("multi-select", self.on_clip_actions, "<Alt>M")
         self.create_action("reveal", self.on_clip_actions, "<Alt>R")
         self.create_action("info", self.on_clip_actions, "<Alt>I")
