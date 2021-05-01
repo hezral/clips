@@ -680,10 +680,12 @@ class ClipsContainer(Gtk.EventBox):
                         import tempfile
                         temp_filename = next(tempfile._get_candidate_names()) + tempfile.gettempprefix()
                         temp_file_uri = os.path.join(tempfile.gettempdir(), temp_filename)
+                        print(temp_file_uri)
                         with open(temp_file_uri, 'wb') as file:
                             file.write(decrypted_data)
                             file.close()
                         copy_result = self.app.utils.copy_to_clipboard(self.target, temp_file_uri, self.type)
+                        
                 else:
                     self.authenticate_dialog = self.on_authenticate(title, action, callback)
             else:
