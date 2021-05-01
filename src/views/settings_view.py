@@ -201,27 +201,48 @@ class SettingsView(Gtk.Grid):
 
         if name == "reset-password":
             label = Gtk.Label(label="This will reset the password and also all protected clips")
-            setpassword_entry = Gtk.Entry()
-            setpassword_entry.props.input_purpose = Gtk.InputPurpose.PASSWORD
-            setpassword_entry.props.visibility = False
-            setpassword_entry.props.hexpand = True
-            setpassword_entry.props.placeholder_text = " type in password"
-            setpassword_entry.props.halign = Gtk.Align.FILL
-            setpassword_entry.props.valign = Gtk.Align.CENTER
-            setpassword_entry.set_size_request(280,32)
-            revealpassword_button = Gtk.Button(image=Gtk.Image().new_from_icon_name("com.github.hezral.clips-hidepswd", Gtk.IconSize.LARGE_TOOLBAR))
-            revealpassword_button.props.hexpand = True
-            revealpassword_button.props.name = "revealpassword"
-            revealpassword_button.props.halign = Gtk.Align.END
-            revealpassword_button.props.valign = Gtk.Align.CENTER
+            oldpassword_entry = Gtk.Entry()
+            oldpassword_entry.props.input_purpose = Gtk.InputPurpose.PASSWORD
+            oldpassword_entry.props.visibility = False
+            oldpassword_entry.props.hexpand = True
+            oldpassword_entry.props.placeholder_text = " current password"
+            oldpassword_entry.props.halign = Gtk.Align.FILL
+            oldpassword_entry.props.valign = Gtk.Align.CENTER
+            oldpassword_entry.set_size_request(280,32)
+
+            newpassword_entry = Gtk.Entry()
+            newpassword_entry.props.input_purpose = Gtk.InputPurpose.PASSWORD
+            newpassword_entry.props.visibility = False
+            newpassword_entry.props.hexpand = True
+            newpassword_entry.props.placeholder_text = " new password"
+            newpassword_entry.props.halign = Gtk.Align.FILL
+            newpassword_entry.props.valign = Gtk.Align.CENTER
+            newpassword_entry.set_size_request(280,32)
+
+            revealoldpassword_button = Gtk.Button(image=Gtk.Image().new_from_icon_name("com.github.hezral.clips-hidepswd", Gtk.IconSize.LARGE_TOOLBAR))
+            revealoldpassword_button.props.hexpand = True
+            revealoldpassword_button.props.name = "revealpassword"
+            revealoldpassword_button.props.halign = Gtk.Align.END
+            revealoldpassword_button.props.valign = Gtk.Align.CENTER
+
+            revealnewpassword_button = Gtk.Button(image=Gtk.Image().new_from_icon_name("com.github.hezral.clips-hidepswd", Gtk.IconSize.LARGE_TOOLBAR))
+            revealnewpassword_button.props.hexpand = True
+            revealnewpassword_button.props.name = "revealpassword"
+            revealnewpassword_button.props.halign = Gtk.Align.END
+            revealnewpassword_button.props.valign = Gtk.Align.CENTER
+
             grid = Gtk.Grid()
             grid.props.row_spacing = 10
             grid.attach(label, 0, 0, 2, 1)
-            grid.attach(revealpassword_button, 0, 1, 1, 1)
-            grid.attach(setpassword_entry, 0, 1, 1, 1)
-            self.resetpassword_dialog = generate_custom_dialog(self, "Reset Password", grid, "Reset", "setpassword", self.on_button_clicked, (setpassword_entry, label))
-            revealpassword_button.connect("clicked", self.on_button_clicked, setpassword_entry)
-            setpassword_entry.connect("activate", self.on_setpassword_entry_activated)
+            grid.attach(revealoldpassword_button, 0, 1, 1, 1)
+            grid.attach(oldpassword_entry, 0, 1, 1, 1)
+            grid.attach(revealnewpassword_button, 0, 2, 1, 1)
+            grid.attach(newpassword_entry, 0, 2, 1, 1)
+
+            self.resetpassword_dialog = generate_custom_dialog(self, "Reset Password", grid, "Reset", "setpassword", self.on_button_clicked, (newpassword_entry, oldpassword_entry, label))
+            revealoldpassword_button.connect("clicked", self.on_button_clicked, oldpassword_entry)
+            revealnewpassword_button.connect("clicked", self.on_button_clicked, newpassword_entry)
+            newpassword_entry.connect("activate", self.on_newpassword_entry_activated)
 
         if button.props.name == "revealpassword":
             if params.props.text != "":
@@ -233,19 +254,26 @@ class SettingsView(Gtk.Grid):
                     button.set_image(Gtk.Image().new_from_icon_name("com.github.hezral.clips-revealpswd", Gtk.IconSize.LARGE_TOOLBAR))
 
         if button.props.name == "setpassword":
-            entry = params[0][0]
-            label = params[0][1]
+            newpassword_entry = params[0][0]
+            oldpassword_entry = params[0][1]
+            label = params[0][2]
             cancel_button = params[1]
-            if entry.props.text != "":
-                set_password, set_password_msg = self.app.utils.do_authentication("set", entry.props.text)
-                if set_password:
-                    label.set_text("Password set successfull")
-                    entry.props.sensitive = False
-                    button.destroy()
-                    cancel_button.props.label = "Close"
-                    self.timeout_on_setpassword(label, entry)
+            newpassword = newpassword_entry.props.text
+            oldpassword = oldpassword_entry.props.text
+            if newpassword != "" and oldpassword != "":
+                get_password, get_password_data = self.app.utils.do_authentication("get")
+                if oldpassword == get_password_data:
+                    get_password, set_password = self.app.utils.do_authentication("reset", newpassword)
+                    if get_password[0] and set_password[0]:
+                        button.destroy()
+                        cancel_button.props.label = "Close"
+                        self.timeout_on_setpassword(label, newpassword_entry, oldpassword_entry)
+                        self.app.cache_manager.reset_protected_clips(get_password[1])
+                    else:
+                        label.set_text("Password set failed: {error}".format(error=set_password[1]))
                 else:
-                    label.set_text("Password set failed: {error}".format(error=set_password_msg))
+                    oldpassword_entry.props.placeholder_text = "Current password incorrect"
+                    oldpassword_entry.props.text = ""
 
     def on_spinbutton_activated(self, spinbutton):        
         name = spinbutton.get_name()
@@ -311,25 +339,26 @@ class SettingsView(Gtk.Grid):
             help_flowbox.props.min_children_per_line = value
         self.gio_settings.set_int(key="min-column-number", value=value)
 
-    def on_setpassword_entry_activated(self, entry):
+    def on_newpassword_entry_activated(self, entry):
         self.ok_button.emit("clicked")
 
-    def timeout_on_setpassword(self, label, entry):
+    def timeout_on_setpassword(self, label, entry1, entry2):
 
         def update_label(timeout):
-            label.props.label = "Password succesfully added ({i})\n".format(i=timeout)
+            label.props.label = "Password succesfully reset ({i})".format(i=timeout)
 
         @self.app.utils.run_async
         def timeout_label(self, label):
             import time
-            for i in reversed(range(5)):
+            for i in reversed(range(3)):
                 GLib.idle_add(update_label, (i))
                 time.sleep(1)
             try:
                 self.resetpassword_dialog.destroy()
             except:
                 pass
-        entry.props.sensitive = False
+
+        entry1.props.sensitive = entry2.props.sensitive = False
         timeout_label(self, label)
 
 
