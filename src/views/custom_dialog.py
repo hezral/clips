@@ -67,6 +67,7 @@ def generate_custom_dialog(self, title, content_widget, action_label, action_nam
     custom_window.set_titlebar(header)
     custom_window.props.transient_for = parent
     custom_window.props.modal = True
+    custom_window.props.window_position = Gtk.WindowPosition.CENTER_ON_PARENT
     custom_window.add(grid)
     custom_window.show_all()
     custom_window.connect("destroy", close_dialog)
