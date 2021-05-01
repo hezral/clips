@@ -347,9 +347,10 @@ class CacheManager():
             os.renames(temp_cache_uri, cache_uri)
 
             if "yes" in protected:
-                hash, hash_value = self.get_passwordhash()
                 if hash:
-                    encrypt, encrypted_file = self.app.utils.do_encryption("encrypt", hash_value, cache_uri)
+                    do_authenticate, authenticate_data = self.app.utils.do_authentication("get")
+                    if do_authenticate:
+                        encrypt, encrypted_file = self.app.utils.do_encryption("encrypt", authenticate_data, cache_uri)
                     if encrypt:
                         os.remove(cache_uri)
                         cache_file = os.path.split(encrypted_file)[1]
@@ -462,73 +463,18 @@ class CacheManager():
         records = self.db_cursor.fetchall()
         return records
 
-    def set_password(self, password):
-        user = "clips"
-        hash = hashlib.sha256(password.encode('utf-8')).hexdigest()
-        data_param = (user, )
-        sqlite_with_param = '''
-            SELECT user FROM 'HashDB'
-            '''
-        self.db_cursor.execute(sqlite_with_param)
-        row = self.db_cursor.fetchall()
-        data_param = (datetime.now(), user, hash)
-        if row is not None and len(row) == 0:
-            sqlite_with_param = '''
-                INSERT INTO 'HashDB'
-                ('created', 'user', 'hash') 
-                VALUES
-                (?, ?, ?);
-                '''
-        else:
-            data_param = (datetime.now(), hash, user)
-            sqlite_with_param = '''
-                UPDATE 'HashDB'
-                SET created = ?, hash = ?
-                WHERE
-                user = ?;
-                '''
-        try:
-            self.db_cursor.execute(sqlite_with_param, data_param)
-            self.db_connection.commit()
-            return True
-        except sqlite3.Error as error:
-            return "sqlite3.Error: " + error
-
-    def verify_password(self, password):
-        verify_password_result = (False, "Account/Password is incorrect")
-        user = "clips"
-        hash = hashlib.sha256(password.encode('utf-8')).hexdigest()
-        data_param = (user, )
+    def reset_protected_clips(self, password):
+        protected = "yes"
+        data_param = (protected, )
         sqlite_with_param = '''
             SELECT hash FROM 'HashDB'
             WHERE
-            user = ?;
+            protected = ?;
             '''
         try:
             self.db_cursor.execute(sqlite_with_param, data_param)
-            row = self.db_cursor.fetchone()
+            row = self.db_cursor.fetchoall()
             if row is not None:
-                returned_hash = row[0]
-                if returned_hash == hash:
-                    verify_password_result = (True, "Account/Password is correct")
-            # else:
-            #     verify_password_result = (False, "Account/Password is incorrect")
-            return verify_password_result
-        except sqlite3.Error as error:
-            return "sqlite3.Error: " + error
-
-    def get_passwordhash(self):
-        user = "clips"
-        data_param = (user, )
-        sqlite_with_param = '''
-            SELECT hash FROM 'HashDB'
-            WHERE
-            user = ?;
-            '''
-        try:
-            self.db_cursor.execute(sqlite_with_param, data_param)
-            row = self.db_cursor.fetchone()
-            if row is not None:
-                return True, row[0]
+                return True, row
         except sqlite3.Error as error:
             return False, "sqlite3.Error: " + error
