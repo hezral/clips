@@ -26,4 +26,4 @@ Depends: ${python3:Depends},
          python3-gi-cairo-dev,
          xclip
 Description: Clips
- Multi format clibpboard manager with support for images, html, richtext, office docs and plaintext.
+ Multi format clibpboard manager with extra features
