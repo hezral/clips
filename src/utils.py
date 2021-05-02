@@ -256,14 +256,14 @@ def get_css_background_color(str):
 def to_rgb(color_string):
     color_string = color_string.strip(" ").strip(";").strip(")") #strip "space ; )" chars    
     color_string = color_string.replace(" ","") #replace space chars
-
     color_string = color_string.split("(")
+    
     
     if "#" in color_string[0]:
         a = 1
         rgb = hex_to_rgb(color_string[0])
 
-    elif "rgb" in color_string[0]:
+    elif "rgb" in color_string[0] and not "rgba" in color_string[0]:
         r, g, b = color_string[1].split(",")[0:3]
         r = int(int(r.strip("%"))/100*255) if r.find("%") != -1 else int(r)
         g = int(int(g.strip("%"))/100*255) if g.find("%") != -1 else int(g)
@@ -273,13 +273,14 @@ def to_rgb(color_string):
 
     elif "rgba" in color_string[0]:
         r, g, b, a = color_string[1].split(",")
+        
         r = int(int(r.strip("%"))/100*255) if r.find("%") != -1 else int(r)
         g = int(int(g.strip("%"))/100*255) if g.find("%") != -1 else int(g)
         b = int(int(b.strip("%"))/100*255) if b.find("%") != -1 else int(b)
         a = float(a.split(")")[0])
         rgb = (r, g, b)
 
-    elif "hsl" in color_string[0]:
+    elif "hsl" in color_string[0] and not "hsla" in color_string[0]:
         h, s, l = color_string[1].split(",")[0:3]
         h = float(h) / 360
         s = float(s.replace("%","")) / 100

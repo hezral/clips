@@ -1039,10 +1039,14 @@ class ColorContainer(DefaultContainer):
 
         color_code = "rgba({red},{green},{blue},{alpha})".format(red=str(rgb[0]),green=str(rgb[1]),blue=str(rgb[2]),alpha=str(a))
 
-        if app.utils.is_light_color(rgb) == "light":
+        if app.utils.is_light_color(rgb) == "light" and a >= 0.5:
             font_color = "rgba(0,0,0,0.85)"
-        else:
+        elif app.utils.is_light_color(rgb) == "dark" and a >= 0.5:
             font_color = "rgba(255,255,255,0.85)"
+        if app.utils.is_light_color(rgb) == "light" and a <= 0.5:
+            font_color = "rgba(0,0,0,0.85)"
+        elif app.utils.is_light_color(rgb) == "dark" and a <= 0.5:
+            font_color = "rgba(0,0,0,0.85)"
 
         color_content_css = ".color-container-bg {background-color: " + color_code + "; color: " + font_color + ";}"
         # font_css = ".color-content {letter-spacing: 1px; font-weight: bold; font-size: 120%; opacity: 0.8;}"
