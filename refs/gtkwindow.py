@@ -14,7 +14,10 @@ def reveal(*args):
 
 header = Gtk.HeaderBar()
 header.props.show_close_button = True
+header.props.decoration_layout = "close:"
 header.props.title = "GtkWindow"
+header.get_style_context().add_class("default-decoration")
+header.get_style_context().add_class(Gtk.STYLE_CLASS_FLAT)
 
 label1 = Gtk.Label("Revealer1")
 label1.props.expand = True
@@ -51,6 +54,8 @@ grid.attach(button, 0, 1, 1, 1)
 win = Gtk.Window()
 win.set_size_request(300,250)
 win.get_style_context().add_class("rounded")
+
+
 win.set_titlebar(header)
 win.add(grid)
 

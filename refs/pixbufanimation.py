@@ -6,67 +6,62 @@ import gi
 gi.require_version("Gtk", "3.0")
 gi.require_version('Granite', '1.0')
 gi.require_version('GdkPixbuf', '2.0')
-from gi.repository import GdkPixbuf, Gtk, Gdk
+from gi.repository import GdkPixbuf, Gtk, Gdk, GLib
+import cairo
 
 filepath = "/home/adi/Downloads/giphy.gif"
 
-
-class Example(Gtk.Window):
-
-    def __init__(self):
-        super(Example, self).__init__()
+class Example(Gtk.ApplicationWindow):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         
-        self.init_ui()
-        self.load_image()
-
-    def init_ui(self):    
-
-        self.pixbuf_original = GdkPixbuf.Pixbuf.new_from_file(filepath)
-        self.pixbuf_original_height = self.pixbuf_original.props.height
-        self.pixbuf_original_width = self.pixbuf_original.props.width
-        if self.pixbuf_original.get_has_alpha():
-            self.get_style_context().add_class("checkerboard")
-
+        self.pixbuf_original = GdkPixbuf.PixbufAnimation.new_from_file(filepath)
+        self.pixbuf_original_height = self.pixbuf_original.get_height()
+        self.pixbuf_original_width = self.pixbuf_original.get_width()
         self.ratio_h_w = self.pixbuf_original_height / self.pixbuf_original_width
         self.ratio_w_h = self.pixbuf_original_width / self.pixbuf_original_height
-    
+
+        self.iter = self.pixbuf_original.get_iter()
+
+        self.timer_func()
+
         drawing_area = Gtk.DrawingArea()
         drawing_area.props.expand = True
         drawing_area.connect("draw", self.draw)
         drawing_area.props.can_focus = False
  
-        self.props.name = "image-container"
         self.add(drawing_area)
-        self.set_title("Image")
         self.resize(700, 400)
         self.set_border_width(10)
-        self.set_position(Gtk.WindowPosition.CENTER)
+        self.set_keep_above(True)
         self.connect("delete-event", Gtk.main_quit)
         self.show_all()
-        
-    def load_image(self):
-        self.pixbuf_original = GdkPixbuf.Pixbuf.new_from_file(filepath)
-        # self.pixbuf_original = GdkPixbuf.PixbufAnimation.new_from_file(filepath)
-            
-    def draw(self, drawing_area, cairo_context, hover_scale=1):
+
+    def timer_func(self, *args):
+        self.iter.advance()
+        GLib.timeout_add(self.iter.get_delay_time(), self.timer_func, None)
+        self.queue_draw()
+   
+    def draw(self, drawing_area, cairo_context):
         from math import pi
 
         scale = self.get_scale_factor()
-        width = self.get_allocated_width() * scale * hover_scale
-        height = self.get_allocated_height() * scale * hover_scale
-        radius = 4 * scale #Off-by-one to prevent light bleed
+        width = self.get_allocated_width() * scale
+        height = self.get_allocated_height() * scale
+        radius = 6 * scale #Off-by-one to prevent light bleed
 
-        pixbuf_fitted = GdkPixbuf.Pixbuf.new(self.pixbuf_original.get_colorspace(), self.pixbuf_original.get_has_alpha(), self.pixbuf_original.get_bits_per_sample(), width, height)
+        pixbuf = GdkPixbuf.PixbufAnimationIter.get_pixbuf(self.iter)
+        pixbuf_fitted = GdkPixbuf.Pixbuf.new(pixbuf.get_colorspace(), pixbuf.get_has_alpha(), pixbuf.get_bits_per_sample(), width, height)
 
         if int(width * self.ratio_h_w) < height:
-            scaled_pixbuf = self.pixbuf_original.scale_simple(int(height * self.ratio_w_h), height, GdkPixbuf.InterpType.BILINEAR)
+            scaled_pixbuf = pixbuf.scale_simple(int(height * self.ratio_w_h), height, GdkPixbuf.InterpType.BILINEAR)
         else:
-            scaled_pixbuf = self.pixbuf_original.scale_simple(width, int(width * self.ratio_h_w), GdkPixbuf.InterpType.BILINEAR)
+            scaled_pixbuf = pixbuf.scale_simple(width, int(width * self.ratio_h_w), GdkPixbuf.InterpType.BILINEAR)
 
-        if self.pixbuf_original.props.width * self.pixbuf_original.props.height < width * height:
+        if self.pixbuf_original_width * self.pixbuf_original_height < width * height:
             # Find the offset we need to center the source pixbuf on the destination since its smaller
-            y = abs((height - self.pixbuf_original.props.height) / 2)
-            x = abs((width - self.pixbuf_original.props.width) / 2)
+            y = abs((height - self.pixbuf_original_height) / 2)
+            x = abs((width - self.pixbuf_original_width) / 2)
             final_pixbuf = self.pixbuf_original
         else:
             # Find the offset we need to center the source pixbuf on the destination
@@ -76,6 +71,11 @@ class Example(Gtk.Window):
             # Set coordinates for cairo surface since this has been fitted, it should be (0, 0) coordinate
             x = y = 0
             final_pixbuf = pixbuf_fitted
+
+        cairo_context.set_operator(cairo.Operator.SOURCE)
+
+        Gdk.cairo_set_source_pixbuf(cairo_context, final_pixbuf, x, y)
+        # cairo_context.paint()
 
         cairo_context.save()
         cairo_context.scale(1.0 / scale, 1.0 / scale)
@@ -88,13 +88,9 @@ class Example(Gtk.Window):
         cairo_context.arc(radius, radius, radius, pi, pi + pi/2) # top-left-corner
     
         cairo_context.close_path()
-
-        Gdk.cairo_set_source_pixbuf(cairo_context, final_pixbuf, x, y)
-
         cairo_context.clip()
         cairo_context.paint()
         cairo_context.restore()
-        
     
 def main():
     app = Example()
