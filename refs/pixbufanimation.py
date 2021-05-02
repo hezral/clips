@@ -9,7 +9,7 @@ gi.require_version('GdkPixbuf', '2.0')
 from gi.repository import GdkPixbuf, Gtk, Gdk, GLib
 import cairo
 
-filepath = "/home/adi/Downloads/giphy.gif"
+filepath = "/home/adi/Downloads/giphy3.gif"
 
 class Example(Gtk.ApplicationWindow):
     def __init__(self, *args, **kwargs):
