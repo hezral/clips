@@ -913,6 +913,7 @@ class ImageContainer(DefaultContainer):
 
     stop_threads = False
     play_gif_thread = None
+    alpha = False
 
     def __init__(self, filepath, type, app, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -923,14 +924,17 @@ class ImageContainer(DefaultContainer):
             self.pixbuf_original_height = self.pixbuf_original.get_height()
             self.pixbuf_original_width = self.pixbuf_original.get_width()
             self.iter = self.pixbuf_original.get_iter()
+            if self.iter.get_pixbuf().get_has_alpha():
+                self.alpha = True
         else:
             self.pixbuf_original = GdkPixbuf.Pixbuf.new_from_file(filepath)
             self.pixbuf_original_height = self.pixbuf_original.props.height
             self.pixbuf_original_width = self.pixbuf_original.props.width
-
-        if hasattr(self.pixbuf_original, "get_has_alpha") and callable(getattr(self.pixbuf_original, "get_has_alpha")):
             if self.pixbuf_original.get_has_alpha():
-                self.get_style_context().add_class("checkerboard")
+                self.alpha = True
+
+        if self.alpha:
+            self.get_style_context().add_class("checkerboard")
 
         self.ratio_h_w = self.pixbuf_original_height / self.pixbuf_original_width
         self.ratio_w_h = self.pixbuf_original_width / self.pixbuf_original_height
