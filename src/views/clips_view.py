@@ -20,11 +20,14 @@ import gi
 gi.require_version('Gtk', '3.0')
 gi.require_version('WebKit2', '4.0')
 from gi.repository import Gtk, WebKit2, GdkPixbuf, Pango, Gdk, Gio, GLib
+import cairo
 from .custom_dialog import *
 
 import os
 from datetime import datetime
 import time
+
+global stop_threads
 
 class ClipsView(Gtk.Grid):
 
@@ -307,7 +310,19 @@ class ClipsContainer(Gtk.EventBox):
         elif "office/word" in self.type:
             self.content = WordContainer(self.cache_file, self.type, app)
         elif "files" in self.type:
-            self.content = FilesContainer(self.cache_file, self.type, app)
+            is_files = True
+            with open(self.cache_file) as file:
+                file_content = file.readlines()
+            file_count = len(file_content)
+            if file_count == 1:
+                file_content = file_content[0].replace("copy","").replace("file://","").strip().replace("%20", " ").replace("\n","")
+                if os.path.exists(file_content):
+                    mime_type, val = Gio.content_type_guess(file_content, data=None)
+                    if "image" in mime_type and not "webp" in mime_type:
+                        self.content = ImageContainer(file_content, mime_type, app)
+                        is_files = False
+            if is_files:
+                self.content = FilesContainer(self.cache_file, self.type, app)
         elif "image" in self.type:
             self.content = ImageContainer(self.cache_file, self.type, app)
         elif "html" in self.type:
@@ -583,7 +598,7 @@ class ClipsContainer(Gtk.EventBox):
             # if self.app.main_window.clips_view.multi_select_mode:
             #     self.app.main_window.clips_view.flowbox.unselect_child(self.get_parent())
             # else:
-            self.on_clip_action(button=None, action="copy")        
+            self.on_clip_action(button=None, action="copy")
 
     def on_cursor_entering_clip(self, widget, eventcrossing):
         self.get_parent().get_style_context().add_class("hover")
@@ -592,6 +607,15 @@ class ClipsContainer(Gtk.EventBox):
         self.clip_action_revealer.set_reveal_child(True)
         self.source_icon_revealer.set_reveal_child(True)
 
+        image_container = self.app.utils.get_widget_by_name(widget=self, child_name="image-container", level=0)
+        if image_container is not None:
+            if "gif" in image_container.type:
+                # image_container.animation_func()
+                image_container.stop_threads = False
+                import threading
+                image_container.play_gif_thread = threading.Thread(target=image_container.animation_func)
+                image_container.play_gif_thread.start()
+                
         # add zoom effect on hovering an image container
         # content = utils.get_widget_by_name(widget=flowboxchild, child_name="image-container", level=0)
         # if content is not None:
@@ -615,6 +639,14 @@ class ClipsContainer(Gtk.EventBox):
         if len(flowboxchild_selected) != 0:
             if flowboxchild_selected[0].get_children()[0].clip_action_notify_revealer.get_child_revealed():
                 flowboxchild_selected[0].get_children()[0].clip_action_notify_revealer.set_reveal_child(False)
+        
+        image_container = self.app.utils.get_widget_by_name(widget=self, child_name="image-container", level=0)
+        if image_container is not None:
+            if "gif" in image_container.type:
+                if image_container.play_gif_thread is not None:
+                    image_container.stop_threads = True
+                    image_container.play_gif_thread.join()
+                    image_container.play_gif_thread = None
 
     def on_clip_action(self, button=None, action=None, validated=False, data=None):
         flowboxchild = self.get_parent()
@@ -695,7 +727,8 @@ class ClipsContainer(Gtk.EventBox):
                 action_notify_box.show_all()
                 self.clip_action_notify_revealer.set_reveal_child(True)
                 self.app.cache_manager.update_cache_on_recopy(self.cache_file)
-                os.remove(temp_file_uri)
+                if "yes" in self.protectd:
+                    os.remove(temp_file_uri)
 
             if validated is False and copy_result is False and button is None:
                 label = Gtk.Label("Authentication failed")
@@ -877,12 +910,30 @@ class FallbackContainer(DefaultContainer):
 # ----------------------------------------------------------------------------------------------------
 
 class ImageContainer(DefaultContainer):
+
+    stop_threads = False
+    play_gif_thread = None
+
     def __init__(self, filepath, type, app, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.pixbuf_original = GdkPixbuf.Pixbuf.new_from_file(filepath)
-        self.ratio_h_w = self.pixbuf_original.props.height / self.pixbuf_original.props.width
-        self.ratio_w_h = self.pixbuf_original.props.width / self.pixbuf_original.props.height
+        self.type = type
+        if "gif" in self.type:
+            self.pixbuf_original = GdkPixbuf.PixbufAnimation.new_from_file(filepath)
+            self.pixbuf_original_height = self.pixbuf_original.get_height()
+            self.pixbuf_original_width = self.pixbuf_original.get_width()
+            self.iter = self.pixbuf_original.get_iter()
+        else:
+            self.pixbuf_original = GdkPixbuf.Pixbuf.new_from_file(filepath)
+            self.pixbuf_original_height = self.pixbuf_original.props.height
+            self.pixbuf_original_width = self.pixbuf_original.props.width
+
+        if hasattr(self.pixbuf_original, "get_has_alpha") and callable(getattr(self.pixbuf_original, "get_has_alpha")):
+            if self.pixbuf_original.get_has_alpha():
+                self.get_style_context().add_class("checkerboard")
+
+        self.ratio_h_w = self.pixbuf_original_height / self.pixbuf_original_width
+        self.ratio_w_h = self.pixbuf_original_width / self.pixbuf_original_height
     
         drawing_area = Gtk.DrawingArea()
         drawing_area.props.expand = True
@@ -892,10 +943,21 @@ class ImageContainer(DefaultContainer):
         self.props.name = "image-container"
         self.attach(drawing_area, 0, 0, 1, 1)
 
-        if self.pixbuf_original.get_has_alpha():
-            self.get_style_context().add_class("checkerboard")
-        
-        self.label = "{width} x {height} px".format(width=str(self.pixbuf_original.props.width), height=str(self.pixbuf_original.props.height))
+        self.label = "{width} x {height} px".format(width=str(self.pixbuf_original_width), height=str(self.pixbuf_original_height))
+
+    def animation_loop_func(self, *args):
+        self.iter.advance()
+        GLib.timeout_add(self.iter.get_delay_time(), self.animation_func, None)
+        self.queue_draw()
+
+    def animation_func(self, *args):
+        import time
+        while True:
+            self.iter.advance()
+            self.queue_draw()
+            time.sleep(self.iter.get_delay_time()/1000)
+            if self.stop_threads:
+                break
 
     def hover(self, *args):
         '''
@@ -914,17 +976,22 @@ class ImageContainer(DefaultContainer):
         height = self.get_allocated_height() * scale * hover_scale
         radius = 4 * scale #Off-by-one to prevent light bleed
 
-        pixbuf_fitted = GdkPixbuf.Pixbuf.new(self.pixbuf_original.get_colorspace(), self.pixbuf_original.get_has_alpha(), self.pixbuf_original.get_bits_per_sample(), width, height)
+        if "gif" in self.type:
+            pixbuf = GdkPixbuf.PixbufAnimationIter.get_pixbuf(self.iter)
+            pixbuf_fitted = GdkPixbuf.Pixbuf.new(pixbuf.get_colorspace(), pixbuf.get_has_alpha(), pixbuf.get_bits_per_sample(), width, height)
+        else:
+            pixbuf = self.pixbuf_original
+            pixbuf_fitted = GdkPixbuf.Pixbuf.new(pixbuf.get_colorspace(), pixbuf.get_has_alpha(), pixbuf.get_bits_per_sample(), width, height)
 
         if int(width * self.ratio_h_w) < height:
-            scaled_pixbuf = self.pixbuf_original.scale_simple(int(height * self.ratio_w_h), height, GdkPixbuf.InterpType.BILINEAR)
+            scaled_pixbuf = pixbuf.scale_simple(int(height * self.ratio_w_h), height, GdkPixbuf.InterpType.BILINEAR)
         else:
-            scaled_pixbuf = self.pixbuf_original.scale_simple(width, int(width * self.ratio_h_w), GdkPixbuf.InterpType.BILINEAR)
+            scaled_pixbuf = pixbuf.scale_simple(width, int(width * self.ratio_h_w), GdkPixbuf.InterpType.BILINEAR)
 
-        if self.pixbuf_original.props.width * self.pixbuf_original.props.height < width * height:
+        if self.pixbuf_original_width * self.pixbuf_original_height < width * height:
             # Find the offset we need to center the source pixbuf on the destination since its smaller
-            y = abs((height - self.pixbuf_original.props.height) / 2)
-            x = abs((width - self.pixbuf_original.props.width) / 2)
+            y = abs((height - self.pixbuf_original_height) / 2)
+            x = abs((width - self.pixbuf_original_width) / 2)
             final_pixbuf = self.pixbuf_original
         else:
             # Find the offset we need to center the source pixbuf on the destination
@@ -934,6 +1001,8 @@ class ImageContainer(DefaultContainer):
             # Set coordinates for cairo surface since this has been fitted, it should be (0, 0) coordinate
             x = y = 0
             final_pixbuf = pixbuf_fitted
+
+        # cairo_context.set_operator(cairo.Operator.SOURCE)
 
         cairo_context.save()
         cairo_context.scale(1.0 / scale, 1.0 / scale)
