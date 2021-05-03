@@ -33,6 +33,7 @@ class ClipsView(Gtk.Grid):
 
     current_selected_flowboxchild_index = 0
     multi_select_mode = False
+    filter_count = 0
 
     def __init__(self, app, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -69,6 +70,12 @@ class ClipsView(Gtk.Grid):
         self.attach(self.clips_view_overlay, 0, 0, 1, 1)
 
     def generate_multi_delete_revealer(self):
+        self.select_all_button = Gtk.Button(label="Select All")
+        self.select_all_button.props.halign = Gtk.Align.START
+        self.select_all_button.props.hexpand = True
+        self.select_all_button.props.name = "select-all-off"
+        self.select_all_button.connect("clicked", self.on_select_all)
+
         self.delete_selected_button = Gtk.Button(label="Delete", image=Gtk.Image().new_from_icon_name("dialog-warning", Gtk.IconSize.SMALL_TOOLBAR))
         self.delete_selected_button.props.always_show_image = True
         self.delete_selected_button.get_style_context().add_class("destructive-action")
@@ -85,7 +92,8 @@ class ClipsView(Gtk.Grid):
         button_grid.props.margin = 6
         button_grid.props.row_spacing = button_grid.props.column_spacing = 6
         button_grid.attach(self.delete_selected_button, 0, 0, 1, 1)
-        button_grid.attach(cancel_multi_delete_button, 1, 0, 1, 1)
+        button_grid.attach(self.select_all_button, 1, 0, 1, 1)
+        button_grid.attach(cancel_multi_delete_button, 2, 0, 1, 1)
 
         grid_multi_delete = Gtk.Grid()
         grid_multi_delete.props.name = "clips-multi-delete"
@@ -191,8 +199,6 @@ class ClipsView(Gtk.Grid):
             flowboxchild.grab_focus()
 
     def on_child_multi_selected(self, flowbox, flowboxchild):
-        selected = len(flowbox.get_selected_children())
-
         for flowboxchild in self.flowbox.get_selected_children():
             clips_container = flowboxchild.get_children()[0]
             clips_container.clip_overlay_revealer.set_reveal_child(True)
@@ -200,14 +206,13 @@ class ClipsView(Gtk.Grid):
             clips_container.source_icon_revealer.set_reveal_child(False)
             clips_container.select_button.get_style_context().add_class("clip-selected")
 
-        self.delete_selected_button.props.label = "Delete ({count})".format(count=str(selected)) 
+        self.delete_selected_button.props.label = "Delete ({count})".format(count=str(len(self.flowbox.get_selected_children()))) 
 
     def on_child_multi_unselected(self, clips_container):
         clips_container.clip_overlay_revealer.set_reveal_child(False)
         self.app.main_window.clips_view.flowbox.unselect_child(clips_container.get_parent())
-        selected = len(self.flowbox.get_selected_children())
-        self.delete_selected_button.props.label = "Delete ({count})".format(count=str(selected))
-        if selected == 0:
+        self.delete_selected_button.props.label = "Delete ({count})".format(count=str(len(self.flowbox.get_selected_children())))
+        if len(self.flowbox.get_selected_children()) == 0:
             self.off_multi_select()
 
     def on_selected_children_changed(self, flowbox):
@@ -229,6 +234,21 @@ class ClipsView(Gtk.Grid):
                 clips_container.clip_action_notify_revealer.set_reveal_child(False)
                 clips_container.clip_overlay_revealer.set_reveal_child(False)
 
+    def on_select_all(self, button):
+        if button.props.name == "select-all-off":
+            self.flowbox.select_all()
+            for flowboxchild in self.flowbox.get_selected_children():
+                self.on_child_multi_selected(self.flowbox, flowboxchild)
+            self.select_all_button.props.name = "select-all-on"
+            self.select_all_button.props.label = "Unselect All ({count})".format(count=str(len(self.flowbox.get_selected_children())))
+        else:
+            for flowboxchild in self.flowbox.get_selected_children():
+                flowboxchild.get_children()[0].clip_overlay_revealer.set_reveal_child(False)
+            self.flowbox.unselect_all()
+            self.select_all_button.props.name = "select-all-off"
+            self.select_all_button.props.label = "Select All"
+            self.delete_selected_button.props.label = "Delete ({count})".format(count=str(len(self.flowbox.get_selected_children())))
+
     def on_delete_selected(self, button):
         selected = self.flowbox.get_selected_children()
         for flowboxchild in self.flowbox.get_selected_children():
@@ -240,6 +260,10 @@ class ClipsView(Gtk.Grid):
     def on_cancel_multi_delete(self, button):
         self.off_multi_select()
         self.flowbox.unselect_all()
+        self.select_all_button.props.name = "select-all-off"
+        self.select_all_button.props.label = "Select All"
+        self.delete_selected_button.props.label = "Delete ({count})".format(count=str(len(self.flowbox.get_selected_children())))
+        
     
     def on_multi_select(self):
         self.flowbox.connect("child-activated", self.on_child_multi_selected)
@@ -278,6 +302,7 @@ class ClipsView(Gtk.Grid):
 # ----------------------------------------------------------------------------------------------------
 
 class ClipsContainer(Gtk.EventBox):
+
     def __init__(self, app, clip, cache_filedir, utils, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
