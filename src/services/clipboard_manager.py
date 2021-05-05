@@ -15,12 +15,9 @@
     along with this Application.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-
 import gi
 gi.require_version('Gtk', '3.0')
-gi.require_version("Wnck", "3.0")
-gi.require_version("Bamf", "3")
-from gi.repository import Gtk, Gdk, Bamf, Wnck
+from gi.repository import Gtk, Gdk
 
 from datetime import datetime
 

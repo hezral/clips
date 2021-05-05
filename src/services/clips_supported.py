@@ -96,34 +96,87 @@ supported_targets = (spreadsheet_libreoffice_target,
                     plaintext_target, )
 
 def get_active_app():
+    import subprocess
+    import re
     import gi
-    gi.require_version("Wnck", "3.0")
-    gi.require_version("Bamf", "3")
-    from gi.repository import Bamf, Wnck, Gio
+    from gi.repository import Gio
    
-    matcher = Bamf.Matcher()
-    screen = Wnck.Screen.get_default()
-    screen.force_update()
+    source_app = None
+    source_icon = None
     all_apps = Gio.AppInfo.get_all()
 
-    bamf_active_win = matcher.get_active_window() 
-    bamf_active_app = matcher.get_active_application()
-    wnck_active_win = screen.get_active_window()
-    wnck_active_app = wnck_active_win.get_application()
+    # root = subprocess.Popen(['xprop', '-root', '_NET_CLIENT_LIST'], stdout=subprocess.PIPE)
+    # m = re.findall(b'(?P<one>\w+)', stdout)
+    # for window_id in m:
+    #     if id != b'_NET_CLIENT_LIST' and id != b'WINDOW' and id != b'window' and id != b'id':
+    root = subprocess.Popen(['xprop', '-root', '_NET_ACTIVE_WINDOW'], stdout=subprocess.PIPE)
+    stdout, stderr = root.communicate()
+    m = re.search(b'^_NET_ACTIVE_WINDOW.* ([\w]+)$', stdout)
+    if m != None:
+        window_id = m.group(1)
+        break_out = False
 
-    if bamf_active_app is not None and wnck_active_app is not None:
-        try:
-            appinfo = [child for child in all_apps if bamf_active_app.get_name().lower() in child.get_name().lower() or bamf_active_app.get_name().lower() in child.get_display_name().lower()][0]
-        except:
-            appinfo = [child for child in all_apps if wnck_active_app.get_name().lower() in child.get_name().lower() or wnck_active_app.get_name().lower() in child.get_display_name().lower()][0]
+        window = subprocess.Popen(['xprop', '-id', window_id], stdout=subprocess.PIPE)
+        stdout, stderr = window.communicate()
 
-        source_app = appinfo.get_name()
-        source_icon = appinfo.get_icon().to_string()
+        output = stdout.decode("utf-8")
 
-    else: 
-        source_app = screen.get_active_workspace().get_name() # if no active window, fallback to workspace name
-        source_icon = "preferences-desktop-wallpaper"
+        wm_class = re.search("WM_CLASS\(\w+\) = (?P<name>.+)*", output)
+        bamf_desktop_file = re.search("_BAMF_DESKTOP_FILE\(\w+\) = (?P<name>.+)*", output)
+        gtk_application_id = re.search("_GTK_APPLICATION_ID\(\w+\) = (?P<name>.+)*", output)
 
+        if break_out is False and bamf_desktop_file != None:
+            # print("_BAMF_DESKTOP_FILE", bamf_desktop_file.group(1).replace('"',''))
+            appinfo = Gio.DesktopAppInfo.new_from_filename(bamf_desktop_file.group(1).replace('"',''))
+            source_app = appinfo.get_name()
+            source_icon = appinfo.get_icon().to_string()
+            # print(bamf_desktop_file.group(1), source_app, source_icon)
+            break_out = True
+
+        if break_out is False and gtk_application_id != None:
+            # print("_GTK_APPLICATION_ID", gtk_application_id.group(1))
+            try:
+                appinfo = [child for child in all_apps if gtk_application_id.group(1).replace('"','').lower() in child.get_id().lower()][0]
+                source_app = appinfo.get_name()
+                source_icon = appinfo.get_icon().to_string()
+                # print(gtk_application_id.group(1), source_app, source_icon)
+                break_out = True
+            except:
+                pass
+
+        if break_out is False and wm_class != None:
+            # print("WM_CLASS", wm_class.group(1).replace('"',"").split(","))
+            app_id = wm_class.group(1).replace('"',"").split(",")
+            for id in app_id:
+                try:
+                    appinfo = [child for child in all_apps if id.lower() in child.get_id().lower()][0]
+                    source_app = appinfo.get_name()
+                    source_icon = appinfo.get_icon().to_string()
+                    # print(id, source_app, source_icon)
+                    break_out = True
+                    break
+                except:
+                    if break_out is False and "-" in id:
+                        for key in id.split("-"):
+                            try:
+                                appinfo = [child for child in all_apps if key.lower().strip() in child.get_id().lower()][0]
+                                source_app = appinfo.get_name()
+                                source_icon = appinfo.get_icon().to_string()
+                                # print(key, source_app, source_icon, appinfo.get_id())
+                                break_out = True
+                                break
+                            except:
+                                pass
+
+        if break_out is False and source_app is None and source_icon is None:
+            workspace = subprocess.Popen(['xprop', '-root', '-notype', '_NET_DESKTOP_NAMES'], stdout=subprocess.PIPE)
+            stdout, stderr = workspace.communicate()
+            m = re.search(b"_NET_DESKTOP_NAMES.* = (?P<name>.+)$", stdout)
+            if m != None:
+                workspace_name = m.group(1)
+            source_app = workspace_name # if no active window, fallback to workspace name
+            source_icon = "preferences-desktop-wallpaper"
+    
     return source_app, source_icon
 
 def get_clipboard_contents(clipboard, event, save_files):
