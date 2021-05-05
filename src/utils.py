@@ -127,9 +127,9 @@ def get_active_app_window():
             stdout, stderr = workspace.communicate()
             m = re.search(b"_NET_DESKTOP_NAMES.* = (?P<name>.+)$", stdout)
             if m != None:
-                workspace_name = m.group(1)
+                workspace_name = m.group(1).replace('"',"") + "unknown app"
             source_app = workspace_name # if no active window, fallback to workspace name
-            source_icon = "preferences-desktop-wallpaper"
+            source_icon = "application-default-icon"
     
     return source_app, source_icon
 
