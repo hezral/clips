@@ -35,8 +35,18 @@ If you like what i make, it would really be nice to have someone buy me a coffee
 
 ## Installation
 
-### Using source files
-#### Ensure you have these dependencies installed
+## Build using flatpak
+* requires that you have flatpak-builder installed
+* flatpak enabled
+* flathub remote enabled
+
+```
+flatpak-builder --user --force-clean --install build-dir com.github.hezral.clips.yml
+```
+
+### Build using meson 
+Ensure you have these dependencies installed
+
 * python3
 * python3-gi
 * python3-cryptography
@@ -50,11 +60,21 @@ If you like what i make, it would really be nice to have someone buy me a coffee
 * python3-gi-cairo
 * python3-gi-cairo-dev
 * xclip
+* xprop
 
 Download the updated source [here](https://github.com/hezral/clips/archive/master.zip), or use git:
 ```bash
 git clone https://github.com/hezral/clips.git
 cd clips
+meson build --prefix=/usr
+cd build
+ninja build
+sudo ninja install
+```
+The desktop launcher should show up on the application launcher for your desktop environment
+if it doesn't, try running
+```
+com.github.hezral.clips
 ```
 
 ## Thanks/Credits
