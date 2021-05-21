@@ -26,7 +26,15 @@ finish-args:
   # keyring
   - --talk-name=org.freedesktop.secrets
 modules:
-  - name: python-keyring
+  - name: requests
+    buildsystem: simple
+    build-options:
+      build-args:
+        - --share=network
+    build-commands:
+      - "pip3 install --prefix=${FLATPAK_DEST} requests"
+
+      - name: python-keyring
     buildsystem: simple
     build-options:
       build-args:
