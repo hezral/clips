@@ -1,0 +1,84 @@
+app-id: com.github.hezral.clips
+runtime: io.elementary.Sdk
+runtime-version: 'daily'
+sdk: io.elementary.Sdk
+command: com.github.hezral.clips
+appstream-compose: false
+finish-args:
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --share=network
+  - --device=dri
+  # - --device=all
+  - --filesystem=host
+  - --filesystem=home
+  - --filesystem=xdg-cache/com.github.hezral.clips
+  - --filesystem=xdg-data
+  - --filesystem=xdg-data/flatpak/exports/share
+  - --filesystem=xdg-data/flatpak/app
+  - --filesystem=/usr/share
+  # - --filesystem=/usr/share/icons:ro
+  - --filesystem=/usr/local/share/
+  - --filesystem=/var/lib/flatpak/exports/share
+  - --filesystem=/var/lib/snapd/desktop
+  # needed for perfers-color-scheme
+  - --system-talk-name=org.freedesktop.Accounts
+  # keyring
+  - --talk-name=org.freedesktop.secrets
+modules:
+  - name: python-keyring
+    buildsystem: simple
+    build-options:
+      build-args:
+        - --share=network
+    build-commands:
+      - "pip3 install --prefix=${FLATPAK_DEST} keyring"
+
+  - name: libx11-dev
+    buildsystem: autotools
+    sources:
+      - type: archive
+        url: http://archive.ubuntu.com/ubuntu/pool/main/libx/libx11/libx11_1.6.9.orig.tar.gz
+        sha256: b8c0930a9b25de15f3d773288cacd5e2f0a4158e194935615c52aeceafd1107b
+  - name: libxmu-headers
+    buildsystem: autotools
+    sources:
+      - type: archive
+        url: http://archive.ubuntu.com/ubuntu/pool/main/libx/libxmu/libxmu_1.1.3.orig.tar.gz
+        sha256: 5bd9d4ed1ceaac9ea023d86bf1c1632cd3b172dce4a193a72a94e1d9df87a62e
+  - name: libxt-dev
+    buildsystem: autotools
+    sources:
+      - type: archive
+        url: http://archive.ubuntu.com/ubuntu/pool/main/libx/libxt/libxt_1.1.5.orig.tar.gz
+        sha256: b59bee38a9935565fa49dc1bfe84cb30173e2e07e1dcdf801430d4b54eb0caa3
+  - name: libxmu-dev
+    buildsystem: autotools
+    sources:
+      - type: archive
+        url: http://archive.ubuntu.com/ubuntu/pool/main/libx/libxmu/libxmu_1.1.3.orig.tar.gz
+        sha256: 5bd9d4ed1ceaac9ea023d86bf1c1632cd3b172dce4a193a72a94e1d9df87a62e
+  - name: xclip
+    buildsystem: autotools
+    sources:
+      - type: git
+        url: https://github.com/astrand/xclip.git
+
+  - name: xprop
+    sources:
+      - type: git
+        url: https://gitlab.freedesktop.org/xorg/app/xprop.git
+
+  # - name: granite
+  #   buildsystem: meson
+  #   config-opts:
+  #     - -Dintrospection=true
+  #   sources:
+  #     - type: git
+  #       url: https://github.com/elementary/granite
+
+  - name: clips
+    buildsystem: meson
+    sources:
+      - type: dir
+        path: .

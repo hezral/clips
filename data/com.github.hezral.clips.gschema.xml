@@ -3,7 +3,7 @@
 <schemalist>
     <schema path="/com/github/hezral/clips/" id="com.github.hezral.clips">
         <key name="prefer-dark-style" type="b">
-            <default>true</default>
+            <default>false</default>
             <summary>If the dark Gtk stylesheet should be used</summary>
             <description>If the dark Gtk stylesheet should be used</description>
         </key>
@@ -13,7 +13,7 @@
             <description>Used to determine whether or not to perform initial install steps</description>
         </key>
         <key type="b" name="persistent-mode">
-            <default>false</default>
+            <default>true</default>
             <summary>Close on focus out of the Clips app window</summary>
             <description>Close on focus out of the Clips app window</description>
         </key>

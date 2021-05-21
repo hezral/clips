@@ -19,12 +19,13 @@ import os
 import gi
 gi.require_version('Gtk', '3.0')
 gi.require_version('Granite', '1.0')
-from gi.repository import Gtk, Granite, GObject, Gdk, Gio
-from views.clips_view import ClipsView
-from views.settings_view import SettingsView
-from views.info_view import InfoView
+from gi.repository import Gtk, Granite, Gdk
+from .clips_view import ClipsView
+from .settings_view import SettingsView
+from .info_view import InfoView
 
 class ClipsWindow(Gtk.ApplicationWindow):
+    
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -274,7 +275,7 @@ class ClipsWindow(Gtk.ApplicationWindow):
                 self.settings_view.hide()
                 self.clips_view.hide()
                 self.stack.set_visible_child(self.info_view)
-                self.gio_settings.set_boolean("first-run", False)
+                
                 
             elif self.gio_settings.get_boolean("first-run") is False and view_switch is None and gparam is None and action is None:
                 if total_clips_in_db == 0:

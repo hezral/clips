@@ -1,0 +1,7 @@
+data/com.github.hezral.clips-flatpak.desktop.in
+data/com.github.hezral.clips.appdata.xml.in
+data/com.github.hezral.clips.gschema.xml
+src/main.py
+src/window.py
+src/utils.py
+
