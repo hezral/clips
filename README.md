@@ -35,12 +35,6 @@ If you like what i make, it would really be nice to have someone buy me a coffee
 
 ## Installation
 
-### Using prepackaged deb file
-Download the deb file from the [releases](https://github.com/hezral/clips/releases) page and install using a deb installer or command line. 
-```bash
-sudo apt install /path/to/deb/filename.deb
-```
-
 ### Using source files
 #### Ensure you have these dependencies installed
 * python3
@@ -61,22 +55,6 @@ Download the updated source [here](https://github.com/hezral/clips/archive/maste
 ```bash
 git clone https://github.com/hezral/clips.git
 cd clips
-```
-#### Run .setup.py
-In the clips file directory:
-```bash
-sudo python3 setup.py install --prefix=/usr --install-data prefix/share --install-purelib prefix/share
-sudo python3 post_install.py
-```
-
-## Uninstallation
-Run the following command to output all the installed files.
-```bash
-sudo python3 setup.py install --prefix=/usr --install-data prefix/share --record files.txt
-```
-Then when you want to uninstall it simply run; be careful with the 'sudo'
-```bash
-cat files.txt | xargs sudo rm -rf
 ```
 
 ## Thanks/Credits
