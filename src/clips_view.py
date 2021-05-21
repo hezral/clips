@@ -1549,15 +1549,14 @@ class UrlContainer(DefaultContainer):
         title = Gtk.Label(self.title)
         title.props.name = "url-container-title"
         title.props.wrap_mode = Pango.WrapMode.WORD
-        title.props.max_width_chars = 40
+        title.props.max_width_chars = 30
         title.props.wrap = True
         title.props.hexpand = True
         title.props.justify = Gtk.Justification.CENTER
-        title.props.lines = 3
+        title.props.lines = 2
         title.props.ellipsize = Pango.EllipsizeMode.END
         
         domain = Gtk.Label(domain)
-
 
         self.attach(favicon, 0, 0, 1, 1)
         self.attach(title, 0, 1, 1, 1)
