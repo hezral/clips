@@ -140,6 +140,10 @@ class SettingsView(Gtk.Grid):
 
         # others -------------------------------------------------
     
+        add_shortcut = SubSettings(type="button", name="add-shortcut", label="Add Shortcut", sublabel="Launch with keyboard shortcut like ⌘+Ctrl+C", separator=True, params=(" Add", Gtk.Image().new_from_icon_name("com.github.hezral.clips", Gtk.IconSize.LARGE_TOOLBAR),))
+        add_shortcut.button.connect("clicked", self.on_button_clicked)
+        add_shortcut.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
+
         reset_password = SubSettings(type="button", name="reset-password", label="Reset Password", sublabel="All protected clips will be changed", separator=True, params=(" Reset", Gtk.Image().new_from_icon_name("preferences-system-privacy", Gtk.IconSize.LARGE_TOOLBAR),))
         reset_password.button.connect("clicked", self.on_button_clicked)
         reset_password.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
@@ -148,7 +152,8 @@ class SettingsView(Gtk.Grid):
         unprotect_timeout.spinbutton.connect("value-changed", self.on_spinbutton_activated)
         self.gio_settings.bind("unprotect-timeout", unprotect_timeout.spinbutton, "value", Gio.SettingsBindFlags.DEFAULT)
 
-        others = SettingsGroup("Other", (reset_password, unprotect_timeout))
+
+        others = SettingsGroup("Other", (add_shortcut, reset_password, unprotect_timeout))
         self.flowbox.add(others)
 
         # help -------------------------------------------------
@@ -199,6 +204,9 @@ class SettingsView(Gtk.Grid):
 
         if name == "buy-me-coffee":
             Gtk.show_uri_on_window(None, "https://www.buymeacoffee.com/hezral", Gdk.CURRENT_TIME)
+
+        if name == "add-shortcut":
+            Gtk.show_uri_on_window(None, "settings://input/keyboard/shortcuts", GLib.get_current_time())
 
         if name == "reset-password":
             label = Gtk.Label(label="This will reset the password and also all protected clips")
