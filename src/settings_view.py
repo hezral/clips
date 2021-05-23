@@ -102,7 +102,7 @@ class SettingsView(Gtk.Grid):
         # run housekeeping now
         run_houseekeeping_now = SubSettings(type="button", name="run-housekeeping-now", label="Run housekeeping now", sublabel="no last run date", separator=True, params=("Run now", Gtk.Image().new_from_icon_name("edit-clear", Gtk.IconSize.LARGE_TOOLBAR),))
         run_houseekeeping_now.button.connect("clicked", self.on_button_clicked, run_houseekeeping_now)
-        run_houseekeeping_now.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
+        #run_houseekeeping_now.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
 
         # delete all
         delete_all = SubSettings(type="button", name="delete-all", label="Delete all clips from cache", sublabel=None, separator=False, params=("Delete all", Gtk.Image().new_from_icon_name("dialog-warning", Gtk.IconSize.LARGE_TOOLBAR),))
@@ -121,7 +121,7 @@ class SettingsView(Gtk.Grid):
         # excluded_appchooser_popover = AppChooserPopover(params=(excluded_apps_list, ))
         excluded_apps = SubSettings(type="button", name="excluded-apps", label="Exclude apps", sublabel="Copy events are excluded for apps selected", separator=False, params=("Select app", Gtk.Image().new_from_icon_name("application-default-icon", Gtk.IconSize.LARGE_TOOLBAR), ))
         excluded_apps.button.connect("clicked", self.on_button_clicked, (excluded_apps_list, ))
-        excluded_apps.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
+        #excluded_apps.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
 
         excluded = SettingsGroup("Excluded Apps", (excluded_apps, excluded_apps_list, ))
         self.flowbox.add(excluded)
@@ -133,7 +133,7 @@ class SettingsView(Gtk.Grid):
         protected_appchooser_popover = AppChooserPopover(params=(protected_apps_list, ))
         protected_apps = SubSettings(type="button", name="protected-apps", label="Protected apps", sublabel="Contents copied will be protected", separator=False, params=("Select app", Gtk.Image().new_from_icon_name("application-default-icon", Gtk.IconSize.LARGE_TOOLBAR), ))
         protected_apps.button.connect("clicked", self.on_button_clicked, (protected_apps_list, ))
-        protected_apps.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
+        #protected_apps.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
 
         protected = SettingsGroup("Protected Apps", (protected_apps, protected_apps_list, ))
         self.flowbox.add(protected)
@@ -142,11 +142,11 @@ class SettingsView(Gtk.Grid):
     
         add_shortcut = SubSettings(type="button", name="add-shortcut", label="Add Shortcut", sublabel="Launch with keyboard shortcut like ⌘+Ctrl+C", separator=True, params=(" Add", Gtk.Image().new_from_icon_name("com.github.hezral.clips", Gtk.IconSize.LARGE_TOOLBAR),))
         add_shortcut.button.connect("clicked", self.on_button_clicked)
-        add_shortcut.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
+        #add_shortcut.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
 
         reset_password = SubSettings(type="button", name="reset-password", label="Reset Password", sublabel="All protected clips will be changed", separator=True, params=(" Reset", Gtk.Image().new_from_icon_name("preferences-system-privacy", Gtk.IconSize.LARGE_TOOLBAR),))
         reset_password.button.connect("clicked", self.on_button_clicked)
-        reset_password.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
+        #reset_password.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
 
         unprotect_timeout = SubSettings(type="spinbutton", name="unprotect-timeout", label="Timeout", sublabel="Timeout(sec) after revealing protected clips", separator=False, params=(1,1800,1))
         unprotect_timeout.spinbutton.connect("value-changed", self.on_spinbutton_activated)
@@ -159,15 +159,15 @@ class SettingsView(Gtk.Grid):
         # help -------------------------------------------------
         view_guides = SubSettings(type="button", name="view-help", label="Guides", sublabel="Guides on how to use Clips", separator=True, params=("View Guides", Gtk.Image().new_from_icon_name("help-contents", Gtk.IconSize.LARGE_TOOLBAR),))
         view_guides.button.connect("clicked", self.on_button_clicked)
-        view_guides.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
+        #view_guides.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
         
         report_issue = SubSettings(type="button", name="report-issue", label="Have a feature request or issue?", sublabel="Report and help make Clips better", separator=True, params=("Report issue", Gtk.Image().new_from_icon_name("help-faq", Gtk.IconSize.LARGE_TOOLBAR),))
         report_issue.button.connect("clicked", self.on_button_clicked)
-        report_issue.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
+        #report_issue.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
 
         buyme_coffee = SubSettings(type="button", name="buy-me-coffee", label="Show Support", sublabel="Thanks for supporting me!", separator=False, params=("Coffee Time", Gtk.Image().new_from_icon_name("com.github.hezral.clips-coffee", Gtk.IconSize.LARGE_TOOLBAR), ))
         buyme_coffee.button.connect("clicked", self.on_button_clicked)
-        buyme_coffee.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
+        #buyme_coffee.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
 
         help = SettingsGroup("Support", (view_guides, report_issue, buyme_coffee))
         self.flowbox.add(help)
