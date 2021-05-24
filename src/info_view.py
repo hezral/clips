@@ -272,6 +272,7 @@ class InfoView(Gtk.Grid):
                 set_password, set_password_msg = self.app.utils.do_authentication("set", entry.props.text)
                 if set_password:
                     button2.props.label = "Get Started"
+                    button2.props.name = "getstarted"
                     self.timeout_on_setpassword(label, entry)
                     self.app.on_clipsapp_action()
                     self.gio_settings.set_boolean("first-run", False)
