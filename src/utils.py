@@ -186,44 +186,52 @@ def get_all_apps(app=None):
             files = d.enumerate_children("standard::*", 0)
             for desktop_file in files:
                 if ".desktop" in desktop_file.get_name():
+
+                    desktop_file_path = ""
+
                     if "application/x-desktop" in desktop_file.get_content_type():
                         desktop_file_path = os.path.join(dir, desktop_file.get_name())
+                    
                     if "inode/symlink" in desktop_file.get_content_type():
+                        
+                        print(os.path.realpath(desktop_file.get_symlink_target()))
+
                         if ".local/share/flatpak/exports/share/applications" in dir:
                             desktop_file_path = os.path.join(GLib.get_home_dir(), ".local/share/flatpak", os.path.realpath(desktop_file.get_symlink_target()).replace("/home/", ""))
 
-                    with open(desktop_file_path) as file:
-                        lines = file.readlines()
-                    contents = ''.join(lines)
+                    if desktop_file_path != "":
+                        with open(desktop_file_path) as file:
+                            lines = file.readlines()
+                        contents = ''.join(lines)
 
-                    app_name = re.search("Name=(?P<name>.+)*", contents)
-                    app_icon = re.search("Icon=(?P<name>.+)*", contents)
-                    startup_wm_class = re.search("StartupWMClass=(?P<name>.+)*", contents)
-                    no_display = re.search("NoDisplay=(?P<name>.+)*", contents)
+                        app_name = re.search("Name=(?P<name>.+)*", contents)
+                        app_icon = re.search("Icon=(?P<name>.+)*", contents)
+                        startup_wm_class = re.search("StartupWMClass=(?P<name>.+)*", contents)
+                        no_display = re.search("NoDisplay=(?P<name>.+)*", contents)
 
-                    if app_name != None:
-                        app_name = app_name.group(1)
-                    else:
-                        app_name = "unknown"
-                    
-                    if app_icon != None:
-                        app_icon = app_icon.group(1)
-                    else:
-                        app_icon = "application-default-icon"
-
-                    if startup_wm_class != None:
-                        startup_wm_class = startup_wm_class.group(1)
-
-                    if no_display != None:
-                        no_display = no_display.group(1)
-                        if 'true' in no_display:
-                            no_display = True
+                        if app_name != None:
+                            app_name = app_name.group(1)
                         else:
-                            no_display = False
+                            app_name = "unknown"
+                        
+                        if app_icon != None:
+                            app_icon = app_icon.group(1)
+                        else:
+                            app_icon = "application-default-icon"
 
-                    if app_name != None and app_icon != None:
-                        if no_display is None or no_display is False:
-                            all_apps[app_name] = [app_icon, startup_wm_class, no_display, desktop_file_path]
+                        if startup_wm_class != None:
+                            startup_wm_class = startup_wm_class.group(1)
+
+                        if no_display != None:
+                            no_display = no_display.group(1)
+                            if 'true' in no_display:
+                                no_display = True
+                            else:
+                                no_display = False
+
+                        if app_name != None and app_icon != None:
+                            if no_display is None or no_display is False:
+                                all_apps[app_name] = [app_icon, startup_wm_class, no_display, desktop_file_path]
 
     if app != None:
         return all_apps[app]
