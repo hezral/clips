@@ -59,8 +59,10 @@ Ensure you have these dependencies installed
 * libwebkit2gtk-4.0-dev
 * python3-gi-cairo
 * python3-gi-cairo-dev
+* python-xlib
 * xclip
 * xprop
+
 
 Download the updated source [here](https://github.com/hezral/clips/archive/master.zip), or use git:
 ```bash

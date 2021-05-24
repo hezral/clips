@@ -172,13 +172,14 @@ def get_all_apps(app=None):
     startup_wm_class = None
     no_display = None
 
-    system_app_dirs = "/run/host/usr/share/applications"
-    system_app_alt_dirs = "/usr/local/share/applications"
-    snap_app_dirs = "/var/lib/snapd/desktop"
-    system_flatpak_app_dirs = "/var/lib/flatpak/exports/share/applications"
-    user_flatpak_app_dirs = os.path.join(GLib.get_home_dir(), ".local/share/flatpak/exports/share/applications")
-    user_app_dirs = os.path.join(GLib.get_home_dir(), ".local/share/applications")
-    desktop_file_dirs = [system_app_dirs, system_app_alt_dirs, system_flatpak_app_dirs, snap_app_dirs, user_app_dirs, user_flatpak_app_dirs]
+    flatpak_system_app_dirs = "/run/host/usr/share/applications"
+    native_system_app_dirs = "/usr/share/applications"
+    native_system_app_alt_dirs = "/usr/local/share/applications"
+    native_system_flatpak_app_dirs = "/var/lib/flatpak/exports/share/applications"
+    native_snap_app_dirs = "/var/lib/snapd/desktop"
+    native_user_flatpak_app_dirs = os.path.join(GLib.get_home_dir(), ".local/share/flatpak/exports/share/applications")
+    native_user_app_dirs = os.path.join(GLib.get_home_dir(), ".local/share/applications")
+    desktop_file_dirs = [native_system_app_dirs, native_system_app_alt_dirs, flatpak_system_app_dirs, native_system_flatpak_app_dirs, native_snap_app_dirs, native_user_flatpak_app_dirs, native_user_app_dirs]
 
     for dir in desktop_file_dirs:
         if os.path.exists(dir):
@@ -191,11 +192,9 @@ def get_all_apps(app=None):
 
                     if "application/x-desktop" in desktop_file.get_content_type():
                         desktop_file_path = os.path.join(dir, desktop_file.get_name())
-                    
+
                     if "inode/symlink" in desktop_file.get_content_type():
                         
-                        print(os.path.realpath(desktop_file.get_symlink_target()))
-
                         if ".local/share/flatpak/exports/share/applications" in dir:
                             desktop_file_path = os.path.join(GLib.get_home_dir(), ".local/share/flatpak", os.path.realpath(desktop_file.get_symlink_target()).replace("/home/", ""))
 
@@ -238,12 +237,10 @@ def get_all_apps(app=None):
     else:
         return all_apps
 
-def get_active_app_window():
+def get_active_app_window_xprop():
     import subprocess
     import re
     import os
-    import gi
-    from gi.repository import Gio, GLib
    
     source_app = None
     source_icon = None
@@ -358,114 +355,78 @@ def get_active_app_window():
     return source_app, source_icon
 
 def get_active_app_window_xlib():
-    import subprocess
-    import re
-    import os
-    import gi
-    from gi.repository import Gio, GLib
-   
     source_app = None
     source_icon = None
-    break_out = False
     all_apps = get_all_apps()
 
-    root = subprocess.Popen(['xprop', '-root', '_NET_ACTIVE_WINDOW'], stdout=subprocess.PIPE)
-    stdout, stderr = root.communicate()
-    m = re.search(b'^_NET_ACTIVE_WINDOW.* ([\w]+)$', stdout)
-    if m != None:
-        window_id = m.group(1)
-        window = subprocess.Popen(['xprop', '-id', window_id], stdout=subprocess.PIPE)
-        stdout, stderr = window.communicate()
-        output = stdout.decode("utf-8")
+    import os
+    import Xlib
+    import Xlib.display
 
-        wm_name = re.search("WM_NAME\(\w+\) = (?P<name>.+)*", output)
-        wm_class = re.search("WM_CLASS\(\w+\) = (?P<name>.+)*", output)
-        bamf_desktop_file = re.search("_BAMF_DESKTOP_FILE\(\w+\) = (?P<name>.+)*", output)
-        gtk_application_id = re.search("_GTK_APPLICATION_ID\(\w+\) = (?P<name>.+)*", output)
+    display = Xlib.display.Display()
+    root = display.screen().root
 
-        if break_out is False and bamf_desktop_file != None:
-            bamf_desktop_file = bamf_desktop_file.group(1).replace('"','')
-            try:
-                for key in all_apps.keys():
-                    if os.path.basename(bamf_desktop_file.lower()) == os.path.basename(all_apps[key][-1].lower()):
-                        source_app = key
-                        source_icon = all_apps[key][0]
-                        break_out = True
-                        break
-            except:
-                pass
+    NET_CLIENT_LIST = display.intern_atom('_NET_CLIENT_LIST')
+    NET_DESKTOP_NAMES = display.intern_atom('_NET_DESKTOP_NAMES')
+    NET_ACTIVE_WINDOW = display.intern_atom('_NET_ACTIVE_WINDOW')
+    GTK_APPLICATION_ID = display.intern_atom('_GTK_APPLICATION_ID')
+    WM_NAME = display.intern_atom('WM_NAME')
+    WM_CLASS = display.intern_atom('WM_CLASS')
+    BAMF_DESKTOP_FILE = display.intern_atom('_BAMF_DESKTOP_FILE')
 
-        if break_out is False and gtk_application_id != None:
-            gtk_application_id = gtk_application_id.group(1).replace('"','')
-            try:
-                for key in all_apps.keys():
-                    if gtk_application_id.lower() == all_apps[key][0].lower():
-                        source_app = key
-                        source_icon = all_apps[key][0]
-                        break_out = True
-                        break
-            except:
-                pass
+    try:
+        window_id = root.get_full_property(NET_ACTIVE_WINDOW, Xlib.X.AnyPropertyType).value[0]
+        window = display.create_resource_object('window', window_id)
+        
+        for key in all_apps.keys():
+            source_app = key
+            source_icon = all_apps[key][0]
 
-        if break_out is False and wm_name != None:
-            if " - " in wm_name.group(1):
-                wm_name = wm_name.group(1).replace('"',"").split(" - ")[-1]
+            app_name = key.lower()
+            app_icon = all_apps[key][0].lower()
+            if all_apps[key][1] is not None:
+                startup_wm_class = all_apps[key][1].lower()
             else:
-                wm_name = wm_name.group(1).replace('"',"")
-            try:
-                for key in all_apps.keys():
-                    if all_apps[key][1] != None:
-                        app_name = key.lower()
-                        app_icon = all_apps[key][0].lower()
-                        startup_wm_name = all_apps[key][1].lower()
-                        if wm_name.lower() == app_name or wm_name.lower() == startup_wm_name or wm_name.lower() in app_icon:
-                            source_app = key
-                            source_icon = all_apps[key][0]
-                            break_out = True
-                            break
-            except:
-                pass
+                startup_wm_class = None
+            desktop_file_path = all_apps[key][3].lower()
 
-        if break_out is False and wm_class != None:
-            wm_class_keys = wm_class.group(1).replace('"',"").split(",")
-            for wm_class_key in wm_class_keys:
-                try:
-                    for key in all_apps.keys():
-                        app_name = key.lower()
-                        app_icon = all_apps[key][0]
-                        startup_wm_name = all_apps[key][1]
-                        if wm_class_key.lower() == app_name or wm_class_key.lower() == startup_wm_name or wm_class_key.lower() in app_icon:
-                            source_app = key
-                            source_icon = all_apps[key][0]
-                            break_out = True
-                            break
-                except:
-                    pass
-                    if break_out is False and "-" in wm_class_key:
-                        for wm_class_subkey in wm_class_key.split("-"):
-                            try:
-                                for key in all_apps.keys():
-                                    if all_apps[key][1] != None:
-                                        app_name = key.lower()
-                                        app_icon = all_apps[key][0]
-                                        startup_wm_name = all_apps[key][1]
-                                        if wm_class_subkey.lower() == app_name or wm_class_subkey.lower() == startup_wm_name or wm_class_subkey.lower() in app_icon:
-                                            source_app = key
-                                            source_icon = all_apps[key][0]
-                                            break_out = True
-                                            break
-                            except:
-                                pass
+            if window.get_full_property(BAMF_DESKTOP_FILE, 0):
+                bamf_desktop_file = window.get_full_property(BAMF_DESKTOP_FILE, 0).value.replace(b'\x00',b' ').decode("utf-8").lower()
+                if os.path.basename(bamf_desktop_file) == os.path.basename(desktop_file_path):
+                    break
+
+            if window.get_full_property(GTK_APPLICATION_ID, 0):
+                gtk_application_id = window.get_full_property(GTK_APPLICATION_ID, 0).value.replace(b'\x00',b' ').decode("utf-8").lower()
+                if gtk_application_id == app_icon:
+                    break
+
+            if window.get_full_property(WM_NAME, 0):
+                wm_name = window.get_full_property(WM_NAME, 0).value.decode("utf-8").lower()
+                if " - " in wm_name:
+                    wm_name = wm_name.split(" - ")[-1]
+                if startup_wm_class != None:
+                    if wm_name == app_name or wm_name== startup_wm_class or wm_name in app_icon:
                         break
+            
+            if window.get_full_property(WM_CLASS, 0):
+                wm_class = window.get_full_property(WM_CLASS, 0).value.replace(b'\x00',b' ').decode("utf-8")
+                wm_class_keys = wm_class.split(",")
+                for wm_class_key in wm_class_keys:
+                    if wm_class_key.lower() == app_name or wm_class_key.lower() == startup_wm_class or wm_class_key.lower() in app_icon:
+                            break
+                    if "-" in wm_class_key:
+                        for wm_class_subkey in wm_class_key.split("-"):
+                            if wm_class_subkey.lower() == app_name or wm_class_subkey.lower() == startup_wm_class or wm_class_subkey.lower() in app_icon:
+                                break
 
-        if break_out is False and source_app is None and source_icon is None:
-            workspace = subprocess.Popen(['xprop', '-root', '-notype', '_NET_DESKTOP_NAMES'], stdout=subprocess.PIPE)
-            stdout, stderr = workspace.communicate()
-            m = re.search(b"_NET_DESKTOP_NAMES.* = (?P<name>.+)$", stdout)
-            if m != None:
-                workspace_name = m.group(1).decode("utf-8").replace('"',"") + ": unknown app"
-            source_app = workspace_name # if no active window, fallback to workspace name
+        if source_app is None and source_icon is None:
+            workspace = root.get_full_property(NET_DESKTOP_NAMES, Xlib.X.AnyPropertyType).value.replace(b'\x00',b'').decode("utf-8")
+            source_app = workspace + ": unknown app" # if no active window, fallback to workspace name
             source_icon = "application-default-icon"
+
+    except Xlib.error.XError: #simplify dealing with BadWindow
+        source_app = None
+        source_icon = None
 
     return source_app, source_icon
 
@@ -522,77 +483,6 @@ def get_appinfo_gio(app):
             icon_name = "application-default-icon"
     return app_name, icon_name
 
-def get_widget_by_name(widget, child_name, level, doPrint=False):
-    '''
-    Function to find widgets using its parent
-    https://stackoverflow.com/questions/20461464/how-do-i-iterate-through-all-Gtk-children-in-pyGtk-recursively
-    http://cdn.php-Gtk.eu/cdn/farfuture/riUt0TzlozMVQuwGBNNJsaPujRQ4uIYXc8SWdgbgiYY/mtime:1368022411/sites/php-Gtk.eu/files/Gtk-php-get-child-widget-by-name.php__0.txt
-    note get_name() vs Gtk.Buildable.get_name(): https://stackoverflow.com/questions/3489520/python-Gtk-widget-name
-    '''
-    import gi
-    gi.require_version('Gtk', '3.0')
-    from gi.repository import Gtk
-
-    if widget is not None:
-        if doPrint: print("-"*level + str(Gtk.Widget.get_name(widget)) + " :: " + str(type(widget).__name__))
-    else:
-        if doPrint: print("-"*level + "None")
-        return None
-
-    #/*** If it is what we are looking for ***/
-    if(Gtk.Widget.get_name(widget) == child_name): # not widget.get_name() !
-        return widget
-
-    #/*** If this widget has one child only search its child ***/
-    if (hasattr(widget, 'get_child') and callable(getattr(widget, 'get_child')) and child_name != ""):
-        child = widget.get_child()
-        if child is not None:
-            return get_widget_by_name(child, child_name, level+1, doPrint)
-
-    # /*** It might have many children, so search them ***/
-    elif (hasattr(widget, 'get_children') and callable(getattr(widget, 'get_children')) and child_name !=""):
-        children = widget.get_children()
-        # /*** For each child ***/
-        found = None
-        for child in children:
-            if child is not None:
-                found = get_widget_by_name(child, child_name, level+1, doPrint) # //search the child
-                if found: return found
-
-def get_widget_by_focus_state(widget, focus_state, level, doPrint=False):
-    '''
-    Function to find widgets using its focus state
-    '''
-    import gi
-    gi.require_version('Gtk', '3.0')
-    from gi.repository import Gtk
-    if widget is not None:
-        if doPrint: print("-"*level + str(Gtk.Widget.get_name(widget)) + " :: " + str(type(widget).__name__) + " :has_focus: " + str(widget.has_focus()))
-    else:
-        if doPrint: print("-"*level + "None")
-        return None
-
-    #/*** If it is what we are looking for ***/
-    if(widget.is_focus() == focus_state):
-        if doPrint: print("###################################################")
-        return widget
-
-    #/*** If this widget has one child only search its child ***/
-    if (hasattr(widget, 'get_child') and callable(getattr(widget, 'get_child'))):
-        child = widget.get_child()
-        if child is not None:
-            return get_widget_by_focus_state(child, focus_state, level+1, doPrint)
-
-    # /*** It might have many children, so search them ***/
-    elif (hasattr(widget, 'get_children') and callable(getattr(widget, 'get_children'))):
-        children = widget.get_children()
-        # /*** For each child ***/
-        found = None
-        for child in children:
-            if child is not None:
-                found = get_widget_by_focus_state(child, focus_state, level+1, doPrint) # //search the child
-                if found: return found
-
 def get_xlib_window_by_gtk_application_id(id):
     ''' Function to get gtk_application_id using the window_id from NET_WM '''
     import Xlib
@@ -643,32 +533,62 @@ def set_active_window_by_xwindow(window):
     window.configure(stack_mode=X.Above)
     display.sync()
 
-def get_all_windows_xlib():
-    ''' Function to get gtk_application_id using the window_id from NET_WM '''
-    import Xlib
-    import Xlib.display
+def get_widget_by_name(widget, child_name, level, doPrint=False):
+    '''
+    Function to find widgets using its parent
+    https://stackoverflow.com/questions/20461464/how-do-i-iterate-through-all-Gtk-children-in-pyGtk-recursively
+    http://cdn.php-Gtk.eu/cdn/farfuture/riUt0TzlozMVQuwGBNNJsaPujRQ4uIYXc8SWdgbgiYY/mtime:1368022411/sites/php-Gtk.eu/files/Gtk-php-get-child-widget-by-name.php__0.txt
+    note get_name() vs Gtk.Buildable.get_name(): https://stackoverflow.com/questions/3489520/python-Gtk-widget-name
+    '''
+    import gi
+    gi.require_version('Gtk', '3.0')
+    from gi.repository import Gtk
 
-    display = Xlib.display.Display()
-    root = display.screen().root
+    if widget is not None:
+        if doPrint: print("-"*level + str(Gtk.Widget.get_name(widget)) + " :: " + str(type(widget).__name__))
+    else:
+        if doPrint: print("-"*level + "None")
+        return None
 
-    NET_CLIENT_LIST = display.intern_atom('_NET_CLIENT_LIST')
-    GTK_APPLICATION_ID = display.intern_atom('_GTK_APPLICATION_ID')
+    #/*** If it is what we are looking for ***/
+    if(Gtk.Widget.get_name(widget) == child_name): # not widget.get_name() !
+        return widget
 
-    root.change_attributes(event_mask=Xlib.X.FocusChangeMask)
-    try:
-        window_id = root.get_full_property(NET_CLIENT_LIST, Xlib.X.AnyPropertyType).value
-        for id in window_id:
-            window = display.create_resource_object('window', id)
-            window.change_attributes(event_mask=Xlib.X.PropertyChangeMask)
-            if window.get_full_property(GTK_APPLICATION_ID, 0):
-                if window.get_full_property(GTK_APPLICATION_ID, 0).value.decode("utf-8") == id:
-                    break
+    #/*** If this widget has one child only search its child ***/
+    if (hasattr(widget, 'get_child') and callable(getattr(widget, 'get_child')) and child_name != ""):
+        child = widget.get_child()
+        if child is not None:
+            return get_widget_by_name(child, child_name, level+1, doPrint)
 
-    except Xlib.error.XError: #simplify dealing with BadWindow
-        window_name = None
+    # /*** It might have many children, so search them ***/
+    elif (hasattr(widget, 'get_children') and callable(getattr(widget, 'get_children')) and child_name !=""):
+        children = widget.get_children()
+        # /*** For each child ***/
+        found = None
+        for child in children:
+            if child is not None:
+                found = get_widget_by_name(child, child_name, level+1, doPrint) # //search the child
+                if found: return found
 
-    return window
-
+def clone_widget(widget):
+    widget2=widget.__class__()
+    for prop in dir(widget):
+        if prop.startswith("set_") and prop not in ["set_buffer"]:
+            prop_value=None
+            try:
+                prop_value=getattr(widget, prop.replace("set_","get_") )()
+            except:
+                try:
+                    prop_value=getattr(widget, prop.replace("set_","") )
+                except:
+                    continue
+            if prop_value == None:
+                continue
+            try:
+                getattr(widget2, prop)( prop_value ) 
+            except:
+                pass
+    return widget2
 
 #-------------------------------------------------------------------------------------------------------
 # Color Validation Functions
@@ -1007,6 +927,21 @@ def is_valid_email(str):
     return validate_string_with_regex(str, regex)
 
 #-------------------------------------------------------------------------------------------------------
+
+def copy_to_clipboard(clipboard_target, file, type=None):
+    ''' Function to copy files to clipboard '''
+    from subprocess import Popen, PIPE
+
+    try:
+        if "url" in type:
+            with open(file) as _file:
+                data = Popen(['echo', _file.readlines()[0].rstrip("\n").rstrip("\n")], stdout=PIPE)
+                Popen(['xclip', '-selection', 'clipboard', '-target', clipboard_target], stdin=data.stdout)
+        else:
+            Popen(['xclip', '-selection', 'clipboard', '-target', clipboard_target, '-i', file])
+        return True
+    except:
+        return False
 
 def copy_files_to_clipboard(uris):
     ''' Function to copy files to clipboard from a string of uris in file:// format '''

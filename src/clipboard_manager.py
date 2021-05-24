@@ -80,7 +80,7 @@ class ClipboardManager():
             self.proceed = True
 
         # exclude apps
-        active_app, active_app_icon = self.app.utils.get_active_app_window()
+        active_app, active_app_icon = self.app.utils.get_active_app_window_xlib()
 
         if active_app != "Clips":
             if active_app not in self.get_settings("excluded-apps"):

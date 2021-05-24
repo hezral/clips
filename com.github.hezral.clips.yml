@@ -72,6 +72,14 @@ modules:
       - type: git
         url: https://github.com/astrand/xclip.git
 
+  - name: python-xlib
+    buildsystem: simple
+    build-options:
+      build-args:
+        - --share=network
+    build-commands:
+      - "pip3 install --prefix=${FLATPAK_DEST} python-xlib"
+
   - name: xprop
     sources:
       - type: git
