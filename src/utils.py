@@ -501,6 +501,10 @@ def get_active_app_window_alt():
     return source_app, source_icon
 
 def get_appinfo(app):
+    all_apps = get_all_apps()
+    return app, all_apps[app][0]
+
+def get_appinfo_gio(app):
     from gi.repository import Gio
     all_apps = Gio.AppInfo.get_all()
     try:

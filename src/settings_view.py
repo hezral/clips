@@ -130,7 +130,7 @@ class SettingsView(Gtk.Grid):
         protected_apps_list_values = self.gio_settings.get_value("protected-apps").get_strv()
         protected_apps_list = SubSettings(type="listbox", name="protected-apps", label=None, sublabel=None, separator=False, params=(protected_apps_list_values, ), utils=self.app.utils)
 
-        protected_appchooser_popover = AppChooserPopover(params=(protected_apps_list, ))
+        # protected_appchooser_popover = AppChooserPopover(params=(protected_apps_list, ))
         protected_apps = SubSettings(type="button", name="protected-apps", label="Protected apps", sublabel="Contents copied will be protected", separator=False, params=("Select app", Gtk.Image().new_from_icon_name("application-default-icon", Gtk.IconSize.LARGE_TOOLBAR), ))
         protected_apps.button.connect("clicked", self.on_button_clicked, (protected_apps_list, ))
         #protected_apps.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
@@ -369,7 +369,6 @@ class SettingsView(Gtk.Grid):
 
         entry1.props.sensitive = entry2.props.sensitive = False
         timeout_label(self, label)
-
 
 # ----------------------------------------------------------------------------------------------------
 
