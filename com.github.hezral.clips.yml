@@ -80,10 +80,10 @@ modules:
     build-commands:
       - "pip3 install --prefix=${FLATPAK_DEST} python-xlib"
 
-  - name: xprop
-    sources:
-      - type: git
-        url: https://gitlab.freedesktop.org/xorg/app/xprop.git
+  # - name: xprop
+  #   sources:
+  #     - type: git
+  #       url: https://gitlab.freedesktop.org/xorg/app/xprop.git
 
   # - name: granite
   #   buildsystem: meson
