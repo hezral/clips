@@ -19,7 +19,8 @@ import sys
 import os
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, Gio, GLib, Gdk
+gi.require_version('Granite', '1.0')
+from gi.repository import Gtk, Gio, GLib, Gdk, Granite
 from .main_window import ClipsWindow
 from .clipboard_manager import ClipboardManager
 from .cache_manager import CacheManager
@@ -48,6 +49,7 @@ class Application(Gtk.Application):
 
         self.gio_settings = Gio.Settings(schema_id="com.github.hezral.clips")
         self.gtk_settings = Gtk.Settings().get_default()
+        self.granite_settings = Granite.Settings.get_default()
         self.utils = utils
         self.clipboard_manager = ClipboardManager(gtk_application=self)
         self.cache_manager = CacheManager(gtk_application=self, clipboard_manager=self.clipboard_manager)
@@ -66,6 +68,11 @@ class Application(Gtk.Application):
 
         # self.create_app_shortcut() # doesn't work in flatpak anymore
         self.create_app_actions()
+
+        if self.gio_settings.get_value("theme-optin"):
+            prefers_color_scheme = self.granite_settings.get_prefers_color_scheme()
+            self.gtk_settings.set_property("gtk-application-prefer-dark-theme", prefers_color_scheme)
+            self.granite_settings.connect("notify::prefers-color-scheme", self.on_prefers_color_scheme)
 
         provider = Gtk.CssProvider()        
         provider.load_from_path(os.path.join(os.path.dirname(__file__), "data", "application.css"))
@@ -264,6 +271,11 @@ class Application(Gtk.Application):
     def on_quit_action(self, action, param):
         if self.main_window is not None:
             self.main_window.destroy()
+
+    def on_prefers_color_scheme(self, *args):
+        prefers_color_scheme = self.granite_settings.get_prefers_color_scheme()
+        self.gtk_settings.set_property("gtk-application-prefer-dark-theme", prefers_color_scheme)
+        
 
 def main(version):
     app = Application()

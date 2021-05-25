@@ -2,7 +2,12 @@
 
 <schemalist>
     <schema path="/com/github/hezral/clips/" id="com.github.hezral.clips">
-        <key name="prefer-dark-style" type="b">
+        <key type="b" name="theme-optin">
+            <default>false</default>
+            <summary>Follow OS Appearance Style</summary>
+            <description>Follow OS Appearance Style</description>
+        </key>
+            <key type="b" name="prefer-dark-style">
             <default>false</default>
             <summary>If the dark Gtk stylesheet should be used</summary>
             <description>If the dark Gtk stylesheet should be used</description>

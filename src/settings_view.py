@@ -17,8 +17,8 @@
 
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, Gio, Pango, GObject, Gdk, GLib
-from . import custom_dialog
+from gi.repository import Gtk, Gio, Pango, GObject, Gdk, GLib, Granite
+from . import custom_widgets
 from . import utils
 
 # ----------------------------------------------------------------------------------------------------
@@ -30,6 +30,7 @@ class SettingsView(Gtk.Grid):
         self.app = app
         self.gio_settings = app.gio_settings
         self.gtk_settings = app.gtk_settings
+        self.granite_settings = app.granite_settings
         
         # construct---
         self.props.name = "settings-view"
@@ -55,73 +56,60 @@ class SettingsView(Gtk.Grid):
 
 
         # display behaviour -------------------------------------------------
-
-        # theme switch
-        theme_switch = SubSettings(type="switch", name="theme-switch", label="Switch between Dark/Light theme", sublabel=None, separator=True)
+        theme_switch = SubSettings(type="switch", name="theme-switch", label="Switch between Dark/Light theme", sublabel=None, separator=False)
         theme_switch.switch.bind_property("active", self.gtk_settings, "gtk-application-prefer-dark-theme", GObject.BindingFlags.SYNC_CREATE)
         theme_switch.switch.connect_after("notify::active", self.on_switch_activated)
         self.gio_settings.bind("prefer-dark-style", theme_switch.switch, "active", Gio.SettingsBindFlags.DEFAULT)
 
-        # persistent mode
+        theme_optin = SubSettings(type="checkbutton", name="theme-optin", label=None, sublabel=None, separator=True, params=("Follow System Appearance Style",))
+        theme_optin.checkbutton.connect_after("notify::active", self.on_checkbutton_activated, theme_switch)
+        self.gio_settings.bind("theme-optin", theme_optin.checkbutton, "active", Gio.SettingsBindFlags.DEFAULT)
+
         persistent_mode = SubSettings(type="switch", name="persistent-mode", label="Persistent mode", sublabel="Stays open and updates as new clips added",separator=True)
         persistent_mode.switch.connect_after("notify::active", self.on_switch_activated)
         self.gio_settings.bind("persistent-mode", persistent_mode.switch, "active", Gio.SettingsBindFlags.DEFAULT)
         
-        # sticky mode
         sticky_mode = SubSettings(type="switch", name="sticky-mode", label="Sticky mode", sublabel="Display on all workspaces",separator=True)
         sticky_mode.switch.connect_after("notify::active", self.on_switch_activated)
         self.gio_settings.bind("sticky-mode", sticky_mode.switch, "active", Gio.SettingsBindFlags.DEFAULT)
 
-        # show close button
         show_close_button = SubSettings(type="switch", name="show-close-button", label="Show close button", sublabel=None,separator=True)
         show_close_button.switch.connect_after("notify::active", self.on_switch_activated)
         self.gio_settings.bind("show-close-button", show_close_button.switch, "active", Gio.SettingsBindFlags.DEFAULT)
 
-        # hide on startup
         hide_onstartup_mode = SubSettings(type="switch", name="hide-on-startup", label="Hide on startup", sublabel="Hides Clips app window on startup", separator=True)
         self.gio_settings.bind("hide-on-startup", hide_onstartup_mode.switch, "active", Gio.SettingsBindFlags.DEFAULT)
 
-        # min column number
         min_column_number = SubSettings(type="spinbutton", name="min-column-number", label="Columns", sublabel="Set minimum number of columns", separator=False, params=(1,9,1))
         min_column_number.spinbutton.connect("value-changed", self.on_spinbutton_activated)
         self.gio_settings.bind("min-column-number", min_column_number.spinbutton, "value", Gio.SettingsBindFlags.DEFAULT)
 
-        display_behaviour_settings = SettingsGroup("Display & Behaviour", (theme_switch, show_close_button, hide_onstartup_mode, persistent_mode, sticky_mode, min_column_number, ))
+        display_behaviour_settings = SettingsGroup("Display & Behaviour", (theme_switch, theme_optin, show_close_button, hide_onstartup_mode, persistent_mode, sticky_mode, min_column_number, ))
         self.flowbox.add(display_behaviour_settings)
 
         # housekeeping -------------------------------------------------
+        auto_housekeeping_mode = SubSettings(type="switch", name="auto-housekeeping", label="Auto housekeeping clips", sublabel="Automatic housekeeping Clips after retention period", separator=True)
+        self.gio_settings.bind("auto-housekeeping", auto_housekeeping_mode.switch, "active", Gio.SettingsBindFlags.DEFAULT)
 
-        # auto housekeeping
-        autopurge_mode = SubSettings(type="switch", name="auto-housekeeping", label="Auto housekeeping clips", sublabel="Automatic housekeeping Clips after retention period", separator=True)
-        self.gio_settings.bind("auto-housekeeping", autopurge_mode.switch, "active", Gio.SettingsBindFlags.DEFAULT)
-
-        # auto retention period
         auto_retention_period = SubSettings(type="spinbutton", name="auto-retention-period", label="Rentention period", sublabel="Days to retain clips before house keeping", separator=True, params=(0,365,5))
         self.gio_settings.bind("auto-retention-period", auto_retention_period.spinbutton, "value", Gio.SettingsBindFlags.DEFAULT)
 
-        # run housekeeping now
         run_houseekeeping_now = SubSettings(type="button", name="run-housekeeping-now", label="Run housekeeping now", sublabel="no last run date", separator=True, params=("Run now", Gtk.Image().new_from_icon_name("edit-clear", Gtk.IconSize.LARGE_TOOLBAR),))
         run_houseekeeping_now.button.connect("clicked", self.on_button_clicked, run_houseekeeping_now)
-        #run_houseekeeping_now.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
 
-        # delete all
         delete_all = SubSettings(type="button", name="delete-all", label="Delete all clips from cache", sublabel=None, separator=False, params=("Delete all", Gtk.Image().new_from_icon_name("dialog-warning", Gtk.IconSize.LARGE_TOOLBAR),))
         delete_all.button.connect("clicked", self.on_button_clicked)
         delete_all.button.get_style_context().add_class("destructive-action")
 
-        app_settings = SettingsGroup("Housekeeping", (autopurge_mode, auto_retention_period, run_houseekeeping_now, delete_all, ))
+        app_settings = SettingsGroup("Housekeeping", (auto_housekeeping_mode, auto_retention_period, run_houseekeeping_now, delete_all, ))
         self.flowbox.add(app_settings)
 
         # exceptions -------------------------------------------------
-
-        # excluded app
         excluded_apps_list_values = self.gio_settings.get_value("excluded-apps").get_strv()
         excluded_apps_list = SubSettings(type="listbox", name="excluded-apps", label=None, sublabel=None, separator=False, params=(excluded_apps_list_values, ), utils=self.app.utils)
 
-        # excluded_appchooser_popover = AppChooserPopover(params=(excluded_apps_list, ))
         excluded_apps = SubSettings(type="button", name="excluded-apps", label="Exclude apps", sublabel="Copy events are excluded for apps selected", separator=False, params=("Select app", Gtk.Image().new_from_icon_name("application-default-icon", Gtk.IconSize.LARGE_TOOLBAR), ))
         excluded_apps.button.connect("clicked", self.on_button_clicked, (excluded_apps_list, ))
-        #excluded_apps.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
 
         excluded = SettingsGroup("Excluded Apps", (excluded_apps, excluded_apps_list, ))
         self.flowbox.add(excluded)
@@ -130,28 +118,22 @@ class SettingsView(Gtk.Grid):
         protected_apps_list_values = self.gio_settings.get_value("protected-apps").get_strv()
         protected_apps_list = SubSettings(type="listbox", name="protected-apps", label=None, sublabel=None, separator=False, params=(protected_apps_list_values, ), utils=self.app.utils)
 
-        # protected_appchooser_popover = AppChooserPopover(params=(protected_apps_list, ))
         protected_apps = SubSettings(type="button", name="protected-apps", label="Protected apps", sublabel="Contents copied will be protected", separator=False, params=("Select app", Gtk.Image().new_from_icon_name("application-default-icon", Gtk.IconSize.LARGE_TOOLBAR), ))
         protected_apps.button.connect("clicked", self.on_button_clicked, (protected_apps_list, ))
-        #protected_apps.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
 
         protected = SettingsGroup("Protected Apps", (protected_apps, protected_apps_list, ))
         self.flowbox.add(protected)
 
         # others -------------------------------------------------
-    
         add_shortcut = SubSettings(type="button", name="add-shortcut", label="Add Shortcut", sublabel="Launch with keyboard shortcut like ⌘+Ctrl+C", separator=True, params=(" Add", Gtk.Image().new_from_icon_name("com.github.hezral.clips", Gtk.IconSize.LARGE_TOOLBAR),))
         add_shortcut.button.connect("clicked", self.on_button_clicked)
-        #add_shortcut.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
 
         reset_password = SubSettings(type="button", name="reset-password", label="Reset Password", sublabel="All protected clips will be changed", separator=True, params=(" Reset", Gtk.Image().new_from_icon_name("preferences-system-privacy", Gtk.IconSize.LARGE_TOOLBAR),))
         reset_password.button.connect("clicked", self.on_button_clicked)
-        #reset_password.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
 
         unprotect_timeout = SubSettings(type="spinbutton", name="unprotect-timeout", label="Timeout", sublabel="Timeout(sec) after revealing protected clips", separator=False, params=(1,1800,1))
         unprotect_timeout.spinbutton.connect("value-changed", self.on_spinbutton_activated)
         self.gio_settings.bind("unprotect-timeout", unprotect_timeout.spinbutton, "value", Gio.SettingsBindFlags.DEFAULT)
-
 
         others = SettingsGroup("Other", (add_shortcut, reset_password, unprotect_timeout))
         self.flowbox.add(others)
@@ -159,15 +141,12 @@ class SettingsView(Gtk.Grid):
         # help -------------------------------------------------
         view_guides = SubSettings(type="button", name="view-help", label="Guides", sublabel="Guides on how to use Clips", separator=True, params=("View Guides", Gtk.Image().new_from_icon_name("help-contents", Gtk.IconSize.LARGE_TOOLBAR),))
         view_guides.button.connect("clicked", self.on_button_clicked)
-        #view_guides.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
         
         report_issue = SubSettings(type="button", name="report-issue", label="Have a feature request or issue?", sublabel="Report and help make Clips better", separator=True, params=("Report issue", Gtk.Image().new_from_icon_name("help-faq", Gtk.IconSize.LARGE_TOOLBAR),))
         report_issue.button.connect("clicked", self.on_button_clicked)
-        #report_issue.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
 
         buyme_coffee = SubSettings(type="button", name="buy-me-coffee", label="Show Support", sublabel="Thanks for supporting me!", separator=False, params=("Coffee Time", Gtk.Image().new_from_icon_name("com.github.hezral.clips-coffee", Gtk.IconSize.LARGE_TOOLBAR), ))
         buyme_coffee.button.connect("clicked", self.on_button_clicked)
-        #buyme_coffee.button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
 
         help = SettingsGroup("Support", (view_guides, report_issue, buyme_coffee))
         self.flowbox.add(help)
@@ -175,7 +154,33 @@ class SettingsView(Gtk.Grid):
         # disable focus on flowboxchilds
         for child in self.flowbox.get_children():
             child.props.can_focus = False
-        
+
+    def on_checkbutton_activated(self, checkbutton, gparam, widget):
+        name = checkbutton.get_name()
+
+        if self.is_visible():
+            if name == "theme-optin":
+                theme_switch = widget
+                if self.gio_settings.get_value("theme-optin"):
+                    prefers_color_scheme = self.granite_settings.get_prefers_color_scheme()
+                    theme_switch.props.sensitive = False
+
+                else:
+                    prefers_color_scheme = Granite.SettingsColorScheme.NO_PREFERENCE
+                    theme_switch.switch.props.active = self.gio_settings.get_value("prefer-dark-style")
+                    theme_switch.props.sensitive = True
+
+                self.gtk_settings.set_property("gtk-application-prefer-dark-theme", prefers_color_scheme)
+                self.granite_settings.connect("notify::prefers-color-scheme", self.app.on_prefers_color_scheme)
+
+                if "DARK" in prefers_color_scheme.value_name:
+                    active = True
+                else:
+                    active = False
+                theme_switch.switch.props.active = active
+  
+
+
     def on_button_clicked(self, button, params=None):
         name = button.get_name()
 
@@ -191,7 +196,7 @@ class SettingsView(Gtk.Grid):
                 self.app.cache_manager.delete_all_record()
                 self.delete_all_dialog.destroy()
             else:
-                self.delete_all_dialog = custom_dialog.generate_custom_dialog(self, "Delete All Clips", label, "Delete All", "delete-all", self.on_button_clicked, (True, ))
+                self.delete_all_dialog = custom_widgets.generate_custom_dialog(self, "Delete All Clips", label, "Delete All", "delete-all", self.on_button_clicked, (True, ))
 
         if name == "run-housekeeping-now":
             self.app.cache_manager.auto_housekeeping(self.gio_settings.get_int("auto-retention-period"), manual_run=True)
@@ -209,49 +214,167 @@ class SettingsView(Gtk.Grid):
             Gtk.show_uri_on_window(None, "settings://input/keyboard/shortcuts", GLib.get_current_time())
 
         if name == "reset-password":
+
             label = Gtk.Label(label="This will reset the password and also all protected clips")
-            oldpassword_entry = Gtk.Entry()
-            oldpassword_entry.props.input_purpose = Gtk.InputPurpose.PASSWORD
-            oldpassword_entry.props.visibility = False
-            oldpassword_entry.props.hexpand = True
-            oldpassword_entry.props.placeholder_text = " current password"
-            oldpassword_entry.props.halign = Gtk.Align.FILL
-            oldpassword_entry.props.valign = Gtk.Align.CENTER
-            oldpassword_entry.set_size_request(280,32)
 
-            newpassword_entry = Gtk.Entry()
-            newpassword_entry.props.input_purpose = Gtk.InputPurpose.PASSWORD
-            newpassword_entry.props.visibility = False
-            newpassword_entry.props.hexpand = True
-            newpassword_entry.props.placeholder_text = " new password"
-            newpassword_entry.props.halign = Gtk.Align.FILL
-            newpassword_entry.props.valign = Gtk.Align.CENTER
-            newpassword_entry.set_size_request(280,32)
+            current_password_label = Granite.HeaderLabel("Current Password")
 
-            revealoldpassword_button = Gtk.Button(image=Gtk.Image().new_from_icon_name("com.github.hezral.clips-hidepswd", Gtk.IconSize.LARGE_TOOLBAR))
-            revealoldpassword_button.props.hexpand = True
-            revealoldpassword_button.props.name = "revealpassword"
-            revealoldpassword_button.props.halign = Gtk.Align.END
-            revealoldpassword_button.props.valign = Gtk.Align.CENTER
+            current_password_entry = Gtk.Entry()
+            current_password_entry.visibility = False
+            current_password_entry.set_icon_tooltip_text(Gtk.EntryIconPosition.SECONDARY, "Press to authenticate")
 
-            revealnewpassword_button = Gtk.Button(image=Gtk.Image().new_from_icon_name("com.github.hezral.clips-hidepswd", Gtk.IconSize.LARGE_TOOLBAR))
-            revealnewpassword_button.props.hexpand = True
-            revealnewpassword_button.props.name = "revealpassword"
-            revealnewpassword_button.props.halign = Gtk.Align.END
-            revealnewpassword_button.props.valign = Gtk.Align.CENTER
+            current_password_error_label = Gtk.Label("<span font_size=\"small\">{0}</span>".format("Authentication failed"))
+            current_password_error_label.props.halign = Gtk.Align.END
+            current_password_error_label.props.justify = Gtk.Justification.RIGHT
+            current_password_error_label.props.max_width_chars = 55
+            current_password_error_label.props.use_markup = True
+            current_password_error_label.props.wrap = True
+            current_password_error_label.props.xalign = 1
+            current_password_error_revealer = Gtk.Revealer()
+            current_password_error_revealer.props.transition_type = Gtk.RevealerTransitionType.CROSSFADE
+            current_password_error_revealer.add(current_password_error_label)
+            current_password_error_revealer.get_child().get_style_context().add_class(Gtk.STYLE_CLASS_ERROR)
+
+            # current_password_entry.changed.connect (() => {
+            #     if (current_password_entry.text.length > 0) {
+            #         current_password_entry.set_icon_from_icon_name (Gtk.EntryIconPosition.SECONDARY, "go-jump-symbolic")
+            #     } else {
+            #         current_password_entry.set_icon_from_icon_name (Gtk.EntryIconPosition.SECONDARY, null)
+            #     }
+
+            #     current_pw_error.reveal_child = False
+            # })
+
+            # current_password_entry.activate.connect (password_auth)
+            # current_password_entry.icon_release.connect (password_auth)
+
+            # current_password_entry.focus_out_event.connect (() => {
+            #     password_auth ()
+
+            password_entry_label = Granite.HeaderLabel("Choose a Password")
+
+            password_entry = Granite.ValidatedEntry()
+            password_entry.props.hexpand = True
+            password_entry.props.visibility = False
+
+            password_levelbar = Gtk.LevelBar().new_for_interval(0.0, 100.0)
+            password_levelbar.props.mode = Gtk.LevelBarMode.CONTINUOUS
+            password_levelbar.add_offset_value("low", 30.0)
+            password_levelbar.add_offset_value("middle", 50.0)
+            password_levelbar.add_offset_value("high", 80.0)
+            password_levelbar.add_offset_value("full", 100.0)
+
+            password_error_label = Gtk.Label("<span font_size=\"small\">{0}</span>".format("."))
+            password_error_label.props.halign = Gtk.Align.END
+            password_error_label.props.justify = Gtk.Justification.RIGHT
+            password_error_label.props.max_width_chars = 55
+            password_error_label.props.use_markup = True
+            password_error_label.props.wrap = True
+            password_error_label.props.xalign = 1
+            password_error_revealer = Gtk.Revealer()
+            password_error_revealer.props.transition_type = Gtk.RevealerTransitionType.CROSSFADE
+            password_error_revealer.add(password_error_label)
+            password_error_revealer.get_child().get_style_context().add_class(Gtk.STYLE_CLASS_WARNING)
+
+            confirm_label = Granite.HeaderLabel("Confirm Password")
+
+            confirm_entry = Granite.ValidatedEntry()
+            confirm_entry.props.sensitive = False
+            confirm_entry.props.visibility = False
+
+            confirm_entry_label = Gtk.Label("<span font_size=\"small\">{0}</span>".format("."))
+            confirm_entry_label.props.halign = Gtk.Align.END
+            confirm_entry_label.props.justify = Gtk.Justification.RIGHT
+            confirm_entry_label.props.max_width_chars = 55
+            confirm_entry_label.props.use_markup = True
+            confirm_entry_label.props.wrap = True
+            confirm_entry_label.props.xalign = 1
+            confirm_entry_revealer = Gtk.Revealer()
+            confirm_entry_revealer.props.transition_type = Gtk.RevealerTransitionType.CROSSFADE
+            confirm_entry_revealer.add(confirm_entry_label)
+            confirm_entry_revealer.get_child().get_style_context().add_class(Gtk.STYLE_CLASS_ERROR)
+
+            revealoldpassword_button = Gtk.CheckButton().new_with_label("Reveal password")
+            revealoldpassword_button.bind_property("active", password_entry, "visibility", GObject.BindingFlags.DEFAULT)
+            revealoldpassword_button.bind_property("active", confirm_entry, "visibility", GObject.BindingFlags.DEFAULT)
+
+            # password_entry.connect("changed", self.password_is_valid, )
+            #             password_entry.changed.connect (() => {
+            #     pw_entry.is_valid = check_password ()
+            #     validate_form ()
+            # })
+
+            # confirm_entry.changed.connect (() => {
+            #     confirm_entry.is_valid = confirm_password ()
+            #     validate_form ()
+            # })
 
             grid = Gtk.Grid()
-            grid.props.row_spacing = 10
-            grid.attach(label, 0, 0, 2, 1)
-            grid.attach(revealoldpassword_button, 0, 1, 1, 1)
-            grid.attach(oldpassword_entry, 0, 1, 1, 1)
-            grid.attach(revealnewpassword_button, 0, 2, 1, 1)
-            grid.attach(newpassword_entry, 0, 2, 1, 1)
+            grid.props.row_spacing = 4
+            grid.props.orientation = Gtk.Orientation.VERTICAL
+            grid.add(label)
+            grid.add(current_password_label)
+            grid.add(current_password_entry)
+            grid.add(current_password_error_revealer)
+            grid.add(password_entry_label)
+            grid.add(password_entry)
+            grid.add(password_levelbar)
+            grid.add(password_error_revealer)
+            grid.add(confirm_label)
+            grid.add(confirm_entry)
+            grid.add(confirm_entry_revealer)
+            grid.add(revealoldpassword_button)
 
-            self.resetpassword_dialog = custom_dialog.generate_custom_dialog(self, "Reset Password", grid, "Reset", "setpassword", self.on_button_clicked, (newpassword_entry, oldpassword_entry, label))
-            revealoldpassword_button.connect("clicked", self.on_button_clicked, oldpassword_entry)
-            revealnewpassword_button.connect("clicked", self.on_button_clicked, newpassword_entry)
-            newpassword_entry.connect("activate", self.on_newpassword_entry_activated)
+            self.resetpassword_dialog = custom_widgets.generate_custom_dialog(self, "Reset Password", grid, "Reset", "setpassword", self.on_button_clicked, (confirm_entry, password_entry, label))
+            # revealoldpassword_button.connect("clicked", self.on_button_clicked, oldpassword_entry)
+            # revealnewpassword_button.connect("clicked", self.on_button_clicked, newpassword_entry)
+            # newpassword_entry.connect("activate", self.on_newpassword_entry_activated)
+
+            # #-------------------------------------------------------
+            # label = Gtk.Label(label="This will reset the password and also all protected clips")
+            # oldpassword_entry = Gtk.Entry()
+            # oldpassword_entry.props.input_purpose = Gtk.InputPurpose.PASSWORD
+            # oldpassword_entry.props.visibility = False
+            # oldpassword_entry.props.hexpand = True
+            # oldpassword_entry.props.placeholder_text = " current password"
+            # oldpassword_entry.props.halign = Gtk.Align.FILL
+            # oldpassword_entry.props.valign = Gtk.Align.CENTER
+            # oldpassword_entry.set_size_request(280,32)
+
+            # newpassword_entry = Gtk.Entry()
+            # newpassword_entry.props.input_purpose = Gtk.InputPurpose.PASSWORD
+            # newpassword_entry.props.visibility = False
+            # newpassword_entry.props.hexpand = True
+            # newpassword_entry.props.placeholder_text = " new password"
+            # newpassword_entry.props.halign = Gtk.Align.FILL
+            # newpassword_entry.props.valign = Gtk.Align.CENTER
+            # newpassword_entry.set_size_request(280,32)
+
+            # revealoldpassword_button = Gtk.Button(image=Gtk.Image().new_from_icon_name("com.github.hezral.clips-hidepswd", Gtk.IconSize.LARGE_TOOLBAR))
+            # revealoldpassword_button.props.hexpand = True
+            # revealoldpassword_button.props.name = "revealpassword"
+            # revealoldpassword_button.props.halign = Gtk.Align.END
+            # revealoldpassword_button.props.valign = Gtk.Align.CENTER
+
+            # revealnewpassword_button = Gtk.Button(image=Gtk.Image().new_from_icon_name("com.github.hezral.clips-hidepswd", Gtk.IconSize.LARGE_TOOLBAR))
+            # revealnewpassword_button.props.hexpand = True
+            # revealnewpassword_button.props.name = "revealpassword"
+            # revealnewpassword_button.props.halign = Gtk.Align.END
+            # revealnewpassword_button.props.valign = Gtk.Align.CENTER
+
+            # grid = Gtk.Grid()
+            # grid.props.row_spacing = 10
+            # grid.attach(label, 0, 0, 2, 1)
+            # grid.attach(revealoldpassword_button, 0, 1, 1, 1)
+            # grid.attach(oldpassword_entry, 0, 1, 1, 1)
+            # grid.attach(revealnewpassword_button, 0, 2, 1, 1)
+            # grid.attach(newpassword_entry, 0, 2, 1, 1)
+            # self.resetpassword_dialog = custom_widgets.generate_custom_dialog(self, "Reset Password", grid, "Reset", "setpassword", self.on_button_clicked, (newpassword_entry, oldpassword_entry, label))
+            # revealoldpassword_button.connect("clicked", self.on_button_clicked, oldpassword_entry)
+            # revealnewpassword_button.connect("clicked", self.on_button_clicked, newpassword_entry)
+            # newpassword_entry.connect("activate", self.on_newpassword_entry_activated)
+            # #-------------------------------------------------------
+
 
         if button.props.name == "revealpassword":
             if params.props.text != "":
@@ -370,13 +493,24 @@ class SettingsView(Gtk.Grid):
         entry1.props.sensitive = entry2.props.sensitive = False
         timeout_label(self, label)
 
+    def password_is_valid(self, *args):
+        print(locals())
+        print("password is valid")
+        self.check_password()
+        self.validate_form()
+    
+    def check_password(self):
+        print("check password")
+    
+    def validate_form(self):
+        print("validate form")
+
 # ----------------------------------------------------------------------------------------------------
 
 class SettingsGroup(Gtk.Grid):
     def __init__(self, group_label, subsettings_list, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # settings grid ---
         grid = Gtk.Grid()
         grid.props.margin = 8
         grid.props.hexpand = True
@@ -388,13 +522,11 @@ class SettingsGroup(Gtk.Grid):
             grid.attach(subsetting, 0, i, 1, 1)
             i += 1
 
-        # subsettingsgroup frame ---
         frame = Gtk.Frame()
         frame.props.name = "settings-group-frame"
         frame.props.hexpand = True
         frame.add(grid)
 
-        # subsettingsgroup label ---
         label = Gtk.Label(group_label)
         label.props.name = "settings-group-label"
         label.props.halign = Gtk.Align.START
@@ -407,7 +539,6 @@ class SettingsGroup(Gtk.Grid):
         self.props.can_focus = False
         self.attach(label, 0, 0, 1, 1)
         self.attach(frame, 0, 1, 1, 1)
-        # self.set_size_request(460, -1)
 
 # ----------------------------------------------------------------------------------------------------
 
@@ -480,6 +611,11 @@ class SubSettings(Gtk.Grid):
             self.scrolled_window.set_size_request(-1, 150)
             self.attach(self.scrolled_window, 0, 1, 1, 1)
 
+        if type == "checkbutton":
+            self.checkbutton = Gtk.CheckButton().new_with_label(params[0])
+            self.checkbutton.props.name = name
+            self.attach(self.checkbutton, 0, 0, 1, 2)
+
         # separator ---
         if separator:
             row_separator = Gtk.Separator()
@@ -493,15 +629,6 @@ class SubSettings(Gtk.Grid):
         self.props.row_spacing = 8
         self.props.column_spacing = 10
         self.attach(box, 0, 0, 1, 2)
-
-    # def get_appinfo(self, app_name):
-    #     all_apps = Gio.AppInfo.get_all()
-    #     try:
-    #         appinfo = [child for child in all_apps if child.get_name() == app_name][0]
-    #     except:
-    #         appinfo = None
-    #     finally:
-    #         return appinfo
 
     def get_gio_settings_values(self, key_name):
         main_window = self.get_toplevel()
