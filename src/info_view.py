@@ -41,13 +41,6 @@ class InfoView(Gtk.Grid):
         self.props.expand = True
         self.props.valign = self.props.halign = Gtk.Align.FILL
 
-        # drawing_area = Gtk.DrawingArea()
-        # drawing_area.props.expand = True
-        # drawing_area.connect("draw", self.draw)
-
-    # def draw(self, drawing_area, cairo_context):
-    #     print(self.get_scale_factor())
-
     def generate_welcome_view(self):
         self.clear_info_view()
 
@@ -254,7 +247,8 @@ class InfoView(Gtk.Grid):
             for i in reversed(range(5)):
                 GLib.idle_add(update_label, (i))
                 time.sleep(1)
-            self.welcome_view_stack.set_visible_child_name("getstarted")
+            if self.welcome_view_stack.get_visible_child_name() == "setpassword":
+                self.welcome_view_stack.set_visible_child_name("getstarted")
         entry.props.sensitive = False
         timeout_label(self, label)
 
