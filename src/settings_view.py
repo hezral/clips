@@ -54,15 +54,17 @@ class SettingsView(Gtk.Grid):
         self.scrolled_window.add(self.flowbox)
         self.attach(self.scrolled_window, 0, 0, 1, 1)
 
-
         # display behaviour -------------------------------------------------
         theme_switch = SubSettings(type="switch", name="theme-switch", label="Switch between Dark/Light theme", sublabel=None, separator=False)
-        theme_switch.switch.bind_property("active", self.gtk_settings, "gtk-application-prefer-dark-theme", GObject.BindingFlags.SYNC_CREATE)
-        theme_switch.switch.connect_after("notify::active", self.on_switch_activated)
-        self.gio_settings.bind("prefer-dark-style", theme_switch.switch, "active", Gio.SettingsBindFlags.DEFAULT)
-
         theme_optin = SubSettings(type="checkbutton", name="theme-optin", label=None, sublabel=None, separator=True, params=("Follow System Appearance Style",))
+
+        theme_switch.switch.bind_property("active", self.gtk_settings, "gtk-application-prefer-dark-theme", GObject.BindingFlags.SYNC_CREATE)
+
+        self.granite_settings.connect("notify::prefers-color-scheme", self.on_appearance_style_change, theme_switch)
+        theme_switch.switch.connect_after("notify::active", self.on_switch_activated)
         theme_optin.checkbutton.connect_after("notify::active", self.on_checkbutton_activated, theme_switch)
+        
+        self.gio_settings.bind("prefer-dark-style", theme_switch.switch, "active", Gio.SettingsBindFlags.DEFAULT)
         self.gio_settings.bind("theme-optin", theme_optin.checkbutton, "active", Gio.SettingsBindFlags.DEFAULT)
 
         persistent_mode = SubSettings(type="switch", name="persistent-mode", label="Persistent mode", sublabel="Stays open and updates as new clips added",separator=True)
@@ -157,28 +159,34 @@ class SettingsView(Gtk.Grid):
 
     def on_checkbutton_activated(self, checkbutton, gparam, widget):
         name = checkbutton.get_name()
+        theme_switch = widget
+        if name == "theme-optin":
+            if self.gio_settings.get_value("theme-optin"):
+                prefers_color_scheme = self.granite_settings.get_prefers_color_scheme()
+                sensitive = False
+            else:
+                prefers_color_scheme = Granite.SettingsColorScheme.NO_PREFERENCE
+                theme_switch.switch.props.active = self.gio_settings.get_value("prefer-dark-style")
+                sensitive = True
 
-        if self.is_visible():
-            if name == "theme-optin":
-                theme_switch = widget
-                if self.gio_settings.get_value("theme-optin"):
-                    prefers_color_scheme = self.granite_settings.get_prefers_color_scheme()
-                    theme_switch.props.sensitive = False
+            self.gtk_settings.set_property("gtk-application-prefer-dark-theme", prefers_color_scheme)
+            self.granite_settings.connect("notify::prefers-color-scheme", self.app.on_prefers_color_scheme)
 
-                else:
-                    prefers_color_scheme = Granite.SettingsColorScheme.NO_PREFERENCE
-                    theme_switch.switch.props.active = self.gio_settings.get_value("prefer-dark-style")
-                    theme_switch.props.sensitive = True
+            if "DARK" in prefers_color_scheme.value_name:
+                active = True
+            else:
+                active = False
 
-                self.gtk_settings.set_property("gtk-application-prefer-dark-theme", prefers_color_scheme)
-                self.granite_settings.connect("notify::prefers-color-scheme", self.app.on_prefers_color_scheme)
+            theme_switch.switch.props.active = active
+            theme_switch.props.sensitive = sensitive
 
-                if "DARK" in prefers_color_scheme.value_name:
-                    active = True
-                else:
-                    active = False
-                theme_switch.switch.props.active = active
-  
+    def on_appearance_style_change(self, granite_settings, gparam, widget):
+        theme_switch = widget
+        if theme_switch.switch.props.active:
+            theme_switch.switch.props.active = False
+        else:
+            theme_switch.switch.props.active = True
+        
 
 
     def on_button_clicked(self, button, params=None):
@@ -330,7 +338,7 @@ class SettingsView(Gtk.Grid):
             # # revealnewpassword_button.connect("clicked", self.on_button_clicked, newpassword_entry)
             # # newpassword_entry.connect("activate", self.on_newpassword_entry_activated)
 
-            # #-------------------------------------------------------
+            #-------------------------------------------------------
             label = Gtk.Label(label="This will reset the password and also all protected clips")
             oldpassword_entry = Gtk.Entry()
             oldpassword_entry.props.input_purpose = Gtk.InputPurpose.PASSWORD
@@ -451,9 +459,6 @@ class SettingsView(Gtk.Grid):
                         headerbar.set_show_close_button(False)
                         headerbar.hide()
                         headerbar.show_all()
-
-            if name == "auto-housekeeping":
-                print("auto-housekeeping enabled")
 
             if name == "theme-switch":
                 if main_window.info_view.help_view:
