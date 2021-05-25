@@ -93,7 +93,6 @@ class Application(Gtk.Application):
         self.cache_manager.main_window = self.main_window
 
         if self.running is False:
-            # check for auto housekeeping
             if self.gio_settings.get_value("auto-housekeeping"):
                 print(datetime.now(), "start auto-housekeeping")
                 print(datetime.now(), "auto-retention-period", self.gio_settings.get_int("auto-retention-period"))
