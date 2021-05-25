@@ -36,7 +36,7 @@ clips_sources = [
   'clips_supported.py',
   'custom_shortcut_settings.py',
   'clips_view.py',
-  'custom_dialog.py',
+  'custom_widgets.py',
   'info_view.py',
   'settings_view.py',
 ]

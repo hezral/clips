@@ -21,7 +21,7 @@ gi.require_version('Gtk', '3.0')
 gi.require_version('WebKit2', '4.0')
 from gi.repository import Gtk, WebKit2, GdkPixbuf, Pango, Gdk, Gio, GLib
 import cairo
-from .custom_dialog import *
+from . import custom_widgets
 
 import os
 from datetime import datetime
@@ -781,7 +781,7 @@ class ClipsContainer(Gtk.EventBox):
                 pass
 
         elif action == "delete":
-            self.delete_all_dialog = generate_custom_dialog(self, "Delete action", self.generate_clip_info(), "Delete", "delete", self.on_clip_action, "force_delete")
+            self.delete_all_dialog = custom_widgets.generate_custom_dialog(self, "Delete action", self.generate_clip_info(), "Delete", "delete", self.on_clip_action, "force_delete")
 
         elif action == "multi-delete":
             flowboxchild.destroy()
@@ -843,7 +843,7 @@ class ClipsContainer(Gtk.EventBox):
         grid.attach(revealpassword_button, 0, 1, 1, 1)
         grid.attach(setpassword_entry, 0, 1, 1, 1)
         
-        dialog = generate_custom_dialog(self, title, grid, "Authenticate", "authenticate", callback, (action, data, setpassword_entry))
+        dialog = custom_widgets.generate_custom_dialog(self, title, grid, "Authenticate", "authenticate", callback, (action, data, setpassword_entry))
         
         revealpassword_button.connect("clicked", reveal_entry_text, setpassword_entry)
         setpassword_entry.connect("activate", entry_activated)
