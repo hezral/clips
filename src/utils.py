@@ -359,6 +359,10 @@ def get_active_app_window_xlib():
     source_icon = None
     all_apps = get_all_apps()
 
+    # print("total apps:", len(all_apps))
+    # for app in sorted(all_apps.keys()):
+    #     print(app, all_apps[app])
+
     import os
     import Xlib
     import Xlib.display
@@ -378,9 +382,7 @@ def get_active_app_window_xlib():
         window_id = root.get_full_property(NET_ACTIVE_WINDOW, Xlib.X.AnyPropertyType).value[0]
         window = display.create_resource_object('window', window_id)
         
-        for key in all_apps.keys():
-            source_app = key
-            source_icon = all_apps[key][0]
+        for key in sorted(all_apps.keys()):
 
             app_name = key.lower()
             app_icon = all_apps[key][0].lower()
@@ -392,32 +394,63 @@ def get_active_app_window_xlib():
 
             if window.get_full_property(BAMF_DESKTOP_FILE, 0):
                 bamf_desktop_file = window.get_full_property(BAMF_DESKTOP_FILE, 0).value.replace(b'\x00',b' ').decode("utf-8").lower()
+                # print("utils.py: os.path.basename(bamf_desktop_file) == os.path.basename(desktop_file_path)", os.path.basename(bamf_desktop_file) == os.path.basename(desktop_file_path), os.path.basename(bamf_desktop_file), os.path.basename(desktop_file_path))
                 if os.path.basename(bamf_desktop_file) == os.path.basename(desktop_file_path):
+                    source_app = key
+                    source_icon = all_apps[key][0]
                     break
 
             if window.get_full_property(GTK_APPLICATION_ID, 0):
                 gtk_application_id = window.get_full_property(GTK_APPLICATION_ID, 0).value.replace(b'\x00',b' ').decode("utf-8").lower()
+                # print("utils.py: gtk_application_id == app_icon", gtk_application_id == app_icon, gtk_application_id, app_icon)
                 if gtk_application_id == app_icon:
+                    source_app = key
+                    source_icon = all_apps[key][0]
                     break
 
             if window.get_full_property(WM_NAME, 0):
                 wm_name = window.get_full_property(WM_NAME, 0).value.decode("utf-8").lower()
                 if " - " in wm_name:
                     wm_name = wm_name.split(" - ")[-1]
+                # print("utils.py: wm_name", wm_name)
                 if startup_wm_class != None:
-                    if wm_name == app_name or wm_name== startup_wm_class or wm_name in app_icon:
+                    if wm_name == app_name or wm_name == startup_wm_class or wm_name in app_icon:
+                        # print("utils.py: key, all_apps[key]", key, all_apps[key])
+                        # print("utils.py: wm_name == app_name", wm_name == app_name, wm_name)
+                        # print("utils.py: wm_name == startup_wm_class", wm_name == startup_wm_class, wm_name)
+                        # print("utils.py: wm_name in app_icon", wm_name in app_icon, wm_name)
+                        source_app = key
+                        source_icon = all_apps[key][0]
                         break
             
             if window.get_full_property(WM_CLASS, 0):
-                wm_class = window.get_full_property(WM_CLASS, 0).value.replace(b'\x00',b' ').decode("utf-8")
+                wm_class = window.get_full_property(WM_CLASS, 0).value.replace(b'\x00',b',').decode("utf-8")
                 wm_class_keys = wm_class.split(",")
+                # print("utils.py:", wm_class_keys)
                 for wm_class_key in wm_class_keys:
-                    if wm_class_key.lower() == app_name or wm_class_key.lower() == startup_wm_class or wm_class_key.lower() in app_icon:
+                    if wm_class_key != '':
+                        if wm_class_key.lower() == app_name or wm_class_key.lower() == startup_wm_class or wm_class_key.lower() in app_icon:
+                            # print("utils.py: wm_class_keys", wm_class_key)
+                            # print("utils.py: key, all_apps[key]", key, all_apps[key])
+                            # print("utils.py: wm_class_key.lower() == app_name", wm_class_key.lower() == app_name, wm_class_key)
+                            # print("utils.py: wm_class_key.lower() == startup_wm_class", wm_class_key.lower() == startup_wm_class, wm_class_key)
+                            # print("utils.py: wm_class_key.lower() in app_icon", wm_class_key.lower() in app_icon, wm_class_key)
+                            source_app = key
+                            source_icon = all_apps[key][0]
                             break
-                    if "-" in wm_class_key:
-                        for wm_class_subkey in wm_class_key.split("-"):
-                            if wm_class_subkey.lower() == app_name or wm_class_subkey.lower() == startup_wm_class or wm_class_subkey.lower() in app_icon:
-                                break
+                        if "-" in wm_class_key:
+                            # print("utils.py: wm_class_key.split("-")", wm_class_key.split("-"))
+                            for wm_class_subkey in wm_class_key.split("-"):
+                                if wm_class_subkey.lower() == app_name or wm_class_subkey.lower() == startup_wm_class or wm_class_subkey.lower() in app_icon:
+                                    # print("utils.py: wm_class_subkey", wm_class_subkey)
+                                    # print("utils.py: key, all_apps[key]", key, all_apps[key])
+                                    # print("utils.py: wm_class_subkey.lower() == app_name", wm_class_subkey.lower() == app_name, wm_class_subkey)
+                                    # print("utils.py: wm_class_subkey.lower() == startup_wm_class", wm_class_subkey.lower() == startup_wm_class, wm_class_subkey)
+                                    # print("utils.py: wm_class_subkey.lower() in app_icon", wm_class_subkey.lower() in app_icon, wm_class_subkey)
+                                    source_app = key
+                                    source_icon = all_apps[key][0]
+                                    break
+            
 
         if source_app is None and source_icon is None:
             workspace = root.get_full_property(NET_DESKTOP_NAMES, Xlib.X.AnyPropertyType).value.replace(b'\x00',b'').decode("utf-8")
