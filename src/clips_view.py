@@ -297,7 +297,8 @@ class ClipsView(Gtk.Grid):
 
         self.delete_selected_button.props.label = "Delete ({count})".format(count=str(0)) 
         self.multi_select_mode = False
-        self.flowbox.select_child(self.flowbox.get_child_at_index(self.current_selected_flowboxchild_index))
+        if self.flowbox.get_child_at_index(self.current_selected_flowboxchild_index) is not None:
+            self.flowbox.select_child(self.flowbox.get_child_at_index(self.current_selected_flowboxchild_index))
 
 # ----------------------------------------------------------------------------------------------------
 
@@ -776,12 +777,21 @@ class ClipsContainer(Gtk.EventBox):
                 self.app.main_window.clips_view.on_child_activated(flowbox, flowbox.get_child_at_index(current_flowbox_index))
             flowboxchild.destroy()
             try:
-                self.delete_all_dialog.destroy()
+                self.delete_clip_dialog.destroy()
             except:
                 pass
 
         elif action == "delete":
-            self.delete_all_dialog = custom_widgets.generate_custom_dialog(self, "Delete action", self.generate_clip_info(), "Delete", "delete", self.on_clip_action, "force_delete")
+            self.delete_clip_dialog = custom_widgets.CustomDialog(
+                dialog_parent_widget=self,
+                dialog_title="Delete Action",
+                dialog_content_widget=self.generate_clip_info(),
+                action_button_label="Delete",
+                action_button_name="delete",
+                action_callback=self.on_clip_action,
+                size=None,
+                data="force_delete"
+                )
 
         elif action == "multi-delete":
             flowboxchild.destroy()
@@ -843,7 +853,20 @@ class ClipsContainer(Gtk.EventBox):
         grid.attach(revealpassword_button, 0, 1, 1, 1)
         grid.attach(setpassword_entry, 0, 1, 1, 1)
         
-        dialog = custom_widgets.generate_custom_dialog(self, title, grid, "Authenticate", "authenticate", callback, (action, data, setpassword_entry))
+        dialog = custom_widgets.CustomDialog(
+                dialog_parent_widget=self,
+                dialog_title=title,
+                dialog_content_widget=grid,
+                action_button_label="Authenticate",
+                action_button_name="authenticate",
+                action_callback=callback,
+                size=None,
+                data=(
+                    action,
+                    data,
+                    setpassword_entry
+                    )
+                )
         
         revealpassword_button.connect("clicked", reveal_entry_text, setpassword_entry)
         setpassword_entry.connect("activate", entry_activated)

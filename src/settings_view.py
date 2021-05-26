@@ -204,7 +204,18 @@ class SettingsView(Gtk.Grid):
                 self.app.cache_manager.delete_all_record()
                 self.delete_all_dialog.destroy()
             else:
-                self.delete_all_dialog = custom_widgets.generate_custom_dialog(self, "Delete All Clips", label, "Delete All", "delete-all", self.on_button_clicked, (True, ))
+                self.delete_all_dialog = custom_widgets.CustomDialog(
+                dialog_parent_widget=self,
+                dialog_title="Delete All Clips",
+                dialog_content_widget=label,
+                action_button_label="Delete All",
+                action_button_name="delete-all",
+                action_callback=self.on_button_clicked,
+                size=None,
+                data=(
+                    True,
+                    )
+                )
 
         if name == "run-housekeeping-now":
             self.app.cache_manager.auto_housekeeping(self.gio_settings.get_int("auto-retention-period"), manual_run=True)
@@ -223,117 +234,22 @@ class SettingsView(Gtk.Grid):
 
         if name == "reset-password":
 
-            # label = Gtk.Label(label="This will reset the password and also all protected clips")
+            # password_editor = custom_widgets.PasswordEditor(main_label="This will reset password and all protected clips", gtk_application=self.app)
 
-            # current_password_label = Granite.HeaderLabel("Current Password")
-
-            # current_password_entry = Gtk.Entry()
-            # current_password_entry.visibility = False
-            # current_password_entry.set_icon_tooltip_text(Gtk.EntryIconPosition.SECONDARY, "Press to authenticate")
-
-            # current_password_error_label = Gtk.Label("<span font_size=\"small\">{0}</span>".format("Authentication failed"))
-            # current_password_error_label.props.halign = Gtk.Align.END
-            # current_password_error_label.props.justify = Gtk.Justification.RIGHT
-            # current_password_error_label.props.max_width_chars = 55
-            # current_password_error_label.props.use_markup = True
-            # current_password_error_label.props.wrap = True
-            # current_password_error_label.props.xalign = 1
-            # current_password_error_revealer = Gtk.Revealer()
-            # current_password_error_revealer.props.transition_type = Gtk.RevealerTransitionType.CROSSFADE
-            # current_password_error_revealer.add(current_password_error_label)
-            # current_password_error_revealer.get_child().get_style_context().add_class(Gtk.STYLE_CLASS_ERROR)
-
-            # # current_password_entry.changed.connect (() => {
-            # #     if (current_password_entry.text.length > 0) {
-            # #         current_password_entry.set_icon_from_icon_name (Gtk.EntryIconPosition.SECONDARY, "go-jump-symbolic")
-            # #     } else {
-            # #         current_password_entry.set_icon_from_icon_name (Gtk.EntryIconPosition.SECONDARY, null)
-            # #     }
-
-            # #     current_pw_error.reveal_child = False
-            # # })
-
-            # # current_password_entry.activate.connect (password_auth)
-            # # current_password_entry.icon_release.connect (password_auth)
-
-            # # current_password_entry.focus_out_event.connect (() => {
-            # #     password_auth ()
-
-            # password_entry_label = Granite.HeaderLabel("Choose a Password")
-
-            # password_entry = Granite.ValidatedEntry()
-            # password_entry.props.hexpand = True
-            # password_entry.props.visibility = False
-
-            # password_levelbar = Gtk.LevelBar().new_for_interval(0.0, 100.0)
-            # password_levelbar.props.mode = Gtk.LevelBarMode.CONTINUOUS
-            # password_levelbar.add_offset_value("low", 30.0)
-            # password_levelbar.add_offset_value("middle", 50.0)
-            # password_levelbar.add_offset_value("high", 80.0)
-            # password_levelbar.add_offset_value("full", 100.0)
-
-            # password_error_label = Gtk.Label("<span font_size=\"small\">{0}</span>".format("."))
-            # password_error_label.props.halign = Gtk.Align.END
-            # password_error_label.props.justify = Gtk.Justification.RIGHT
-            # password_error_label.props.max_width_chars = 55
-            # password_error_label.props.use_markup = True
-            # password_error_label.props.wrap = True
-            # password_error_label.props.xalign = 1
-            # password_error_revealer = Gtk.Revealer()
-            # password_error_revealer.props.transition_type = Gtk.RevealerTransitionType.CROSSFADE
-            # password_error_revealer.add(password_error_label)
-            # password_error_revealer.get_child().get_style_context().add_class(Gtk.STYLE_CLASS_WARNING)
-
-            # confirm_label = Granite.HeaderLabel("Confirm Password")
-
-            # confirm_entry = Granite.ValidatedEntry()
-            # confirm_entry.props.sensitive = False
-            # confirm_entry.props.visibility = False
-
-            # confirm_entry_label = Gtk.Label("<span font_size=\"small\">{0}</span>".format("."))
-            # confirm_entry_label.props.halign = Gtk.Align.END
-            # confirm_entry_label.props.justify = Gtk.Justification.RIGHT
-            # confirm_entry_label.props.max_width_chars = 55
-            # confirm_entry_label.props.use_markup = True
-            # confirm_entry_label.props.wrap = True
-            # confirm_entry_label.props.xalign = 1
-            # confirm_entry_revealer = Gtk.Revealer()
-            # confirm_entry_revealer.props.transition_type = Gtk.RevealerTransitionType.CROSSFADE
-            # confirm_entry_revealer.add(confirm_entry_label)
-            # confirm_entry_revealer.get_child().get_style_context().add_class(Gtk.STYLE_CLASS_ERROR)
-
-            # revealoldpassword_button = Gtk.CheckButton().new_with_label("Reveal password")
-            # revealoldpassword_button.bind_property("active", password_entry, "visibility", GObject.BindingFlags.DEFAULT)
-            # revealoldpassword_button.bind_property("active", confirm_entry, "visibility", GObject.BindingFlags.DEFAULT)
-
-            # # password_entry.connect("changed", self.password_is_valid, )
-            # #             password_entry.changed.connect (() => {
-            # #     pw_entry.is_valid = check_password ()
-            # #     validate_form ()
-            # # })
-
-            # # confirm_entry.changed.connect (() => {
-            # #     confirm_entry.is_valid = confirm_password ()
-            # #     validate_form ()
-            # # })
-
-            # grid = Gtk.Grid()
-            # grid.props.row_spacing = 4
-            # grid.props.orientation = Gtk.Orientation.VERTICAL
-            # grid.add(label)
-            # grid.add(current_password_label)
-            # grid.add(current_password_entry)
-            # grid.add(current_password_error_revealer)
-            # grid.add(password_entry_label)
-            # grid.add(password_entry)
-            # grid.add(password_levelbar)
-            # grid.add(password_error_revealer)
-            # grid.add(confirm_label)
-            # grid.add(confirm_entry)
-            # grid.add(confirm_entry_revealer)
-            # grid.add(revealoldpassword_button)
-
-            # self.resetpassword_dialog = custom_widgets.generate_custom_dialog(self, "Reset Password", grid, "Reset", "setpassword", self.on_button_clicked, (confirm_entry, password_entry, label))
+            # self.resetpassword_dialog = custom_widgets.CustomDialog(
+            #     dialog_parent_widget=self,
+            #     dialog_title="Reset Password",
+            #     dialog_content_widget=password_editor,
+            #     action_button_label="Reset",
+            #     action_button_name="setpassword",
+            #     action_callback=self.on_button_clicked,
+            #     size=[400,-1],
+            #     data=(
+            #         password_editor.confirm_entry, 
+            #         password_editor.password_entry, 
+            #         password_editor.main_label
+            #         )
+            #     )
             # # revealoldpassword_button.connect("clicked", self.on_button_clicked, oldpassword_entry)
             # # revealnewpassword_button.connect("clicked", self.on_button_clicked, newpassword_entry)
             # # newpassword_entry.connect("activate", self.on_newpassword_entry_activated)
@@ -382,7 +298,6 @@ class SettingsView(Gtk.Grid):
             revealnewpassword_button.connect("clicked", self.on_button_clicked, newpassword_entry)
             newpassword_entry.connect("activate", self.on_newpassword_entry_activated)
             #-------------------------------------------------------
-
 
         if button.props.name == "revealpassword":
             if params.props.text != "":
