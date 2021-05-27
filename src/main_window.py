@@ -316,7 +316,11 @@ class ClipsWindow(Gtk.ApplicationWindow):
                 self.clips_view.hide()
             else:
                 if total_clips_in_db == 0:
-                    self.info_view.noclips_view = self.info_view.generate_noclips_view()
+                    if self.gio_settings.get_boolean("first-run"):
+                        self.info_view.welcome_view = self.info_view.generate_welcome_view()
+                    else:
+                        self.info_view.noclips_view = self.info_view.generate_noclips_view()
+
                     self.stack.set_visible_child(self.info_view)
                     self.info_view.show_all()
                     self.settings_view.hide()
