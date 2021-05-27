@@ -130,14 +130,26 @@ class SettingsView(Gtk.Grid):
         add_shortcut = SubSettings(type="button", name="add-shortcut", label="Add Shortcut", sublabel="Launch with keyboard shortcut like ⌘+Ctrl+C", separator=True, params=(" Add", Gtk.Image().new_from_icon_name("com.github.hezral.clips", Gtk.IconSize.LARGE_TOOLBAR),))
         add_shortcut.button.connect("clicked", self.on_button_clicked)
 
-        reset_password = SubSettings(type="button", name="reset-password", label="Reset Password", sublabel="All protected clips will be changed", separator=True, params=(" Reset", Gtk.Image().new_from_icon_name("preferences-system-privacy", Gtk.IconSize.LARGE_TOOLBAR),))
+        reset_password = SubSettings(type="button", name="reset-password", label="Reset Password", sublabel="All protected clips will be changed", separator=True, params=(" Reset", Gtk.Image().new_from_icon_name("dialog-password", Gtk.IconSize.LARGE_TOOLBAR),))
         reset_password.button.connect("clicked", self.on_button_clicked)
+
+        protected_mode_button_icon = Gtk.Image().new_from_icon_name("preferences-system-privacy", Gtk.IconSize.LARGE_TOOLBAR)
+        if self.app.gio_settings.get_value("protected-mode"):
+            protected_mode_state = "On"
+            protected_mode_button_label = "Disable"
+            protected_mode_button_icon.props.sensitive = False
+        else:
+            protected_mode_state = "Off"
+            protected_mode_button_label = "Enable"
+            protected_mode_button_icon.props.sensitive = True
+        protected_mode = SubSettings(type="button", name="protected-mode", label="Protected Mode: {0}".format(protected_mode_state), sublabel="Toggle protected mode", separator=True, params=(protected_mode_button_label, protected_mode_button_icon,))
+        protected_mode.button.connect("clicked", self.on_button_clicked, reset_password)
 
         unprotect_timeout = SubSettings(type="spinbutton", name="unprotect-timeout", label="Timeout", sublabel="Timeout(sec) after revealing protected clips", separator=False, params=(1,1800,1))
         unprotect_timeout.spinbutton.connect("value-changed", self.on_spinbutton_activated)
         self.gio_settings.bind("unprotect-timeout", unprotect_timeout.spinbutton, "value", Gio.SettingsBindFlags.DEFAULT)
 
-        others = SettingsGroup("Other", (add_shortcut, reset_password, unprotect_timeout))
+        others = SettingsGroup("Other", (add_shortcut, protected_mode, reset_password, unprotect_timeout))
         self.flowbox.add(others)
 
         # help -------------------------------------------------
@@ -153,7 +165,6 @@ class SettingsView(Gtk.Grid):
         help = SettingsGroup("Support", (view_guides, report_issue, buyme_coffee))
         self.flowbox.add(help)
 
-        # disable focus on flowboxchilds
         for child in self.flowbox.get_children():
             child.props.can_focus = False
 
@@ -265,6 +276,29 @@ class SettingsView(Gtk.Grid):
                     None,
                     )
                 )
+
+        if name == "protected-mode":
+            reset_password_button = params.button
+            protected_mode_label_text = button.get_parent().label_text
+
+            if self.app.gio_settings.get_value("protected-mode"):
+                self.gio_settings.set_boolean("protected-mode", False)
+                button.props.label = "Enable"
+                button.props.image.props.sensitive = True
+                protected_mode_label_text.props.label = "Protected Mode: Off"
+            else:
+                self.gio_settings.set_boolean("protected-mode", True)
+                button.props.label = "Disable"
+                button.props.image.props.sensitive = False
+                protected_mode_label_text.props.label = "Protected Mode: On"
+            
+            label = [child for child in button.get_children()[0].get_child() if isinstance(child, Gtk.Label)][0]
+            label.props.valign = Gtk.Align.CENTER
+
+            authenticated, authenticate_return = self.app.utils.do_authentication("get")
+            if authenticated and authenticate_return is None:
+                reset_password_button = params.button
+                reset_password_button.emit("clicked")
 
     def on_spinbutton_activated(self, spinbutton):        
         name = spinbutton.get_name()
@@ -411,6 +445,7 @@ class SubSettings(Gtk.Grid):
             self.button.props.name = name
             self.button.props.hexpand = False
             self.button.props.always_show_image = True
+            self.button.set_size_request(90, -1)
             if len(params) >1:
                 label = [child for child in self.button.get_children()[0].get_child() if isinstance(child, Gtk.Label)][0]
                 label.props.valign = Gtk.Align.CENTER
