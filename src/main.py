@@ -82,7 +82,7 @@ class Application(Gtk.Application):
         if not self.main_window:
             self.main_window = ClipsWindow(application=self)
             self.add_window(self.main_window)
-            
+
         if self.gio_settings.get_value("hide-on-startup") and self.running is False:
             self.main_window.hide()
         else:

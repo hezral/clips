@@ -187,8 +187,6 @@ class SettingsView(Gtk.Grid):
         else:
             theme_switch.switch.props.active = True
         
-
-
     def on_button_clicked(self, button, params=None):
         name = button.get_name()
 
@@ -234,18 +232,34 @@ class SettingsView(Gtk.Grid):
 
         if name == "reset-password":
 
+            if self.app.gio_settings.get_value("protected-mode"):
+                type = "full"
+                title = "Reset Password"
+                button_label = "Reset"
+                copy_text = "Reset password for unlocking protected clips\nand update all protected clip's password"
+            else:
+                type = "editor"
+                title = "Set Password"
+                button_label = "Set"
+                copy_text = "Set password for unlocking protected clips"
+            
             password_editor = custom_widgets.PasswordEditor(
-                main_label="Reset password for unlocking protected clips\nand update all protected clip's password", 
+                main_label=copy_text, 
                 gtk_application=self.app,
-                type="full")
+                type=type)
+
+            if self.app.gio_settings.get_value("protected-mode"):
+                callback = password_editor.reset_password
+            else:
+                callback = password_editor.set_password
 
             self.resetpassword_dialog = custom_widgets.CustomDialog(
                 dialog_parent_widget=self,
-                dialog_title="Reset Password",
+                dialog_title=title,
                 dialog_content_widget=password_editor,
-                action_button_label="Reset",
+                action_button_label=button_label,
                 action_button_name="setpassword",
-                action_callback=password_editor.set_password,
+                action_callback=callback,
                 size=[450,-1],
                 data=(
                     None,
