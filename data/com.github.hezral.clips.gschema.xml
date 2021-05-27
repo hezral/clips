@@ -17,6 +17,11 @@
             <summary>Whether this is the first time that Clips has opened</summary>
             <description>Used to determine whether or not to perform initial install steps</description>
         </key>
+        <key type="b" name="protected-mode">
+            <default>true</default>
+            <summary>Clips items will be protected with a password set at first run</summary>
+            <description>Used to determine whether or not to protect a clip item</description>
+        </key>
         <key type="b" name="persistent-mode">
             <default>true</default>
             <summary>Close on focus out of the Clips app window</summary>
