@@ -237,7 +237,7 @@ class SettingsView(Gtk.Grid):
             password_editor = custom_widgets.PasswordEditor(
                 main_label="Reset password for unlocking protected clips\nand update all protected clip's password", 
                 gtk_application=self.app,
-                authenticate=True)
+                type="full")
 
             self.resetpassword_dialog = custom_widgets.CustomDialog(
                 dialog_parent_widget=self,

@@ -145,7 +145,6 @@ class CustomDialog(Gtk.Window):
 
         dialog_parent_widget.cancel_button.grab_focus()
 
-
 class PasswordEditor(Gtk.Grid):
     ''' 
         Widget for password editor interface
@@ -157,7 +156,7 @@ class PasswordEditor(Gtk.Grid):
 
     is_authenticated = False
 
-    def __init__(self, main_label, gtk_application, authenticate=False, *args, **kwargs):
+    def __init__(self, main_label, gtk_application, type, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         # GObject.signal_new(signal_name, object_class, GObject.SIGNAL-flags, return_type, param_types)
@@ -168,37 +167,80 @@ class PasswordEditor(Gtk.Grid):
         self.app = gtk_application
         self.set_events(Gdk.EventMask.FOCUS_CHANGE_MASK)
 
+        self.props.row_spacing = 4
+        self.props.orientation = Gtk.Orientation.VERTICAL
+
         self.main_label = Gtk.Label(main_label)
         self.main_label.props.wrap_mode = Pango.WrapMode.WORD
         self.main_label.props.max_width_chars = 40
         self.main_label.props.wrap = True
         self.main_label.props.hexpand = True
         self.main_label.props.justify = Gtk.Justification.CENTER
+        self.add(self.main_label)
 
-        if authenticate:
-            current_password_label = Granite.HeaderLabel("Current Password")
+        if type == "authenticate":
+            self.generate_authenticate_fields()
+        elif type == "editor":
+            self.generate_editor_fields()
+        elif type == "full":
+            self.generate_authenticate_fields()
+            self.generate_editor_fields()
 
-            self.current_password_entry = Gtk.Entry()
-            self.current_password_entry.props.visibility = False
-            self.current_password_entry.set_icon_tooltip_text(Gtk.EntryIconPosition.SECONDARY, "Press to authenticate")
-            self.current_password_entry.connect("changed", self.on_current_password_entry_changed)
-            self.current_password_entry.connect("activate", self.on_current_password_entry_activated)
-            self.current_password_entry.connect("icon-release", self.on_current_password_entry_icon_release)
-            self.current_password_entry.connect("focus-out-event", self.on_current_password_entry_focus_out)
+        self.reveal_password_button = Gtk.CheckButton().new_with_label("Reveal password")
+        self.add(self.reveal_password_button)
 
-            self.current_password_error_label = Gtk.Label("<span font_size=\"small\">{0}</span>".format("Authentication failed"))
-            self.current_password_error_label.props.halign = Gtk.Align.END
-            self.current_password_error_label.props.justify = Gtk.Justification.RIGHT
-            self.current_password_error_label.props.max_width_chars = 55
-            self.current_password_error_label.props.use_markup = True
-            self.current_password_error_label.props.wrap = True
-            self.current_password_error_label.props.xalign = 1
-            self.current_password_error_revealer = Gtk.Revealer()
-            self.current_password_error_revealer.props.transition_type = Gtk.RevealerTransitionType.CROSSFADE
-            self.current_password_error_revealer.add(self.current_password_error_label)
-            self.current_password_error_revealer.get_child().get_style_context().add_class(Gtk.STYLE_CLASS_ERROR)
+        if type == "authenticate":
+            self.reveal_password_button.bind_property("active", self.current_password_entry, "visibility", GObject.BindingFlags.DEFAULT)
+        elif type == "editor":
+            self.reveal_password_button.bind_property("active", self.password_entry, "visibility", GObject.BindingFlags.DEFAULT)
+            self.reveal_password_button.bind_property("active", self.confirm_entry, "visibility", GObject.BindingFlags.DEFAULT)
+        elif type == "full":
+            self.reveal_password_button.bind_property("active", self.current_password_entry, "visibility", GObject.BindingFlags.DEFAULT)
+            self.reveal_password_button.bind_property("active", self.password_entry, "visibility", GObject.BindingFlags.DEFAULT)
+            self.reveal_password_button.bind_property("active", self.confirm_entry, "visibility", GObject.BindingFlags.DEFAULT)
 
-        password_entry_label = Granite.HeaderLabel("Choose a Password")
+        self.result_label = Gtk.Label("<span font_size=\"small\">{0}</span>".format("."))
+        self.result_label.props.halign = Gtk.Align.END
+        self.result_label.props.justify = Gtk.Justification.RIGHT
+        self.result_label.props.max_width_chars = 55
+        self.result_label.props.use_markup = True
+        self.result_label.props.wrap = True
+        self.result_label.props.xalign = 1
+        self.result_label_revealer = Gtk.Revealer()
+        self.result_label_revealer.props.transition_type = Gtk.RevealerTransitionType.CROSSFADE
+        self.result_label_revealer.add(self.result_label)
+        self.result_label_revealer.get_child().get_style_context().add_class(Gtk.STYLE_CLASS_INFO)
+        self.add(self.result_label_revealer)
+
+    def generate_authenticate_fields(self):
+        self.current_password_headerlabel = Granite.HeaderLabel("Current Password")
+
+        self.current_password_entry = Gtk.Entry()
+        self.current_password_entry.props.visibility = False
+        self.current_password_entry.set_icon_tooltip_text(Gtk.EntryIconPosition.SECONDARY, "Press to authenticate")
+        self.current_password_entry.connect("changed", self.on_current_password_entry_changed)
+        self.current_password_entry.connect("activate", self.on_current_password_entry_activated)
+        self.current_password_entry.connect("icon-release", self.on_current_password_entry_icon_release)
+        self.current_password_entry.connect("focus-out-event", self.on_current_password_entry_focus_out)
+
+        self.current_password_error_label = Gtk.Label("<span font_size=\"small\">{0}</span>".format("Authentication failed"))
+        self.current_password_error_label.props.halign = Gtk.Align.END
+        self.current_password_error_label.props.justify = Gtk.Justification.RIGHT
+        self.current_password_error_label.props.max_width_chars = 55
+        self.current_password_error_label.props.use_markup = True
+        self.current_password_error_label.props.wrap = True
+        self.current_password_error_label.props.xalign = 1
+        self.current_password_error_revealer = Gtk.Revealer()
+        self.current_password_error_revealer.props.transition_type = Gtk.RevealerTransitionType.CROSSFADE
+        self.current_password_error_revealer.add(self.current_password_error_label)
+        self.current_password_error_revealer.get_child().get_style_context().add_class(Gtk.STYLE_CLASS_ERROR)
+
+        self.add(self.current_password_headerlabel)
+        self.add(self.current_password_entry)
+        self.add(self.current_password_error_revealer)
+
+    def generate_editor_fields(self):
+        self.password_entry_headerlabel = Granite.HeaderLabel("Choose a Password")
 
         self.password_entry = Granite.ValidatedEntry()
         self.password_entry.props.activates_default = True
@@ -225,7 +267,7 @@ class PasswordEditor(Gtk.Grid):
         self.password_error_revealer.add(self.password_error_label)
         self.password_error_revealer.get_child().get_style_context().add_class(Gtk.STYLE_CLASS_WARNING)
 
-        confirm_label = Granite.HeaderLabel("Confirm Password")
+        self.confirm_headerlabel = Granite.HeaderLabel("Confirm Password")
 
         self.confirm_entry = Granite.ValidatedEntry()
         self.confirm_entry.props.activates_default = True
@@ -245,40 +287,13 @@ class PasswordEditor(Gtk.Grid):
         self.confirm_entry_revealer.add(self.confirm_entry_label)
         self.confirm_entry_revealer.get_child().get_style_context().add_class(Gtk.STYLE_CLASS_ERROR)
 
-        self.reveal_password_button = Gtk.CheckButton().new_with_label("Reveal password")
-        if authenticate:
-            self.reveal_password_button.bind_property("active", self.current_password_entry, "visibility", GObject.BindingFlags.DEFAULT)
-        self.reveal_password_button.bind_property("active", self.password_entry, "visibility", GObject.BindingFlags.DEFAULT)
-        self.reveal_password_button.bind_property("active", self.confirm_entry, "visibility", GObject.BindingFlags.DEFAULT)
-
-        self.result_label = Gtk.Label("<span font_size=\"small\">{0}</span>".format("."))
-        self.result_label.props.halign = Gtk.Align.END
-        self.result_label.props.justify = Gtk.Justification.RIGHT
-        self.result_label.props.max_width_chars = 55
-        self.result_label.props.use_markup = True
-        self.result_label.props.wrap = True
-        self.result_label.props.xalign = 1
-        self.result_label_revealer = Gtk.Revealer()
-        self.result_label_revealer.props.transition_type = Gtk.RevealerTransitionType.CROSSFADE
-        self.result_label_revealer.add(self.result_label)
-        self.result_label_revealer.get_child().get_style_context().add_class(Gtk.STYLE_CLASS_INFO)
-
-        self.props.row_spacing = 4
-        self.props.orientation = Gtk.Orientation.VERTICAL
-        self.add(self.main_label)
-        if authenticate:
-            self.add(current_password_label)
-            self.add(self.current_password_entry)
-            self.add(self.current_password_error_revealer)
-        self.add(password_entry_label)
+        self.add(self.password_entry_headerlabel)
         self.add(self.password_entry)
         self.add(self.password_levelbar)
         self.add(self.password_error_revealer)
-        self.add(confirm_label)
+        self.add(self.confirm_headerlabel)
         self.add(self.confirm_entry)
         self.add(self.confirm_entry_revealer)
-        self.add(self.reveal_password_button)
-        self.add(self.result_label_revealer)
 
     def on_current_password_entry_changed(self, entry):
         if len(entry.props.text) > 0:
