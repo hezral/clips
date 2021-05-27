@@ -156,7 +156,7 @@ class PasswordEditor(Gtk.Grid):
 
     is_authenticated = False
 
-    def __init__(self, main_label, gtk_application, type, *args, **kwargs):
+    def __init__(self, main_label, gtk_application, type, callback=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         # GObject.signal_new(signal_name, object_class, GObject.SIGNAL-flags, return_type, param_types)
@@ -165,6 +165,8 @@ class PasswordEditor(Gtk.Grid):
             GObject.signal_new("validation-changed", Gtk.Grid, GObject.SIGNAL_RUN_LAST, GObject.TYPE_BOOLEAN, [GObject.TYPE_PYOBJECT,])
         
         self.app = gtk_application
+        self.type = type
+        self.callback = callback
         self.set_events(Gdk.EventMask.FOCUS_CHANGE_MASK)
 
         self.props.row_spacing = 4
@@ -178,23 +180,23 @@ class PasswordEditor(Gtk.Grid):
         self.main_label.props.justify = Gtk.Justification.CENTER
         self.add(self.main_label)
 
-        if type == "authenticate":
+        if self.type == "authenticate":
             self.generate_authenticate_fields()
-        elif type == "editor":
+        elif self.type == "editor":
             self.generate_editor_fields()
-        elif type == "full":
+        elif self.type == "full":
             self.generate_authenticate_fields()
             self.generate_editor_fields()
 
         self.reveal_password_button = Gtk.CheckButton().new_with_label("Reveal password")
         self.add(self.reveal_password_button)
 
-        if type == "authenticate":
+        if self.type == "authenticate":
             self.reveal_password_button.bind_property("active", self.current_password_entry, "visibility", GObject.BindingFlags.DEFAULT)
-        elif type == "editor":
+        elif self.type == "editor":
             self.reveal_password_button.bind_property("active", self.password_entry, "visibility", GObject.BindingFlags.DEFAULT)
             self.reveal_password_button.bind_property("active", self.confirm_entry, "visibility", GObject.BindingFlags.DEFAULT)
-        elif type == "full":
+        elif self.type == "full":
             self.reveal_password_button.bind_property("active", self.current_password_entry, "visibility", GObject.BindingFlags.DEFAULT)
             self.reveal_password_button.bind_property("active", self.password_entry, "visibility", GObject.BindingFlags.DEFAULT)
             self.reveal_password_button.bind_property("active", self.confirm_entry, "visibility", GObject.BindingFlags.DEFAULT)
@@ -362,15 +364,18 @@ class PasswordEditor(Gtk.Grid):
         else:
             self.confirm_entry.props.sensitive = True
 
-            if self.current_password_entry is not None:
+            try:
                 current_password = self.current_password_entry.props.text
+            except:
+                current_password = ""
+
 
             import pwquality
             password_quality = 0
             password_quality_settings = pwquality.PWQSettings()
             error = None
             try:
-                password_quality = password_quality_settings.check(self.password_entry.props.text, self.current_password_entry.props.text, None)
+                password_quality = password_quality_settings.check(self.password_entry.props.text, current_password, None)
             except pwquality.PWQError as error:
                 error_msg = error
 
@@ -414,23 +419,35 @@ class PasswordEditor(Gtk.Grid):
 
         return False
 
-    def set_password(self, button, params=None):
+    def reset_password(self, button, params=None):
         cancel_button = params[1]
         if self.password_entry.props.text != "" and self.current_password_entry.props.text != "":
             if self.password_authentication():
                 if self.password_entry.props.text == self.confirm_entry.props.text:
                     get_password, set_password = self.app.utils.do_authentication("reset", self.password_entry.props.text)
-
                     if get_password[0] and set_password[0]:
                         button.destroy()
                         cancel_button.props.label = "Close"
                         self.timeout_on_setpassword()
-                        self.app.cache_manager.reset_protected_clips(get_password[1])
+                        if self.type == "full":
+                            self.app.cache_manager.reset_protected_clips(get_password[1])
                     else:
                         self.result_label.set_text("Password set failed: {error}".format(error=set_password[1]))
-
                     self.result_label_revealer.set_reveal_child(True)
 
+    def set_password(self, button, params=None):
+        cancel_button = params[1]
+        if self.password_entry.props.text != "":
+            if self.password_entry.props.text == self.confirm_entry.props.text:
+                set_password = self.app.utils.do_authentication("set", self.password_entry.props.text)
+                if set_password[0]:
+                    button.destroy()
+                    cancel_button.props.label = "Close"
+                    self.timeout_on_setpassword()
+                    self.app.gio_settings.set_boolean("protected-mode", True)
+                else:
+                    self.result_label.set_text("Password set failed: {error}".format(error=set_password[1]))
+                self.result_label_revealer.set_reveal_child(True)
 
     def timeout_on_setpassword(self):
 
@@ -448,4 +465,6 @@ class PasswordEditor(Gtk.Grid):
             except:
                 pass
 
+        if self.callback is not None:
+            self.callback()
         timeout_label(self, self.result_label)
