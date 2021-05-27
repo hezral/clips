@@ -423,12 +423,14 @@ class ClipsContainer(Gtk.EventBox):
         return button
     
     def generate_clip_info(self):
-        # app_name, app_icon = self.app.utils.get_appinfo(self.source_app)
-
         id = Gtk.Label("ID: " + str(self.id))
         id.props.hexpand = True
         id.props.halign = Gtk.Align.START
         id_icon = Gtk.Image().new_from_icon_name("com.github.hezral.clips", Gtk.IconSize.LARGE_TOOLBAR)
+
+        cache_file = Gtk.Label("Cache: " + os.path.basename(self.cache_file))
+        cache_file.props.hexpand = True
+        cache_file.props.halign = Gtk.Align.START
 
         source_app = Gtk.Label("Source: " + self.source_app)
         source_app.props.hexpand = True
@@ -482,14 +484,15 @@ class ClipsContainer(Gtk.EventBox):
 
         grid.attach(id_icon, 0, 0, 1, 1)
         grid.attach(id, 1, 0, 1, 1)
-        grid.attach(source_app_icon, 0, 1, 1, 1)
-        grid.attach(source_app, 1, 1, 1, 1)
-        grid.attach(created_icon, 0, 2, 1, 1)
-        grid.attach(created, 1, 2, 1, 1)
-        grid.attach(type_icon, 0, 3, 1, 1)
-        grid.attach(type, 1, 3, 1, 1)
-        grid.attach(extended_icon, 0, 4, 1, 1)
-        grid.attach(extended_info, 1, 4, 1, 1)
+        grid.attach(cache_file, 1, 1, 1, 1)
+        grid.attach(source_app_icon, 0, 2, 1, 1)
+        grid.attach(source_app, 1, 2, 1, 1)
+        grid.attach(created_icon, 0, 3, 1, 1)
+        grid.attach(created, 1, 3, 1, 1)
+        grid.attach(type_icon, 0, 4, 1, 1)
+        grid.attach(type, 1, 4, 1, 1)
+        grid.attach(extended_icon, 0, 5, 1, 1)
+        grid.attach(extended_info, 1, 5, 1, 1)
         grid.show_all()
 
         return grid
