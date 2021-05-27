@@ -334,7 +334,7 @@ class CacheManager():
             cache_uri = self.cache_filedir + '/' + cache_file
             os.renames(temp_cache_uri, cache_uri)
 
-            if "yes" in protected:
+            if "yes" in protected and type == "plaintext":
                 cache_file = self.encrypt_file(cache_uri)
 
             # save thumbnail if available
@@ -451,14 +451,15 @@ class CacheManager():
             if reencrypt:
                 decrypt, decrypted_data = self.app.utils.do_encryption("decrypt", passphrase, cache_uri)
                 if decrypt:
-                    import tempfile
+                    import tempfile, shutil
                     temp_filename = next(tempfile._get_candidate_names()) + tempfile.gettempprefix()
                     temp_file_uri = os.path.join(tempfile.gettempdir(), temp_filename)
                     with open(temp_file_uri, 'wb') as file:
                         file.write(decrypted_data)
                         file.close()
                     os.remove(cache_uri)
-                    os.renames(temp_file_uri, cache_uri)
+                    shutil.copy2(temp_file_uri, cache_uri)
+                    # os.renames(temp_file_uri, cache_uri)
                     self.encrypt_file(cache_uri)
             else:
                 encrypt, encrypted_file = self.app.utils.do_encryption("encrypt", authenticate_data, cache_uri)
