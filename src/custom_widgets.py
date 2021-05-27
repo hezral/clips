@@ -143,7 +143,7 @@ class CustomDialog(Gtk.Window):
         self.connect("destroy", close_dialog)
         self.connect("key-press-event", on_key_press)
 
-        dialog_parent_widget.cancel_button.grab_focus()
+        # dialog_parent_widget.cancel_button.grab_focus()
 
 class PasswordEditor(Gtk.Grid):
     ''' 
@@ -213,6 +213,12 @@ class PasswordEditor(Gtk.Grid):
         self.result_label_revealer.add(self.result_label)
         self.result_label_revealer.get_child().get_style_context().add_class(Gtk.STYLE_CLASS_INFO)
         self.add(self.result_label_revealer)
+
+        if self.type == "authenticate":
+            self.current_password_entry.grab_focus()
+        elif self.type == "editor":
+            self.password_entry.grab_focus()
+
 
     def generate_authenticate_fields(self):
         self.current_password_headerlabel = Granite.HeaderLabel("Current Password")
