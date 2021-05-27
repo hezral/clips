@@ -458,7 +458,7 @@ class CacheManager():
                         file.write(decrypted_data)
                         file.close()
                     os.remove(cache_uri)
-                    shutil.copy2(temp_file_uri, cache_uri)
+                    shutil.move(temp_file_uri, cache_uri)
                     # os.renames(temp_file_uri, cache_uri)
                     self.encrypt_file(cache_uri)
             else:
