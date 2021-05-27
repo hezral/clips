@@ -822,71 +822,28 @@ class ClipsContainer(Gtk.EventBox):
         clip_action_notify.props.can_focus = False
 
     def on_authenticate(self, title, action, callback, data=None):
+        password_editor = custom_widgets.PasswordEditor(
+            main_label="Password required to reveal content", 
+            gtk_application=self.app,
+            type="authenticate")
 
-        def reveal_entry_text(button, entry):
-            if button.props.name == "revealentry":
-                if entry.props.text != "":
-                    if entry.props.visibility:
-                        entry.props.visibility = False
-                        button.set_image(Gtk.Image().new_from_icon_name("com.github.hezral.clips-hidepswd", Gtk.IconSize.LARGE_TOOLBAR))
-                    else:
-                        entry.props.visibility = True
-                        button.set_image(Gtk.Image().new_from_icon_name("com.github.hezral.clips-revealpswd", Gtk.IconSize.LARGE_TOOLBAR))
-
-        def entry_activated(entry):
-            self.ok_button.emit("clicked")
-
-        setpassword_entry = Gtk.Entry()
-        setpassword_entry.props.input_purpose = Gtk.InputPurpose.PASSWORD
-        setpassword_entry.props.visibility = False
-        setpassword_entry.props.hexpand = True
-        setpassword_entry.props.placeholder_text = " type in password"
-        setpassword_entry.props.halign = Gtk.Align.FILL
-        setpassword_entry.props.valign = Gtk.Align.CENTER
-        setpassword_entry.set_size_request(280,32)
-
-        revealpassword_button = Gtk.Button(image=Gtk.Image().new_from_icon_name("com.github.hezral.clips-hidepswd", Gtk.IconSize.LARGE_TOOLBAR))
-        revealpassword_button.props.hexpand = True
-        revealpassword_button.props.name = "revealentry"
-        revealpassword_button.props.halign = Gtk.Align.END
-        revealpassword_button.props.valign = Gtk.Align.CENTER
-        
-        grid = Gtk.Grid()
-        grid.props.row_spacing = 10
-        grid.attach(revealpassword_button, 0, 1, 1, 1)
-        grid.attach(setpassword_entry, 0, 1, 1, 1)
-        
         dialog = custom_widgets.CustomDialog(
-                dialog_parent_widget=self,
-                dialog_title=title,
-                dialog_content_widget=grid,
-                action_button_label="Authenticate",
-                action_button_name="authenticate",
-                action_callback=callback,
-                size=None,
-                data=(
-                    action,
-                    data,
-                    setpassword_entry
-                    )
+            dialog_parent_widget=self,
+            dialog_title=title,
+            dialog_content_widget=password_editor,
+            action_button_label="Reveal",
+            action_button_name="authenticate",
+            action_callback=callback,
+            size=None,
+            data=(
+                action,
+                data,
+                password_editor.current_password_entry,
                 )
-        
-        revealpassword_button.connect("clicked", reveal_entry_text, setpassword_entry)
-        setpassword_entry.connect("activate", entry_activated)
-
+            )
         return dialog
 
     def on_button_clicked(self, button=None, data=None):
-        if button.props.name == "revealpassword":
-            entry = data
-            if entry.props.text != "":
-                if entry.props.visibility:
-                    entry.props.visibility = False
-                    button.set_image(Gtk.Image().new_from_icon_name("com.github.hezral.clips-hidepswd", Gtk.IconSize.LARGE_TOOLBAR))
-                else:
-                    entry.props.visibility = True
-                    button.set_image(Gtk.Image().new_from_icon_name("com.github.hezral.clips-revealpswd", Gtk.IconSize.LARGE_TOOLBAR))
-        
         if button.props.name == "authenticate":
             action = data[0][0]
             label = data[0][1]
@@ -906,9 +863,6 @@ class ClipsContainer(Gtk.EventBox):
                     entry.props.text = ""
                     entry.props.placeholder_text = "Authentication failed!"
                     button.grab_focus()
-
-    def on_setpassword_entry_activated(self, entry):
-        self.ok_button.emit("clicked")
 
     def on_revealcontent_timeout(self, label, content):
 
