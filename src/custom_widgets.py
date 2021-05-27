@@ -18,7 +18,7 @@
 import gi
 gi.require_version('Gtk', '3.0')
 gi.require_version('Granite', '1.0')
-from gi.repository import Gtk, Granite, GObject, Gdk
+from gi.repository import Gtk, Granite, GObject, Gdk, Pango, GLib
 
 def generate_custom_dialog(dialog_parent_widget, dialog_title, dialog_content_widget, action_button_label, action_button_name, action_callback, data=None):
 
@@ -155,39 +155,48 @@ class PasswordEditor(Gtk.Grid):
         https://github.com/elementary/switchboard-plug-useraccounts/blob/b5d4cdcde10551a33440594c8fb2d805407b6638/src/Dialogs/NewUserDialog.vala
     '''
 
-    def __init__(self, main_label, gtk_application, *args, **kwargs):
+    is_authenticated = False
+
+    def __init__(self, main_label, gtk_application, authenticate=False, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         # GObject.signal_new(signal_name, object_class, GObject.SIGNAL-flags, return_type, param_types)
         # param_types is a list object, example [GObject.TYPE_PYOBJECT, GObject.TYPE_STRING]
-        if GObject.signal_is_valid_name("validation-changed") is False:
+        if GObject.signal_lookup("validation-changed", Gtk.Grid) == 0:
             GObject.signal_new("validation-changed", Gtk.Grid, GObject.SIGNAL_RUN_LAST, GObject.TYPE_BOOLEAN, [GObject.TYPE_PYOBJECT,])
         
+        self.app = gtk_application
         self.set_events(Gdk.EventMask.FOCUS_CHANGE_MASK)
 
         self.main_label = Gtk.Label(main_label)
+        self.main_label.props.wrap_mode = Pango.WrapMode.WORD
+        self.main_label.props.max_width_chars = 40
+        self.main_label.props.wrap = True
+        self.main_label.props.hexpand = True
+        self.main_label.props.justify = Gtk.Justification.CENTER
 
-        current_password_label = Granite.HeaderLabel("Current Password")
+        if authenticate:
+            current_password_label = Granite.HeaderLabel("Current Password")
 
-        self.current_password_entry = Gtk.Entry()
-        self.current_password_entry.visibility = False
-        self.current_password_entry.set_icon_tooltip_text(Gtk.EntryIconPosition.SECONDARY, "Press to authenticate")
-        self.current_password_entry.connect("changed", self.on_current_password_entry_changed)
-        self.current_password_entry.connect("activate", self.on_current_password_entry_activated)
-        self.current_password_entry.connect("icon-release", self.on_current_password_entry_icon_release)
-        self.current_password_entry.connect("focus-out-event", self.on_current_password_entry_focus_out)
+            self.current_password_entry = Gtk.Entry()
+            self.current_password_entry.props.visibility = False
+            self.current_password_entry.set_icon_tooltip_text(Gtk.EntryIconPosition.SECONDARY, "Press to authenticate")
+            self.current_password_entry.connect("changed", self.on_current_password_entry_changed)
+            self.current_password_entry.connect("activate", self.on_current_password_entry_activated)
+            self.current_password_entry.connect("icon-release", self.on_current_password_entry_icon_release)
+            self.current_password_entry.connect("focus-out-event", self.on_current_password_entry_focus_out)
 
-        self.current_password_error_label = Gtk.Label("<span font_size=\"small\">{0}</span>".format("Authentication failed"))
-        self.current_password_error_label.props.halign = Gtk.Align.END
-        self.current_password_error_label.props.justify = Gtk.Justification.RIGHT
-        self.current_password_error_label.props.max_width_chars = 55
-        self.current_password_error_label.props.use_markup = True
-        self.current_password_error_label.props.wrap = True
-        self.current_password_error_label.props.xalign = 1
-        self.current_password_error_revealer = Gtk.Revealer()
-        self.current_password_error_revealer.props.transition_type = Gtk.RevealerTransitionType.CROSSFADE
-        self.current_password_error_revealer.add(self.current_password_error_label)
-        self.current_password_error_revealer.get_child().get_style_context().add_class(Gtk.STYLE_CLASS_ERROR)
+            self.current_password_error_label = Gtk.Label("<span font_size=\"small\">{0}</span>".format("Authentication failed"))
+            self.current_password_error_label.props.halign = Gtk.Align.END
+            self.current_password_error_label.props.justify = Gtk.Justification.RIGHT
+            self.current_password_error_label.props.max_width_chars = 55
+            self.current_password_error_label.props.use_markup = True
+            self.current_password_error_label.props.wrap = True
+            self.current_password_error_label.props.xalign = 1
+            self.current_password_error_revealer = Gtk.Revealer()
+            self.current_password_error_revealer.props.transition_type = Gtk.RevealerTransitionType.CROSSFADE
+            self.current_password_error_revealer.add(self.current_password_error_label)
+            self.current_password_error_revealer.get_child().get_style_context().add_class(Gtk.STYLE_CLASS_ERROR)
 
         password_entry_label = Granite.HeaderLabel("Choose a Password")
 
@@ -197,12 +206,12 @@ class PasswordEditor(Gtk.Grid):
         self.password_entry.props.visibility = False
         self.password_entry.connect("changed", self.on_password_entry_changed)
 
-        password_levelbar = Gtk.LevelBar().new_for_interval(0.0, 100.0)
-        password_levelbar.props.mode = Gtk.LevelBarMode.CONTINUOUS
-        password_levelbar.add_offset_value("low", 30.0)
-        password_levelbar.add_offset_value("middle", 50.0)
-        password_levelbar.add_offset_value("high", 80.0)
-        password_levelbar.add_offset_value("full", 100.0)
+        self.password_levelbar = Gtk.LevelBar().new_for_interval(0.0, 100.0)
+        self.password_levelbar.props.mode = Gtk.LevelBarMode.CONTINUOUS
+        self.password_levelbar.add_offset_value("low", 30.0)
+        self.password_levelbar.add_offset_value("middle", 50.0)
+        self.password_levelbar.add_offset_value("high", 80.0)
+        self.password_levelbar.add_offset_value("full", 100.0)
 
         self.password_error_label = Gtk.Label("<span font_size=\"small\">{0}</span>".format("."))
         self.password_error_label.props.halign = Gtk.Align.END
@@ -237,26 +246,41 @@ class PasswordEditor(Gtk.Grid):
         self.confirm_entry_revealer.get_child().get_style_context().add_class(Gtk.STYLE_CLASS_ERROR)
 
         self.reveal_password_button = Gtk.CheckButton().new_with_label("Reveal password")
+        if authenticate:
+            self.reveal_password_button.bind_property("active", self.current_password_entry, "visibility", GObject.BindingFlags.DEFAULT)
         self.reveal_password_button.bind_property("active", self.password_entry, "visibility", GObject.BindingFlags.DEFAULT)
         self.reveal_password_button.bind_property("active", self.confirm_entry, "visibility", GObject.BindingFlags.DEFAULT)
+
+        self.result_label = Gtk.Label("<span font_size=\"small\">{0}</span>".format("."))
+        self.result_label.props.halign = Gtk.Align.END
+        self.result_label.props.justify = Gtk.Justification.RIGHT
+        self.result_label.props.max_width_chars = 55
+        self.result_label.props.use_markup = True
+        self.result_label.props.wrap = True
+        self.result_label.props.xalign = 1
+        self.result_label_revealer = Gtk.Revealer()
+        self.result_label_revealer.props.transition_type = Gtk.RevealerTransitionType.CROSSFADE
+        self.result_label_revealer.add(self.result_label)
+        self.result_label_revealer.get_child().get_style_context().add_class(Gtk.STYLE_CLASS_INFO)
 
         self.props.row_spacing = 4
         self.props.orientation = Gtk.Orientation.VERTICAL
         self.add(self.main_label)
-        self.add(current_password_label)
-        self.add(self.current_password_entry)
-        self.add(self.current_password_error_revealer)
+        if authenticate:
+            self.add(current_password_label)
+            self.add(self.current_password_entry)
+            self.add(self.current_password_error_revealer)
         self.add(password_entry_label)
         self.add(self.password_entry)
-        self.add(password_levelbar)
+        self.add(self.password_levelbar)
         self.add(self.password_error_revealer)
         self.add(confirm_label)
         self.add(self.confirm_entry)
         self.add(self.confirm_entry_revealer)
         self.add(self.reveal_password_button)
+        self.add(self.result_label_revealer)
 
     def on_current_password_entry_changed(self, entry):
-        print("on_current_password_entry_changed")
         if len(entry.props.text) > 0:
             entry.set_icon_from_icon_name(Gtk.EntryIconPosition.SECONDARY, "go-jump-symbolic")
         else:
@@ -264,133 +288,149 @@ class PasswordEditor(Gtk.Grid):
         self.current_password_error_revealer.set_reveal_child(False)
 
     def on_current_password_entry_activated(self, entry):
-        print("on_current_password_entry_activated")
         self.password_authentication()
 
     def on_current_password_entry_icon_release(self, entry, entry_icon_position, event):
-        print("on_current_password_entry_icon_release")
         self.password_authentication()
 
     def on_current_password_entry_focus_out(self, entry, eventfocus):
-        print("on_current_password_entry_focus_out")
         self.password_authentication()
 
     def on_password_entry_changed(self, validate_entry):
-        print("on_password_entry_changed")
         validate_entry.props.is_valid = self.check_password()
         self.validate_form(validate_entry)
 
     def on_confirm_entry_changed(self, validate_entry):
-        print("on_confirm_entry_changed")
         validate_entry.props.is_valid = self.confirm_password()
         self.validate_form(validate_entry)
 
     def password_authentication(self):
-        print("password_authentication")
-        print(locals())
-        # private void password_auth () {
-        #     current_pw_entry.set_icon_from_icon_name (Gtk.EntryIconPosition.SECONDARY, "process-working-symbolic");
-        #     current_pw_entry.get_style_context ().add_class ("spin");
+        self.current_password_entry.set_icon_from_icon_name(Gtk.EntryIconPosition.SECONDARY, "process-working-symbolic")
+        self.current_password_entry.get_style_context().add_class("spin")
 
-        #     Passwd.passwd_authenticate (get_passwd_handler (true), current_pw_entry.text, (h, e) => {
-        #         if (e != null) {
-        #             debug ("Authentication error: %s".printf (e.message));
-        #             current_pw_error.reveal_child = true;
-        #             is_authenticated = false;
-        #             current_pw_entry.set_icon_from_icon_name (Gtk.EntryIconPosition.SECONDARY, "process-error-symbolic");
-        #         } else {
-        #             debug ("User is authenticated for password change now");
-        #             is_authenticated = true;
+        authenticated, authenticate_return = self.app.utils.do_authentication("get")
 
-        #             current_pw_entry.sensitive = false;
-        #             current_pw_entry.set_icon_from_icon_name (Gtk.EntryIconPosition.SECONDARY, "process-completed-symbolic");
-        #         }
-        #         current_pw_entry.get_style_context ().remove_class ("spin");
-        #     });
-        # }
+        if authenticated and self.current_password_entry.props.text == authenticate_return:
+            self.is_authenticated = True
+            self.current_password_entry.set_icon_from_icon_name(Gtk.EntryIconPosition.SECONDARY, "process-completed-symbolic")
+            self.current_password_entry.props.sensitive = False
+            self.current_password_entry.get_style_context().remove_class("spin")
+            return True
+        else:
+            self.is_authenticated = False
+            if authenticated is False:
+                message = "Authentication error: {0}".format(authenticate_return)
+            else:
+                message = "Authentication error"
+            self.current_password_error_label.props.label = message
+            self.current_password_error_revealer.set_reveal_child(True)
+            self.current_password_entry.set_icon_from_icon_name(Gtk.EntryIconPosition.SECONDARY, "process-error-symbolic")
+            
+            self.current_password_entry.get_style_context().remove_class("spin")
+            return False
 
     def validate_form(self, validate_entry):
-        print("validate_form")
         if self.password_entry.props.is_valid and self.confirm_password():
             validate_entry.props.is_valid = True
         self.emit("validation-changed", [validate_entry])
 
     def check_password(self):
-        print("check_password")
-        print(locals())
-        # private bool check_password () {
-        #     if (pw_entry.text == "") {
-        #         confirm_entry.text = "";
-        #         confirm_entry.sensitive = false;
+        if self.password_entry.props.text == "":
+            self.confirm_entry.props.text = ""
+            self.confirm_entry.props.sensitive = False
 
-        #         pw_levelbar.value = 0;
+            self.password_levelbar.props.value = 0
 
-        #         pw_entry.set_icon_from_icon_name (Gtk.EntryIconPosition.SECONDARY, null);
-        #         pw_error_revealer.reveal_child = false;
-        #     } else {
-        #         confirm_entry.sensitive = true;
+            self.password_entry.set_icon_from_icon_name(Gtk.EntryIconPosition.SECONDARY, None)
+            self.password_error_revealer.set_reveal_child(False)
+        
+        else:
+            self.confirm_entry.props.sensitive = True
 
-        #         string? current_pw = null;
-        #         if (current_pw_entry != null) {
-        #             current_pw = current_pw_entry.text;
-        #         }
+            if self.current_password_entry is not None:
+                current_password = self.current_password_entry.props.text
 
-        #         var pwquality = new PasswordQuality.Settings ();
-        #         void* error;
-        #         var quality = pwquality.check (pw_entry.text, current_pw, null, out error);
+            import pwquality
+            password_quality = 0
+            password_quality_settings = pwquality.PWQSettings()
+            error = None
+            try:
+                password_quality = password_quality_settings.check(self.password_entry.props.text, self.current_password_entry.props.text, None)
+            except pwquality.PWQError as error:
+                error_msg = error
 
-        #         if (quality >= 0) {
-        #             pw_entry.set_icon_from_icon_name (Gtk.EntryIconPosition.SECONDARY, "process-completed-symbolic");
-        #             pw_error_revealer.reveal_child = false;
+            if password_quality >= 0:
+                self.password_entry.set_icon_from_icon_name(Gtk.EntryIconPosition.SECONDARY, "process-completed-symbolic")
+                self.password_error_revealer.set_reveal_child(False)
 
-        #             pw_levelbar.value = quality;
+                self.password_levelbar.props.value = password_quality
 
-        #             is_obscure = true;
-        #         } else {
-        #             pw_entry.set_icon_from_icon_name (Gtk.EntryIconPosition.SECONDARY, "dialog-warning-symbolic");
+                self.is_obscure = True
+            
+            else:
+                self.password_entry.set_icon_from_icon_name(Gtk.EntryIconPosition.SECONDARY, "dialog-warning-symbolic")
 
-        #             pw_error_revealer.reveal_child = true;
-        #             pw_error_revealer.label = ((PasswordQuality.Error) quality).to_string (error);
+                self.password_error_revealer.set_reveal_child(True)
+                self.password_error_label = error_msg.to_string()
 
-        #             pw_levelbar.value = 0;
+                self.password_levelbar.props.value = 0
 
-        #             is_obscure = false;
-        #         }
-        #         return true;
-        #     }
+                self.is_obscure = False
+            
+            return True
 
-        #     return false;
-        # }
+        return False
 
     def confirm_password(self):
-        print("confirm_password")
-        print(locals())
-        # private bool confirm_password () {
-        #     if (confirm_entry.text != "") {
-        #         if (pw_entry.text != confirm_entry.text) {
-        #             confirm_entry.set_icon_from_icon_name (Gtk.EntryIconPosition.SECONDARY, "process-error-symbolic");
-        #             confirm_entry_revealer.label = _("Passwords do not match");
-        #             confirm_entry_revealer.reveal_child = true;
-        #         } else {
-        #             confirm_entry.set_icon_from_icon_name (Gtk.EntryIconPosition.SECONDARY, "process-completed-symbolic");
-        #             confirm_entry_revealer.reveal_child = false;
-        #             return true;
-        #         }
-        #     } else {
-        #         confirm_entry.set_icon_from_icon_name (Gtk.EntryIconPosition.SECONDARY, null);
-        #         confirm_entry_revealer.reveal_child = false;
-        #     }
+        if self.confirm_entry.props.text != "":
+            if self.password_entry.props.text != self.confirm_entry.props.text:
+                self.confirm_entry.set_icon_from_icon_name(Gtk.EntryIconPosition.SECONDARY, "process-error-symbolic")
+                self.confirm_entry_label.props.label = "Passwords do not match"
+                self.confirm_entry_revealer.set_reveal_child(True)
+        
+            else:
+                self.confirm_entry.set_icon_from_icon_name(Gtk.EntryIconPosition.SECONDARY, "process-completed-symbolic")
+                self.confirm_entry_revealer.set_reveal_child(False)
+                return True
 
-        #     return false;
-        # }
+        else:
+                self.confirm_entry.set_icon_from_icon_name(Gtk.EntryIconPosition.SECONDARY, None)
+                self.confirm_entry_revealer.set_reveal_child(False)
 
-    def get_password(self):
-        print("get_password")
-        print(locals())
-        # public string? get_password () {
-        #     if (is_valid) {
-        #         return pw_entry.text;
-        #     } else {
-        #         return null;
-        #     }
-        # }
+        return False
+
+    def set_password(self, button, params=None):
+        cancel_button = params[1]
+        if self.password_entry.props.text != "" and self.current_password_entry.props.text != "":
+            if self.password_authentication():
+                if self.password_entry.props.text == self.confirm_entry.props.text:
+                    get_password, set_password = self.app.utils.do_authentication("reset", self.password_entry.props.text)
+
+                    if get_password[0] and set_password[0]:
+                        button.destroy()
+                        cancel_button.props.label = "Close"
+                        self.timeout_on_setpassword()
+                        self.app.cache_manager.reset_protected_clips(get_password[1])
+                    else:
+                        self.result_label.set_text("Password set failed: {error}".format(error=set_password[1]))
+
+                    self.result_label_revealer.set_reveal_child(True)
+
+
+    def timeout_on_setpassword(self):
+
+        def update_label(timeout):
+            self.result_label.props.label = "Password succesfully reset ({i})".format(i=timeout)
+
+        @self.app.utils.run_async
+        def timeout_label(self, label):
+            import time
+            for i in reversed(range(3)):
+                GLib.idle_add(update_label, (i))
+                time.sleep(1)
+            try:
+                self.resetpassword_dialog.destroy()
+            except:
+                pass
+
+        timeout_label(self, self.result_label)
