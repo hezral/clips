@@ -93,10 +93,11 @@ class ClipboardManager():
                         source_icon = active_app_icon
 
                         # print("clipboard_manager.py, line:98:", source_app, self.get_settings("protected-apps"))
-                        if source_app not in self.get_settings("protected-apps"):
-                            protected = "no"
+                        if self.app.gio_settings.get_value("protected-mode"):
+                            if source_app in self.get_settings("protected-apps"):
+                                protected = "yes"
                         else:
-                            protected = "yes"
+                            protected = "no"
 
                         print("clipboard event captured:", self.events, active_app)
                         return target, content, source_app, source_icon, created, protected, thumbnail, file_extension, content_type
