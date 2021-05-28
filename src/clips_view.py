@@ -823,8 +823,12 @@ class ClipsContainer(Gtk.EventBox):
         clip_action_notify.props.can_focus = False
 
     def on_authenticate(self, title, action, callback, data=None):
+        if action == "protect":
+            action_label = "reveal"
+        else:
+            action_label = action
         password_editor = custom_widgets.PasswordEditor(
-            main_label="Password required to reveal content", 
+            main_label="Password required to {0} content".format(action_label), 
             gtk_application=self.app,
             type="authenticate",
             auth_callback=self.on_revealcontent)
