@@ -62,7 +62,7 @@ class CustomDialog(Gtk.Window):
 
         grid = Gtk.Grid()
         grid.props.expand = True
-        grid.props.margin_top = 10
+        grid.props.margin_top = 0
         grid.props.margin_bottom = grid.props.margin_left = grid.props.margin_right = 15
         grid.props.row_spacing = 10
         grid.props.column_spacing = 10
@@ -122,6 +122,7 @@ class PasswordEditor(Gtk.Grid):
         self.main_label.props.wrap = True
         self.main_label.props.hexpand = True
         self.main_label.props.justify = Gtk.Justification.CENTER
+        self.main_label.props.margin_bottom = 10
         self.add(self.main_label)
 
         if self.type == "authenticate":
