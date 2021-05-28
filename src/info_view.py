@@ -53,7 +53,7 @@ class InfoView(Gtk.Grid):
             callback=self.on_set_password)
 
         self.setpassword_button = Gtk.Button("Set Password")
-        self.setpassword_button.props.hexpand = True
+        self.setpassword_button.props.hexpand = False
         self.setpassword_button.props.name = "setpassword"
         self.setpassword_button.props.valign = Gtk.Align.CENTER
         self.setpassword_button.props.halign = Gtk.Align.END
@@ -62,7 +62,7 @@ class InfoView(Gtk.Grid):
 
         self.skippassword_button = Gtk.Button("Skip Protection")
         self.skippassword_button.props.name = "skippassword"
-        self.skippassword_button.props.expand = False
+        self.skippassword_button.props.expand = True
         self.skippassword_button.props.valign = Gtk.Align.CENTER
         self.skippassword_button.props.halign = Gtk.Align.END
         self.skippassword_button.connect("clicked", self.on_button_clicked)
@@ -73,8 +73,8 @@ class InfoView(Gtk.Grid):
         setpassword_grid.props.column_spacing = 10
         setpassword_grid.props.margin = 2
         setpassword_grid.attach(self.password_editor, 0, 0, 2, 1)
-        setpassword_grid.attach(self.setpassword_button, 0, 1, 1, 1)
-        setpassword_grid.attach_next_to(self.skippassword_button, self.setpassword_button, 1, 1, 1)
+        setpassword_grid.attach(self.skippassword_button, 0, 1, 1, 1)
+        setpassword_grid.attach_next_to(self.setpassword_button, self.skippassword_button, 1, 1, 1)
 
         getstarted_button = Gtk.Button("Quick Start Guide")
         getstarted_button.props.name = "getstarted"
@@ -214,22 +214,6 @@ class InfoView(Gtk.Grid):
     def clear_info_view(self):
         for child in self.get_children():
             child.destroy()
-
-    def timeout_on_setpassword(self, label, entry):
-
-        def update_label(timeout):
-            label.props.label = "Password succesfully added ({i})\n".format(i=timeout)
-
-        @self.app.utils.run_async
-        def timeout_label(self, label):
-            import time
-            for i in reversed(range(5)):
-                GLib.idle_add(update_label, (i))
-                time.sleep(1)
-            if self.welcome_view_stack.get_visible_child_name() == "setpassword":
-                self.welcome_view_stack.set_visible_child_name("getstarted")
-        entry.props.sensitive = False
-        timeout_label(self, label)
 
     def on_button_clicked(self, button=None, entry=None, label=None, button2=None):
         if button.props.name == "getstarted":

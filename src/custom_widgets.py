@@ -20,68 +20,8 @@ gi.require_version('Gtk', '3.0')
 gi.require_version('Granite', '1.0')
 from gi.repository import Gtk, Granite, GObject, Gdk, Pango, GLib
 
-def generate_custom_dialog(dialog_parent_widget, dialog_title, dialog_content_widget, action_button_label, action_button_name, action_callback, data=None):
-
-    parent_window = dialog_parent_widget.get_toplevel()
-
-    def close_dialog(button):
-        window.destroy()
-
-    def on_key_press(window, eventkey):
-        if eventkey.keyval == 65307: #63307 is esc key
-            window.destroy()
-
-    header = Gtk.HeaderBar()
-    header.props.show_close_button = True
-    header.props.decoration_layout = "close:"
-    header.props.title = dialog_title
-    header.get_style_context().add_class("default-decoration")
-    header.get_style_context().add_class(Gtk.STYLE_CLASS_FLAT)
-
-    dialog_parent_widget.ok_button = Gtk.Button(label=action_button_label)
-    dialog_parent_widget.ok_button.props.name = action_button_name
-    dialog_parent_widget.ok_button.props.hexpand = True
-    dialog_parent_widget.ok_button.props.halign = Gtk.Align.END
-    dialog_parent_widget.ok_button.set_size_request(65,25)
-    dialog_parent_widget.ok_button.get_style_context().add_class("destructive-action")
-
-    dialog_parent_widget.cancel_button = Gtk.Button(label="Cancel")
-    dialog_parent_widget.cancel_button.props.expand = False
-    dialog_parent_widget.cancel_button.props.halign = Gtk.Align.END
-    dialog_parent_widget.cancel_button.set_size_request(65,25)
-
-    dialog_parent_widget.ok_button.connect("clicked", action_callback, (data, dialog_parent_widget.cancel_button))
-    dialog_parent_widget.cancel_button.connect("clicked", close_dialog)
-
-    grid = Gtk.Grid()
-    grid.props.expand = True
-    grid.props.margin_top = 10
-    grid.props.margin_bottom = grid.props.margin_left = grid.props.margin_right = 20
-    grid.props.row_spacing = 10
-    grid.props.column_spacing = 10
-    grid.attach(dialog_content_widget, 0, 0, 2, 1)
-    grid.attach(dialog_parent_widget.ok_button, 0, 1, 1, 1)
-    grid.attach(dialog_parent_widget.cancel_button, 1, 1, 1, 1)
-
-    window = Gtk.Window()
-    window.set_size_request(150,100)
-    window.get_style_context().add_class("rounded")
-    window.set_titlebar(header)
-    window.props.transient_for = parent_window
-    window.props.modal = True
-    window.props.resizable = False
-    window.props.window_position = Gtk.WindowPosition.CENTER_ON_PARENT
-    window.add(grid)
-    window.show_all()
-    window.connect("destroy", close_dialog)
-    window.connect("key-press-event", on_key_press)
-
-    dialog_parent_widget.cancel_button.grab_focus()
-
-    return window
-
 class CustomDialog(Gtk.Window):
-    def __init__(self, dialog_parent_widget, dialog_title, dialog_content_widget, action_button_label, action_button_name, action_callback, size=None, data=None, *args, **kwargs):
+    def __init__(self, dialog_parent_widget, dialog_title, dialog_content_widget, action_button_label, action_button_name, action_callback, action_type, size=None, data=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         parent_window = dialog_parent_widget.get_toplevel()
@@ -96,21 +36,24 @@ class CustomDialog(Gtk.Window):
                 self.destroy()
 
         header = Gtk.HeaderBar()
-        header.props.show_close_button = True
-        header.props.decoration_layout = "close:"
+        header.props.show_close_button = False
         header.props.title = dialog_title
         header.get_style_context().add_class("default-decoration")
         header.get_style_context().add_class(Gtk.STYLE_CLASS_FLAT)
 
         dialog_parent_widget.ok_button = Gtk.Button(label=action_button_label)
         dialog_parent_widget.ok_button.props.name = action_button_name
-        dialog_parent_widget.ok_button.props.hexpand = True
+        dialog_parent_widget.ok_button.props.expand = False
         dialog_parent_widget.ok_button.props.halign = Gtk.Align.END
         dialog_parent_widget.ok_button.set_size_request(65,25)
-        dialog_parent_widget.ok_button.get_style_context().add_class("destructive-action")
+        if action_type == "destructive":
+            dialog_parent_widget.ok_button.get_style_context().add_class("destructive-action")
+        else:
+            dialog_parent_widget.ok_button.get_style_context().add_class(Gtk.STYLE_CLASS_SUGGESTED_ACTION)
+
 
         dialog_parent_widget.cancel_button = Gtk.Button(label="Cancel")
-        dialog_parent_widget.cancel_button.props.expand = False
+        dialog_parent_widget.cancel_button.props.hexpand = True
         dialog_parent_widget.cancel_button.props.halign = Gtk.Align.END
         dialog_parent_widget.cancel_button.set_size_request(65,25)
 
@@ -120,12 +63,12 @@ class CustomDialog(Gtk.Window):
         grid = Gtk.Grid()
         grid.props.expand = True
         grid.props.margin_top = 10
-        grid.props.margin_bottom = grid.props.margin_left = grid.props.margin_right = 20
+        grid.props.margin_bottom = grid.props.margin_left = grid.props.margin_right = 15
         grid.props.row_spacing = 10
         grid.props.column_spacing = 10
         grid.attach(dialog_content_widget, 0, 0, 2, 1)
-        grid.attach(dialog_parent_widget.ok_button, 0, 1, 1, 1)
-        grid.attach(dialog_parent_widget.cancel_button, 1, 1, 1, 1)
+        grid.attach(dialog_parent_widget.cancel_button, 0, 1, 1, 1)
+        grid.attach(dialog_parent_widget.ok_button, 1, 1, 1, 1)
 
         if size is not None:
             self.set_size_request(size[0],size[1])
@@ -156,7 +99,7 @@ class PasswordEditor(Gtk.Grid):
 
     is_authenticated = False
 
-    def __init__(self, main_label, gtk_application, type, callback=None, *args, **kwargs):
+    def __init__(self, main_label, gtk_application, type, callback=None, auth_callback=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         # GObject.signal_new(signal_name, object_class, GObject.SIGNAL-flags, return_type, param_types)
@@ -167,6 +110,7 @@ class PasswordEditor(Gtk.Grid):
         self.app = gtk_application
         self.type = type
         self.callback = callback
+        self.auth_callback = auth_callback
         self.set_events(Gdk.EventMask.FOCUS_CHANGE_MASK)
 
         self.props.row_spacing = 4
@@ -201,18 +145,19 @@ class PasswordEditor(Gtk.Grid):
             self.reveal_password_button.bind_property("active", self.password_entry, "visibility", GObject.BindingFlags.DEFAULT)
             self.reveal_password_button.bind_property("active", self.confirm_entry, "visibility", GObject.BindingFlags.DEFAULT)
 
-        self.result_label = Gtk.Label("<span font_size=\"small\">{0}</span>".format("."))
-        self.result_label.props.halign = Gtk.Align.END
-        self.result_label.props.justify = Gtk.Justification.RIGHT
-        self.result_label.props.max_width_chars = 55
-        self.result_label.props.use_markup = True
-        self.result_label.props.wrap = True
-        self.result_label.props.xalign = 1
-        self.result_label_revealer = Gtk.Revealer()
-        self.result_label_revealer.props.transition_type = Gtk.RevealerTransitionType.CROSSFADE
-        self.result_label_revealer.add(self.result_label)
-        self.result_label_revealer.get_child().get_style_context().add_class(Gtk.STYLE_CLASS_INFO)
-        self.add(self.result_label_revealer)
+        if self.type != "authenticate":
+            self.result_label = Gtk.Label("<span font_size=\"small\">{0}</span>".format("."))
+            self.result_label.props.halign = Gtk.Align.END
+            self.result_label.props.justify = Gtk.Justification.RIGHT
+            self.result_label.props.max_width_chars = 55
+            self.result_label.props.use_markup = True
+            self.result_label.props.wrap = True
+            self.result_label.props.xalign = 1
+            self.result_label_revealer = Gtk.Revealer()
+            self.result_label_revealer.props.transition_type = Gtk.RevealerTransitionType.CROSSFADE
+            self.result_label_revealer.add(self.result_label)
+            self.result_label_revealer.get_child().get_style_context().add_class(Gtk.STYLE_CLASS_INFO)
+            self.add(self.result_label_revealer)
 
         if self.type == "authenticate":
             self.current_password_entry.grab_focus()
@@ -221,15 +166,20 @@ class PasswordEditor(Gtk.Grid):
 
 
     def generate_authenticate_fields(self):
-        self.current_password_headerlabel = Granite.HeaderLabel("Current Password")
 
         self.current_password_entry = Gtk.Entry()
         self.current_password_entry.props.visibility = False
         self.current_password_entry.set_icon_tooltip_text(Gtk.EntryIconPosition.SECONDARY, "Press to authenticate")
+
+        if self.type != "authenticate":
+            self.current_password_headerlabel = Granite.HeaderLabel("Current Password")
+            self.add(self.current_password_headerlabel)
+            
+            self.current_password_entry.connect("icon-release", self.on_current_password_entry_icon_release)
+            self.current_password_entry.connect("focus-out-event", self.on_current_password_entry_focus_out)
+
         self.current_password_entry.connect("changed", self.on_current_password_entry_changed)
         self.current_password_entry.connect("activate", self.on_current_password_entry_activated)
-        self.current_password_entry.connect("icon-release", self.on_current_password_entry_icon_release)
-        self.current_password_entry.connect("focus-out-event", self.on_current_password_entry_focus_out)
 
         self.current_password_error_label = Gtk.Label("<span font_size=\"small\">{0}</span>".format("Authentication failed"))
         self.current_password_error_label.props.halign = Gtk.Align.END
@@ -243,7 +193,6 @@ class PasswordEditor(Gtk.Grid):
         self.current_password_error_revealer.add(self.current_password_error_label)
         self.current_password_error_revealer.get_child().get_style_context().add_class(Gtk.STYLE_CLASS_ERROR)
 
-        self.add(self.current_password_headerlabel)
         self.add(self.current_password_entry)
         self.add(self.current_password_error_revealer)
 
@@ -311,7 +260,11 @@ class PasswordEditor(Gtk.Grid):
         self.current_password_error_revealer.set_reveal_child(False)
 
     def on_current_password_entry_activated(self, entry):
-        self.password_authentication()
+        if self.type == "authenticate":
+            if self.password_authentication():
+                self.auth_callback()
+        else:
+            self.password_authentication()
 
     def on_current_password_entry_icon_release(self, entry, entry_icon_position, event):
         self.password_authentication()
@@ -327,7 +280,7 @@ class PasswordEditor(Gtk.Grid):
         validate_entry.props.is_valid = self.confirm_password()
         self.validate_form(validate_entry)
 
-    def password_authentication(self):
+    def password_authentication(self, *args):
         self.current_password_entry.set_icon_from_icon_name(Gtk.EntryIconPosition.SECONDARY, "process-working-symbolic")
         self.current_password_entry.get_style_context().add_class("spin")
 
@@ -442,13 +395,12 @@ class PasswordEditor(Gtk.Grid):
                     self.result_label_revealer.set_reveal_child(True)
 
     def set_password(self, button, params=None):
-        cancel_button = params[1]
+        print(locals())
         if self.password_entry.props.text != "":
             if self.password_entry.props.text == self.confirm_entry.props.text:
                 set_password = self.app.utils.do_authentication("set", self.password_entry.props.text)
                 if set_password[0]:
                     button.destroy()
-                    cancel_button.props.label = "Close"
                     self.timeout_on_setpassword()
                     self.app.gio_settings.set_boolean("protected-mode", True)
                 else:
@@ -458,7 +410,7 @@ class PasswordEditor(Gtk.Grid):
     def timeout_on_setpassword(self):
 
         def update_label(timeout):
-            self.result_label.props.label = "Password succesfully reset ({i})".format(i=timeout)
+            self.result_label.props.label = "Password succesfully set ({i})".format(i=timeout)
 
         @self.app.utils.run_async
         def timeout_label(self, label):

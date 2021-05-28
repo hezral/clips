@@ -220,6 +220,7 @@ class SettingsView(Gtk.Grid):
                 action_button_label="Delete All",
                 action_button_name="delete-all",
                 action_callback=self.on_button_clicked,
+                action_type="destructive",
                 size=None,
                 data=(
                     True,
@@ -271,6 +272,7 @@ class SettingsView(Gtk.Grid):
                 action_button_label=button_label,
                 action_button_name="setpassword",
                 action_callback=callback,
+                action_type="destructive",
                 size=[450,-1],
                 data=(
                     None,
