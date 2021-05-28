@@ -516,8 +516,8 @@ def get_appinfo_gio(app):
             icon_name = "application-default-icon"
     return app_name, icon_name
 
-def get_xlib_window_by_gtk_application_id(id):
-    ''' Function to get gtk_application_id using the window_id from NET_WM '''
+def get_window_by_gtk_application_id_xlib(id):
+    ''' Function to get window using the gtk_application_id from NET_WM '''
     import Xlib
     import Xlib.display
 
@@ -538,7 +538,27 @@ def get_xlib_window_by_gtk_application_id(id):
                     break
 
     except Xlib.error.XError: #simplify dealing with BadWindow
-        window_name = None
+        window = None
+
+    return window
+
+def get_active_window_xlib():
+    ''' Function to get active window '''
+    import Xlib
+    import Xlib.display
+
+    display = Xlib.display.Display()
+    root = display.screen().root
+
+    NET_CLIENT_LIST = display.intern_atom('_NET_CLIENT_LIST')
+    NET_ACTIVE_WINDOW = display.intern_atom('_NET_ACTIVE_WINDOW')
+
+    root.change_attributes(event_mask=Xlib.X.FocusChangeMask)
+    try:
+        window_id = root.get_full_property(NET_ACTIVE_WINDOW, Xlib.X.AnyPropertyType).value[0]
+        window = display.create_resource_object('window', window_id)
+    except Xlib.error.XError: #simplify dealing with BadWindow
+        window = None
 
     return window
 
