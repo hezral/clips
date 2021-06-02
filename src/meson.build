@@ -2,13 +2,6 @@ pkgdatadir = join_paths(get_option('prefix'), get_option('datadir'), meson.proje
 moduledir = join_paths(pkgdatadir, 'clips')
 gnome = import('gnome')
 
-# gnome.compile_resources('clips',
-#   'clips.gresource.xml',
-#   gresource_bundle: true,
-#   install: true,
-#   install_dir: pkgdatadir,
-# )
-
 python = import('python')
 
 conf = configuration_data()
