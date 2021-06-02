@@ -683,7 +683,10 @@ class AppListBox(Gtk.ListBox):
 
         for app in all_apps:
             app_icon = all_apps[app][0]
-            app_name = app
+            if "#" in app:
+                app_name = app.split("#")[0]
+            else:
+                app_name = app
             app = (app_name, app_icon)
             self.apps.append(app)
         
