@@ -229,13 +229,13 @@ def get_all_apps(app=None):
                                 no_display = False
 
                         if app_name != None and app_icon != None:
-                            # if no_display is None or no_display is False:
-                            if app_name in all_apps:
-                                duplicate_app += 1
-                                app_name = app_name + "#{0}".format(str(duplicate_app))
-                                all_apps[app_name] = [app_icon, startup_wm_class, no_display, desktop_file_path]
-                            else:
-                                all_apps[app_name] = [app_icon, startup_wm_class, no_display, desktop_file_path]
+                            if no_display is None or no_display is False:
+                                if app_name in all_apps:
+                                    duplicate_app += 1
+                                    app_name = app_name + "#{0}".format(str(duplicate_app))
+                                    all_apps[app_name] = [app_icon, startup_wm_class, no_display, desktop_file_path]
+                                else:
+                                    all_apps[app_name] = [app_icon, startup_wm_class, no_display, desktop_file_path]
 
     if app != None:
         return all_apps[app]
