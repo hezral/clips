@@ -91,9 +91,9 @@ class ClipsView(Gtk.Grid):
         button_grid.props.hexpand = True
         button_grid.props.margin = 6
         button_grid.props.row_spacing = button_grid.props.column_spacing = 6
-        button_grid.attach(self.delete_selected_button, 0, 0, 1, 1)
+        button_grid.attach(cancel_multi_delete_button, 0, 0, 1, 1)
         button_grid.attach(self.select_all_button, 1, 0, 1, 1)
-        button_grid.attach(cancel_multi_delete_button, 2, 0, 1, 1)
+        button_grid.attach(self.delete_selected_button, 2, 0, 1, 1)
 
         grid_multi_delete = Gtk.Grid()
         grid_multi_delete.props.name = "clips-multi-delete"
@@ -263,7 +263,6 @@ class ClipsView(Gtk.Grid):
         self.select_all_button.props.name = "select-all-off"
         self.select_all_button.props.label = "Select All"
         self.delete_selected_button.props.label = "Delete ({count})".format(count=str(len(self.flowbox.get_selected_children())))
-        
     
     def on_multi_select(self):
         self.flowbox.connect("child-activated", self.on_child_multi_selected)
