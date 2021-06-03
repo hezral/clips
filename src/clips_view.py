@@ -404,7 +404,7 @@ class ClipsContainer(Gtk.EventBox):
         button.props.halign = Gtk.Align.END
         button.props.valign = Gtk.Align.START
         button.props.can_focus = False
-        button.props.margin_right = 3
+        # button.props.margin_right = 3
         button.connect("clicked", self.on_clip_select)
         button.get_style_context().add_class("clip-select")
         return button
