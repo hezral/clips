@@ -37,6 +37,11 @@
             <summary>Display Clips app window on all workspaces</summary>
             <description>Display Clips app window on all workspaces</description>
         </key>
+        <key type="b" name="always-on-top">
+            <default>true</default>
+            <summary>Display Clips app window above all windows</summary>
+            <description>Display Clips app window above all windows</description>
+        </key>
         <key type="b" name="hide-on-startup">
             <default>false</default>
             <summary>Hides Clips app window on startup</summary>

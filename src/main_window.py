@@ -82,6 +82,8 @@ class ClipsWindow(Gtk.ApplicationWindow):
             # print('state-flags-on')
         if self.gio_settings.get_value("sticky-mode"):
             self.stick()
+        if self.gio_settings.get_value("always-on-top"):
+            self.set_keep_above(True)
 
     def on_persistent_mode(self, widget, event):
         # state flags for window active state

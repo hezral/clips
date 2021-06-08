@@ -75,6 +75,10 @@ class SettingsView(Gtk.Grid):
         sticky_mode.switch.connect_after("notify::active", self.on_switch_activated)
         self.gio_settings.bind("sticky-mode", sticky_mode.switch, "active", Gio.SettingsBindFlags.DEFAULT)
 
+        always_on_top = SubSettings(type="switch", name="always-on-top", label="Always on top", sublabel="Display above all windows",separator=True)
+        always_on_top.switch.connect_after("notify::active", self.on_switch_activated)
+        self.gio_settings.bind("always-on-top", always_on_top.switch, "active", Gio.SettingsBindFlags.DEFAULT)
+
         show_close_button = SubSettings(type="switch", name="show-close-button", label="Show close button", sublabel=None,separator=True)
         show_close_button.switch.connect_after("notify::active", self.on_switch_activated)
         self.gio_settings.bind("show-close-button", show_close_button.switch, "active", Gio.SettingsBindFlags.DEFAULT)
@@ -86,7 +90,7 @@ class SettingsView(Gtk.Grid):
         min_column_number.spinbutton.connect("value-changed", self.on_spinbutton_activated)
         self.gio_settings.bind("min-column-number", min_column_number.spinbutton, "value", Gio.SettingsBindFlags.DEFAULT)
 
-        display_behaviour_settings = SettingsGroup("Display & Behaviour", (theme_switch, theme_optin, show_close_button, hide_onstartup_mode, persistent_mode, sticky_mode, min_column_number, ))
+        display_behaviour_settings = SettingsGroup("Display & Behaviour", (theme_switch, theme_optin, show_close_button, hide_onstartup_mode, persistent_mode, always_on_top, sticky_mode, min_column_number, ))
         self.flowbox.add(display_behaviour_settings)
 
         # housekeeping -------------------------------------------------
@@ -335,6 +339,12 @@ class SettingsView(Gtk.Grid):
                     main_window.stick()
                 else:
                     main_window.unstick()
+
+            if name == "always-on-top":
+                if switch.get_active():
+                    main_window.set_keep_above(True)
+                else:
+                    main_window.set_keep_above(False)
 
             if name == "show-close-button":
                 if main_window is not None:
