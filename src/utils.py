@@ -511,6 +511,7 @@ def get_running_appinfo_xlib():
         print(type(window_id_list), window_id_list)
         for window_id in window_id_list:
             window = display.create_resource_object('window', window_id)
+            print(window_id)
             
             for key in sorted(all_apps.keys()):
 
@@ -662,7 +663,7 @@ def get_appinfo_gio(app):
             icon_name = "application-default-icon"
     return app_name, icon_name
 
-def get_window_by_gtk_application_id_xlib(id):
+def get_window_by_gtk_application_id_xlib(gtk_application_id):
     ''' Function to get window using the gtk_application_id from NET_WM '''
     import Xlib
     import Xlib.display
@@ -680,7 +681,7 @@ def get_window_by_gtk_application_id_xlib(id):
             window = display.create_resource_object('window', id)
             window.change_attributes(event_mask=Xlib.X.PropertyChangeMask)
             if window.get_full_property(GTK_APPLICATION_ID, 0):
-                if window.get_full_property(GTK_APPLICATION_ID, 0).value.decode("utf-8") == id:
+                if window.get_full_property(GTK_APPLICATION_ID, 0).value.decode("utf-8") == gtk_application_id:
                     break
 
     except Xlib.error.XError: #simplify dealing with BadWindow
@@ -696,7 +697,6 @@ def get_active_window_xlib():
     display = Xlib.display.Display()
     root = display.screen().root
 
-    NET_CLIENT_LIST = display.intern_atom('_NET_CLIENT_LIST')
     NET_ACTIVE_WINDOW = display.intern_atom('_NET_ACTIVE_WINDOW')
 
     root.change_attributes(event_mask=Xlib.X.FocusChangeMask)
@@ -707,6 +707,50 @@ def get_active_window_xlib():
         window = None
 
     return window
+
+def get_window_id_by_gtk_application_id_xlib(gtk_application_id):
+    ''' Function to get window using the gtk_application_id from NET_WM '''
+    import Xlib
+    import Xlib.display
+
+    display = Xlib.display.Display()
+    root = display.screen().root
+
+    NET_CLIENT_LIST = display.intern_atom('_NET_CLIENT_LIST')
+    GTK_APPLICATION_ID = display.intern_atom('_GTK_APPLICATION_ID')
+
+    root.change_attributes(event_mask=Xlib.X.FocusChangeMask)
+    try:
+        window_ids = root.get_full_property(NET_CLIENT_LIST, Xlib.X.AnyPropertyType).value
+        for window_id in window_ids:
+            window = display.create_resource_object('window', window_id)
+            window.change_attributes(event_mask=Xlib.X.PropertyChangeMask)
+            if window.get_full_property(GTK_APPLICATION_ID, 0):
+                if window.get_full_property(GTK_APPLICATION_ID, 0).value.decode("utf-8") == gtk_application_id:
+                    break
+
+    except Xlib.error.XError: #simplify dealing with BadWindow
+        window_id = None
+
+    return window_id
+
+def get_active_window_id_xlib():
+    ''' Function to get active window '''
+    import Xlib
+    import Xlib.display
+
+    display = Xlib.display.Display()
+    root = display.screen().root
+
+    NET_ACTIVE_WINDOW = display.intern_atom('_NET_ACTIVE_WINDOW')
+
+    root.change_attributes(event_mask=Xlib.X.FocusChangeMask)
+    try:
+        window_id = root.get_full_property(NET_ACTIVE_WINDOW, Xlib.X.AnyPropertyType).value[0]
+    except Xlib.error.XError: #simplify dealing with BadWindow
+        window_id = None
+
+    return window_id
 
 def set_active_window_by_pointer():
     ''' Function to set window as active based on where the mouse pointer is located '''
@@ -1292,3 +1336,8 @@ def do_authentication(action, password=None):
         return set_password(password)
     elif action == "reset":
         return get_password(), set_password(password)
+
+
+if __name__ == '__main__':
+    import sys
+    globals()[sys.argv[1]]()
