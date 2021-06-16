@@ -1509,18 +1509,7 @@ class UrlContainer(DefaultContainer):
         domain = app.utils.get_domain(self.content[0].replace("\n",""))
         checksum = os.path.splitext(filepath)[0].split("/")[-1]
         
-        icon_size = 48 * self.get_scale_factor()
-        favicon_file = os.path.join(cache_filedir[:-6],"icon", domain + "-" + checksum + ".ico")
-        
-        try:
-            favicon = Gtk.Image()
-            favicon_pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_size(favicon_file, icon_size, icon_size)
-            favicon.props.pixbuf = favicon_pixbuf
-        except:
-            favicon = Gtk.Image().new_from_icon_name("applications-internet", Gtk.IconSize.LARGE_TOOLBAR)
-            favicon.set_pixel_size(icon_size)
-            
-        favicon.props.margin_bottom = 10
+        self.favicon = self.update_favicon(cache_filedir, domain, checksum)
 
         self.title = self.content[1]
 
@@ -1536,7 +1525,7 @@ class UrlContainer(DefaultContainer):
         
         domain = Gtk.Label(domain)
 
-        self.attach(favicon, 0, 0, 1, 1)
+        self.attach(self.favicon, 0, 0, 1, 1)
         self.attach(title, 0, 1, 1, 1)
         self.attach(domain, 0, 2, 1, 1)
         self.props.margin = 10
@@ -1544,6 +1533,22 @@ class UrlContainer(DefaultContainer):
         self.props.halign = Gtk.Align.FILL
         
         self.label = "Internet URL"
+    
+    def update_favicon(self, cache_filedir, domain, checksum):
+        icon_size = 48 * self.get_scale_factor()
+        favicon_file = os.path.join(cache_filedir[:-6],"icon", domain + "-" + checksum + ".ico")
+  
+        try:
+            favicon = Gtk.Image()
+            favicon_pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_size(favicon_file, icon_size, icon_size)
+            favicon.props.pixbuf = favicon_pixbuf
+        except:
+            favicon = Gtk.Image().new_from_icon_name("applications-internet", Gtk.IconSize.LARGE_TOOLBAR)
+            favicon.set_pixel_size(icon_size)
+        
+        favicon.props.margin_bottom = 10
+
+        return favicon
 
 # ----------------------------------------------------------------------------------------------------
 

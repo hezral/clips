@@ -253,8 +253,16 @@ class CacheManager():
         #     print("db:", type(row), row)
         return records
 
-    def search_record(self, data_tuple):
-        pass
+    def get_id_by_checksum(self, checksum):
+        data_param = (checksum + "%",) #pass in a sequence ie list
+        sqlite_with_param = '''
+            SELECT id FROM 'ClipsDB'
+            WHERE
+            cache_file LIKE ?;
+            '''
+        self.db_cursor.execute(sqlite_with_param, data_param)
+        records = self.db_cursor.fetchall()
+        return records[0][0]
 
     def delete_cache_file(self, cache_file, clip_type):
 
@@ -383,7 +391,6 @@ class CacheManager():
                 self.add_record(record) # add to database
                 new_record = self.select_record(self.db_cursor.lastrowid)[0] # prepare record for gui
                 clips_view.new_clip(new_record) # add to gui
-
             else:
                 self.update_cache_on_recopy(checksum)
 
@@ -415,6 +422,28 @@ class CacheManager():
         clips_container = flowboxchild_updated.get_children()[0]
         clips_container.update_timestamp_on_clips(created_updated)
         
+        self.main_window.clips_view.flowbox.invalidate_sort()
+
+    def update_cache_on_newdata(self, cache_file=None, checksum=None):
+        
+        # get the id for the clip that was updated
+        clip = self.check_duplicate(checksum)[0]
+
+        id = clip[0]
+        target = clip[1]
+        created = clip[2]
+        source = clip[3]
+        source_app = clip[4]
+        source_icon = clip[5]
+        cache_file = clip[6]
+        type = clip[7]
+        protected = clip[8]
+        created_short = clip[9]
+        
+        # update timestamp
+        flowboxchild_updated = [child for child in self.main_window.clips_view.flowbox.get_children() if child.get_children()[0].id == id][0]
+        clips_container = flowboxchild_updated.get_children()[0]
+
         self.main_window.clips_view.flowbox.invalidate_sort()
 
     def check_total_clips(self):
