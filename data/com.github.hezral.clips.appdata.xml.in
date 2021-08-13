@@ -21,11 +21,11 @@
 
   <screenshots>
       <screenshot type="default">
-          <caption>Clips</caption>
+          <caption>Clips Main Window</caption>
           <image>https://github.com/hezral/clips/blob/master/data/screenshot-01.png?raw=true</image>
       </screenshot>
       <screenshot>
-          <caption>Clips settings</caption>
+          <caption>Clips Settings Page</caption>
           <image>https://github.com/hezral/clips/blob/master/data/screenshot-02.png?raw=true</image>
       </screenshot>
   </screenshots>
