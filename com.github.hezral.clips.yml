@@ -1,6 +1,6 @@
 app-id: com.github.hezral.clips
-runtime: io.elementary.Sdk
-runtime-version: 'daily'
+runtime: io.elementary.Platform
+runtime-version: '6'
 sdk: io.elementary.Sdk
 command: com.github.hezral.clips
 appstream-compose: false
