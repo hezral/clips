@@ -60,15 +60,15 @@
     <content_attribute id="money-gambling">none</content_attribute>
   </content_rating>
 
-​  <releases>
-​    <release version="1.0.0" date="2021-06-01">
-​      <description>
-​        <ul>
+  <releases>
+    <release version="1.0.0" date="2021-06-01">
+      <description>
+        <ul>
             <li>First release</li>
         </ul>
-​      </description>
-​    </release>
-​  </releases>
+      </description>
+    </release>
+  </releases>
 
   <custom>
     <value key="x-appcenter-color-primary">#7D30E8</value>
