@@ -1134,12 +1134,6 @@ def get_web_data_threaded(url, file_path, download_path='./'):
         # print(return_value)
         print(get_fuzzy_timestamp(datetime.now()))
 
-# print("Testing GetWebpageThread...")
-# url = "https://netflix.com"
-# # GetWebpageThread(url, "./")
-# get_web_data(url)
-# print("Finish  GetWebpageThread...")
-
 #-------------------------------------------------------------------------------------------------------
 
 def is_valid_url(str):
@@ -1337,7 +1331,6 @@ def do_authentication(action, password=None):
     elif action == "reset":
         return get_password(), set_password(password)
 
-
-if __name__ == '__main__':
-    import sys
-    globals()[sys.argv[1]]()
+# if __name__ == '__main__':
+#     import sys
+#     globals()[sys.argv[1]]()
