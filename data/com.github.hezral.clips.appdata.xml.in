@@ -61,7 +61,7 @@
   </content_rating>
 
   <releases>
-    <release version="1.0.0" date="2021-06-01">
+    <release version="1.0.0" date="2021-08-22">
       <description>
           <p>First release for AppCenter</p>
       </description>
