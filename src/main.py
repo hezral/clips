@@ -24,7 +24,7 @@ from gi.repository import Gtk, Gio, GLib, Gdk, Granite
 from .main_window import ClipsWindow
 from .clipboard_manager import ClipboardManager
 from .cache_manager import CacheManager
-from .custom_shortcut_settings import CustomShortcutSettings
+# from .custom_shortcut_settings import CustomShortcutSettings
 from . import utils
 
 import platform
@@ -143,21 +143,21 @@ class Application(Gtk.Application):
         self.activate()
         return 0
 
-    def create_app_shortcut(self):
-        if self.gio_settings.get_boolean("first-run"):
-            SHORTCUT = "<Super><Control>c"
-            ID = "gtk-launch" + " " + self.props.application_id
-            setup_shortcut = CustomShortcutSettings()
-            has_shortcut = False
-            for shortcut in setup_shortcut.list_custom_shortcuts():
-                if shortcut[1] == ID:
-                    has_shortcut = True
+    # def create_app_shortcut(self):
+    #     if self.gio_settings.get_boolean("first-run"):
+    #         SHORTCUT = "<Super><Control>c"
+    #         ID = "gtk-launch" + " " + self.props.application_id
+    #         setup_shortcut = CustomShortcutSettings()
+    #         has_shortcut = False
+    #         for shortcut in setup_shortcut.list_custom_shortcuts():
+    #             if shortcut[1] == ID:
+    #                 has_shortcut = True
 
-            if has_shortcut is False:
-                shortcut = setup_shortcut.create_shortcut()
-                if shortcut is not None:
-                    setup_shortcut.edit_shortcut(shortcut, SHORTCUT)
-                    setup_shortcut.edit_command(shortcut, ID)
+    #         if has_shortcut is False:
+    #             shortcut = setup_shortcut.create_shortcut()
+    #             if shortcut is not None:
+    #                 setup_shortcut.edit_shortcut(shortcut, SHORTCUT)
+    #                 setup_shortcut.edit_command(shortcut, ID)
             
     def create_app_actions(self):
         # app actions
