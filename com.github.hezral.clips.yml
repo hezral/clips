@@ -3,28 +3,24 @@ runtime: io.elementary.Platform
 runtime-version: '6'
 sdk: io.elementary.Sdk
 command: com.github.hezral.clips
-appstream-compose: false
 finish-args:
   - --share=ipc
   - --socket=wayland
   - --socket=fallback-x11
+  # network access for clips to retrieve basic info on URLs
   - --share=network
-  - --device=dri
-  # - --device=all
+  # filesystem access
   - --filesystem=host
   - --filesystem=home
-  - --filesystem=xdg-cache/com.github.hezral.clips
-  - --filesystem=xdg-data
-  - --filesystem=xdg-data/flatpak/exports/share
-  - --filesystem=xdg-data/flatpak/app
-  - --filesystem=/usr/share
-  # - --filesystem=/usr/share/icons:ro
-  - --filesystem=/usr/local/share/
-  - --filesystem=/var/lib/flatpak/exports/share
-  - --filesystem=/var/lib/snapd/desktop
+  # read
+  - --filesystem=xdg-data:ro
+  - --filesystem=/usr/share:ro
+  - --filesystem=/usr/local/share:ro
+  - --filesystem=/var/lib/flatpak/exports/share:ro
+  - --filesystem=/var/lib/snapd/desktop:ro
   # needed for perfers-color-scheme
   - --system-talk-name=org.freedesktop.Accounts
-  # keyring
+  # keyring access for setting password for clips protection
   - --talk-name=org.freedesktop.secrets
 modules:
   - name: requests
