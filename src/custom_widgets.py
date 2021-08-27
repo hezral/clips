@@ -380,6 +380,7 @@ class PasswordEditor(Gtk.Grid):
         return False
 
     def reset_password(self, button, params=None):
+        
         cancel_button = params[1]
         if self.password_entry.props.text != "" and self.current_password_entry.props.text != "":
             if self.password_authentication():
@@ -396,7 +397,7 @@ class PasswordEditor(Gtk.Grid):
                     self.result_label_revealer.set_reveal_child(True)
 
     def set_password(self, button, params=None):
-        print(locals())
+
         if self.password_entry.props.text != "":
             if self.password_entry.props.text == self.confirm_entry.props.text:
                 set_password = self.app.utils.do_authentication("set", self.password_entry.props.text)
