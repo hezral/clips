@@ -97,10 +97,8 @@ class Application(Gtk.Application):
             self.main_window.hide()
         else:
             print("show-main-window")
-            self.main_window.set_keep_above(True)
             self.main_window.present()
-            GLib.timeout_add(100, self.main_window.set_keep_above, False) # need to put time gap else won't work to bring window front
-            self.utils.set_active_window_by_xwindow(self.utils.get_window_by_gtk_application_id_xlib(self.props.application_id))
+            self.utils.set_active_window_by_xwindow(self.utils.get_window_by_gtk_application_id_xlib(self.props.application_id)) # bring the window above and focused
 
         self.cache_manager.main_window = self.main_window
 
