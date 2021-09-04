@@ -766,7 +766,7 @@ def set_active_window_by_pointer():
     display.sync()
 
 def set_active_window_by_xwindow(window):
-    ''' Function to set window as active based on xid '''
+    ''' Function to set window as active based on x window '''
     import Xlib
     from Xlib.display import Display
     from Xlib import X
