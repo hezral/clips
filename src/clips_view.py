@@ -716,7 +716,7 @@ class ClipsContainer(Gtk.EventBox):
                     file_content = file.readlines()
                 if len(file_content) == 1:
                     file_path = file_content[0].replace("copy","").replace("file://","").strip().replace("%20", " ")
-                    self.app.utils.reveal_file_gio(file_path)
+                    self.app.utils.reveal_file_gio(self.app.main_window, file_path)
                 else:
                     files_popover = FilesContainerPopover(self.cache_file, self.type, self.app, button)
                     files_popover.popup()
