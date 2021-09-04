@@ -148,7 +148,7 @@ class InfoView(Gtk.Grid):
             child.destroy()
 
         if self.help_view is None:
-            help_run_clips = HelpSubView(prefer_dark_style, image_name="help_run_clips", subtitle_text="Fast app launch")
+            help_run_clips = HelpSubView(prefer_dark_style, image_name="help_run_clips", subtitle_text="Set shortcut for quick launch")
             help_hide_clips = HelpSubView(prefer_dark_style, image_name="help_hide_clips", subtitle_text="Run in background")
             help_switch_views = HelpSubView(prefer_dark_style, image_name="help_switch_views", subtitle_text="Switch between views")
             help_column_number = HelpSubView(prefer_dark_style, image_name="help_column_number", subtitle_text="Adjust columns display")

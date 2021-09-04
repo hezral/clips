@@ -131,7 +131,7 @@ class SettingsView(Gtk.Grid):
         self.flowbox.add(protected)
 
         # others -------------------------------------------------
-        add_shortcut = SubSettings(type="button", name="add-shortcut", label="Add Shortcut", sublabel="Launch with keyboard shortcut like ⌘+Ctrl+C", separator=True, params=(" Add", Gtk.Image().new_from_icon_name("com.github.hezral.clips", Gtk.IconSize.LARGE_TOOLBAR),))
+        add_shortcut = SubSettings(type="button", name="add-shortcut", label="Add Shortcut", sublabel="Launch with keyboard shortcut like ⌘+Ctrl+C\nSet with 'gtk-launch com.github.hezral.clips'", separator=True, params=(" Add", Gtk.Image().new_from_icon_name("com.github.hezral.clips", Gtk.IconSize.LARGE_TOOLBAR),))
         add_shortcut.button.connect("clicked", self.on_button_clicked)
 
         reset_password = SubSettings(type="button", name="reset-password", label="Reset Password", sublabel="All protected clips will be changed", separator=True, params=(" Reset", Gtk.Image().new_from_icon_name("dialog-password", Gtk.IconSize.LARGE_TOOLBAR),))
@@ -457,6 +457,7 @@ class SubSettings(Gtk.Grid):
             self.button.props.name = name
             self.button.props.hexpand = False
             self.button.props.always_show_image = True
+            self.button.props.valign = Gtk.Align.START
             self.button.set_size_request(90, -1)
             if len(params) >1:
                 label = [child for child in self.button.get_children()[0].get_child() if isinstance(child, Gtk.Label)][0]
