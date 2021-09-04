@@ -11,8 +11,8 @@ finish-args:
   - --share=network
   # read-only access to get installed apps and app icons, since clips uses app name matching to know what app a content was copied from
   - --filesystem=xdg-data
-  - --filesystem=xdg-data/flatpak/exports/share
-  - --filesystem=xdg-data/flatpak/app
+  - --filesystem=xdg-data/flatpak/exports/share:ro
+  - --filesystem=xdg-data/flatpak/app:ro
   - --filesystem=home/.local/share/flatpak/exports/share/applications:ro
   - --filesystem=home/.local/share/applications:ro
   - --filesystem=host:ro
