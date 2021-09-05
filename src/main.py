@@ -83,26 +83,18 @@ class Application(Gtk.Application):
 
     def do_activate(self):
 
-        # print("DEBUG:", "running", self.running)
-        # print("DEBUG:", "window_id", self.utils.get_window_id_by_gtk_application_id_xlib(self.props.application_id))
-
-        # hide-on-startup and persistent-mode should be setup here
-
         if not self.main_window:
             self.main_window = ClipsWindow(application=self)
             self.add_window(self.main_window)
+            self.cache_manager.main_window = self.main_window
 
-        if self.gio_settings.get_value("hide-on-startup") and self.running is False:
-            print("hide-on-start")
+        if self.gio_settings.get_value("hide-on-startup") and self.app_startup is True:
             self.main_window.hide()
         else:
-            print("show-main-window")
+            self.main_window.show()
             self.main_window.present()
-            self.utils.set_active_window_by_xwindow(self.utils.get_window_by_gtk_application_id_xlib(self.props.application_id)) # bring the window above and focused
-
-        self.cache_manager.main_window = self.main_window
-
-        if self.running is False:
+        
+        if self.app_startup is True:
             if self.gio_settings.get_value("auto-housekeeping"):
                 print(datetime.now(), "start auto-housekeeping")
                 print(datetime.now(), "auto-retention-period", self.gio_settings.get_int("auto-retention-period"))
@@ -117,8 +109,9 @@ class Application(Gtk.Application):
 
             self.main_window.on_view_visible()
 
-            self.running = True
-            self.app_startup = False
+        self.app_startup = False
+        self.running = True
+            
             
 
     @utils.run_async

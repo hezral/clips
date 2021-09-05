@@ -19,7 +19,7 @@ import os
 import gi
 gi.require_version('Gtk', '3.0')
 gi.require_version('Granite', '1.0')
-from gi.repository import Gtk, Granite, Gdk
+from gi.repository import Gtk, Granite, Gdk, GLib
 from .clips_view import ClipsView
 from .settings_view import SettingsView
 from .info_view import InfoView
@@ -73,28 +73,19 @@ class ClipsWindow(Gtk.ApplicationWindow):
         self.show_all()
 
     def set_display_settings(self):
-        # this is for tracking window state flags for persistent mode
-        self.state_flags_changed_count = 0
-        self.active_state_flags = ['GTK_STATE_FLAG_NORMAL', 'GTK_STATE_FLAG_DIR_LTR']
-        # read settings
         if not self.gio_settings.get_value("persistent-mode"):
             self.state_flags_on = self.connect("state-flags-changed", self.on_persistent_mode)
-            # print('state-flags-on')
         if self.gio_settings.get_value("sticky-mode"):
             self.stick()
         if self.gio_settings.get_value("always-on-top"):
             self.set_keep_above(True)
 
-    def on_persistent_mode(self, widget, event):
-        # state flags for window active state
-        self.state_flags = self.get_state_flags().value_names
-        # print(self.state_flags)
-        if not self.state_flags == self.active_state_flags and self.state_flags_changed_count > 1:
+    def check_active(self, data=None):
+        if self.utils.get_active_appinfo_xlib(data)[0] != "Clips":
             self.hide()
-            self.state_flags_changed_count = 0
-        else:
-            self.state_flags_changed_count += 1
-            # print('state-flags-changed', self.state_flags_changed_count)
+
+    def on_persistent_mode(self, widget, event):
+        GLib.timeout_add(100, self.check_active, None)
 
     def set_main_window_size(self, column_number=None):
         if column_number is None:
@@ -214,11 +205,11 @@ class ClipsWindow(Gtk.ApplicationWindow):
         self.view_switch.connect_after("notify::active", self.on_view_visible)
         return self.view_switch
 
-    def on_sourceapp_filter(self, button, popover):
-        popover.set_relative_to(button)
-        popover.show_all()
-        popover.popup()
-        popover.listbox.unselect_all()
+    # def on_sourceapp_filter(self, button, popover):
+    #     popover.set_relative_to(button)
+    #     popover.show_all()
+    #     popover.popup()
+    #     popover.listbox.unselect_all()
 
     def on_searchbar_activate(self, searchentry, event, type):
 
@@ -239,7 +230,6 @@ class ClipsWindow(Gtk.ApplicationWindow):
                 self.searchentry.props.hexpand = False
                 self.searchentry.props.primary_icon_name = "system-search-symbolic"
                 self.searchentry.props.name = "search-entry"
-
 
     def on_search_entry_changed(self, search_entry):
         self.searchentry.props.primary_icon_name = "system-search-symbolic"
