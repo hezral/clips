@@ -363,7 +363,7 @@ def get_active_appinfo_xprop():
 
     return source_app, source_icon
 
-def get_active_appinfo_xlib():
+def get_active_appinfo_xlib(data=None):
     source_app = None
     source_icon = None
     all_apps = get_all_apps()
