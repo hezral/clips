@@ -61,9 +61,13 @@
   </content_rating>
 
   <releases>
-    <release version="1.0.1" date="2021-08-28">
+    <release version="1.0.2" date="2021-09-05">
       <description>
-          <p>First release for AppCenter</p>
+        <p>Fixed issue with Persistent Mode and Hide on Startup conflicting behaviour</p>
+        <p>Fixed reveal file action</p>
+        <p>Improved behaviour to have Clips window focused when called</p>
+        <p>Improved description for shortcuts and basic setup instructions</p>
+        <p>Various code clean-ups</p>
       </description>
     </release>
   </releases>

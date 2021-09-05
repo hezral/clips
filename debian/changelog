@@ -1,5 +1,9 @@
-com.github.hezral.clips (1.0.1) precise; urgency=low
+com.github.hezral.clips (1.0.2) precise; urgency=low
 
-  * First Release
+  * Fixed issue with Persistent Mode and Hide on Startup conflicting behaviour
+  * Fixed reveal file action
+  * Improved behaviour to have Clips window focused when called
+  * Improved description for shortcuts and basic setup instructions
+  * Various code clean-ups
 
- -- Adi Hezral <hezral@gmail.com>  Mon, 28 Aug 2021 00:00:00 +0800
+ -- Adi Hezral <hezral@gmail.com>  Sun, 5 Sep 2021 00:00:00 +0800
