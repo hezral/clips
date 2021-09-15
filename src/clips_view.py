@@ -197,6 +197,8 @@ class ClipsView(Gtk.Grid):
             flowboxchild.get_children()[0].clip_action_revealer.set_reveal_child(True)
             flowboxchild.get_children()[0].source_icon_revealer.set_reveal_child(True)
             flowboxchild.grab_focus()
+            # flowboxchild.get_children()[0].on_clip_action(action="copy")
+            
 
     def on_child_multi_selected(self, flowbox, flowboxchild):
         for flowboxchild in self.flowbox.get_selected_children():
