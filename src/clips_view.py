@@ -549,9 +549,10 @@ class ClipsContainer(Gtk.EventBox):
             view_action.get_style_context().add_class("clip-action-disabled")
 
         if "yes" in self.protected:
-            # protect_action.props.sensitive = False
-            # protect_action.get_style_context().add_class("clip-action-disabled")
-            clip_action.attach(protect_action, 4, 0, 1, 1)
+            clip_action.attach(protect_action, 1, 0, 1, 1)
+        else:
+            clip_action.attach(view_action, 1, 0, 1, 1)
+
 
         grid = Gtk.Grid()
         grid.props.expand = True
