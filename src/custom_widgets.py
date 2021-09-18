@@ -99,7 +99,7 @@ class PasswordEditor(Gtk.Grid):
 
     is_authenticated = False
 
-    def __init__(self, main_label, gtk_application, type, callback=None, auth_callback=None, *args, **kwargs):
+    def __init__(self, main_label, gtk_application, type, callback=None, auth_callback=None, action=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         # GObject.signal_new(signal_name, object_class, GObject.SIGNAL-flags, return_type, param_types)
@@ -111,6 +111,7 @@ class PasswordEditor(Gtk.Grid):
         self.type = type
         self.callback = callback
         self.auth_callback = auth_callback
+        self.action = action
         self.set_events(Gdk.EventMask.FOCUS_CHANGE_MASK)
 
         self.props.row_spacing = 4
@@ -260,10 +261,10 @@ class PasswordEditor(Gtk.Grid):
             entry.set_icon_from_icon_name(Gtk.EntryIconPosition.SECONDARY, None)
         self.current_password_error_revealer.set_reveal_child(False)
 
-    def on_current_password_entry_activated(self, entry):
+    def on_current_password_entry_activated(self, *args):
         if self.type == "authenticate":
             if self.password_authentication():
-                self.auth_callback()
+                self.auth_callback(action=self.action)
         else:
             self.password_authentication()
 

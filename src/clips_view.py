@@ -695,7 +695,7 @@ class ClipsContainer(Gtk.EventBox):
                 protected_container = self.app.utils.get_widget_by_name(self, "protected-container", 0, doPrint=False)
                 content = protected_container.content
                 title = "Reveal Content"
-                callback = self.on_button_clicked
+                callback = self.on_authenticated
                 if validated:
                     decrypt, decrypted_data = self.app.utils.do_encryption("decrypt", data, self.cache_file)
                     if decrypt:
@@ -734,7 +734,7 @@ class ClipsContainer(Gtk.EventBox):
             copy_result = False
             temp_file_uri = ""
             title = "Copy Content"
-            callback = self.on_button_clicked
+            callback = self.on_authenticated
             
             if "yes" in self.protected:
                 if validated:
@@ -829,11 +829,13 @@ class ClipsContainer(Gtk.EventBox):
             action_label = "reveal"
         else:
             action_label = action
+
         password_editor = custom_widgets.PasswordEditor(
             main_label="Password required to {0} content".format(action_label), 
             gtk_application=self.app,
             type="authenticate",
-            auth_callback=self.on_revealcontent)
+            auth_callback=callback, #callback if user press enter in password entry field
+            action=action) 
         
         authenticate_dialog = custom_widgets.CustomDialog(
             dialog_parent_widget=self,
@@ -841,7 +843,7 @@ class ClipsContainer(Gtk.EventBox):
             dialog_content_widget=password_editor,
             action_button_label="Authenticate",
             action_button_name="authenticate",
-            action_callback=callback,
+            action_callback=password_editor.on_current_password_entry_activated, #callback if user click on authenticate button
             action_type="suggested",
             size=[250,-1],
             data=(
@@ -850,14 +852,25 @@ class ClipsContainer(Gtk.EventBox):
             )
         return authenticate_dialog
 
-    def on_button_clicked(self, button=None, data=None):
-        if button.props.name == "authenticate":
-            password_authentication_callback = data[0][0]
-            if password_authentication_callback:
-                self.on_reveal_content()
+    def on_authenticated(self, action=None):
+        print("func: on_button_clicked", locals())
+        # if button.props.name == "authenticate":
+        #     password_authentication_callback = data[0][0]
+        #     if password_authentication_callback():
+                # self.on_revealcontent()
+        # self.on_revealcontent()
+        do_authenticate, authenticated_data = self.app.utils.do_authentication("get")
+        print("func: on_revealcontent", do_authenticate, authenticated_data)
+        if do_authenticate:
+            self.on_clip_action(button=None, action=action, validated=True, data=authenticated_data)
+            try:
+                self.authenticate_dialog.destroy()
+            except:
+                pass
 
     def on_revealcontent(self, *args):
         do_authenticate, authenticated_data = self.app.utils.do_authentication("get")
+        print("func: on_revealcontent", do_authenticate, authenticated_data)
         if do_authenticate:
             self.on_clip_action(button=None, action="protect", validated=True, data=authenticated_data)
             try:
