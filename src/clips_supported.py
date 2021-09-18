@@ -96,7 +96,10 @@ supported_targets = (spreadsheet_libreoffice_target,
                     plaintext_target, )
 
 def get_clipboard_contents(clipboard, event, save_files):
-    from . import utils
+    try:
+        from . import utils
+    except:
+        import utils
     print("Active App:", utils.get_active_appinfo_xlib())
     print("Current clipboard offers formats: ", len(clipboard.wait_for_targets()[1]))
     i=0
