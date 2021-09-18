@@ -1330,7 +1330,3 @@ def do_authentication(action, password=None):
         return set_password(password)
     elif action == "reset":
         return get_password(), set_password(password)
-
-# if __name__ == '__main__':
-#     import sys
-#     globals()[sys.argv[1]]()
