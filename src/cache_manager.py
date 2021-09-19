@@ -267,6 +267,7 @@ class CacheManager():
     def delete_cache_file(self, cache_file, clip_type):
 
         thumbnail_file = os.path.splitext(cache_file)[0]+'-thumb.png'
+        alt_cache_file = cache_file.replace("html", "txt")
 
         if 'http' in clip_type:
             with open(cache_file) as file:
@@ -281,6 +282,8 @@ class CacheManager():
 
         try:
             os.remove(cache_file)
+            if "html" in clip_type:
+                os.remove(alt_cache_file)
             os.remove(thumbnail_file)
             return True
         except OSError:
@@ -334,7 +337,7 @@ class CacheManager():
             file.write(content.get_data())
             file.close()
 
-            # save alt_content in temp
+            # save alt_content in temp for html
             if alt_content is not None:
                 temp_alt_cache_uri = os.path.join(self.cache_filedir, temp_filename + alt_file_extension)
                 file = open(temp_alt_cache_uri,"wb")

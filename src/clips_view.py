@@ -787,10 +787,8 @@ class ClipsContainer(Gtk.EventBox):
             alt_target = "text/plain;charset=utf-8"
             alt_type = "text"
             alt_cache_file = self.cache_file.replace("html", "txt")
-            print(self.target, self.cache_file, self.type)
-            print(alt_target, alt_cache_file, alt_type)
 
-            copy_result = self.app.utils.copy_to_clipboard(self.target, self.cache_file, self.type)
+            copy_result = self.app.utils.copy_to_clipboard(alt_target, alt_cache_file, alt_type)
 
             if copy_result:
                 action_notify_box.show_all()

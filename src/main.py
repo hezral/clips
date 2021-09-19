@@ -177,6 +177,7 @@ class Application(Gtk.Application):
         self.create_action("info", self.on_clip_actions, "<Alt>I")
         self.create_action("view", self.on_clip_actions, "<Alt>V")
         self.create_action("copy", self.on_clip_actions, "<Alt>C")
+        self.create_action("copy-plaintext", self.on_clip_actions, "<Shift><Alt>C")
         self.create_action("delete", self.on_clip_actions, "<Alt>D")
         self.create_action("force_delete", self.on_clip_actions, "<Alt>F")
         self.create_action("quick_copy1", self.on_clip_actions, "<Alt>1")
