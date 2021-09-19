@@ -202,6 +202,7 @@ class ClipsWindow(Gtk.ApplicationWindow):
         self.view_switch.props.halign = Gtk.Align.END
         self.view_switch.props.margin = 4
         self.view_switch.props.name = "view-switch"
+        self.view_switch.get_children()[1].props.can_focus = False
         self.view_switch.connect_after("notify::active", self.on_view_visible)
         return self.view_switch
 
