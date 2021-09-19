@@ -111,7 +111,6 @@ class Application(Gtk.Application):
 
         self.app_startup = False
         self.running = True
-            
 
     @utils.run_async
     def load_clips_fromdb(self, clips):
