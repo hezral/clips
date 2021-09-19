@@ -115,17 +115,21 @@ class Application(Gtk.Application):
     @utils.run_async
     def load_clips_fromdb(self, clips):
         
-        for clip in reversed(clips[-25:]):
+        def first_clip(clip): #load first clip to focus 
+            self.main_window.clips_view.new_clip(clip)
+            self.main_window.clips_view.flowbox.select_child(self.main_window.clips_view.flowbox.get_child_at_index(0))
+            self.main_window.clips_view.flowbox.get_child_at_index(0).grab_focus()
+
+        GLib.idle_add(first_clip,clips[-1])
+        time.sleep(0.01)
+
+        for clip in reversed(clips[-24:]):
             GLib.idle_add(self.main_window.clips_view.new_clip, clip)
             time.sleep(0.01)
 
-        for clip in reversed(clips[:-25]):
+        for clip in reversed(clips[:-24]):
             GLib.idle_add(self.main_window.clips_view.new_clip, clip)
             time.sleep(0.05)
-
-        if self.main_window.clips_view.flowbox.get_child_at_index(0) is not None:
-            self.main_window.clips_view.flowbox.select_child(self.main_window.clips_view.flowbox.get_child_at_index(0))
-            self.main_window.clips_view.flowbox.get_child_at_index(0).grab_focus()
 
         print(datetime.now(), "finish load_clips")
 
@@ -175,7 +179,7 @@ class Application(Gtk.Application):
         self.create_action("info", self.on_clip_actions, "<Alt>I")
         self.create_action("view", self.on_clip_actions, "<Alt>V")
         self.create_action("copy", self.on_clip_actions, "<Alt>C")
-        self.create_action("copy-plaintext", self.on_clip_actions, "<Shift><Alt>C")
+        self.create_action("copy-plaintext", self.on_clip_actions, "<Shift>C")
         self.create_action("delete", self.on_clip_actions, "<Alt>D")
         self.create_action("force_delete", self.on_clip_actions, "<Alt>F")
         self.create_action("quick_copy1", self.on_clip_actions, "<Alt>1")
