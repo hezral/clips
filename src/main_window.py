@@ -135,6 +135,7 @@ class ClipsWindow(Gtk.ApplicationWindow):
         # self.searchentry.connect("icon-press", self.on_quicksearch_activate)
         
         self.searchentry.connect("search-changed", self.on_search_entry_changed)
+        self.searchentry.connect("key-press-event", self.on_search_entry_key_pressed)
 
         # sourceapp_appchooser_popover = ClipsFilterPopover(self.app, self.searchentry)
         # sourceapp_filter = Gtk.Button(image=Gtk.Image().new_from_icon_name("application-default-icon", Gtk.IconSize.LARGE_TOOLBAR))
@@ -211,6 +212,16 @@ class ClipsWindow(Gtk.ApplicationWindow):
     #     popover.show_all()
     #     popover.popup()
     #     popover.listbox.unselect_all()
+
+    def on_search_entry_key_pressed(self, search_entry, eventkey):
+        key = Gdk.keyval_name(eventkey.keyval).lower()
+        if self.clips_view.flowbox.get_child_at_index(0) is not None and key == "down":
+            print(self.clips_view.flowbox.get_selected_children())
+            if self.clips_view.flowbox.get_selected_children() != 0:
+                self.clips_view.flowbox.get_selected_children()[0].grab_focus()
+            else:
+                self.clips_view.flowbox.select_child(self.clips_view.flowbox.get_child_at_index(0))
+                self.clips_view.flowbox.get_child_at_index(0).grab_focus()
 
     def on_searchbar_activate(self, searchentry, event, type):
 

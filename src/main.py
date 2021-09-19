@@ -199,6 +199,7 @@ class Application(Gtk.Application):
         if self.main_window is not None and self.main_window.is_visible() and self.main_window.searchentry.has_focus() is False:
             self.main_window.searchentry.grab_focus()
         else:
+            self.main_window.searchentry.props.text = ""
             self.main_window.clips_view.flowbox.get_selected_children()[0].grab_focus()
     
     def on_clip_actions(self, action, param):
