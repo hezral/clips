@@ -201,7 +201,8 @@ class Application(Gtk.Application):
             self.main_window.searchentry.grab_focus()
         else:
             self.main_window.searchentry.props.text = ""
-            self.main_window.clips_view.flowbox.get_selected_children()[0].grab_focus()
+            self.main_window.clips_view.flowbox.select_child(self.main_window.clips_view.flowbox.get_child_at_index(0))
+            self.main_window.clips_view.flowbox.get_child_at_index(0).grab_focus()
     
     def on_clip_actions(self, action, param):
         if len(self.main_window.clips_view.flowbox.get_selected_children()) != 0:

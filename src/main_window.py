@@ -215,12 +215,10 @@ class ClipsWindow(Gtk.ApplicationWindow):
 
     def on_search_entry_key_pressed(self, search_entry, eventkey):
         key = Gdk.keyval_name(eventkey.keyval).lower()
+        print(key)
         if self.clips_view.flowbox.get_child_at_index(0) is not None and key == "down": 
-            if self.clips_view.flowbox.get_selected_children() != 0:
-                self.clips_view.flowbox.get_selected_children()[0].grab_focus()
-            else:
-                self.clips_view.flowbox.select_child(self.clips_view.flowbox.get_child_at_index(0))
-                self.clips_view.flowbox.get_child_at_index(0).grab_focus()
+            self.clips_view.flowbox.select_child(self.clips_view.flowbox.get_child_at_index(0))
+            self.clips_view.flowbox.get_child_at_index(0).grab_focus()
 
     def on_searchbar_activate(self, searchentry, event, type):
 
