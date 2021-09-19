@@ -315,7 +315,7 @@ class CacheManager():
         data_tuple = clipboard_manager.clipboard_changed(clipboard, event)
 
         if data_tuple is not None:
-            target, content, source_app, source_icon, created, protected, thumbnail, file_extension, content_type = data_tuple
+            target, content, source_app, source_icon, created, protected, thumbnail, file_extension, content_type, alt_content, alt_file_extension = data_tuple
 
             temp_filename = next(tempfile._get_candidate_names()) + tempfile.gettempprefix()
             type = content_type
@@ -334,13 +334,24 @@ class CacheManager():
             file.write(content.get_data())
             file.close()
 
+            # save alt_content in temp
+            if alt_content is not None:
+                temp_alt_cache_uri = os.path.join(self.cache_filedir, temp_filename + alt_file_extension)
+                file = open(temp_alt_cache_uri,"wb")
+                file.write(alt_content.get_data())
+                file.close()
+
             # get checksum value
             checksum = self.get_checksum(open(temp_cache_uri, 'rb').read())
 
             # rename cache file using its checksum value
-            cache_file = checksum + "." + cache_filetype      
+            cache_file = checksum + "." + cache_filetype
             cache_uri = self.cache_filedir + '/' + cache_file
             os.renames(temp_cache_uri, cache_uri)
+            if alt_content is not None:
+                alt_cache_file = checksum + "." + alt_file_extension
+                alt_cache_uri = self.cache_filedir + '/' + alt_cache_file
+                os.renames(temp_alt_cache_uri, alt_cache_uri)
 
             if "yes" in protected and type == "plaintext":
                 cache_file = self.encrypt_file(cache_uri)

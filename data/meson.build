@@ -78,6 +78,7 @@ other_icon_sources = [
   join_paths('icons', meson.project_name() + '-' + 'view-symbolic' + '.svg'),
   join_paths('icons', meson.project_name() + '-' + 'unprotect-symbolic' + '.svg'),
   join_paths('icons', 'edit-copy-symbolic' + '.svg'),
+  join_paths('icons', 'edit-copy-style' + '.svg'),
   join_paths('icons', 'edit-delete-symbolic' + '.svg'),
   join_paths('icons', 'quick-search' + '.svg'),
 ]

@@ -88,7 +88,7 @@ class ClipboardManager():
                     created = datetime.now()
                     clipboard_contents = self.get_clipboard_contents(clipboard, event, active_app)
                     if clipboard_contents is not None:
-                        target, content, thumbnail, file_extension, additional_desc, content_type = clipboard_contents
+                        target, content, thumbnail, file_extension, additional_desc, content_type, alt_content, alt_file_extension = clipboard_contents
                         source_app = active_app
                         source_icon = active_app_icon
 
@@ -99,7 +99,7 @@ class ClipboardManager():
                                 protected = "yes"
 
                         print("clipboard event captured:", self.events, active_app)
-                        return target, content, source_app, source_icon, created, protected, thumbnail, file_extension, content_type
+                        return target, content, source_app, source_icon, created, protected, thumbnail, file_extension, content_type, alt_content, alt_file_extension
             else:
                 print("clipboard event ignored:", self.events, event_id, active_app)
                 pass
@@ -107,6 +107,9 @@ class ClipboardManager():
     def get_clipboard_contents(self, clipboard, event, active_app):
         
         clip_saved = False
+        alt_target = None
+        alt_content = None
+        alt_file_extension = None
 
         for supported_target in self.clips_supported.supported_targets:   
             for target in clipboard.wait_for_targets()[1]:
@@ -136,6 +139,10 @@ class ClipboardManager():
 
                         if "LibreOffice Impress" in supported_target[2]:
                             target = Gdk.Atom.intern('application/x-openoffice-embed-source-xml;windows_formatname="Star Embed Source (XML)"', False)
+
+                        if "text/html" in supported_target[0]:
+                            alt_target = Gdk.Atom.intern('text/plain', False)
+                            alt_file_extension = "txt"
 
                         if "text/plain;charset=utf-8" in supported_target[0] and "color" in supported_target[3]:
                             if clipboard.wait_for_contents(target).get_text() is not None:
@@ -173,6 +180,9 @@ class ClipboardManager():
 
                             content = clipboard.wait_for_contents(target)
 
+                            if alt_target is not None:
+                                alt_content = clipboard.wait_for_contents(alt_target)
+
                             clip_saved = True
 
-                            return target, content, thumbnail, file_extension, additional_desc, content_type
+                            return target, content, thumbnail, file_extension, additional_desc, content_type, alt_content, alt_file_extension

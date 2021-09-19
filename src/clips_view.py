@@ -515,7 +515,13 @@ class ClipsContainer(Gtk.EventBox):
         protect_action = self.generate_action_button("com.github.hezral.clips-unprotect-symbolic", "Unprotect", "protect")
         reveal_action = self.generate_action_button("document-open-symbolic", "Reveal Cache File", "reveal")
         view_action = self.generate_action_button("com.github.hezral.clips-view-symbolic", "View", "view")
-        copy_action = self.generate_action_button("edit-copy-symbolic", "Copy to Clipboard", "copy")
+        
+        if "html" in self.type:
+            copy_formatted_action = self.generate_action_button("edit-copy-style", "Copy Formatted", "copy")
+            copy_action = self.generate_action_button("edit-copy-symbolic", "Copy Plaintext", "copy-plaintext")
+        else:
+            copy_action = self.generate_action_button("edit-copy-symbolic", "Copy", "copy")
+
         delete_action = self.generate_action_button("edit-delete-symbolic", "Delete", "delete")
 
         clip_action = Gtk.Grid()
@@ -541,20 +547,23 @@ class ClipsContainer(Gtk.EventBox):
         self.fuzzytimestamp_label = self.generate_fuzzytimestamp_label()
 
         clip_action.attach(reveal_action, 0, 0, 1, 1)
-        clip_action.attach(view_action, 1, 0, 1, 1)
-        clip_action.attach(copy_action, 2, 0, 1, 1)
-        clip_action.attach(delete_action, 3, 0, 1, 1)
-        clip_action.attach(self.fuzzytimestamp_label, 5, 0, 1, 1)
-
-        if "color" in self.type or "spreadsheet" in self.type or "presentation" in self.type:
-            view_action.props.sensitive = False
-            view_action.get_style_context().add_class("clip-action-disabled")
 
         if "yes" in self.protected:
             clip_action.attach(protect_action, 1, 0, 1, 1)
         else:
             clip_action.attach(view_action, 1, 0, 1, 1)
+            if "color" in self.type or "spreadsheet" in self.type or "presentation" in self.type:
+                view_action.props.sensitive = False
+                view_action.get_style_context().add_class("clip-action-disabled")
 
+        if "html" in self.type:
+            clip_action.attach(copy_formatted_action, 2, 0, 1, 1)
+            clip_action.attach(copy_action, 3, 0, 1, 1)
+        else:
+            clip_action.attach(copy_action, 2, 0, 1, 1)
+
+        clip_action.attach(delete_action, 4, 0, 1, 1)
+        clip_action.attach(self.fuzzytimestamp_label, 5, 0, 1, 1)
 
         grid = Gtk.Grid()
         grid.props.expand = True
@@ -654,6 +663,7 @@ class ClipsContainer(Gtk.EventBox):
 
     def on_cursor_leaving_clip(self, widget, eventcrossing):
         self.get_parent().get_style_context().remove_class("hover")
+
         flowboxchild = self.get_parent()
 
         if flowboxchild.is_selected():
@@ -764,8 +774,29 @@ class ClipsContainer(Gtk.EventBox):
             if validated is False and copy_result is False and button is None:
                 label = Gtk.Label("Authentication failed")
                 action_notify_box.show_all()
-                self.clip_action_notify_revealer.set_reveal_child(True)
+                self.clip_action_notify_revealer.set_reveal_child(False)
+
+        elif action == "copy-plaintext":
+            icon = Gtk.Image().new_from_icon_name("process-completed", Gtk.IconSize.SMALL_TOOLBAR)
+            label = Gtk.Label("Copied to clipboard")
+            action_notify_box.attach(icon, 0, 0, 1, 1)
+            action_notify_box.attach(label, 1, 0, 1, 1)
+            copy_result = False
+            temp_file_uri = ""
             
+            alt_target = "text/plain;charset=utf-8"
+            alt_type = "text"
+            alt_cache_file = self.cache_file.replace("html", "txt")
+            print(self.target, self.cache_file, self.type)
+            print(alt_target, alt_cache_file, alt_type)
+
+            copy_result = self.app.utils.copy_to_clipboard(self.target, self.cache_file, self.type)
+
+            if copy_result:
+                action_notify_box.show_all()
+                self.clip_action_notify_revealer.set_reveal_child(True)
+                self.app.cache_manager.update_cache_on_recopy(self.cache_file)
+
         elif action == "force_delete" or action[0] == "force_delete":
             current_flowbox_index = flowboxchild.get_index() - 1
             self.app.cache_manager.delete_record(self.id, self.cache_file, self.type)
@@ -846,33 +877,13 @@ class ClipsContainer(Gtk.EventBox):
             action_callback=password_editor.on_current_password_entry_activated, #callback if user click on authenticate button
             action_type="suggested",
             size=[250,-1],
-            data=(
-                password_editor.password_authentication,
-                )
             )
         return authenticate_dialog
 
     def on_authenticated(self, action=None):
-        print("func: on_button_clicked", locals())
-        # if button.props.name == "authenticate":
-        #     password_authentication_callback = data[0][0]
-        #     if password_authentication_callback():
-                # self.on_revealcontent()
-        # self.on_revealcontent()
         do_authenticate, authenticated_data = self.app.utils.do_authentication("get")
-        print("func: on_revealcontent", do_authenticate, authenticated_data)
         if do_authenticate:
             self.on_clip_action(button=None, action=action, validated=True, data=authenticated_data)
-            try:
-                self.authenticate_dialog.destroy()
-            except:
-                pass
-
-    def on_revealcontent(self, *args):
-        do_authenticate, authenticated_data = self.app.utils.do_authentication("get")
-        print("func: on_revealcontent", do_authenticate, authenticated_data)
-        if do_authenticate:
-            self.on_clip_action(button=None, action="protect", validated=True, data=authenticated_data)
             try:
                 self.authenticate_dialog.destroy()
             except:

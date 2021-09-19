@@ -24,6 +24,8 @@ finish-args:
   - --system-talk-name=org.freedesktop.Accounts
   # keyring access for setting password for clips protection
   - --talk-name=org.freedesktop.secrets
+  # access contractor
+  # - --talk-name=org.elementary.Contractor
 modules:
   - name: requests
     buildsystem: simple
