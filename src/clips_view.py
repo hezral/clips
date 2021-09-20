@@ -517,7 +517,7 @@ class ClipsContainer(Gtk.EventBox):
         view_action = self.generate_action_button("com.github.hezral.clips-view-symbolic", "View", "view")
         
         if "html" in self.type:
-            copy_formatted_action = self.generate_action_button("edit-copy-style", "Copy Formatted", "copy")
+            copy_formatted_action = self.generate_action_button("edit-copy-style", "Copy", "copy")
             copy_action = self.generate_action_button("edit-copy-symbolic", "Copy Plaintext", "copy-plaintext")
         else:
             copy_action = self.generate_action_button("edit-copy-symbolic", "Copy", "copy")

@@ -1,9 +1,11 @@
-com.github.hezral.clips (1.0.2) precise; urgency=low
+com.github.hezral.clips (1.0.3) precise; urgency=low
 
-  * Fixed issue with Persistent Mode and Hide on Startup conflicting behaviour
-  * Fixed reveal file action
-  * Improved behaviour to have Clips window focused when called
-  * Improved description for shortcuts and basic setup instructions
+  * Added behaviour to move focus down to search results by using down key
+  * Added option to copy HTML contents as plain text, via action button or Shift+C key
+  * Added new help guides
+  * Fixed when startup focus is set on the first clip so arrow keys work to move around the clips
+  * Fixed when hovering a clip slowly it does not show the hover status
+  * Fixed when using arrow keys and reach an end, focus goes to view switcher
   * Various code clean-ups
 
- -- Adi Hezral <hezral@gmail.com>  Sun, 5 Sep 2021 00:00:00 +0800
+ -- Adi Hezral <hezral@gmail.com>  Mon, 20 Sep 2021 00:00:00 +0800
