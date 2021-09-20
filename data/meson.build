@@ -88,6 +88,8 @@ install_data(other_icon_sources, install_dir: iconsdir)
 image_sources = [
   join_paths('images', 'help_clip_actions_dark' + '.png'),
   join_paths('images', 'help_clip_actions_light' + '.png'),
+  join_paths('images', 'help_clip_extra_actions_dark' + '.png'),
+  join_paths('images', 'help_clip_extra_actions_light' + '.png'),
   join_paths('images', 'help_clip_info_dark' + '.png'),
   join_paths('images', 'help_clip_info_light' + '.png'),
   join_paths('images', 'help_clipsapp_toggle_dark' + '.png'),
