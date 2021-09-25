@@ -878,8 +878,6 @@ def get_active_window_wm_class():
     except Xlib.error.XError: #simplify dealing with BadWindow
         return None
 
-get_active_window_wm_class()
-
 #-------------------------------------------------------------------------------------------------------
 # Color Validation Functions
 # Regex Pattern for Rgb, Rgba, Hsl, Hsla color coding
