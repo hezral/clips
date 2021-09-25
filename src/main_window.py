@@ -81,9 +81,8 @@ class ClipsWindow(Gtk.ApplicationWindow):
             self.set_keep_above(True)
 
     def check_active(self, data=None):
-        if self.utils.get_active_window_xlib() != self.app.props.application_id:
+        if self.app.props.application_id not in self.utils.get_active_window_wm_class():
             self.hide()
-
 
     def on_persistent_mode(self, widget, event):
         GLib.timeout_add(25, self.check_active, None)
