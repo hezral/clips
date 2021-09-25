@@ -81,11 +81,12 @@ class ClipsWindow(Gtk.ApplicationWindow):
             self.set_keep_above(True)
 
     def check_active(self, data=None):
-        if self.utils.get_active_appinfo_xlib(data)[0] != "Clips":
+        if self.utils.get_active_window_xlib() != self.app.props.application_id:
             self.hide()
 
+
     def on_persistent_mode(self, widget, event):
-        GLib.timeout_add(100, self.check_active, None)
+        GLib.timeout_add(25, self.check_active, None)
 
     def set_main_window_size(self, column_number=None):
         if column_number is None:
