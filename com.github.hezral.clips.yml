@@ -13,8 +13,8 @@ finish-args:
   - --filesystem=xdg-data
   - --filesystem=xdg-data/flatpak/exports/share:ro
   - --filesystem=xdg-data/flatpak/app:ro
-  # - --filesystem=home/.local/share/flatpak/exports/share/applications:ro
-  # - --filesystem=home/.local/share/applications:ro
+  - --filesystem=~/.local/share/flatpak/exports/share/applications:ro
+  - --filesystem=~/.local/share/applications:ro
   - --filesystem=host:ro
   - --filesystem=/usr/share:ro
   - --filesystem=/usr/local/share:ro
