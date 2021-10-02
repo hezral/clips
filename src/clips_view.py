@@ -852,15 +852,6 @@ class ClipsContainer(Gtk.EventBox):
         self.app.main_window.hide()
         GLib.timeout_add(100, paste, None)
 
-        # stashed_window = self.app.utils.get_window_by_gtk_application_id_xlib(self.app.props.application_id)
-        # if self.app.props.application_id not in self.utils.get_active_window_wm_class():
-
-        # if self.app.utils.set_active_window_by_pointer() != :
-            # 
-        # elif self.app.utils.set_active_window_by_pointer() == stashed_window:
-            # clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
-            # clipboard.clear()
-
     def update_timestamp_on_clips(self, datetime):
         self.created = datetime
         self.created_short = datetime.strftime('%a, %b %d %Y, %H:%M:%S')
