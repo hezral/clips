@@ -280,6 +280,7 @@ class ClipsWindow(Gtk.ApplicationWindow):
             elif self.gio_settings.get_boolean("first-run") is False and view_switch is None and gparam is None and action is None:
                 if total_clips_in_db == 0:
                     self.info_view.noclips_view = self.info_view.generate_noclips_view()
+                    self.searchentry.props.text = ""
                     self.info_view.show_all()
                     self.settings_view.hide()
                     self.clips_view.hide()
@@ -320,6 +321,7 @@ class ClipsWindow(Gtk.ApplicationWindow):
                         self.info_view.welcome_view = self.info_view.generate_welcome_view()
                     else:
                         self.info_view.noclips_view = self.info_view.generate_noclips_view()
+                        self.searchentry.props.text = ""
 
                     self.stack.set_visible_child(self.info_view)
                     self.info_view.show_all()
