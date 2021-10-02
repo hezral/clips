@@ -167,7 +167,7 @@ class InfoView(Gtk.Grid):
             flowbox.add(help_multiselect)
 
             help_clip_info = HelpSubView(prefer_dark_style, image_name="help_clip_info", subtitle_text="Hover on icon for extra info")
-            help_search = HelpSubView(prefer_dark_style, image_name="help_search", subtitle_text="Search with multi keyword")
+            help_search = HelpSubView(prefer_dark_style, image_name="help_search", subtitle_text="Multi keyword & As-You-Type search")
             help_clipsapp_toggle = HelpSubView(prefer_dark_style, image_name="help_clipsapp_toggle", subtitle_text="Toggle clipboard monitoring")
             help_settings = HelpSubView(prefer_dark_style, image_name="help_settings", subtitle_text="Explore availble settings")
             flowbox.add(help_clip_info)
