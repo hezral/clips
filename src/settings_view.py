@@ -149,11 +149,15 @@ class SettingsView(Gtk.Grid):
         protected_mode = SubSettings(type="button", name="protected-mode", label="Protected Mode: {0}".format(protected_mode_state), sublabel="Toggle protected mode", separator=True, params=(protected_mode_button_label, protected_mode_button_icon,))
         protected_mode.button.connect("clicked", self.on_button_clicked, reset_password)
 
-        unprotect_timeout = SubSettings(type="spinbutton", name="unprotect-timeout", label="Timeout", sublabel="Timeout(sec) after revealing protected clips", separator=False, params=(1,1800,1))
+        unprotect_timeout = SubSettings(type="spinbutton", name="unprotect-timeout", label="Timeout", sublabel="Timeout(sec) after revealing protected clips", separator=True, params=(1,1800,1))
         unprotect_timeout.spinbutton.connect("value-changed", self.on_spinbutton_activated)
         self.gio_settings.bind("unprotect-timeout", unprotect_timeout.spinbutton, "value", Gio.SettingsBindFlags.DEFAULT)
 
-        others = SettingsGroup("Other", (add_shortcut, protected_mode, reset_password, unprotect_timeout))
+        quick_paste = SubSettings(type="switch", name="quick-paste", label="Quick paste", sublabel="Paste contents in active window after copy action",separator=False)
+        # quick_paste.switch.connect_after("notify::active", self.on_switch_activated)
+        self.gio_settings.bind("quick-paste", quick_paste.switch, "active", Gio.SettingsBindFlags.DEFAULT)
+
+        others = SettingsGroup("Other", (add_shortcut, protected_mode, reset_password, unprotect_timeout, quick_paste))
         self.flowbox.add(others)
 
         # help -------------------------------------------------

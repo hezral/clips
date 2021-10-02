@@ -770,6 +770,7 @@ class ClipsContainer(Gtk.EventBox):
                 self.app.cache_manager.update_cache_on_recopy(self.cache_file)
                 if "yes" in self.protected:
                     os.remove(temp_file_uri)
+                self.quick_paste()
 
             if validated is False and copy_result is False and button is None:
                 label = Gtk.Label("Authentication failed")
@@ -794,6 +795,7 @@ class ClipsContainer(Gtk.EventBox):
                 action_notify_box.show_all()
                 self.clip_action_notify_revealer.set_reveal_child(True)
                 self.app.cache_manager.update_cache_on_recopy(self.cache_file)
+                self.quick_paste()
 
         elif action == "force_delete" or action[0] == "force_delete":
             current_flowbox_index = flowboxchild.get_index() - 1
@@ -837,6 +839,27 @@ class ClipsContainer(Gtk.EventBox):
             print(action[0])
             print(action[1])
             pass
+
+    def quick_paste(self):
+        def paste(data=None):
+            if self.app.gio_settings.get_value("quick-paste"):
+                
+                print(self.app.utils.get_active_window_id_xlib())
+                print(self.app.utils.get_active_window_wm_class())
+                self.app.utils.set_active_window_by_xwindow(self.app.utils.get_active_window_xlib())
+                self.app.utils.paste_from_clipboard()
+        
+        self.app.main_window.hide()
+        GLib.timeout_add(100, paste, None)
+
+        # stashed_window = self.app.utils.get_window_by_gtk_application_id_xlib(self.app.props.application_id)
+        # if self.app.props.application_id not in self.utils.get_active_window_wm_class():
+
+        # if self.app.utils.set_active_window_by_pointer() != :
+            # 
+        # elif self.app.utils.set_active_window_by_pointer() == stashed_window:
+            # clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
+            # clipboard.clear()
 
     def update_timestamp_on_clips(self, datetime):
         self.created = datetime

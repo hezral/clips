@@ -79,5 +79,10 @@
             <summary>Timeout (in seconds) after revealing protected clips</summary>
             <description>Timeout (in seconds) after revealing protected clips</description>
         </key>
+        <key type="b" name="quick-paste">
+            <default>false</default>
+            <summary>Paste contents in active window after copy action</summary>
+            <description>Paste contents in active window after copy action</description>
+        </key>
     </schema>
 </schemalist>
