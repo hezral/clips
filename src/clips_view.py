@@ -542,10 +542,7 @@ class ClipsContainer(Gtk.EventBox):
         self.source_icon_revealer = Gtk.Revealer()
         self.source_icon_revealer.add(icon)
         self.source_icon_revealer.props.can_focus = False
-
-        self.select_button = self.generate_clip_select_button()
-        self.fuzzytimestamp_label = self.generate_fuzzytimestamp_label()
-
+        
         clip_action.attach(reveal_action, 0, 0, 1, 1)
 
         if "yes" in self.protected:
@@ -563,7 +560,11 @@ class ClipsContainer(Gtk.EventBox):
             clip_action.attach(copy_action, 2, 0, 1, 1)
 
         clip_action.attach(delete_action, 4, 0, 1, 1)
+
+        self.fuzzytimestamp_label = self.generate_fuzzytimestamp_label()
         clip_action.attach(self.fuzzytimestamp_label, 5, 0, 1, 1)
+
+        self.select_button = self.generate_clip_select_button()
 
         grid = Gtk.Grid()
         grid.props.expand = True
@@ -843,9 +844,6 @@ class ClipsContainer(Gtk.EventBox):
     def quick_paste(self):
         def paste(data=None):
             if self.app.gio_settings.get_value("quick-paste"):
-                
-                print(self.app.utils.get_active_window_id_xlib())
-                print(self.app.utils.get_active_window_wm_class())
                 self.app.utils.set_active_window_by_xwindow(self.app.utils.get_active_window_xlib())
                 self.app.utils.paste_from_clipboard()
         
