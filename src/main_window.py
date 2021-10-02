@@ -25,7 +25,7 @@ from .settings_view import SettingsView
 from .info_view import InfoView
 
 class ClipsWindow(Gtk.ApplicationWindow):
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -79,6 +79,14 @@ class ClipsWindow(Gtk.ApplicationWindow):
             self.stick()
         if self.gio_settings.get_value("always-on-top"):
             self.set_keep_above(True)
+
+        self.connect("key-press-event", self.on_search_as_you_type)
+
+    def on_search_as_you_type(self, window, eventkey):
+        # print(Gdk.keyval_name(eventkey.keyval), eventkey.keyval, eventkey.state.value_names)
+        if len(Gdk.keyval_name(eventkey.keyval)) == 1:
+            if self.is_visible() and self.searchentry.has_focus() is False:
+                self.searchentry.grab_focus()
 
     def check_active(self, data=None):
         if self.app.props.application_id not in self.utils.get_active_window_wm_class():
@@ -206,12 +214,6 @@ class ClipsWindow(Gtk.ApplicationWindow):
         self.view_switch.get_children()[1].props.can_focus = False
         self.view_switch.connect_after("notify::active", self.on_view_visible)
         return self.view_switch
-
-    # def on_sourceapp_filter(self, button, popover):
-    #     popover.set_relative_to(button)
-    #     popover.show_all()
-    #     popover.popup()
-    #     popover.listbox.unselect_all()
 
     def on_search_entry_key_pressed(self, search_entry, eventkey):
         key = Gdk.keyval_name(eventkey.keyval).lower()
