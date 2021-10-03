@@ -83,8 +83,16 @@ class ClipsWindow(Gtk.ApplicationWindow):
         self.connect("key-press-event", self.on_search_as_you_type)
 
     def on_search_as_you_type(self, window, eventkey):
-        # print(Gdk.keyval_name(eventkey.keyval), eventkey.keyval, eventkey.state.value_names)
-        if len(Gdk.keyval_name(eventkey.keyval)) == 1:
+        proceed = False
+        # print(Gdk.keyval_name(eventkey.keyval), eventkey.state.value_names, len(eventkey.state.value_names))
+
+        if eventkey.state.value_names == ['GDK_SHIFT_MASK', 'GDK_MOD2_MASK'] and len(Gdk.keyval_name(eventkey.keyval)) == 1:
+            proceed = True
+
+        if eventkey.state.value_names == ['GDK_MOD2_MASK'] and len(Gdk.keyval_name(eventkey.keyval)) == 1:
+            proceed = True
+
+        if proceed:
             if self.is_visible() and self.searchentry.has_focus() is False:
                 self.searchentry.grab_focus()
 
