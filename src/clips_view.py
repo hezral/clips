@@ -843,12 +843,12 @@ class ClipsContainer(Gtk.EventBox):
 
     def quick_paste(self):
         def paste(data=None):
-            if self.app.gio_settings.get_value("quick-paste"):
-                self.app.utils.set_active_window_by_xwindow(self.app.utils.get_active_window_xlib())
-                self.app.utils.paste_from_clipboard()
-        
-        self.app.main_window.hide()
-        GLib.timeout_add(100, paste, None)
+            self.app.utils.set_active_window_by_xwindow(self.app.utils.get_active_window_xlib())
+            self.app.utils.paste_from_clipboard()
+
+        if self.app.gio_settings.get_value("quick-paste"):
+            self.app.main_window.hide()
+            GLib.timeout_add(100, paste, None)
 
     def update_timestamp_on_clips(self, datetime):
         self.created = datetime
