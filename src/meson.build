@@ -31,5 +31,7 @@ clips_sources = [
   'custom_widgets.py',
   'info_view.py',
   'settings_view.py',
+  'shake_listener.py',
+  'active_window_manager.py',
 ]
 install_data(clips_sources, install_dir: moduledir)

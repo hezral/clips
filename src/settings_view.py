@@ -149,15 +149,22 @@ class SettingsView(Gtk.Grid):
         protected_mode = SubSettings(type="button", name="protected-mode", label="Protected Mode: {0}".format(protected_mode_state), sublabel="Toggle protected mode", separator=True, params=(protected_mode_button_label, protected_mode_button_icon,))
         protected_mode.button.connect("clicked", self.on_button_clicked, reset_password)
 
-        unprotect_timeout = SubSettings(type="spinbutton", name="unprotect-timeout", label="Timeout", sublabel="Timeout(sec) after revealing protected clips", separator=True, params=(1,1800,1))
+        unprotect_timeout = SubSettings(type="spinbutton", name="unprotect-timeout", label="Protected Reveal Timeout", sublabel="Timeout(sec) after revealing protected clips", separator=True, params=(1,1800,1))
         unprotect_timeout.spinbutton.connect("value-changed", self.on_spinbutton_activated)
         self.gio_settings.bind("unprotect-timeout", unprotect_timeout.spinbutton, "value", Gio.SettingsBindFlags.DEFAULT)
 
-        quick_paste = SubSettings(type="switch", name="quick-paste", label="Quick paste", sublabel="Paste contents in active window after copy action",separator=False)
-        # quick_paste.switch.connect_after("notify::active", self.on_switch_activated)
+        quick_paste = SubSettings(type="switch", name="quick-paste", label="Quick paste", sublabel="Paste contents in active window after copy action",separator=True)
         self.gio_settings.bind("quick-paste", quick_paste.switch, "active", Gio.SettingsBindFlags.DEFAULT)
 
-        others = SettingsGroup("Other", (add_shortcut, protected_mode, reset_password, unprotect_timeout, quick_paste))
+        shake_reveal = SubSettings(type="switch", name="shake-reveal", label="Shake to reveal   ! experimental !", sublabel="Shake mouse to reveal app",separator=True)
+        # shake_reveal.switch.connect_after("notify::active", self.on_switch_activated)
+        self.app.gio_settings.bind("shake-reveal", shake_reveal.switch, "active", Gio.SettingsBindFlags.DEFAULT)
+
+        shake_sensitivity = SubSettings(type="spinbutton", name="shake-sensitivity", label="Shake sensitivity", sublabel="Adjust shake to reveal sensitivity", separator=False, params=(3,10,1))
+        shake_sensitivity.spinbutton.connect("value-changed", self.on_spinbutton_activated)
+        self.app.gio_settings.bind("shake-sensitivity", shake_sensitivity.spinbutton, "value", Gio.SettingsBindFlags.DEFAULT)
+
+        others = SettingsGroup("Other", (add_shortcut, protected_mode, unprotect_timeout, reset_password, quick_paste, shake_reveal, shake_sensitivity))
         self.flowbox.add(others)
 
         # help -------------------------------------------------
@@ -318,11 +325,17 @@ class SettingsView(Gtk.Grid):
             if name == "min-column-number":
                 self.on_min_column_number_changed(spinbutton.props.value)
                 
-            if name == "auto-retention-period":
-                print("spin:", spinbutton, spinbutton.props.value, name)
+            # if name == "auto-retention-period":
+            #     print("spin:", spinbutton, spinbutton.props.value, name)
 
-            if name == "unprotect-timeout":
-                print("spin:", spinbutton, spinbutton.props.value, name)
+            # if name == "unprotect-timeout":
+            #     print("spin:", spinbutton, spinbutton.props.value, name)
+
+            if name == "shake-sensitivity":
+                # print("spin:", spinbutton, spinbutton.props.value, name, main_window.app.shake_listener.needed_shake_count)
+                if self.app.shake_listener is not None:
+                    self.app.shake_listener.needed_shake_count = spinbutton.props.value
+                    # print(self.app.shake_listener.needed_shake_count)
 
     def on_switch_activated(self, switch, gparam):
         name = switch.get_name()
@@ -332,11 +345,9 @@ class SettingsView(Gtk.Grid):
 
             if name == "persistent-mode":
                 if switch.get_active():
-                    # print('state-flags-on')
-                    main_window.disconnect_by_func(main_window.on_persistent_mode)
+                    self.app.window_manager._stop()
                 else:
-                    main_window.connect("state-flags-changed", main_window.on_persistent_mode)
-                    # print('state-flags-off')
+                    self.app.window_manager._run(callback=main_window.on_persistent_mode)
 
             if name == "sticky-mode":
                 if switch.get_active():

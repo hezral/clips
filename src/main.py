@@ -24,7 +24,8 @@ from gi.repository import Gtk, Gio, GLib, Gdk, Granite
 from .main_window import ClipsWindow
 from .clipboard_manager import ClipboardManager
 from .cache_manager import CacheManager
-# from .custom_shortcut_settings import CustomShortcutSettings
+from .shake_listener import ShakeListener
+from .active_window_manager import ActiveWindowManager
 from . import utils
 
 import platform
@@ -53,8 +54,8 @@ class Application(Gtk.Application):
         self.utils = utils
         self.clipboard_manager = ClipboardManager(gtk_application=self)
         self.cache_manager = CacheManager(gtk_application=self, clipboard_manager=self.clipboard_manager)
-        self.main_window = None
-        self.total_clips = 0
+        self.window_manager = ActiveWindowManager(gtk_application=self)
+        self.create_shakelistener()
 
         # prepend custom path for icon theme
         self.icon_theme = Gtk.IconTheme.get_default()
@@ -282,7 +283,14 @@ class Application(Gtk.Application):
     def on_prefers_color_scheme(self, *args):
         prefers_color_scheme = self.granite_settings.get_prefers_color_scheme()
         self.gtk_settings.set_property("gtk-application-prefer-dark-theme", prefers_color_scheme)
-        
+
+    def create_shakelistener(self, *args):
+        if self.shake_listener is not None:
+            self.shake_listener.listener.stop()
+            self.shake_listener = None
+        if self.gio_settings.get_value("shake-reveal"):
+            self.shake_listener = ShakeListener(app=self, reveal_callback=self.do_activate, sensitivity=self.gio_settings.get_int("shake-sensitivity"))
+
 
 def main(version):
     app = Application()

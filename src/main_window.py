@@ -74,7 +74,8 @@ class ClipsWindow(Gtk.ApplicationWindow):
 
     def set_display_settings(self):
         if not self.gio_settings.get_value("persistent-mode"):
-            self.state_flags_on = self.connect("state-flags-changed", self.on_persistent_mode)
+            if self.app.window_manager is not None:
+                self.app.window_manager._run(callback=self.on_persistent_mode)
         if self.gio_settings.get_value("sticky-mode"):
             self.stick()
         if self.gio_settings.get_value("always-on-top"):
@@ -96,8 +97,8 @@ class ClipsWindow(Gtk.ApplicationWindow):
             if self.is_visible() and self.searchentry.has_focus() is False:
                 self.searchentry.grab_focus()
 
-    def check_active(self, data=None):
-        if self.app.props.application_id not in self.utils.get_active_window_wm_class():
+    def on_persistent_mode(self, wm_class):
+        if self.app.props.application_id not in wm_class:
             self.hide()
 
     def on_persistent_mode(self, widget, event):
