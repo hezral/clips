@@ -742,10 +742,10 @@ class ClipsContainer(Gtk.EventBox):
                 self.app.utils.open_file_gio(self.cache_file)
 
         elif action == "copy":
-            icon = Gtk.Image().new_from_icon_name("process-completed", Gtk.IconSize.SMALL_TOOLBAR)
-            label = Gtk.Label("Copied to clipboard")
-            action_notify_box.attach(icon, 0, 0, 1, 1)
-            action_notify_box.attach(label, 1, 0, 1, 1)
+            # icon = Gtk.Image().new_from_icon_name("process-completed", Gtk.IconSize.SMALL_TOOLBAR)
+            # label = Gtk.Label("Copied to clipboard")
+            # action_notify_box.attach(icon, 0, 0, 1, 1)
+            # action_notify_box.attach(label, 1, 0, 1, 1)
             copy_result = False
             temp_file_uri = ""
             title = "Copy Content"
