@@ -772,8 +772,11 @@ def set_active_window_by_xwindow(window):
     from Xlib import X
 
     display = Display()
+
+    window.circulate(X.RaiseLowest)
     window.set_input_focus(X.RevertToParent, X.CurrentTime)
     window.configure(stack_mode=X.Above)
+    display.flush()
     display.sync()
 
 def get_widget_by_name(widget, child_name, level, doPrint=False):
