@@ -21,6 +21,7 @@ import gi
 gi.require_version('Gtk', '3.0')
 gi.require_version('Granite', '1.0')
 from gi.repository import Gtk, Gio, GLib, Gdk, Granite
+
 from .main_window import ClipsWindow
 from .clipboard_manager import ClipboardManager
 from .cache_manager import CacheManager
@@ -28,27 +29,33 @@ from .shake_listener import ShakeListener
 from .active_window_manager import ActiveWindowManager
 from . import utils
 
-import platform
 from datetime import datetime
+import time
 
-import sys, os
-import threading, time
+import logging
 
 class Application(Gtk.Application):
 
+    app_id = "com.github.hezral.clips"
     running = False
     app_startup = True
+    clipboard_manager = None
+    cache_manager = None
+    shake_listener = None
+    window_manager = None
+    main_window = None
+    total_clips = 0
 
     def __init__(self):
         super().__init__()
 
         print(datetime.now(), "startup")
 
-        self.props.application_id = "com.github.hezral.clips"
+        self.props.application_id = self.app_id
         self.props.flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE
         self.add_main_option("test", ord("t"), GLib.OptionFlags.NONE, GLib.OptionArg.NONE, "Command line test", None)
 
-        self.gio_settings = Gio.Settings(schema_id="com.github.hezral.clips")
+        self.gio_settings = Gio.Settings(schema_id=self.app_id)
         self.gtk_settings = Gtk.Settings().get_default()
         self.granite_settings = Granite.Settings.get_default()
         self.utils = utils
@@ -84,7 +91,7 @@ class Application(Gtk.Application):
 
     def do_activate(self):
 
-        if not self.main_window:
+        if self.main_window is None:
             self.main_window = ClipsWindow(application=self)
             self.add_window(self.main_window)
             self.cache_manager.main_window = self.main_window
@@ -145,22 +152,6 @@ class Application(Gtk.Application):
 
         self.activate()
         return 0
-
-    # def create_app_shortcut(self):
-    #     if self.gio_settings.get_boolean("first-run"):
-    #         SHORTCUT = "<Super><Control>c"
-    #         ID = "gtk-launch" + " " + self.props.application_id
-    #         setup_shortcut = CustomShortcutSettings()
-    #         has_shortcut = False
-    #         for shortcut in setup_shortcut.list_custom_shortcuts():
-    #             if shortcut[1] == ID:
-    #                 has_shortcut = True
-
-    #         if has_shortcut is False:
-    #             shortcut = setup_shortcut.create_shortcut()
-    #             if shortcut is not None:
-    #                 setup_shortcut.edit_shortcut(shortcut, SHORTCUT)
-    #                 setup_shortcut.edit_command(shortcut, ID)
             
     def create_app_actions(self):
         # app actions
