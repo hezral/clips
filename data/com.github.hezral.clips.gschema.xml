@@ -84,5 +84,16 @@
             <summary>Paste contents in active window after copy action</summary>
             <description>Paste contents in active window after copy action</description>
         </key>
+        <key type="b" name="shake-reveal">
+            <default>false</default>
+            <summary>Shake to reveal</summary>
+            <description>Shake to reveal</description>
+        </key>
+        <key type="i" name="shake-sensitivity">
+            <default>3</default>
+            <range min="1" max="10"/>
+            <summary>Shake sensitivity</summary>
+            <description>Shake sensitivity</description>
+        </key>
     </schema>
 </schemalist>
