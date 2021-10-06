@@ -691,6 +691,10 @@ class ClipsContainer(Gtk.EventBox):
                     image_container.play_gif_thread = None
 
     def on_clip_action(self, button=None, action=None, validated=False, data=None):
+
+        def display_action_notify(action_notify_box):
+            ...
+
         flowboxchild = self.get_parent()
         flowbox = self.app.main_window.clips_view.flowbox
         flowbox.select_child(flowboxchild)
@@ -698,8 +702,8 @@ class ClipsContainer(Gtk.EventBox):
         action_notify_box = self.clip_action_notify_revealer.get_children()[0]
 
         # remove previous widgets
-        for child in action_notify_box.get_children():
-            child.destroy()
+        # for child in action_notify_box.get_children():
+        #     child.destroy()
  
         if action == "protect":
             if "yes" in self.protected:
@@ -779,10 +783,10 @@ class ClipsContainer(Gtk.EventBox):
                 self.clip_action_notify_revealer.set_reveal_child(False)
 
         elif action == "copy-plaintext":
-            icon = Gtk.Image().new_from_icon_name("process-completed", Gtk.IconSize.SMALL_TOOLBAR)
-            label = Gtk.Label("Copied to clipboard")
-            action_notify_box.attach(icon, 0, 0, 1, 1)
-            action_notify_box.attach(label, 1, 0, 1, 1)
+            # icon = Gtk.Image().new_from_icon_name("process-completed", Gtk.IconSize.SMALL_TOOLBAR)
+            # label = Gtk.Label("Copied to clipboard")
+            # action_notify_box.attach(icon, 0, 0, 1, 1)
+            # action_notify_box.attach(label, 1, 0, 1, 1)
             copy_result = False
             temp_file_uri = ""
             
