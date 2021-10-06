@@ -504,6 +504,11 @@ class ClipsContainer(Gtk.EventBox):
         action_notify_box.props.column_spacing = 6
         action_notify_box.props.halign = action_notify_box.props.valign = Gtk.Align.CENTER
 
+        icon = Gtk.Image().new_from_icon_name("process-completed", Gtk.IconSize.SMALL_TOOLBAR)
+        label = Gtk.Label("Copied to clipboard")
+        action_notify_box.attach(icon, 0, 0, 1, 1)
+        action_notify_box.attach(label, 1, 0, 1, 1)
+
         clip_action_notify_revealer = Gtk.Revealer()
         clip_action_notify_revealer.props.name = "clip-action-notify-revealer"
         clip_action_notify_revealer.props.can_focus = False
