@@ -34,12 +34,10 @@ class ClipsWindow(Gtk.ApplicationWindow):
         self.gio_settings = self.props.application.gio_settings
         self.gtk_settings = self.props.application.gtk_settings
 
-        #------ views ----#
         self.clips_view = ClipsView(self.app)
         self.settings_view = SettingsView(self.app)
         self.info_view = InfoView(self.app, "No Clips Found","Start Copying Stuffs", "system-os-installer")
 
-        #------ stack ----#
         self.stack = Gtk.Stack()
         self.stack.props.name = "main-stack"
         self.stack.props.transition_type = Gtk.StackTransitionType.CROSSFADE
@@ -48,10 +46,8 @@ class ClipsWindow(Gtk.ApplicationWindow):
         self.stack.add_named(self.settings_view, self.settings_view.get_name())
         self.stack.add_named(self.info_view, self.info_view.get_name())
 
-        #------ headerbar ----#
         self.set_titlebar(self.generate_headerbar())
 
-        #------ main_view ----#
         self.main_view = Gtk.Grid()
         self.main_view.props.name = "main-view"
         self.main_view.attach(self.stack, 0, 0, 3, 1)
@@ -60,7 +56,6 @@ class ClipsWindow(Gtk.ApplicationWindow):
         self.main_view.attach(self.generate_statusbar(), 1, 2, 1, 1)
         self.main_view.attach(self.generate_viewswitch(), 2, 2, 1, 1)
 
-        #------ construct ----#
         self.props.title = "Clips"
         self.props.name = "main-window"
         self.props.border_width = 0
@@ -100,9 +95,6 @@ class ClipsWindow(Gtk.ApplicationWindow):
     def on_persistent_mode(self, wm_class):
         if self.app.props.application_id not in wm_class:
             self.hide()
-
-    def on_persistent_mode(self, widget, event):
-        GLib.timeout_add(25, self.check_active, None)
 
     def set_main_window_size(self, column_number=None):
         if column_number is None:
