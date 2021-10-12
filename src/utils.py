@@ -1378,3 +1378,52 @@ def do_authentication(action, password=None):
         return set_password(password)
     elif action == "reset":
         return get_password(), set_password(password)
+
+
+def run_keyboard_shortcut(modifier, key):
+    '''
+    Function to trigger a keyboard shortcut
+    '''
+    # ported from Clipped: https://github.com/davidmhewitt/clipped/blob/edac68890c2a78357910f05bf44060c2aba5958e/src/ClipboardManager.vala
+
+    def perform_key_event(accelerator, press, delay):
+        import Xlib
+        from Xlib import X
+        from Xlib.display import Display
+        from Xlib.ext.xtest import fake_input
+        from Xlib.protocol.event import KeyPress, KeyRelease
+        import time
+
+        import gi
+        gi.require_version('Gtk', '3.0')
+        from gi.repository import Gtk, Gdk, GdkX11
+
+        keysym, modifiers = Gtk.accelerator_parse(accelerator)
+        display = Display()
+
+        keycode = display.keysym_to_keycode(keysym)
+
+        if press:
+            event_type = X.KeyPress
+        else:
+            event_type = X.KeyRelease
+
+        if keycode != 0:
+            if 'GDK_CONTROL_MASK' in modifiers.value_names:
+                modcode = display.keysym_to_keycode(Gdk.KEY_Control_L)
+                fake_input(display, event_type, modcode, delay)
+
+            if 'GDK_SHIFT_MASK' in modifiers.value_names:
+                modcode = display.keysym_to_keycode(Gdk.KEY_Shift_L)
+                fake_input(display, event_type, modcode, delay)
+
+            if 'GDK_SUPER_MASK' in modifiers.value_names:
+                modcode = display.keysym_to_keycode(Gdk.KEY_Super_L)
+                fake_input(display, event_type, modcode, delay)
+
+            fake_input(display, event_type, keycode, delay)
+            display.sync()
+
+    accelerator = "<{0}>{1}".format(modifier,key)
+    perform_key_event("<Super>C", True, 100)
+    perform_key_event("<Super>C", False, 0)
