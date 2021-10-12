@@ -93,8 +93,9 @@ class ClipsWindow(Gtk.ApplicationWindow):
                 self.searchentry.grab_focus()
 
     def on_persistent_mode(self, wm_class):
-        if self.app.props.application_id not in wm_class:
-            self.hide()
+        if wm_class is not None:
+           if self.app.props.application_id not in wm_class:
+                self.hide()
 
     def set_main_window_size(self, column_number=None):
         if column_number is None:
