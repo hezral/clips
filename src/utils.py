@@ -1385,7 +1385,6 @@ def do_authentication(action, password=None):
     elif action == "reset":
         return get_password(), set_password(password)
 
-
 def run_keyboard_shortcut(modifier, key):
     '''
     Function to trigger a keyboard shortcut
@@ -1433,3 +1432,20 @@ def run_keyboard_shortcut(modifier, key):
     accelerator = "<{0}>{1}".format(modifier,key)
     perform_key_event("<Super>C", True, 100)
     perform_key_event("<Super>C", False, 0)
+
+def run_on_host():
+    ''' Function to copy files to clipboard '''
+    from subprocess import Popen, PIPE
+
+    try:
+        # run_executable = Popen(['ls', '-l', '/proc'], stdout=PIPE)
+        # stdout, stderr = run_executable.communicate()
+        Popen(['flatpak-spawn', '--host', 'gtk-launch', 'com.github.hezral.keystrokes'])
+        # Popen(['flatpak-spawn', '--host', 'gtk-launch', 'com.github.hezral.clips'])
+        # new = stdout.splitlines()
+        # print(new)
+        # for i in new:
+            # print(i)
+    except:
+        print("error")
+
