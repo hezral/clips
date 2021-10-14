@@ -95,5 +95,10 @@
             <summary>Shake sensitivity</summary>
             <description>Shake sensitivity</description>
         </key>
+        <key type="s" name="version">
+            <default>"1.0.3"</default>
+            <summary>Current version</summary>
+            <description>Current version</description>
+        </key>
     </schema>
 </schemalist>
