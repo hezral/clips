@@ -174,10 +174,13 @@ class SettingsView(Gtk.Grid):
         report_issue = SubSettings(type="button", name="report-issue", label="Have a feature request or issue?", sublabel="Report and help make Clips better", separator=True, params=("Report issue", Gtk.Image().new_from_icon_name("help-faq", Gtk.IconSize.LARGE_TOOLBAR),))
         report_issue.button.connect("clicked", self.on_button_clicked)
 
-        buyme_coffee = SubSettings(type="button", name="buy-me-coffee", label="Show Support", sublabel="Thanks for supporting me!", separator=False, params=("Coffee Time", Gtk.Image().new_from_icon_name("com.github.hezral.clips-coffee", Gtk.IconSize.LARGE_TOOLBAR), ))
+        buyme_coffee = SubSettings(type="button", name="buy-me-coffee", label="Show Support", sublabel="Thanks for supporting me!", separator=True, params=("Coffee Time", Gtk.Image().new_from_icon_name("com.github.hezral.clips-coffee", Gtk.IconSize.LARGE_TOOLBAR), ))
         buyme_coffee.button.connect("clicked", self.on_button_clicked)
 
-        help = SettingsGroup("Support", (view_guides, report_issue, buyme_coffee))
+        whats_new = SubSettings(type="button", name="whats-new", label="Whats New", sublabel="Latest release details", separator=False, params=("What's New", Gtk.Image().new_from_icon_name("software-update-available", Gtk.IconSize.LARGE_TOOLBAR), ))
+        whats_new.button.connect("clicked", self.on_button_clicked)
+
+        help = SettingsGroup("Support", (view_guides, report_issue, buyme_coffee, whats_new))
         self.flowbox.add(help)
 
         for child in self.flowbox.get_children():
@@ -253,6 +256,9 @@ class SettingsView(Gtk.Grid):
 
         if name == "buy-me-coffee":
             Gtk.show_uri_on_window(None, "https://www.buymeacoffee.com/hezral", Gdk.CURRENT_TIME)
+
+        if name == "whats-new":
+            Gtk.show_uri_on_window(None, "https://github.com/hezral/clips/releases", Gdk.CURRENT_TIME)
 
         if name == "add-shortcut":
             Gtk.show_uri_on_window(None, "settings://input/keyboard/shortcuts", GLib.get_current_time())
