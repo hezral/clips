@@ -282,7 +282,6 @@ class Application(Gtk.Application):
         if self.gio_settings.get_value("shake-reveal"):
             self.shake_listener = ShakeListener(app=self, reveal_callback=self.do_activate, sensitivity=self.gio_settings.get_int("shake-sensitivity"))
 
-
 def main(version):
     app = Application()
     return app.run(sys.argv)
