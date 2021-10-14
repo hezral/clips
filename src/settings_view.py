@@ -79,7 +79,7 @@ class SettingsView(Gtk.Grid):
         always_on_top.switch.connect_after("notify::active", self.on_switch_activated)
         self.gio_settings.bind("always-on-top", always_on_top.switch, "active", Gio.SettingsBindFlags.DEFAULT)
 
-        show_close_button = SubSettings(type="switch", name="show-close-button", label="Show close button", sublabel=None,separator=True)
+        show_close_button = SubSettings(type="switch", name="show-close-button", label="Show close button", sublabel="Close to quit Clips",separator=True)
         show_close_button.switch.connect_after("notify::active", self.on_switch_activated)
         self.gio_settings.bind("show-close-button", show_close_button.switch, "active", Gio.SettingsBindFlags.DEFAULT)
 
