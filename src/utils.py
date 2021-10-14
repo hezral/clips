@@ -207,6 +207,7 @@ def get_all_apps(app=None):
                         app_icon = re.search("Icon=(?P<name>.+)*", contents)
                         startup_wm_class = re.search("StartupWMClass=(?P<name>.+)*", contents)
                         no_display = re.search("NoDisplay=(?P<name>.+)*", contents)
+                        flatpak = re.search("X-Flatpak=(?P<name>.+)*", contents)
 
                         if app_name != None:
                             app_name = app_name.group(1)
@@ -227,6 +228,11 @@ def get_all_apps(app=None):
                                 no_display = True
                             else:
                                 no_display = False
+
+                        if flatpak != None:
+                            flatpak = True
+                        else:
+                            flatpak = False
 
                         if app_name != None and app_icon != None:
                             if no_display is None or no_display is False:
