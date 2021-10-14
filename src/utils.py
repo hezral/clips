@@ -150,7 +150,7 @@ def get_os_distribution_name():
 
 #-------------------------------------------------------------------------------------------------------
 
-def get_all_apps():
+def get_all_apps_gio():
     ''' Function to get all apps installed on system using Gio '''
     import gi, os
     from gi.repository import Gio, GLib
