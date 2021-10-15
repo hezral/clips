@@ -188,8 +188,6 @@ def get_all_apps(app=None):
             files = d.enumerate_children("standard::*", 0)
             for desktop_file in files:
                 if ".desktop" in desktop_file.get_name():
-                    print(desktop_file)
-
                     desktop_file_path = ""
 
                     if "application/x-desktop" in desktop_file.get_content_type():
@@ -200,50 +198,55 @@ def get_all_apps(app=None):
                             desktop_file_path = os.path.join(GLib.get_home_dir(), ".local/share/flatpak", os.path.realpath(desktop_file.get_symlink_target()).replace("/home/", ""))
 
                     if desktop_file_path != "":
-                        print(desktop_file_path)
-                        with open(desktop_file_path) as file:
-                            lines = file.readlines()
-                        contents = ''.join(lines)
+                        # print(datetime.now(), "Read start {0}".format(desktop_file_path))
+                        try:
+                            with open(desktop_file_path) as file:
+                                lines = file.readlines()
+                            contents = ''.join(lines)
 
-                        app_name = re.search("Name=(?P<name>.+)*", contents)
-                        app_icon = re.search("Icon=(?P<name>.+)*", contents)
-                        startup_wm_class = re.search("StartupWMClass=(?P<name>.+)*", contents)
-                        no_display = re.search("NoDisplay=(?P<name>.+)*", contents)
-                        flatpak = re.search("X-Flatpak=(?P<name>.+)*", contents)
+                            app_name = re.search("Name=(?P<name>.+)*", contents)
+                            app_icon = re.search("Icon=(?P<name>.+)*", contents)
+                            startup_wm_class = re.search("StartupWMClass=(?P<name>.+)*", contents)
+                            no_display = re.search("NoDisplay=(?P<name>.+)*", contents)
+                            flatpak = re.search("X-Flatpak=(?P<name>.+)*", contents)
 
-                        if app_name != None:
-                            app_name = app_name.group(1)
-                        else:
-                            app_name = "unknown"
-                        
-                        if app_icon != None:
-                            app_icon = app_icon.group(1)
-                        else:
-                            app_icon = "application-default-icon"
-
-                        if startup_wm_class != None:
-                            startup_wm_class = startup_wm_class.group(1)
-
-                        if no_display != None:
-                            no_display = no_display.group(1)
-                            if 'true' in no_display:
-                                no_display = True
+                            if app_name != None:
+                                app_name = app_name.group(1)
                             else:
-                                no_display = False
+                                app_name = "unknown"
+                            
+                            if app_icon != None:
+                                app_icon = app_icon.group(1)
+                            else:
+                                app_icon = "application-default-icon"
 
-                        if flatpak != None:
-                            flatpak = True
-                        else:
-                            flatpak = False
+                            if startup_wm_class != None:
+                                startup_wm_class = startup_wm_class.group(1)
 
-                        if app_name != None and app_icon != None:
-                            if no_display is None or no_display is False:
-                                if app_name in all_apps:
-                                    duplicate_app += 1
-                                    app_name = app_name + "#{0}".format(str(duplicate_app))
-                                    all_apps[app_name] = [app_icon, startup_wm_class, no_display, desktop_file_path]
+                            if no_display != None:
+                                no_display = no_display.group(1)
+                                if 'true' in no_display:
+                                    no_display = True
                                 else:
-                                    all_apps[app_name] = [app_icon, startup_wm_class, no_display, desktop_file_path]
+                                    no_display = False
+
+                            if flatpak != None:
+                                flatpak = True
+                            else:
+                                flatpak = False
+
+                            if app_name != None and app_icon != None:
+                                if no_display is None or no_display is False:
+                                    if app_name in all_apps:
+                                        duplicate_app += 1
+                                        app_name = app_name + "#{0}".format(str(duplicate_app))
+                                        all_apps[app_name] = [app_icon, startup_wm_class, no_display, desktop_file_path]
+                                    else:
+                                        all_apps[app_name] = [app_icon, startup_wm_class, no_display, desktop_file_path]
+                            
+                            # print(datetime.now(), "Read complete {0}".format(desktop_file_path))
+                        except:
+                            print(datetime.now(), "Unable to read {0} application info".format(desktop_file_path))
 
     if app != None:
         return all_apps[app]
@@ -1435,14 +1438,14 @@ def run_keyboard_shortcut(modifier, key):
     perform_key_event("<Super>C", True, 100)
     perform_key_event("<Super>C", False, 0)
 
-def run_on_host():
+def run_on_host(application_id):
     ''' Function to copy files to clipboard '''
     from subprocess import Popen, PIPE
 
     try:
         # run_executable = Popen(['ls', '-l', '/proc'], stdout=PIPE)
         # stdout, stderr = run_executable.communicate()
-        Popen(['flatpak-spawn', '--host', 'gtk-launch', 'com.github.hezral.keystrokes'])
+        Popen(['flatpak-spawn', '--host', 'gtk-launch', application_id])
         # Popen(['flatpak-spawn', '--host', 'gtk-launch', 'com.github.hezral.clips'])
         # new = stdout.splitlines()
         # print(new)
