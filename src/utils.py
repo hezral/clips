@@ -188,6 +188,7 @@ def get_all_apps(app=None):
             files = d.enumerate_children("standard::*", 0)
             for desktop_file in files:
                 if ".desktop" in desktop_file.get_name():
+                    print(desktop_file)
 
                     desktop_file_path = ""
 
@@ -199,6 +200,7 @@ def get_all_apps(app=None):
                             desktop_file_path = os.path.join(GLib.get_home_dir(), ".local/share/flatpak", os.path.realpath(desktop_file.get_symlink_target()).replace("/home/", ""))
 
                     if desktop_file_path != "":
+                        print(desktop_file_path)
                         with open(desktop_file_path) as file:
                             lines = file.readlines()
                         contents = ''.join(lines)
