@@ -1,11 +1,12 @@
-com.github.hezral.clips (1.0.3) precise; urgency=low
+com.github.hezral.clips (1.0.4) precise; urgency=low
 
-  * Added behaviour to move focus down to search results by using down key
-  * Added option to copy HTML contents as plain text, via action button or Shift+C key
-  * Added new help guides
-  * Fixed when startup focus is set on the first clip so arrow keys work to move around the clips
-  * Fixed when hovering a clip slowly it does not show the hover status
-  * Fixed when using arrow keys and reach an end, focus goes to view switcher
-  * Various code clean-ups
+  * *New* Quick Paste: copy and paste to previous active application
+  * *New* "What's New" button: Check latest release details
+  * *New* Search-as-you-type: Begin typing and search will activate
+  * *Improved* Use down key to move from search field to search results
+  * *Experimental* Shake-to-reveal: Shake your mouse to open Clips
+  * Refactored and improved Persistent Mode
+  * Improved error handling on multiple areas
+  * Refactored, clean-ups on multiple areas
 
- -- Adi Hezral <hezral@gmail.com>  Mon, 20 Sep 2021 00:00:00 +0800
+ -- Adi Hezral <hezral@gmail.com>  Mon, 17 Oct 2021 00:00:00 +0800

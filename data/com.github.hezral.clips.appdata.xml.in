@@ -61,13 +61,16 @@
   </content_rating>
 
   <releases>
-    <release version="1.0.3" date="2021-09-20">
+    <release version="1.0.4" date="2021-10-17">
       <description>
-        <p>Fixed issue with Persistent Mode and Hide on Startup conflicting behaviour</p>
-        <p>Fixed reveal file action</p>
-        <p>Improved behaviour to have Clips window focused when called</p>
-        <p>Improved description for shortcuts and basic setup instructions</p>
-        <p>Various code clean-ups</p>
+        <p>*New* Quick Paste: copy and paste to previous active application</p>
+        <p>*New* "What's New" button: Check latest release details</p>
+        <p>*New* Search-as-you-type: Begin typing and search will activate</p>
+        <p>*Improved* Use down key to move from search field to search results</p>
+        <p>*Experimental* Shake-to-reveal: Shake your mouse to open Clips</p>
+        <p>Refactored and improved Persistent Mode</p>
+        <p>Improved error handling on multiple areas</p>
+        <p>Refactored, clean-ups on multiple areas</p>
       </description>
     </release>
   </releases>
