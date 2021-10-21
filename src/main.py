@@ -99,8 +99,11 @@ class Application(Gtk.Application):
         if self.gio_settings.get_value("hide-on-startup") and self.app_startup is True:
             self.main_window.hide()
         else:
-            self.main_window.show()
-            self.main_window.present_with_time(Gdk.CURRENT_TIME)
+            if self.main_window.is_visible():
+                self.main_window.hide()
+            else:
+                self.main_window.show()
+                self.main_window.present_with_time(Gdk.CURRENT_TIME)
         
         if self.app_startup is True:
             if self.gio_settings.get_value("auto-housekeeping"):
