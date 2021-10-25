@@ -43,6 +43,22 @@ modules:
     build-commands:
       - "pip3 install --prefix=${FLATPAK_DEST} keyring"
 
+  - name: python-xlib
+    buildsystem: simple
+    build-options:
+      build-args:
+        - --share=network
+    build-commands:
+      - "pip3 install --prefix=${FLATPAK_DEST} python-xlib"
+
+  - name: pynput
+    buildsystem: simple
+    build-options:
+      build-args:
+        - --share=network
+    build-commands:
+      - "pip3 install --prefix=${FLATPAK_DEST} pynput"
+
   - name: libx11-dev
     buildsystem: autotools
     sources:
@@ -72,22 +88,6 @@ modules:
     sources:
       - type: git
         url: https://github.com/astrand/xclip.git
-
-  - name: python-xlib
-    buildsystem: simple
-    build-options:
-      build-args:
-        - --share=network
-    build-commands:
-      - "pip3 install --prefix=${FLATPAK_DEST} python-xlib"
-
-  - name: pynput
-    buildsystem: simple
-    build-options:
-      build-args:
-        - --share=network
-    build-commands:
-      - "pip3 install --prefix=${FLATPAK_DEST} pynput"
 
   - name: libpwquality
     sources:
