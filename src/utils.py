@@ -1393,6 +1393,8 @@ def do_authentication(action, password=None):
     elif action == "reset":
         return get_password(), set_password(password)
 
+#-------------------------------------------------------------------------------------------------------
+
 def run_keyboard_shortcut(modifier, key):
     '''
     Function to trigger a keyboard shortcut
