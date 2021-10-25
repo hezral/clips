@@ -654,7 +654,10 @@ def get_active_app_window_alt():
 
 def get_appinfo(app):
     all_apps = get_all_apps()
-    return app, all_apps[app][0]
+    try:
+        return app, all_apps[app][0]
+    except:
+        return "not-found", "application-default-icon"
 
 def get_appinfo_gio(app):
     from gi.repository import Gio
