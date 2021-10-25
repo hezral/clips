@@ -80,7 +80,10 @@ class ClipsWindow(Gtk.ApplicationWindow):
 
     def on_search_as_you_type(self, window, eventkey):
         proceed = False
-        # print(Gdk.keyval_name(eventkey.keyval), eventkey.state.value_names, len(eventkey.state.value_names))
+        # print(Gdk.keyval_name(eventkey.keyval), len(Gdk.keyval_name(eventkey.keyval)), eventkey.state.value_names, len(eventkey.state.value_names))
+
+        if eventkey.state.value_names == ['GDK_SHIFT_MASK'] and len(Gdk.keyval_name(eventkey.keyval)) == 1:
+            proceed = True
 
         if eventkey.state.value_names == ['GDK_SHIFT_MASK', 'GDK_MOD2_MASK'] and len(Gdk.keyval_name(eventkey.keyval)) == 1:
             proceed = True
@@ -88,9 +91,13 @@ class ClipsWindow(Gtk.ApplicationWindow):
         if eventkey.state.value_names == ['GDK_MOD2_MASK'] and len(Gdk.keyval_name(eventkey.keyval)) == 1:
             proceed = True
 
+        if eventkey.state.value_names == [] and len(Gdk.keyval_name(eventkey.keyval)) == 1:
+            proceed = True
+        
         if proceed:
             if self.is_visible() and self.searchentry.has_focus() is False:
                 self.searchentry.grab_focus()
+        
 
     def on_persistent_mode(self, wm_class):
         if wm_class is not None:
