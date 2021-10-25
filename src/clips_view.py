@@ -970,6 +970,7 @@ class ImageContainer(DefaultContainer):
         super().__init__(*args, **kwargs)
 
         self.type = type
+        self.filepath = filepath
         if "gif" in self.type:
             self.pixbuf_original = GdkPixbuf.PixbufAnimation.new_from_file(filepath)
             self.pixbuf_original_height = self.pixbuf_original.get_height()
@@ -984,8 +985,9 @@ class ImageContainer(DefaultContainer):
             if self.pixbuf_original.get_has_alpha():
                 self.alpha = True
 
-        if self.alpha:
+        if self.alpha and "thumb" not in filepath:
             self.get_style_context().add_class("checkerboard")
+            self.props.halign = self.props.valign = Gtk.Align.START
 
         self.ratio_h_w = self.pixbuf_original_height / self.pixbuf_original_width
         self.ratio_w_h = self.pixbuf_original_width / self.pixbuf_original_height
@@ -1047,6 +1049,11 @@ class ImageContainer(DefaultContainer):
             # Find the offset we need to center the source pixbuf on the destination since its smaller
             y = abs((height - self.pixbuf_original_height) / 2)
             x = abs((width - self.pixbuf_original_width) / 2)
+            final_pixbuf = self.pixbuf_original
+        elif "thumb" in self.filepath:
+            # take top left corner for thumbnails
+            y = 0
+            x = 0
             final_pixbuf = self.pixbuf_original
         else:
             # Find the offset we need to center the source pixbuf on the destination
@@ -1145,6 +1152,7 @@ class PlainTextContainer(DefaultContainer):
         self.props.name = "plaintext-container"
         self.attach(self.content, 0, 0, 1, 1)
 
+        i = 0
         with open(filepath) as file:
             for i, l in enumerate(file):
                 pass
@@ -1158,7 +1166,40 @@ class PlainTextContainer(DefaultContainer):
 
 # ----------------------------------------------------------------------------------------------------
 
-class HtmlContainer(DefaultContainer):
+class HtmlContainer(ImageContainer):
+    def __init__(self, filepath, type, app, *args, **kwargs):
+
+        thumbnail = os.path.splitext(filepath)[0]+'-thumb.png'
+        if not os.path.exists(thumbnail):
+            app.utils.do_webview_screenshot(uri=filepath, out_file_path=thumbnail)
+
+        super().__init__(thumbnail, type, app)
+
+        self.content = open(filepath, "r")
+        self.content = self.content.read()
+
+        css_bg_color = app.utils.get_css_background_color(self.content)
+
+        if css_bg_color is not None:
+            rgb, a = app.utils.to_rgb(css_bg_color)
+            color_code = "rgba({red},{green},{blue},{alpha})".format(red=str(rgb[0]),green=str(rgb[1]),blue=str(rgb[2]),alpha=str(a))
+        else:
+            color_code = "@theme_base_color"
+
+        html_content_css = ".html-container-bg {background-color: " + color_code + ";}"
+        provider = Gtk.CssProvider()
+        provider.load_from_data(bytes(html_content_css.encode()))
+
+        self.get_style_context().add_provider(provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+        self.get_style_context().add_class("html-container-bg")
+
+        self.props.name = "html-container"
+
+        self.type = type
+
+        self.label = str(len(self.content)) + " chars"
+
+class HtmlContainer_Webview(DefaultContainer):
     def __init__(self, filepath, type, app, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -1171,6 +1212,10 @@ class HtmlContainer(DefaultContainer):
         webview.props.expand = True
         webview.props.can_focus = False
         # webview.props.sensitive = True
+        websettings = webview.get_settings()
+
+        if hasattr(websettings, "set_hardware_acceleration_policy"):
+            websettings.set_hardware_acceleration_policy(WebKit2.HardwareAccelerationPolicy.ALWAYS)
 
         # print(webview.get_child())
         css_bg_color = app.utils.get_css_background_color(self.content)
@@ -1479,12 +1524,13 @@ class FilesContainerPopover(Gtk.Popover):
         icon.props.pixbuf = scaled_pixbuf
         return icon
 
-
 # ----------------------------------------------------------------------------------------------------
 
-class SpreadsheetContainer(HtmlContainer):
+class SpreadsheetContainer(HtmlContainer_Webview):
     def __init__(self, filepath, type, app, *args, **kwargs):
-        super().__init__(filepath, type, app)
+        thumbnail = os.path.splitext(filepath)[0]+'-thumb.png'
+        super().__init__(thumbnail, type, app)
+        # super().__init__(filepath, type, app)
 
         self.props.name = "spreadsheet-container"
 

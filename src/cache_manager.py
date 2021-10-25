@@ -361,12 +361,15 @@ class CacheManager():
 
             # save thumbnail if available
             if thumbnail is not None:
-                file = open(temp_cache_thumbnail_uri,"wb")
-                file.write(thumbnail.get_data())
-                file.close()
+                if content_type == "html":
+                    self.app.utils.do_webview_screenshot(uri=cache_uri, out_file_path=temp_cache_thumbnail_uri)
+                else:
+                    file = open(temp_cache_thumbnail_uri,"wb")
+                    file.write(thumbnail.get_data())
+                    file.close()
                 cache_thumbnail_file = checksum + "-thumb" + ".png"
                 cache_thumbnail_uri = self.cache_filedir + '/' + cache_thumbnail_file
-                os.renames(temp_cache_thumbnail_uri, cache_thumbnail_uri)
+                GLib.timeout_add(250, os.renames, temp_cache_thumbnail_uri, cache_thumbnail_uri) #add timeout for it to catchup and now the temp file is there
             
             from datetime import datetime
             if "http" in type:
@@ -404,7 +407,8 @@ class CacheManager():
             if len(self.check_duplicate(checksum)) == 0:
                 self.add_record(record) # add to database
                 new_record = self.select_record(self.db_cursor.lastrowid)[0] # prepare record for gui
-                clips_view.new_clip(new_record) # add to gui
+                # clips_view.new_clip(new_record) # add to gui
+                GLib.timeout_add(250, clips_view.new_clip, new_record) # add to gui
             else:
                 self.update_cache_on_recopy(checksum)
 

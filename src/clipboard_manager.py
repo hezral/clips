@@ -174,7 +174,10 @@ class ClipboardManager():
 
                         if proceed:
                             if thumbnail:
-                                thumbnail = clipboard.wait_for_contents(Gdk.Atom.intern('image/png', False))
+                                if content_type == "html":
+                                    thumbnail = True
+                                else:
+                                    thumbnail = clipboard.wait_for_contents(Gdk.Atom.intern('image/png', False))
                             else:
                                 thumbnail = None
 

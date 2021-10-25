@@ -1457,3 +1457,63 @@ def run_on_host(application_id):
     except:
         print("error")
 
+#-------------------------------------------------------------------------------------------------------
+
+def do_webview_screenshot(uri, out_file_path):
+    """
+    function to load html/url in webview and save snapshot of the full page in png
+    uri: can be local uri like a html file, or internet url
+    out_file_path: full path to the png file export
+    """
+    import os
+    import gi
+    gi.require_version('Gtk', '3.0')
+    gi.require_version('WebKit2', '4.0')
+    from gi.repository import Gtk, WebKit2, GLib
+
+    def get_snapshot(webview, result, callback, *args):
+        snapshot = webview.get_snapshot_finish(result)
+        snapshot.write_to_png(out_file_path)
+        # offscreen_window.destroy()
+
+    def loaded_handler(webview, event):
+        # print(locals())
+        if event.value_name == "WEBKIT_LOAD_FINISHED":
+            try:
+                webview.get_snapshot(WebKit2.SnapshotRegion.FULL_DOCUMENT, WebKit2.SnapshotOptions.TRANSPARENT_BACKGROUND, None, get_snapshot, None)
+            except:
+                import traceback
+                traceback.print_exc()
+                pass
+    
+    webview = WebKit2.WebView()
+    webview.props.zoom_level = 1
+    webview.props.expand = True
+    webview.connect("load-changed", loaded_handler)
+
+    file = open(uri, "r")
+    alt_file = open(uri.replace("html", "txt"), "r")
+    
+    content = file.read()
+    webview.load_html(content)
+
+    if os.path.exists(alt_file):
+        lines = alt_file.readlines()
+        line_char_counts = []
+        for line in lines:
+            line_chars = line.split(' ')
+            line_char_counts.append(len(' '.join(line_chars)))
+        
+        if max(line_char_counts) < 50:
+            snapshot_width = 256
+        elif max(line_char_counts) < 100:
+            snapshot_width = 512
+        else:
+            snapshot_width = 1024
+    else:
+        snapshot_width = 256
+
+    offscreen_window = Gtk.OffscreenWindow()
+    offscreen_window.set_size_request(snapshot_width, 10)
+    offscreen_window.add(webview)
+    offscreen_window.show_all()

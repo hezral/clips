@@ -39,16 +39,16 @@ excluded_targets = (Gdk.Atom.intern('TIMESTAMP', False),
 
 # office types
 word_libreoffice_target = ('application/x-openoffice-embed-source-xml;windows_formatname="Star Embed Source (XML)"', "odt", "LibreOffice Writer", "office/word", False)
-spreadsheet_libreoffice_target = ('application/x-openoffice-sylk;windows_formatname="Sylk"', "ods", "LibreOffice Calc", "office/spreadsheet", False) # use this to differentiate since all libreoffice target using same Gdk.Atom target
+spreadsheet_libreoffice_target = ('application/x-openoffice-sylk;windows_formatname="Sylk"', "ods", "LibreOffice Calc", "office/spreadsheet", True) # use this to differentiate since all libreoffice target using same Gdk.Atom target
 slides_libreoffice_target = ('application/x-openoffice-drawing;windows_formatname="Drawing Format"', "odp", "LibreOffice Impress", "office/presentation", True) # use this to differentiate since all libreoffice target using same Gdk.Atom target
 
 word_wpsoffice_target = ("Kingsoft WPS 9.0 Format", "rtf", "WPS Writer", "office/word", False)
-spreadsheet_wpsoffice_target = ("WPS Spreadsheets 6.0 Format", "xlsx", "WPS Spreadsheets", "office/spreadsheet", False)
+spreadsheet_wpsoffice_target = ("WPS Spreadsheets 6.0 Format", "xlsx", "WPS Spreadsheets", "office/spreadsheet", True)
 slides_wpsoffice_target = ("WPS Drawing Shape Format", "pptx", "WPS Presentation", "office/presentation", True)
 slidepage_wpsoffice_target = ("PowerPoint 14.0 Slides Package", "pptx", "WPS Presentation", "office/presentation", True)
 
 # html types
-html_target = ("text/html", "html", "HTML Formt", "html", False) # chrome, firefox, any app capable of copying html content
+html_target = ("text/html", "html", "HTML Formt", "html", True) # chrome, firefox, any app capable of copying html content
 # html_webkit_target = ("org.webkitgtk.WebKit.custom-pasteboard-data", "html", "HTML Format for Epiphany", "html", False) # epiphany
 
 # image types
