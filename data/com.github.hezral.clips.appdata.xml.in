@@ -61,16 +61,13 @@
   </content_rating>
 
   <releases>
-    <release version="1.0.4" date="2021-10-17">
+    <release version="1.0.5" date="2021-10-26">
       <description>
-        <p>*New* Quick Paste: copy and paste to previous active application</p>
-        <p>*New* "What's New" button: Check latest release details</p>
-        <p>*New* Search-as-you-type: Begin typing and search will activate</p>
-        <p>*Improved* Use down key to move from search field to search results</p>
-        <p>*Experimental* Shake-to-reveal: Shake your mouse to open Clips</p>
-        <p>Refactored and improved Persistent Mode</p>
-        <p>Improved error handling on multiple areas</p>
-        <p>Refactored, clean-ups on multiple areas</p>
+        <p>*New* Run/Trigger shortcut keys will show/hide Clips depending if its visible or not</p>
+        <p>*New* Hover on Clips total to see tooltip of total clip types</p>
+        <p>*Improved* Html clip types causing performance and resource issues</p>
+        <p>*Fixed* Search-as-you-type behaviour</p>
+        <p>*Fixed* App source icon error if app is not installed</p>
       </description>
     </release>
   </releases>
