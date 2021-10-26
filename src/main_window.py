@@ -197,7 +197,8 @@ class ClipsWindow(Gtk.ApplicationWindow):
         self.clipsapp_toggle.props.has_tooltip = True
         self.clipsapp_toggle.props.can_focus = False
         self.clipsapp_toggle.props.tooltip_text = "Clipboard Monitoring: Enabled"
-        self.clipsapp_toggle.connect("clicked", self.app.on_clipsapp_action)
+        # self.clipsapp_toggle.connect("clicked", self.app.on_clipsapp_action)
+        self.clipsapp_toggle.connect("button-press-event", self.on_button_press)
         
         self.passwordprotect_toggle = Gtk.Button(image=Gtk.Image().new_from_icon_name("com.github.hezral.clips-protect-symbolic", Gtk.IconSize.SMALL_TOOLBAR))
         self.passwordprotect_toggle.props.name = "app-action-protect"
@@ -353,6 +354,10 @@ class ClipsWindow(Gtk.ApplicationWindow):
         else:
             self.searchentry.props.sensitive = False
         
+    def on_button_press(self, button, eventbutton):
+
+        if eventbutton.button == 1:
+            self.app.on_clipsapp_action()
     def update_total_clips_label(self, event, count=1):
         total_clips = int(self.total_clips_label.props.label.split(": ")[1])
         if event == "add":
