@@ -987,7 +987,6 @@ class ImageContainer(DefaultContainer):
 
         if self.alpha and "thumb" not in filepath:
             self.get_style_context().add_class("checkerboard")
-            self.props.halign = self.props.valign = Gtk.Align.START
 
         self.ratio_h_w = self.pixbuf_original_height / self.pixbuf_original_width
         self.ratio_w_h = self.pixbuf_original_width / self.pixbuf_original_height
