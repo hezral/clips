@@ -524,7 +524,6 @@ class CacheManager():
                     os.renames(encrypted_file, cache_file)
                     return os.path.split(cache_file)[1]
 
-
     def reset_protected_clips(self, password):
         protected = "yes"
         data_param = (protected, )
