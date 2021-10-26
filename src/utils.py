@@ -1494,12 +1494,13 @@ def do_webview_screenshot(uri, out_file_path):
     webview.connect("load-changed", loaded_handler)
 
     file = open(uri, "r")
-    alt_file = open(uri.replace("html", "txt"), "r")
+    alt_file_uri = uri.replace("html", "txt")
     
     content = file.read()
     webview.load_html(content)
 
-    if os.path.exists(alt_file):
+    if os.path.exists(alt_file_uri):
+        alt_file = open(uri.replace("html", "txt"), "r")
         lines = alt_file.readlines()
         line_char_counts = []
         for line in lines:
