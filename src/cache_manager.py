@@ -484,6 +484,14 @@ class CacheManager():
         records = self.db_cursor.fetchall()
         return records
 
+    def get_total_clips_by_type(self):
+        sqlite_with_param = '''
+            SELECT type, count(id) FROM 'ClipsDB' group by type
+            '''
+        self.db_cursor.execute(sqlite_with_param)
+        records = self.db_cursor.fetchall()
+        return records
+
     def get_data_for_liststore(self):
         sqlite_with_param = '''
             SELECT distinct type FROM 'ClipsDB'

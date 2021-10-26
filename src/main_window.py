@@ -180,6 +180,8 @@ class ClipsWindow(Gtk.ApplicationWindow):
 
     def generate_statusbar(self):
         self.total_clips_label = Gtk.Label("Clips: {total}".format(total=self.props.application.total_clips))
+        self.total_clips_label.props.has_tooltip = True
+        self.total_clips_label.connect("query-tooltip", self.on_total_clips_tooltip)
         status = Gtk.Grid()
         status.props.name = "app-statusbar"
         status.props.halign = Gtk.Align.START
@@ -358,3 +360,28 @@ class ClipsWindow(Gtk.ApplicationWindow):
         elif event == "delete":
             total_clips = total_clips - count
         self.total_clips_label.props.label = "Clips: {total}".format(total=total_clips)
+
+    def on_total_clips_tooltip(self, widget, x, y, keyboard_mode, tooltip):
+        grid = Gtk.Grid()
+        grid.props.column_spacing = 4
+        grid.props.row_spacing = 2
+
+        total_clips_by_type = self.app.cache_manager.get_total_clips_by_type()
+        i = 0
+        j = 0
+        for clip_type in total_clips_by_type:
+            type_label = Gtk.Label("{0}: ".format(clip_type[0]))
+            type_label.props.halign = Gtk.Align.END
+            type_label.props.expand = True
+            total_label = Gtk.Label(clip_type[1])
+            total_label.props.halign = Gtk.Align.START
+            total_label.props.expand = True
+
+            grid.attach(type_label, i, j, 1, 1)
+            grid.attach(total_label, i+1, j, 1, 1)
+            j = j + 1
+
+        grid.show_all()
+        tooltip.set_custom(None)
+        tooltip.set_custom(grid)
+        return True
