@@ -548,23 +548,23 @@ class ClipsContainer(Gtk.EventBox):
         self.source_icon_revealer.add(icon)
         self.source_icon_revealer.props.can_focus = False
         
-        clip_action.attach(reveal_action, 0, 0, 1, 1)
+        clip_action.attach(reveal_action, 4, 0, 1, 1)
 
         if "yes" in self.protected:
-            clip_action.attach(protect_action, 1, 0, 1, 1)
+            clip_action.attach(protect_action, 2, 0, 1, 1)
         else:
-            clip_action.attach(view_action, 1, 0, 1, 1)
+            clip_action.attach(view_action, 2, 0, 1, 1)
             if "color" in self.type or "spreadsheet" in self.type or "presentation" in self.type:
                 view_action.props.sensitive = False
                 view_action.get_style_context().add_class("clip-action-disabled")
 
         if "html" in self.type:
-            clip_action.attach(copy_formatted_action, 2, 0, 1, 1)
-            clip_action.attach(copy_action, 3, 0, 1, 1)
+            clip_action.attach(copy_formatted_action, 0, 0, 1, 1)
+            clip_action.attach(copy_action, 1, 0, 1, 1)
         else:
-            clip_action.attach(copy_action, 2, 0, 1, 1)
+            clip_action.attach(copy_action, 0, 0, 1, 1)
 
-        clip_action.attach(delete_action, 4, 0, 1, 1)
+        clip_action.attach(delete_action, 3, 0, 1, 1)
 
         self.fuzzytimestamp_label = self.generate_fuzzytimestamp_label()
         clip_action.attach(self.fuzzytimestamp_label, 5, 0, 1, 1)
