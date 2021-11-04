@@ -1164,14 +1164,17 @@ class HtmlContainer(ImageContainer):
         self.content = self.content.read()
 
         css_bg_color = app.utils.get_css_background_color(self.content)
+        css_txt_color = app.utils.get_css_text_color(self.content)
 
+        # if css_bg_color is not None and css_bg_color != css_txt_color:
         if css_bg_color is not None:
             rgb, a = app.utils.to_rgb(css_bg_color)
             color_code = "rgba({red},{green},{blue},{alpha})".format(red=str(rgb[0]),green=str(rgb[1]),blue=str(rgb[2]),alpha=str(a))
         else:
             color_code = "@theme_base_color"
 
-        html_content_css = ".html-container-bg {background-color: " + color_code + ";}"
+        html_content_css = ".html-container-bg {{background-color: {0};}}".format(color_code)
+
         provider = Gtk.CssProvider()
         provider.load_from_data(bytes(html_content_css.encode()))
 
