@@ -162,9 +162,9 @@ class Application(Gtk.Application):
         self.create_action("info", self.on_clip_actions, "<Ctrl>I")
         self.create_action("view", self.on_clip_actions, "<Ctrl>V")
         self.create_action("copy", self.on_clip_actions, "<Ctrl>C")
-        self.create_action("copy-plaintext", self.on_clip_actions, "<Ctrl><Shift>C")
+        self.create_action("copy-plaintext", self.on_clip_actions, "<Alt>C")
         self.create_action("delete", self.on_clip_actions, "<Ctrl>D")
-        self.create_action("force_delete", self.on_clip_actions, "<Ctrl><Shift>D")
+        self.create_action("force_delete", self.on_clip_actions, "<Alt>D")
         self.create_action("quick_copy1", self.on_clip_actions, "<Ctrl>1")
         self.create_action("quick_copy2", self.on_clip_actions, "<Ctrl>2")
         self.create_action("quick_copy3", self.on_clip_actions, "<Ctrl>3")
@@ -243,7 +243,7 @@ class Application(Gtk.Application):
                 print(datetime.now(), "clipboard monitoring disabled")
             except:
                 print(datetime.now(), "clipboard monitoring disabling failed")
-        elif self.cache_manager.clipboard_monitoring is False or param is "disable":
+        elif self.cache_manager.clipboard_monitoring is False or param == "disable":
             try:
                 self.clipboard_manager.clipboard.connect("owner-change", self.cache_manager.update_cache, self.clipboard_manager)
                 self.cache_manager.clipboard_monitoring = True

@@ -161,7 +161,7 @@ class InfoView(Gtk.Grid):
             flowbox.add(help_clipsapp_toggle)
             flowbox.add(help_settings)
 
-            help_clip_extra_actions = HelpSubView(prefer_dark_style, image_name="help_clip_extra_actions", subtitle_text="Force delete & Copy plaintext")
+            help_clip_extra_actions = HelpSubView(prefer_dark_style, image_name="help_clip_extra_actions", subtitle_text="Copy plaintext & Force delete")
             flowbox.add(help_clip_extra_actions)
 
             for child in flowbox.get_children():
