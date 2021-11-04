@@ -330,6 +330,19 @@ class CacheManager():
                 file.write(alt_content.get_data())
                 file.close()
 
+                # condition for html content where bg and text is same color
+                # file_read = open(temp_cache_uri, "r")
+                # content = file_read.read()
+                # css_bg_color = self.app.utils.get_css_background_color(content)
+                # css_txt_color = self.app.utils.get_css_text_color(content)
+                # if css_bg_color == css_txt_color:
+                #     new_content = content.replace("background-color: {0}".format(css_bg_color), "background-color: rgb(255,255,255)")
+                #     new_content = new_content.replace("color: {0}".format(css_txt_color), "color: none")
+                #     file_read.close()
+                #     file_write = open(temp_cache_uri,"w")
+                #     file_write.write(new_content)
+                #     file_write.close()
+
             # get checksum value
             checksum = self.get_checksum(open(temp_cache_uri, 'rb').read())
 
