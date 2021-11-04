@@ -1,12 +1,7 @@
-com.github.hezral.clips (1.0.4) precise; urgency=low
+com.github.hezral.clips (1.0.6) precise; urgency=low
 
-  * *New* Quick Paste: copy and paste to previous active application
-  * *New* "What's New" button: Check latest release details
-  * *New* Search-as-you-type: Begin typing and search will activate
-  * *Improved* Use down key to move from search field to search results
-  * *Experimental* Shake-to-reveal: Shake your mouse to open Clips
-  * Refactored and improved Persistent Mode
-  * Improved error handling on multiple areas
-  * Refactored, clean-ups on multiple areas
+  * *New* Shortcut keys changed to CTRL for more natural use, credits to @marcinjahn
+  * Improved* Clip action icons arranged for better context, credits to @marcinjahn
+  * Improved* Html clip thumbnails quality
 
- -- Adi Hezral <hezral@gmail.com>  Mon, 17 Oct 2021 00:00:00 +0800
+ -- Adi Hezral <hezral@gmail.com>  Thu, 4 Nov 2021 00:00:00 +0800
