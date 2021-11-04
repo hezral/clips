@@ -1503,6 +1503,6 @@ def do_webview_screenshot(uri, out_file_path):
         snapshot_width = 256
 
     offscreen_window = Gtk.OffscreenWindow()
-    offscreen_window.set_size_request(snapshot_width, 10)
+    offscreen_window.set_size_request(snapshot_width, 160)
     offscreen_window.add(webview)
     offscreen_window.show_all()
