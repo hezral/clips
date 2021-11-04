@@ -959,13 +959,36 @@ def get_css_background_color(str):
     import re
     regex = r"(?:background-color)\:(.*?)\;"
     result = re.search(regex, str)
-    
+
     if result is not None:
         css_background_color = re.search(regex, str).group(1).strip()
 
         for regex in color_regex:
             if validate_string_with_regex(css_background_color, regex[1]):
                 return css_background_color
+
+def get_css_text_color(str):
+    '''
+    function to extract background-color from html files
+    https://stackoverflow.com/a/4894134/14741406
+    '''
+    HEX = ("hex", r"^#([\da-f]{3}|[\dA-F]{3}){1,2};?\s?$")
+    RGB = ("rgb", r"^[Rr][Gg][Bb]\(\d{1,3}%?(,\s?\d{1,3}%?){2}\);?\s?$")
+    RGBA = ("rgba", r"^[Rr][Gg][Bb][Aa]\((\d{1,3}%?,\s?){3}(1|0?\.\d+)\);?\s?$")
+    HSL = ("hsl", r"^[Hh][Ss][Ll]\(\d{1,3}%?(,\s?\d{1,3}%?){2}\);?\s?$")
+    HSLA = ("hsla", r"^[Hh][Ss][Ll][Aa]\((\d{1,3}%?,\s?){3}(1|0?\.\d+)\);?\s?$")
+    color_regex = (HEX, RGB, RGBA, HSL, HSLA)
+    
+    import re
+    regex = r"(?:[^\-]color)\:(.*?)\;"
+    result = re.search(regex, str)
+
+    if result is not None:
+        css_text_color = re.search(regex, str).group(1).strip()
+
+        for regex in color_regex:
+            if validate_string_with_regex(css_text_color, regex[1]):
+                return css_text_color
 
 def to_rgb(color_string):
     '''
