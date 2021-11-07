@@ -9,19 +9,22 @@ finish-args:
   - --socket=fallback-x11
   # network access for clips to retrieve basic info on URLs
   - --share=network
-  # read-only access to get installed apps and app icons, since clips uses app name matching to know what app a content was copied from
-  - --filesystem=xdg-data
-  - --filesystem=xdg-data/flatpak/exports/share:ro
+ # read-only access to get app icons based on .desktop files
+  - --filesystem=xdg-data:ro
   - --filesystem=xdg-data/flatpak/app:ro
-  - --filesystem=~/.local/share/flatpak/exports/share/applications:ro
-  - --filesystem=~/.local/share/applications:ro
-  - --filesystem=host:ro
   - --filesystem=/usr/share:ro
   - --filesystem=/usr/local/share:ro
-  - --filesystem=/var/lib/flatpak/exports/share:ro
+  - --filesystem=/var/lib/flatpak/exports/share/icons:ro
+  # read-only access to get installed apps based on .desktop files
+  - --filesystem=host:ro
+  - --filesystem=~/.local/share/applications:ro
+  - --filesystem=~/.local/share/flatpak/exports/share/applications:ro
+  - --filesystem=xdg-data/flatpak/exports/share:ro
+  - --filesystem=/var/lib/flatpak/app:ro
+  - --filesystem=/var/lib/flatpak/exports/share/applications:ro
   - --filesystem=/var/lib/snapd/desktop:ro
   # needed for perfers-color-scheme
-  - --system-talk-name=org.freedesktop.Accounts
+  # - --system-talk-name=org.freedesktop.Accounts
   # keyring access for setting password for clips protection
   - --talk-name=org.freedesktop.secrets
   # access contractor
