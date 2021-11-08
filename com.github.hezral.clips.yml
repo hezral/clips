@@ -7,28 +7,23 @@ finish-args:
   - --share=ipc
   - --socket=wayland
   - --socket=fallback-x11
+
   # network access for clips to retrieve basic info on URLs
   - --share=network
- # read-only access to get app icons based on .desktop files
-  - --filesystem=xdg-data:ro
-  - --filesystem=xdg-data/flatpak/app:ro
-  - --filesystem=/usr/share:ro
-  - --filesystem=/usr/local/share:ro
-  - --filesystem=/var/lib/flatpak/exports/share/icons:ro
-  # read-only access to get installed apps based on .desktop files
+
+  # read-only access to get installed app and icons based on .desktop files
   - --filesystem=host:ro
-  - --filesystem=~/.local/share/applications:ro
-  - --filesystem=~/.local/share/flatpak/exports/share/applications:ro
-  - --filesystem=xdg-data/flatpak/exports/share:ro
+  - --filesystem=xdg-data:ro
+  - --filesystem=xdg-data/applications:ro
+  - --filesystem=xdg-data/icons:ro
   - --filesystem=/var/lib/flatpak/app:ro
-  - --filesystem=/var/lib/flatpak/exports/share/applications:ro
   - --filesystem=/var/lib/snapd/desktop:ro
-  # needed for perfers-color-scheme
-  # - --system-talk-name=org.freedesktop.Accounts
+  - --filesystem=/var/lib/flatpak/exports/share/applications:ro
+  - --filesystem=/var/lib/flatpak/exports/share/icons:ro
+
   # keyring access for setting password for clips protection
   - --talk-name=org.freedesktop.secrets
-  # access contractor
-  # - --talk-name=org.elementary.Contractor
+
 modules:
   - name: requests
     buildsystem: simple
