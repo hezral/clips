@@ -184,7 +184,6 @@ def get_all_apps(app=None):
                             desktop_file_path = os.path.join(GLib.get_home_dir(), ".local/share/flatpak", os.path.realpath(desktop_file.get_symlink_target()).replace("/home/", ""))
 
                     if desktop_file_path != "":
-                        # print(datetime.now(), "Read start {0}".format(desktop_file_path))
                         try:
                             with open(desktop_file_path) as file:
                                 lines = file.readlines()
@@ -194,6 +193,7 @@ def get_all_apps(app=None):
                             app_icon = re.search("Icon=(?P<name>.+)*", contents)
                             startup_wm_class = re.search("StartupWMClass=(?P<name>.+)*", contents)
                             no_display = re.search("NoDisplay=(?P<name>.+)*", contents)
+                            app_exec = re.search("Exec=(?P<name>.+)*", contents)
                             flatpak = re.search("X-Flatpak=(?P<name>.+)*", contents)
 
                             if app_name != None:
@@ -216,6 +216,9 @@ def get_all_apps(app=None):
                                 else:
                                     no_display = False
 
+                            if app_exec != None:
+                                app_exec = app_exec.group(1)
+
                             if flatpak != None:
                                 flatpak = True
                             else:
@@ -230,17 +233,12 @@ def get_all_apps(app=None):
                                     else:
                                         all_apps[app_name] = [app_icon, startup_wm_class, no_display, desktop_file_path]
                             
-                            # print(datetime.now(), "Read complete {0}".format(desktop_file_path))
                         except:
                             print(datetime.now(), "Unable to read {0} application info".format(desktop_file_path))
 
     if app != None:
         return all_apps[app]
     else:
-        # print("total apps:", len(all_apps))
-        # for app in sorted(all_apps.keys()):
-        #     if "code" in app.lower():
-        #         print(app, all_apps[app])
         return all_apps
 
 def get_active_appinfo_xprop():
