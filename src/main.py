@@ -54,6 +54,7 @@ class Application(Gtk.Application):
         self.icon_theme = Gtk.IconTheme.get_default()
         self.icon_theme.prepend_search_path("/run/host/usr/share/pixmaps")
         self.icon_theme.prepend_search_path("/run/host/usr/share/icons")
+        self.icon_theme.prepend_search_path("/var/lib/flatpak/exports/share/icons")
         self.icon_theme.prepend_search_path(os.path.join(GLib.get_home_dir(), ".local/share/flatpak/exports/share/icons"))
         self.icon_theme.prepend_search_path(os.path.join(os.path.dirname(__file__), "data", "icons"))
 
