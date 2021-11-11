@@ -175,6 +175,7 @@ def get_all_apps(app=None):
     app_icon = None
     startup_wm_class = None
     no_display = None
+    app_exec = None
     duplicate_app = 0
 
     flatpak_system_app_dirs = "/run/host/usr/share/applications"
@@ -186,6 +187,14 @@ def get_all_apps(app=None):
     native_user_app_dirs = os.path.join(GLib.get_home_dir(), ".local/share/applications")
     desktop_file_dirs = [native_system_app_dirs, native_system_app_alt_dirs, flatpak_system_app_dirs, native_system_flatpak_app_dirs, native_snap_app_dirs, native_user_flatpak_app_dirs, native_user_app_dirs]
 
+    # system_app_dirs = "/run/host/usr/share/applications"
+    # # system_app_alt_dirs = "/usr/local/share/applications"
+    # snap_app_dirs = "/var/lib/snapd/desktop"
+    # system_flatpak_app_dirs = "/var/lib/flatpak/exports/share/applications"
+    # user_flatpak_app_dirs = os.path.join(GLib.get_home_dir(), ".local/share/flatpak/exports/share/applications")
+    # user_app_dirs = os.path.join(GLib.get_home_dir(), ".local/share/applications")
+    # desktop_file_dirs = [system_app_dirs, system_flatpak_app_dirs, snap_app_dirs, user_app_dirs, user_flatpak_app_dirs]
+
     for dir in desktop_file_dirs:
         if os.path.exists(dir):
             d = Gio.file_new_for_path(dir)
@@ -193,6 +202,8 @@ def get_all_apps(app=None):
             for desktop_file in files:
                 if ".desktop" in desktop_file.get_name():
                     desktop_file_path = ""
+                    
+                    # print(desktop_file.get_content_type(), os.path.join(dir, desktop_file.get_name()))
 
                     if "application/x-desktop" in desktop_file.get_content_type():
                         desktop_file_path = os.path.join(dir, desktop_file.get_name())
@@ -247,10 +258,9 @@ def get_all_apps(app=None):
                                     if app_name in all_apps:
                                         duplicate_app += 1
                                         app_name = app_name + "#{0}".format(str(duplicate_app))
-                                        all_apps[app_name] = [app_icon, startup_wm_class, no_display, desktop_file_path]
+                                        all_apps[app_name] = [app_icon, startup_wm_class, no_display, desktop_file_path, app_exec, flatpak]
                                     else:
-                                        all_apps[app_name] = [app_icon, startup_wm_class, no_display, desktop_file_path]
-                            
+                                        all_apps[app_name] = [app_icon, startup_wm_class, no_display, desktop_file_path, app_exec, flatpak]
                         except:
                             print(datetime.now(), "Unable to read {0} application info".format(desktop_file_path))
 
@@ -1417,72 +1427,6 @@ def do_authentication(action, password=None):
         return set_password(password)
     elif action == "reset":
         return get_password(), set_password(password)
-
-#-------------------------------------------------------------------------------------------------------
-
-def run_keyboard_shortcut(modifier, key):
-    '''
-    Function to trigger a keyboard shortcut
-    '''
-    # ported from Clipped: https://github.com/davidmhewitt/clipped/blob/edac68890c2a78357910f05bf44060c2aba5958e/src/ClipboardManager.vala
-
-    def perform_key_event(accelerator, press, delay):
-        import Xlib
-        from Xlib import X
-        from Xlib.display import Display
-        from Xlib.ext.xtest import fake_input
-        from Xlib.protocol.event import KeyPress, KeyRelease
-        import time
-
-        import gi
-        gi.require_version('Gtk', '3.0')
-        from gi.repository import Gtk, Gdk, GdkX11
-
-        keysym, modifiers = Gtk.accelerator_parse(accelerator)
-        display = Display()
-
-        keycode = display.keysym_to_keycode(keysym)
-
-        if press:
-            event_type = X.KeyPress
-        else:
-            event_type = X.KeyRelease
-
-        if keycode != 0:
-            if 'GDK_CONTROL_MASK' in modifiers.value_names:
-                modcode = display.keysym_to_keycode(Gdk.KEY_Control_L)
-                fake_input(display, event_type, modcode, delay)
-
-            if 'GDK_SHIFT_MASK' in modifiers.value_names:
-                modcode = display.keysym_to_keycode(Gdk.KEY_Shift_L)
-                fake_input(display, event_type, modcode, delay)
-
-            if 'GDK_SUPER_MASK' in modifiers.value_names:
-                modcode = display.keysym_to_keycode(Gdk.KEY_Super_L)
-                fake_input(display, event_type, modcode, delay)
-
-            fake_input(display, event_type, keycode, delay)
-            display.sync()
-
-    accelerator = "<{0}>{1}".format(modifier,key)
-    perform_key_event("<Super>C", True, 100)
-    perform_key_event("<Super>C", False, 0)
-
-def run_on_host(application_id):
-    ''' Function to copy files to clipboard '''
-    from subprocess import Popen, PIPE
-
-    try:
-        # run_executable = Popen(['ls', '-l', '/proc'], stdout=PIPE)
-        # stdout, stderr = run_executable.communicate()
-        Popen(['flatpak-spawn', '--host', 'gtk-launch', application_id])
-        # Popen(['flatpak-spawn', '--host', 'gtk-launch', 'com.github.hezral.clips'])
-        # new = stdout.splitlines()
-        # print(new)
-        # for i in new:
-            # print(i)
-    except:
-        print("error")
 
 #-------------------------------------------------------------------------------------------------------
 

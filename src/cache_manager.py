@@ -321,7 +321,6 @@ class CacheManager():
                 source = 'application'
 
             # save content in temp
-            print(temp_cache_uri)
             file = open(temp_cache_uri,"wb")
             file.write(content.get_data())
             file.close()
