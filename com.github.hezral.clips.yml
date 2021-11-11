@@ -25,6 +25,14 @@ finish-args:
   - --talk-name=org.freedesktop.secrets
 
 modules:
+  - name: chardet
+    buildsystem: simple
+    build-options:
+      build-args:
+        - --share=network
+    build-commands:
+      - "pip3 install --prefix=${FLATPAK_DEST} chardet"
+
   - name: requests
     buildsystem: simple
     build-options:
