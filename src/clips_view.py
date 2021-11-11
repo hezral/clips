@@ -37,6 +37,8 @@ class ClipsView(Gtk.Grid):
         self.flowbox.props.halign = Gtk.Align.FILL
         self.flowbox.set_sort_func(self.sort_flowbox)
         self.flowbox.connect("child-activated", self.on_child_activated)
+        self.flowbox.connect("add", self.on_child_count)
+        self.flowbox.connect("remove", self.on_child_count)
         
         scrolled_window = Gtk.ScrolledWindow()
         scrolled_window.props.expand = True
@@ -286,6 +288,15 @@ class ClipsView(Gtk.Grid):
         self.multi_select_mode = False
         if self.flowbox.get_child_at_index(self.current_selected_flowboxchild_index) is not None:
             self.flowbox.select_child(self.flowbox.get_child_at_index(self.current_selected_flowboxchild_index))
+
+    def on_child_count(self, flowbox, object):
+        if len(flowbox.get_children()) == 1:
+            flowbox.props.homogeneous = True
+            flowbox.props.max_children_per_line = 1
+        else:
+            flowbox.props.homogeneous = False
+            flowbox.props.max_children_per_line = 8
+
 
 # ----------------------------------------------------------------------------------------------------
 
