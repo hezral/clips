@@ -96,7 +96,7 @@ class SettingsView(Gtk.Grid):
         app_settings = SettingsGroup("Housekeeping", (auto_housekeeping_mode, auto_retention_period, run_houseekeeping_now, delete_all, ))
         self.flowbox.add(app_settings)
 
-        # exceptions -------------------------------------------------
+        # excluded apps -------------------------------------------------
         excluded_apps_list_values = self.gio_settings.get_value("excluded-apps").get_strv()
         excluded_apps_list = SubSettings(type="listbox", name="excluded-apps", label=None, sublabel=None, separator=False, params=(excluded_apps_list_values, ), utils=self.app.utils)
 
@@ -106,7 +106,7 @@ class SettingsView(Gtk.Grid):
         excluded = SettingsGroup("Excluded Apps", (excluded_apps, excluded_apps_list, ))
         self.flowbox.add(excluded)
 
-        # protected app -------------------------------------------------
+        # protected apps -------------------------------------------------
         protected_apps_list_values = self.gio_settings.get_value("protected-apps").get_strv()
         protected_apps_list = SubSettings(type="listbox", name="protected-apps", label=None, sublabel=None, separator=False, params=(protected_apps_list_values, ), utils=self.app.utils)
 
@@ -115,6 +115,16 @@ class SettingsView(Gtk.Grid):
 
         protected = SettingsGroup("Protected Apps", (protected_apps, protected_apps_list, ))
         self.flowbox.add(protected)
+
+        # file types  -------------------------------------------------
+        file_types_list_values = self.gio_settings.get_value("file-types").get_strv()
+        file_types_list = SubSettings(type="listbox", name="file-types", label=None, sublabel=None, separator=False, params=(file_types_list_values, ), utils=self.app.utils)
+
+        file_types = SubSettings(type="button", name="file-types", label="File types", sublabel="Copy events are excluded for types selected", separator=False, params=("Select type", Gtk.Image().new_from_icon_name("application-octet-stream", Gtk.IconSize.LARGE_TOOLBAR), ))
+        file_types.button.connect("clicked", self.on_button_clicked, (file_types_list, ))
+
+        filetype = SettingsGroup("File Types", (file_types, file_types_list, ))
+        self.flowbox.add(filetype)
 
         # others -------------------------------------------------
         add_shortcut = SubSettings(type="button", name="add-shortcut", label="Add Shortcut", sublabel="Launch with keyboard shortcut like ⌘+Ctrl+C\nSet with 'gtk-launch com.github.hezral.clips'", separator=True, params=(" Add", Gtk.Image().new_from_icon_name("com.github.hezral.clips", Gtk.IconSize.LARGE_TOOLBAR),))
@@ -206,10 +216,18 @@ class SettingsView(Gtk.Grid):
         name = button.get_name()
 
         if name == "excluded-apps" or name == "protected-apps":
-            app_chooser_popover = AppChooserPopover(params=(params[0], ))
+            content_type = "apps"
+            app_chooser_popover = ListChooserPopover(subsettings=params[0], content_type=content_type)
             app_chooser_popover.set_relative_to(button)
             app_chooser_popover.show_all()
             app_chooser_popover.popup()
+
+        if name == "file-types":
+            content_type = "file-types"
+            filetype_chooser_popover = ListChooserPopover(subsettings=params[0], content_type=content_type)
+            filetype_chooser_popover.set_relative_to(button)
+            filetype_chooser_popover.show_all()
+            filetype_chooser_popover.popup()
 
         if name == "delete-all":
             label = Gtk.Label(label="Attention! This action will delete all clips from the cache and no recovery")
@@ -471,16 +489,21 @@ class SubSettings(Gtk.Grid):
                 label.props.valign = Gtk.Align.CENTER
             self.attach(self.button, 1, 0, 1, 2)
 
-        if type == "listbox" and "-apps" in name:
+        if type == "listbox" and ("-apps" in name or "-types" in name):
             self.last_row_selected_idx = 0
             self.listbox = Gtk.ListBox()
             self.listbox.props.name = name
             self.listbox.connect("row-selected", self.on_row_selected)
             icon = None
             if params is not None:
-                for app in params[0]:
-                    app_name, icon_name = utils.get_appinfo(app)
-                    self.add_listboxrow(app_name, icon_name)
+                if "-apps" in name:
+                    for app in params[0]:
+                        app_name, icon_name = utils.get_appinfo(app)
+                        self.add_listboxrow(app_name, icon_name)
+                if "-types" in name:
+                    for type in params[0]:
+                        icon_name = utils.get_mimetype_icon(type)
+                        self.add_listboxrow(type, icon_name)
 
             self.scrolled_window = Gtk.ScrolledWindow()
             self.scrolled_window.props.shadow_type = Gtk.ShadowType.ETCHED_IN
@@ -493,7 +516,6 @@ class SubSettings(Gtk.Grid):
             self.checkbutton.props.name = name
             self.attach(self.checkbutton, 0, 0, 1, 2)
 
-        # separator ---
         if separator:
             row_separator = Gtk.Separator()
             row_separator.props.hexpand = True
@@ -587,11 +609,11 @@ class SubSettings(Gtk.Grid):
 
 # ----------------------------------------------------------------------------------------------------
 
-class AppChooserPopover(Gtk.Popover):
-    def __init__(self, params=None, *args, **kwargs):
+class ListChooserPopover(Gtk.Popover):
+    def __init__(self, subsettings=None, content_type=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.subsettings = params[0]
+        self.subsettings = subsettings
         self.subsettings_listbox = self.subsettings.listbox
 
         self.choose_button = Gtk.Button(label="Choose")
@@ -600,14 +622,14 @@ class AppChooserPopover(Gtk.Popover):
         self.choose_button.props.sensitive = False
         self.choose_button.props.margin = 6
         
-        self.app_listbox = AppListBox()
-        self.app_listbox.connect("row-selected", self.on_row_selected)
-        self.app_listbox.connect("row-activated", self.on_row_activated)
+        self.item_listbox = ItemsListBox(type=content_type)
+        self.item_listbox.connect("row-selected", self.on_row_selected)
+        self.item_listbox.connect("row-activated", self.on_row_activated)
 
         self.scrolled_window = Gtk.ScrolledWindow()
         self.scrolled_window.set_size_request(-1, 300)
         self.scrolled_window.props.expand = True
-        self.scrolled_window.add(self.app_listbox)
+        self.scrolled_window.add(self.item_listbox)
         # self.scrolled_window.connect("edge-overshot", self.on_edget_overshot)
 
         self.search_entry = Gtk.SearchEntry()
@@ -638,13 +660,13 @@ class AppChooserPopover(Gtk.Popover):
         self.add_selected()
 
     def on_button_clicked(self, button):
-        if self.app_listbox.get_selected_row() is not None:
+        if self.item_listbox.get_selected_row() is not None:
             self.add_selected()
         
     def add_selected(self, *args):
-        app_name = self.app_listbox.get_selected_row().app_name 
-        icon_name = self.app_listbox.get_selected_row().icon_name
-        self.subsettings.add_listboxrow(app_name, icon_name, add_new=True)
+        item_name = self.item_listbox.get_selected_row().item_name 
+        icon_name = self.item_listbox.get_selected_row().icon_name
+        self.subsettings.add_listboxrow(item_name, icon_name, add_new=True)
         self.popdown()
 
     def on_edget_overshot(self, *args):
@@ -656,20 +678,20 @@ class AppChooserPopover(Gtk.Popover):
         # }
 
     def on_search_entry_changed(self, search_entry):
-        self.app_listbox.invalidate_filter()
-        self.app_listbox.app_listbox_filter_func(search_entry)
+        self.item_listbox.invalidate_filter()
+        self.item_listbox.app_listbox_filter_func(search_entry)
 
 # ----------------------------------------------------------------------------------------------------
 
-class AppListBoxRow(Gtk.ListBoxRow):
-    def __init__(self, app_name, icon_name, *args, **kwargs):
+class ItemListBoxRow(Gtk.ListBoxRow):
+    def __init__(self, item_name, icon_name, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         icon_size = 24 * self.get_scale_factor()
         icon = Gtk.Image().new_from_icon_name(icon_name, Gtk.IconSize.LARGE_TOOLBAR)
         icon.set_pixel_size(icon_size)
 
-        label = Gtk.Label(app_name)
+        label = Gtk.Label(item_name)
 
         grid = Gtk.Grid()
         grid.props.margin = 6
@@ -679,55 +701,66 @@ class AppListBoxRow(Gtk.ListBoxRow):
 
         self.add(grid)
         self.props.name = "app-listboxrow"
-        self.app_name = app_name
+        self.item_name = item_name
         self.icon_name = icon_name
 
 # ----------------------------------------------------------------------------------------------------
 
-class AppListBox(Gtk.ListBox):
+class ItemsListBox(Gtk.ListBox):
 
     LOADING_COUNT = 100
     max_index = -1
     current_index = 0
     search_query = ""
     search_cancellable = None
+    list_items = None
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, type=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.apps = []
+        self.type = type
 
-        all_apps = utils.get_all_apps()
+        if type == "apps":
+            self.apps = []
+            all_apps = utils.get_all_apps()
+            for app in all_apps:
+                app_icon = all_apps[app][0]
+                if "#" in app:
+                    app_name = app.split("#")[0]
+                else:
+                    app_name = app
+                app = (app_name, app_icon)
+                self.apps.append(app)
+            self.list_items = self.apps
 
-        for app in all_apps:
-            app_icon = all_apps[app][0]
-            if "#" in app:
-                app_name = app.split("#")[0]
-            else:
-                app_name = app
-            app = (app_name, app_icon)
-            self.apps.append(app)
+        if type == "file-types":
+            self.content_types = []
+            all_content_types = Gio.content_types_get_registered()
+            for type in all_content_types:
+                type_icon = utils.get_mimetype_icon(type)
+                type_item = (type, type_icon)
+                self.content_types.append(type_item)
+            self.list_items = self.content_types
         
-        self.apps.sort(key=self.sort_apps)
-        self.max_index = len(self.apps) - 1
+        self.list_items.sort(key=self.sort_list)
+        self.max_index = len(self.list_items) - 1
 
-        for app in self.apps:
-            self.add(AppListBoxRow(app_name=app[0], icon_name=app[1]))
+        for item in self.list_items:
+            self.add(ItemListBoxRow(item_name=item[0], icon_name=item[1]))
 
-        self.props.name = "app-listbox"
-        
-        self.props.selection_mode = Gtk.SelectionMode.BROWSE
+        self.props.name = "items-listbox"
+        self.props.selection_mode = Gtk.SelectionMode.MULTIPLE
         self.props.activate_on_single_click = False
 
-    def sort_apps(self, val):
+    def sort_list(self, val):
         return val[0].lower()
 
     def sort_func(self, row_1, row_2, data, notify_destroy):
-        return row_1.app.name.lower() > row_2.app.name.lower()
+        return row_1.item_name.lower() > row_2.item_name.lower()
     
     def app_listbox_filter_func(self, search_entry):
         def filter_func(row, text):
-            if text.lower() in row.app_name.lower():
+            if text.lower() in row.item_name.lower():
                 return True
             else:
                 return False
@@ -749,3 +782,4 @@ class AppListBox(Gtk.ListBox):
 
         current_index = index
         self.show_all()
+

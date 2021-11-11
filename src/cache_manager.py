@@ -8,9 +8,11 @@ import sqlite3
 import tempfile
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, GLib, GdkPixbuf
+from gi.repository import Gtk, Gio, GLib, GdkPixbuf
 from urllib.parse import urlparse
 from datetime import datetime
+
+import chardet
 
 class CacheManager():
 
@@ -304,7 +306,7 @@ class CacheManager():
         data_tuple = clipboard_manager.clipboard_changed(clipboard, event)
 
         if data_tuple is not None:
-            target, content, source_app, source_icon, created, protected, thumbnail, file_extension, content_type, alt_content, alt_file_extension = data_tuple
+            target, content, source_app, source_icon, created, protected, thumbnail, file_extension, content_type, alt_content, alt_file_extension, additional_desc = data_tuple
 
             temp_filename = next(tempfile._get_candidate_names()) + tempfile.gettempprefix()
             type = content_type
@@ -319,9 +321,45 @@ class CacheManager():
                 source = 'application'
 
             # save content in temp
+            print(temp_cache_uri)
             file = open(temp_cache_uri,"wb")
             file.write(content.get_data())
             file.close()
+ 
+           # condition if certain file types is excluded from copy events
+            if 'files' in content_type:
+                lines = []
+                excluded_file_types_list_values = self.app.gio_settings.get_value("file-types").get_strv()
+                file_read = open(temp_cache_uri, "r")
+                line_content = file_read.readlines()
+
+                if len(line_content) == 1:
+                    line = line_content[0].replace("copy","").replace("file://","").strip().replace("%20", " ")
+                    if os.path.exists(line):
+                        mime_type, val = Gio.content_type_guess(line, data=None)
+                        if mime_type in excluded_file_types_list_values:
+                            return
+                else:
+                    for line in line_content:
+                            line = line.replace("copy","").replace("file://","").strip().replace("%20", " ")
+                            if os.path.exists(line):
+                                mime_type, val = Gio.content_type_guess(line, data=None)
+                                if mime_type not in excluded_file_types_list_values:
+                                    lines.append(line)
+                file_read.close()
+
+                if len(lines) != 0:
+                    file_write = open(temp_cache_uri, "w")
+                    i = 0
+                    for line in lines:
+                        if i == 0:
+                            line = "copyfile://{0}".format(line)
+                        else:
+                            line = "\nfile://{0}".format(line)
+                        file_write.write(line)
+                        i += 1
+
+                    file_write.close()
 
             # save alt_content in temp for html
             if alt_content is not None:
@@ -329,6 +367,7 @@ class CacheManager():
                 file = open(temp_alt_cache_uri,"wb")
                 file.write(alt_content.get_data())
                 file.close()
+
 
                 # condition for html content where bg and text is same color
                 # file_read = open(temp_cache_uri, "r")

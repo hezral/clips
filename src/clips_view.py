@@ -186,7 +186,6 @@ class ClipsView(Gtk.Grid):
             flowboxchild.get_children()[0].source_icon_revealer.set_reveal_child(True)
             flowboxchild.grab_focus()
             # flowboxchild.get_children()[0].on_clip_action(action="copy")
-            
 
     def on_child_multi_selected(self, flowbox, flowboxchild):
         for flowboxchild in self.flowbox.get_selected_children():
@@ -1264,16 +1263,16 @@ class FilesContainer(DefaultContainer):
 
         mime_type = None
         with open(filepath) as file:
-            for line_number, line_content in enumerate(file):
-                if "file://" in line_content:
-                    line_content = line_content.replace("copy","").replace("file://","").strip().replace("%20", " ")
-                    if os.path.exists(line_content):
-                        if os.path.isdir(line_content):  
+            file_content = file.readlines()
+            for line in file_content:
+                if "file://" in line:
+                    line = line.replace("copy","").replace("file://","").strip().replace("%20", " ")
+                    if os.path.exists(line):
+                        if os.path.isdir(line):  
                             mime_type = "inode/directory"
-                        elif os.path.isfile(line_content):  
-                            mime_type, val = Gio.content_type_guess(line_content, data=None)
-                        
-                        self.update_stack(line_content, mime_type)
+                        elif os.path.isfile(line):  
+                            mime_type, val = Gio.content_type_guess(line, data=None)
+                        self.update_stack(line, mime_type)
 
         self.props.name = "files-container"
         self.attach(self.iconstack_overlay, 0, 0, 1, 1)
@@ -1363,8 +1362,6 @@ class FilesContainer(DefaultContainer):
         icon.props.pixbuf = scaled_pixbuf
         return icon
 
-# ----------------------------------------------------------------------------------------------------
-
 class FilesContainerPopover(Gtk.Popover):
     def __init__(self, filepath, type, app, parent, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -1387,16 +1384,17 @@ class FilesContainerPopover(Gtk.Popover):
 
         mime_type = None
         with open(filepath) as file:
-            for line_number, line_content in enumerate(file):
-                if "file://" in line_content:
-                    line_content = line_content.replace("copy","").replace("file://","").strip().replace("%20", " ")
-                    if os.path.exists(line_content):
-                        if os.path.isdir(line_content):  
+            file_content = file.readlines()
+            for line in file_content:
+                if "file://" in line:
+                    line = line.replace("copy","").replace("file://","").strip().replace("%20", " ")
+                    if os.path.exists(line):
+                        if os.path.isdir(line):  
                             mime_type = "inode/directory"
-                        elif os.path.isfile(line_content):  
-                            mime_type, val = Gio.content_type_guess(line_content, data=None)
+                        elif os.path.isfile(line):  
+                            mime_type, val = Gio.content_type_guess(line, data=None)
                         
-                        self.update_stack(line_content, mime_type)
+                        self.update_stack(line, mime_type)
 
         # disable focus on flowboxchild items
         for child in self.flowbox.get_children():
