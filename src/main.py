@@ -121,15 +121,20 @@ class Application(Gtk.Application):
         GLib.idle_add(first_clip,clips[-1])
         time.sleep(0.01)
 
-        for clip in reversed(clips[-24:]):
+        for clip in reversed(clips[-25:]):
             GLib.idle_add(self.main_window.clips_view.new_clip, clip)
             print(datetime.now(), "loading {0}".format(clip[0]))
             time.sleep(0.01)
 
-        for clip in reversed(clips[:-24]):
+        for clip in reversed(clips[-50:-25]):
             GLib.idle_add(self.main_window.clips_view.new_clip, clip)
             print(datetime.now(), "loading {0}".format(clip[0]))
             time.sleep(0.05)
+
+        for clip in reversed(clips[:-50]):
+            GLib.idle_add(self.main_window.clips_view.new_clip, clip)
+            print(datetime.now(), "loading {0}".format(clip[0]))
+            time.sleep(0.10)
 
         print(datetime.now(), "finish load_clips")
 
