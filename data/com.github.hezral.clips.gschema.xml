@@ -72,6 +72,11 @@
             <summary>Exclude file types from Clips</summary>
             <description>These file types will not be included for clipboard events</description>
         </key>
+        <key type="as" name="keywords">
+            <default>[]</default>
+            <summary>Exclude keywords from Clips</summary>
+            <description>These keywords will not be included for clipboard events</description>
+        </key>
         <key type="i" name="min-column-number">
             <default>3</default>
             <range min="1" max="20"/>

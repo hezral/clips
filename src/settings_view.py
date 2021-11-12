@@ -100,31 +100,41 @@ class SettingsView(Gtk.Grid):
         excluded_apps_list_values = self.gio_settings.get_value("excluded-apps").get_strv()
         excluded_apps_list = SubSettings(type="listbox", name="excluded-apps", label=None, sublabel=None, separator=False, params=(excluded_apps_list_values, ), utils=self.app.utils)
 
-        excluded_apps = SubSettings(type="button", name="excluded-apps", label="Exclude apps", sublabel="Copy events are excluded for apps selected", separator=False, params=("Select app", Gtk.Image().new_from_icon_name("application-default-icon", Gtk.IconSize.LARGE_TOOLBAR), ))
+        excluded_apps = SubSettings(type="button", name="excluded-apps", label=None, sublabel="Apps will not be monitored", separator=False, params=("Select app", Gtk.Image().new_from_icon_name("application-default-icon", Gtk.IconSize.LARGE_TOOLBAR), ))
         excluded_apps.button.connect("clicked", self.on_button_clicked, (excluded_apps_list, ))
 
         excluded = SettingsGroup("Excluded Apps", (excluded_apps, excluded_apps_list, ))
         self.flowbox.add(excluded)
 
-        # protected apps -------------------------------------------------
-        protected_apps_list_values = self.gio_settings.get_value("protected-apps").get_strv()
-        protected_apps_list = SubSettings(type="listbox", name="protected-apps", label=None, sublabel=None, separator=False, params=(protected_apps_list_values, ), utils=self.app.utils)
-
-        protected_apps = SubSettings(type="button", name="protected-apps", label="Protected apps", sublabel="Contents copied will be protected", separator=False, params=("Select app", Gtk.Image().new_from_icon_name("application-default-icon", Gtk.IconSize.LARGE_TOOLBAR), ))
-        protected_apps.button.connect("clicked", self.on_button_clicked, (protected_apps_list, ))
-
-        protected = SettingsGroup("Protected Apps", (protected_apps, protected_apps_list, ))
-        self.flowbox.add(protected)
-
         # file types  -------------------------------------------------
         file_types_list_values = self.gio_settings.get_value("file-types").get_strv()
         file_types_list = SubSettings(type="listbox", name="file-types", label=None, sublabel=None, separator=False, params=(file_types_list_values, ), utils=self.app.utils)
 
-        file_types = SubSettings(type="button", name="file-types", label="File types", sublabel="Copy events are excluded for types selected", separator=False, params=("Select type", Gtk.Image().new_from_icon_name("application-octet-stream", Gtk.IconSize.LARGE_TOOLBAR), ))
+        file_types = SubSettings(type="button", name="file-types", label=None, sublabel="File types will be skipped", separator=False, params=("Select type", Gtk.Image().new_from_icon_name("application-octet-stream", Gtk.IconSize.LARGE_TOOLBAR), ))
         file_types.button.connect("clicked", self.on_button_clicked, (file_types_list, ))
 
-        filetype = SettingsGroup("File Types", (file_types, file_types_list, ))
+        filetype = SettingsGroup("Excluded File Types", (file_types, file_types_list, ))
         self.flowbox.add(filetype)
+
+        # keywords  -------------------------------------------------
+        keywords_list_values = self.gio_settings.get_value("keywords").get_strv()
+        keywords_list = SubSettings(type="listbox", name="keywords", label=None, sublabel=None, separator=False, params=(keywords_list_values, ), utils=self.app.utils)
+
+        keywords = SubSettings(type="entry", name="keywords", label=None, sublabel="Any matches will be skipped", separator=False, params=None)
+        keywords.entry.connect("activate", self.on_entry_activated, (keywords_list, ))
+
+        keyword = SettingsGroup("Excluded Keywords", (keywords, keywords_list, ))
+        self.flowbox.add(keyword)
+
+        # protected apps -------------------------------------------------
+        protected_apps_list_values = self.gio_settings.get_value("protected-apps").get_strv()
+        protected_apps_list = SubSettings(type="listbox", name="protected-apps", label=None, sublabel=None, separator=False, params=(protected_apps_list_values, ), utils=self.app.utils)
+
+        protected_apps = SubSettings(type="button", name="protected-apps", label=None, sublabel="Contents copied will be protected", separator=False, params=("Select app", Gtk.Image().new_from_icon_name("application-default-icon", Gtk.IconSize.LARGE_TOOLBAR), ))
+        protected_apps.button.connect("clicked", self.on_button_clicked, (protected_apps_list, ))
+
+        protected = SettingsGroup("Protected Apps", (protected_apps, protected_apps_list, ))
+        self.flowbox.add(protected)
 
         # others -------------------------------------------------
         add_shortcut = SubSettings(type="button", name="add-shortcut", label="Add Shortcut", sublabel="Launch with keyboard shortcut like ⌘+Ctrl+C\nSet with 'gtk-launch com.github.hezral.clips'", separator=True, params=(" Add", Gtk.Image().new_from_icon_name("com.github.hezral.clips", Gtk.IconSize.LARGE_TOOLBAR),))
@@ -398,6 +408,11 @@ class SettingsView(Gtk.Grid):
             help_flowbox.props.min_children_per_line = value
         self.gio_settings.set_int(key="min-column-number", value=value)
 
+    def on_entry_activated(self, entry, params):
+        new_keyword = entry.props.text
+        subsettings = params[0]
+        subsettings.add_listboxrow(new_keyword, None, add_new=True)
+
 # ----------------------------------------------------------------------------------------------------
 
 class SettingsGroup(Gtk.Grid):
@@ -489,12 +504,13 @@ class SubSettings(Gtk.Grid):
                 label.props.valign = Gtk.Align.CENTER
             self.attach(self.button, 1, 0, 1, 2)
 
-        if type == "listbox" and ("-apps" in name or "-types" in name):
+        if type == "listbox":
             self.last_row_selected_idx = 0
             self.listbox = Gtk.ListBox()
             self.listbox.props.name = name
             self.listbox.connect("row-selected", self.on_row_selected)
             icon = None
+            # if ("-apps" in name or "-types" in name)
             if params is not None:
                 if "-apps" in name:
                     for app in params[0]:
@@ -504,6 +520,9 @@ class SubSettings(Gtk.Grid):
                     for type in params[0]:
                         icon_name = utils.get_mimetype_icon(type)
                         self.add_listboxrow(type, icon_name)
+                if "keywords" in name:
+                    for keyword in params[0]:
+                        self.add_listboxrow(keyword)
 
             self.scrolled_window = Gtk.ScrolledWindow()
             self.scrolled_window.props.shadow_type = Gtk.ShadowType.ETCHED_IN
@@ -516,13 +535,22 @@ class SubSettings(Gtk.Grid):
             self.checkbutton.props.name = name
             self.attach(self.checkbutton, 0, 0, 1, 2)
 
+        if type == "entry":
+            self.entry = Gtk.Entry()
+            self.entry.props.name = name
+            self.entry.props.halign = Gtk.Align.END
+            self.entry.props.valign = Gtk.Align.START
+            self.entry.props.hexpand = False
+            self.entry.props.placeholder_text = "Enter keyword.."
+            self.entry.set_size_request(-1, 34)
+            self.attach(self.entry, 1, 0, 1, 2)
+
         if separator:
             row_separator = Gtk.Separator()
             row_separator.props.hexpand = True
             row_separator.props.valign = Gtk.Align.CENTER
             self.attach(row_separator, 0, 2, 2, 1)
         
-        # SubSettings construct---
         self.props.name = name
         self.props.hexpand = True
         self.props.row_spacing = 8
@@ -535,31 +563,33 @@ class SubSettings(Gtk.Grid):
         settings_values = gio_settings.get_value(key_name).get_strv()
         return settings_values, gio_settings
 
-    def add_listboxrow(self, app_name, icon_name, add_new=False):
+    def add_listboxrow(self, item, icon_name=None, add_new=False):
         skip_add = False
         key_name = self.listbox.props.name
 
         if add_new:
             settings_values, gio_settings = self.get_gio_settings_values(key_name)
-            if app_name not in settings_values:
-                settings_values.append(app_name)
+            if item not in settings_values:
+                settings_values.append(item)
                 gio_settings.set_strv(key_name, settings_values)
-                print(app_name, "added in {name} list".format(name=key_name))
+                print(item, "added in {name} list".format(name=key_name))
             else:
-                print(app_name, "already in {name} list".format(name=key_name))
+                print(item, "already in {name} list".format(name=key_name))
                 skip_add = True
 
         if skip_add is False:
-            app_label = Gtk.Label(app_name)
-            icon_size = 32 * self.get_scale_factor()
-            app_icon = Gtk.Image().new_from_icon_name(icon_name, Gtk.IconSize.LARGE_TOOLBAR)
-            app_icon.set_pixel_size(icon_size)
-
             grid = Gtk.Grid()
             grid.props.column_spacing = 10
             grid.props.margin = 6
-            grid.attach(app_icon, 0, 0, 1, 1)
+            
+            app_label = Gtk.Label(item)
             grid.attach(app_label, 1, 0, 1, 1)
+            
+            if icon_name is not None:
+                icon_size = 32 * self.get_scale_factor()
+                app_icon = Gtk.Image().new_from_icon_name(icon_name, Gtk.IconSize.LARGE_TOOLBAR)
+                app_icon.set_pixel_size(icon_size)
+                grid.attach(app_icon, 0, 0, 1, 1)
 
             delete_row_button = Gtk.Button(image=Gtk.Image().new_from_icon_name("list-remove", Gtk.IconSize.MENU))
             delete_row_button.props.always_show_image = True
@@ -577,7 +607,7 @@ class SubSettings(Gtk.Grid):
             overlay.add_overlay(delete_row_revealer)
 
             row = Gtk.ListBoxRow()
-            row.app_name = app_name
+            row.app_name = item
             row.add(overlay)
 
             self.listbox.add(row)

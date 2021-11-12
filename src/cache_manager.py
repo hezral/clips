@@ -325,7 +325,14 @@ class CacheManager():
             file.write(content.get_data())
             file.close()
  
-           # condition if certain file types is excluded from copy events
+            # condition if certain keywords is excluded from copy events
+            excluded_keywords_list_values = self.app.gio_settings.get_value("keywords").get_strv()
+            keyword_match = [source_app.lower(), content.get_data().decode("utf-8").lower(), file_extension.lower(), content_type.lower(), additional_desc.lower()]
+            keyword_match_joined = ' '.join(keyword_match)
+            if any(i.lower() in keyword_match_joined for i in excluded_keywords_list_values):
+                return
+
+            # condition if certain file types is excluded from copy events
             if 'files' in content_type:
                 lines = []
                 excluded_file_types_list_values = self.app.gio_settings.get_value("file-types").get_strv()
