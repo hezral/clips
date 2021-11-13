@@ -2,7 +2,7 @@
 Name=Clips
 GenericName=Clips
 Comment=Clips Multi Format Clipboard Manager
-Categories=Utility;
+Categories=Utility;System;
 Exec=com.github.hezral.clips
 Icon=com.github.hezral.clips
 Terminal=false
