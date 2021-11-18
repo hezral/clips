@@ -111,26 +111,26 @@ class InfoView(Gtk.Grid):
     def generate_help_view(self):
         self.clear_info_view()
         
-        flowbox = Gtk.FlowBox()
-        flowbox.props.name = "help-flowbox"
-        flowbox.props.homogeneous = False
-        flowbox.props.row_spacing = 2
-        flowbox.props.column_spacing = 2
-        flowbox.props.max_children_per_line = 9
-        flowbox.props.min_children_per_line = self.app.gio_settings.get_int("min-column-number")
-        flowbox.props.valign = Gtk.Align.START
-        flowbox.props.halign = Gtk.Align.FILL
-        flowbox.props.selection_mode = Gtk.SelectionMode.NONE
+        self.flowbox = Gtk.FlowBox()
+        self.flowbox.props.name = "help-flowbox"
+        self.flowbox.props.homogeneous = False
+        self.flowbox.props.row_spacing = 2
+        self.flowbox.props.column_spacing = 2
+        self.flowbox.props.max_children_per_line = 9
+        self.flowbox.props.min_children_per_line = self.app.gio_settings.get_int("min-column-number")
+        self.flowbox.props.valign = Gtk.Align.START
+        self.flowbox.props.halign = Gtk.Align.FILL
+        self.flowbox.props.selection_mode = Gtk.SelectionMode.NONE
 
         scrolled_window = Gtk.ScrolledWindow()
         scrolled_window.props.hscrollbar_policy = Gtk.PolicyType.NEVER
-        scrolled_window.add(flowbox)
+        scrolled_window.add(self.flowbox)
 
         self.attach(scrolled_window, 0, 0, 1, 1)
 
         prefer_dark_style = self.app.gio_settings.get_boolean("prefer-dark-style")
 
-        for child in flowbox.get_children():
+        for child in self.flowbox.get_children():
             child.destroy()
 
         if self.help_view is None:
@@ -138,33 +138,33 @@ class InfoView(Gtk.Grid):
             help_hide_clips = HelpSubView(prefer_dark_style, image_name="help_hide_clips", subtitle_text="Run in background")
             help_switch_views = HelpSubView(prefer_dark_style, image_name="help_switch_views", subtitle_text="Switch between views")
             help_column_number = HelpSubView(prefer_dark_style, image_name="help_column_number", subtitle_text="Adjust columns display")
-            flowbox.add(help_run_clips)
-            flowbox.add(help_hide_clips)
-            flowbox.add(help_switch_views)
-            flowbox.add(help_column_number)
+            self.flowbox.add(help_run_clips)
+            self.flowbox.add(help_hide_clips)
+            self.flowbox.add(help_switch_views)
+            self.flowbox.add(help_column_number)
 
             help_clip_actions = HelpSubView(prefer_dark_style, image_name="help_clip_actions", subtitle_text="Actions on clips")
             help_quick_copy = HelpSubView(prefer_dark_style, image_name="help_quick_copy", subtitle_text="Quick copy first 9 clips")
             help_doubleclick_copy = HelpSubView(prefer_dark_style, image_name="help_doubleclick_copy", subtitle_text="Double click to copy")
             help_multiselect = HelpSubView(prefer_dark_style, image_name="help_multiselect", subtitle_text="Delete multi clips")
-            flowbox.add(help_clip_actions)
-            flowbox.add(help_quick_copy)
-            flowbox.add(help_doubleclick_copy)
-            flowbox.add(help_multiselect)
+            self.flowbox.add(help_clip_actions)
+            self.flowbox.add(help_quick_copy)
+            self.flowbox.add(help_doubleclick_copy)
+            self.flowbox.add(help_multiselect)
 
             help_clip_info = HelpSubView(prefer_dark_style, image_name="help_clip_info", subtitle_text="Hover on icon for extra info")
             help_search = HelpSubView(prefer_dark_style, image_name="help_search", subtitle_text="Multi keyword & As-You-Type search")
             help_clipsapp_toggle = HelpSubView(prefer_dark_style, image_name="help_clipsapp_toggle", subtitle_text="Toggle clipboard monitoring")
             help_settings = HelpSubView(prefer_dark_style, image_name="help_settings", subtitle_text="Explore availble settings")
-            flowbox.add(help_clip_info)
-            flowbox.add(help_search)
-            flowbox.add(help_clipsapp_toggle)
-            flowbox.add(help_settings)
+            self.flowbox.add(help_clip_info)
+            self.flowbox.add(help_search)
+            self.flowbox.add(help_clipsapp_toggle)
+            self.flowbox.add(help_settings)
 
             help_clip_extra_actions = HelpSubView(prefer_dark_style, image_name="help_clip_extra_actions", subtitle_text="Copy plaintext & Force delete")
-            flowbox.add(help_clip_extra_actions)
+            self.flowbox.add(help_clip_extra_actions)
 
-            for child in flowbox.get_children():
+            for child in self.flowbox.get_children():
                 child.props.can_focus = False
         
             self.show_all()
