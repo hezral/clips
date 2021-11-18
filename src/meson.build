@@ -33,5 +33,6 @@ clips_sources = [
   'settings_view.py',
   'shake_listener.py',
   'active_window_manager.py',
+  'filemanager_backend.py',
 ]
 install_data(clips_sources, install_dir: moduledir)

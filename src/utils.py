@@ -1489,3 +1489,25 @@ def do_webview_screenshot(uri, out_file_path):
     offscreen_window.set_size_request(snapshot_width, 160)
     offscreen_window.add(webview)
     offscreen_window.show_all()
+def open_url_gtk(url):
+    ''' Function to view file using default application via Gtk'''
+    import gi
+    gi.require_version('Gtk', '3.0')
+    from gi.repository import Gtk, Gdk
+    try:
+        Gtk.show_uri_on_window(None, url, Gdk.CURRENT_TIME)
+    except:
+        print("Unable to launch {url}".format(url=url))
+        pass
+
+def open_file_gio(filepath):
+    ''' Function to view file using default application via Gio'''
+    import gi
+    from gi.repository import Gio
+    view_file = Gio.File.new_for_path(filepath)
+    if view_file.query_exists():
+        try:
+            Gio.AppInfo.launch_default_for_uri(uri=view_file.get_uri(), context=None)
+        except:
+            print("Unable to launch {file}".format(file=view_file))
+            pass

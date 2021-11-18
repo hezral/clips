@@ -43,6 +43,10 @@ finish-args:
   # keyring access for setting password for clips protection
   - --talk-name=org.freedesktop.secrets
 
+  # talking to FileManager1 to use ShowItems() function to reveal and select/highlight file in default file manager
+  # source file: filemanager_backend.py
+  - --talk-name=org.freedesktop.FileManager1
+
 modules:
   - name: chardet
     buildsystem: simple
@@ -51,6 +55,14 @@ modules:
         - --share=network
     build-commands:
       - "pip3 install --prefix=${FLATPAK_DEST} chardet"
+
+  - name: pydbus
+    buildsystem: simple
+    build-options:
+      build-args:
+        - --share=network
+    build-commands:
+      - "pip3 install --prefix=${FLATPAK_DEST} pydbus"
 
   - name: requests
     buildsystem: simple

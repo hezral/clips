@@ -720,7 +720,7 @@ class ClipsContainer(Gtk.EventBox):
                     self.authenticate_dialog = self.on_authenticate(title, action, callback, content)
 
         elif action == "reveal":
-            self.app.utils.reveal_file_gio(self.app.main_window, self.cache_file)
+            self.app.file_manager.show_files_in_file_manager(self.cache_file)
 
         elif action == "info":
             self.clip_info_revealer.set_reveal_child(True)
@@ -735,7 +735,7 @@ class ClipsContainer(Gtk.EventBox):
                     file_content = file.readlines()
                 if len(file_content) == 1:
                     file_path = file_content[0].replace("copy","").replace("file://","").strip().replace("%20", " ")
-                    self.app.utils.reveal_file_gio(self.app.main_window, file_path)
+                    self.app.file_manager.show_files_in_file_manager(file_path)
                 else:
                     files_popover = FilesContainerPopover(self.cache_file, self.type, self.app, button)
                     files_popover.popup()
@@ -1430,7 +1430,7 @@ class FilesContainerPopover(Gtk.Popover):
     def on_files_activated(self, flowbox, flowboxchild):
         flowboxchild.grab_focus()
         file_grid = [child for child in flowboxchild.get_children() if isinstance(child, Gtk.Grid)][0]
-        self.app.utils.reveal_file_gio(self.app.main_window, file_grid.props.name)
+        self.app.file_manager.show_files_in_file_manager(file_grid.props.name)
 
     def update_stack(self, path, mime_type):
         icon = self.generate_default_icon(path, mime_type)

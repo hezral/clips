@@ -13,6 +13,7 @@ from .clipboard_manager import ClipboardManager
 from .cache_manager import CacheManager
 from .shake_listener import ShakeListener
 from .active_window_manager import ActiveWindowManager
+from .filemanager_backend import FileManagerBackend
 from . import utils
 
 from datetime import datetime
@@ -48,6 +49,7 @@ class Application(Gtk.Application):
         self.clipboard_manager = ClipboardManager(gtk_application=self)
         self.cache_manager = CacheManager(gtk_application=self, clipboard_manager=self.clipboard_manager)
         self.window_manager = ActiveWindowManager(gtk_application=self)
+        self.file_manager = FileManagerBackend()
         self.create_shakelistener()
 
         # prepend custom path for icon theme
