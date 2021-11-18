@@ -1049,7 +1049,8 @@ class ImageContainer(DefaultContainer):
             # take top left corner for thumbnails
             y = 0
             x = 0
-            final_pixbuf = self.pixbuf_original
+            new_subpixbuf = self.pixbuf_original.new_subpixbuf(0, 0, width, height)
+            final_pixbuf = new_subpixbuf
         else:
             # Find the offset we need to center the source pixbuf on the destination
             y = abs((height - scaled_pixbuf.props.height) / 2)
