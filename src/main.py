@@ -85,31 +85,31 @@ class Application(Gtk.Application):
             self.add_window(self.main_window)
             self.cache_manager.main_window = self.main_window
 
-        if self.gio_settings.get_value("hide-on-startup") and self.app_startup is True:
-            self.main_window.hide()
-        else:
-            if self.main_window.is_visible():
-                self.main_window.hide()
-            else:
-                self.main_window.show()
-                self.main_window.present()
-        
         if self.app_startup is True:
             if self.gio_settings.get_value("auto-housekeeping"):
                 print(datetime.now(), "start auto-housekeeping")
                 print(datetime.now(), "auto-retention-period", self.gio_settings.get_int("auto-retention-period"))
-                self.cache_manager.auto_housekeeping(self.gio_settings.get_int("auto-retention-period"))        
+                self.cache_manager.auto_housekeeping(self.gio_settings.get_int("auto-retention-period"))
+
+            if self.gio_settings.get_value("hide-on-startup"):
+                self.main_window.hide()
 
             print(datetime.now(), "start load_clips")
-
             clips = self.cache_manager.load_clips()
             
             if len(clips) != 0:
                 self.load_clips_fromdb(clips)
-
+            
+            self.app_startup = False
             self.main_window.on_view_visible()
 
-        self.app_startup = False
+        else:
+            if self.main_window.is_visible():
+                self.main_window.hide()
+            else:
+                self.main_window.present()
+                # self.main_window.save_window_state()
+
         self.running = True
 
     @utils.run_async
