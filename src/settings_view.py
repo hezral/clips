@@ -401,11 +401,9 @@ class SettingsView(Gtk.Grid):
     def on_min_column_number_changed(self, value):
         main_window = self.get_toplevel()
         main_window.set_main_window_size(column_number=value)
-        clips_flowbox = self.app.utils.get_widget_by_name(widget=main_window, child_name="flowbox", level=0)
-        help_flowbox = self.app.utils.get_widget_by_name(widget=main_window, child_name="help-flowbox", level=0)
-        clips_flowbox.props.min_children_per_line = value
-        if help_flowbox is not None:
-            help_flowbox.props.min_children_per_line = value
+        main_window.clips_view.flowbox.props.min_children_per_line = value
+        if hasattr(main_window.info_view, 'flowbox'):
+            main_window.info_view.flowbox.props.min_children_per_line = value
         self.gio_settings.set_int(key="min-column-number", value=value)
 
     def on_entry_activated(self, entry, params):
