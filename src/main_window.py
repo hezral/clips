@@ -13,7 +13,12 @@ from .info_view import InfoView
 class ClipsWindow(Gtk.ApplicationWindow):
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(
+                        title="Clips", 
+                        name = "main-window",
+                        window_position = Gtk.WindowPosition.CENTER,
+                        *args, **kwargs
+                    )
 
         self.utils = self.props.application.utils
         self.app = self.props.application
