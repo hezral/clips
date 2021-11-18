@@ -37,24 +37,17 @@ class ClipsWindow(Gtk.ApplicationWindow):
         self.stack.add_named(self.settings_view, self.settings_view.get_name())
         self.stack.add_named(self.info_view, self.info_view.get_name())
 
-        self.set_titlebar(self.generate_headerbar())
-
-        self.main_view = Gtk.Grid()
-        self.main_view.props.name = "main-view"
+        self.main_view = Gtk.Grid(name = "main-view")
         self.main_view.attach(self.stack, 0, 0, 3, 1)
         self.main_view.attach(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL), 0, 1, 3, 1)
         self.main_view.attach(self.generate_actionbar(), 0, 2, 1, 1)
         self.main_view.attach(self.generate_statusbar(), 1, 2, 1, 1)
         self.main_view.attach(self.generate_viewswitch(), 2, 2, 1, 1)
 
-        self.props.title = "Clips"
-        self.props.name = "main-window"
-        self.props.border_width = 0
-        self.props.window_position = Gtk.WindowPosition.CENTER
+        self.set_titlebar(self.generate_headerbar())
         self.get_style_context().add_class("rounded")
-
-        self.set_main_window_size()
         self.set_display_settings()
+        self.set_main_window_size()
         self.add(self.main_view)
         self.show_all()
 
@@ -62,40 +55,16 @@ class ClipsWindow(Gtk.ApplicationWindow):
         if not self.gio_settings.get_value("persistent-mode"):
             if self.app.window_manager is not None:
                 self.app.window_manager._run(callback=self.on_persistent_mode)
+        
         if self.gio_settings.get_value("sticky-mode"):
             self.stick()
+        
         if self.gio_settings.get_value("always-on-top"):
             self.set_keep_above(True)
-
+        
         self.connect("key-press-event", self.on_search_as_you_type)
 
-    def on_search_as_you_type(self, window, eventkey):
-        proceed = False
-        # print(Gdk.keyval_name(eventkey.keyval), len(Gdk.keyval_name(eventkey.keyval)), eventkey.state.value_names, len(eventkey.state.value_names))
-
-        if eventkey.state.value_names == ['GDK_SHIFT_MASK'] and len(Gdk.keyval_name(eventkey.keyval)) == 1:
-            proceed = True
-
-        if eventkey.state.value_names == ['GDK_SHIFT_MASK', 'GDK_MOD2_MASK'] and len(Gdk.keyval_name(eventkey.keyval)) == 1:
-            proceed = True
-
-        if eventkey.state.value_names == ['GDK_MOD2_MASK'] and len(Gdk.keyval_name(eventkey.keyval)) == 1:
-            proceed = True
-
-        if eventkey.state.value_names == [] and len(Gdk.keyval_name(eventkey.keyval)) == 1:
-            proceed = True
-        
-        if proceed:
-            if self.is_visible() and self.searchentry.has_focus() is False:
-                self.searchentry.grab_focus()
-        
-
-    def on_persistent_mode(self, wm_class):
-        if wm_class is not None:
-           if self.app.props.application_id not in wm_class:
-                self.hide()
-
-    def set_main_window_size(self, column_number=None):
+    def set_main_window_size(self, column_number=None, view=None, min_size=[], max_size=[]):
         if column_number is None:
             column_number = self.gio_settings.get_int("min-column-number")
         
@@ -151,72 +120,30 @@ class ClipsWindow(Gtk.ApplicationWindow):
         # print(event, self.app.gio_settings.get_int("pos-x"), self.app.gio_settings.get_int("pos-y"))
         return False
 
-        #------ searchbar ----#
-        searchbar = Gtk.Grid()
-        searchbar.props.name = "search-bar"
-        searchbar.props.hexpand = True
-        searchbar.props.halign = Gtk.Align.START
-        searchbar.attach(self.searchentry, 0, 0, 1, 1)
+    def on_search_as_you_type(self, window, eventkey):
+        proceed = False
+        # print(Gdk.keyval_name(eventkey.keyval), len(Gdk.keyval_name(eventkey.keyval)), eventkey.state.value_names, len(eventkey.state.value_names))
 
-        overlay = Gtk.Overlay()
-        overlay.add(searchbar)
-        # overlay.add_overlay(sourceapp_filter)
-        # overlay.set_overlay_pass_through(sourceapp_filter, True)
+        if eventkey.state.value_names == ['GDK_SHIFT_MASK'] and len(Gdk.keyval_name(eventkey.keyval)) == 1:
+            proceed = True
 
-        headerbar = Gtk.HeaderBar()
-        headerbar.props.show_close_button = self.gio_settings.get_value("show-close-button")
-        headerbar.props.has_subtitle = False
-        headerbar.props.custom_title = overlay
-        return headerbar
+        if eventkey.state.value_names == ['GDK_SHIFT_MASK', 'GDK_MOD2_MASK'] and len(Gdk.keyval_name(eventkey.keyval)) == 1:
+            proceed = True
 
-    def generate_statusbar(self):
-        self.total_clips_label = Gtk.Label("Clips: {total}".format(total=self.props.application.total_clips))
-        self.total_clips_label.props.has_tooltip = True
-        self.total_clips_label.connect("query-tooltip", self.on_total_clips_tooltip)
-        status = Gtk.Grid()
-        status.props.name = "app-statusbar"
-        status.props.halign = Gtk.Align.START
-        status.props.valign = Gtk.Align.CENTER
-        status.props.hexpand = True
-        status.props.margin_left = 3
-        status.attach(self.total_clips_label, 0, 0, 1, 1)
-        return status
+        if eventkey.state.value_names == ['GDK_MOD2_MASK'] and len(Gdk.keyval_name(eventkey.keyval)) == 1:
+            proceed = True
 
-    def generate_actionbar(self):
-        self.clipsapp_toggle = Gtk.Button(image=Gtk.Image().new_from_icon_name("com.github.hezral.clips-enabled-symbolic", Gtk.IconSize.SMALL_TOOLBAR))
-        self.clipsapp_toggle.props.name = "app-action-enable"
-        self.clipsapp_toggle.props.has_tooltip = True
-        self.clipsapp_toggle.props.can_focus = False
-        self.clipsapp_toggle.props.tooltip_text = "Clipboard Monitoring: Enabled"
-        # self.clipsapp_toggle.connect("clicked", self.app.on_clipsapp_action)
-        self.clipsapp_toggle.connect("button-press-event", self.on_button_press)
+        if eventkey.state.value_names == [] and len(Gdk.keyval_name(eventkey.keyval)) == 1:
+            proceed = True
         
-        self.passwordprotect_toggle = Gtk.Button(image=Gtk.Image().new_from_icon_name("com.github.hezral.clips-protect-symbolic", Gtk.IconSize.SMALL_TOOLBAR))
-        self.passwordprotect_toggle.props.name = "app-action-protect"
-        self.passwordprotect_toggle.props.has_tooltip = True
-        self.passwordprotect_toggle.props.can_focus = False
-        self.passwordprotect_toggle.props.tooltip_text = "Password Display/Monitoring: Enabled"
-        # self.passwordprotect_toggle.get_style_context().add_class("clips-action-enabled")
-        # self.passwordprotect_toggle.connect("clicked", self.on_clips_action, "protect")
+        if proceed:
+            if self.is_visible() and self.searchentry.has_focus() is False:
+                self.searchentry.grab_focus()
 
-        actionbar = Gtk.Grid()
-        actionbar.props.name = "app-actionbar"
-        actionbar.props.halign = Gtk.Align.START
-        actionbar.props.valign = Gtk.Align.CENTER
-        actionbar.props.margin_left = 3
-        actionbar.attach(self.clipsapp_toggle, 0, 0, 1, 1)
-        # actionbar.attach(self.passwordprotect_toggle, 1, 0, 1, 1)
-        return actionbar
-
-    def generate_viewswitch(self):
-        self.view_switch = Granite.ModeSwitch.from_icon_name("com.github.hezral.clips-flowbox-symbolic", "com.github.hezral.clips-settings-symbolic")
-        self.view_switch.props.valign = Gtk.Align.CENTER
-        self.view_switch.props.halign = Gtk.Align.END
-        self.view_switch.props.margin = 4
-        self.view_switch.props.name = "view-switch"
-        self.view_switch.get_children()[1].props.can_focus = False
-        self.view_switch.connect_after("notify::active", self.on_view_visible)
-        return self.view_switch
+    def on_persistent_mode(self, wm_class):
+        if wm_class is not None:
+           if self.app.props.application_id not in wm_class:
+                self.hide()
 
     def on_search_entry_key_pressed(self, search_entry, eventkey):
         key = Gdk.keyval_name(eventkey.keyval).lower()
@@ -339,16 +266,97 @@ class ClipsWindow(Gtk.ApplicationWindow):
                     self.info_view.hide()
                 else:
                     pass
-        
-        if self.stack.get_visible_child() == self.clips_view:
-            self.searchentry.props.sensitive = True
-        else:
-            self.searchentry.props.sensitive = False
+
+        if self.app.app_startup is False:
+            if self.stack.get_visible_child() == self.clips_view:
+                self.searchentry.props.sensitive = True
+            else:
+                self.searchentry.props.sensitive = False
         
     def on_button_press(self, button, eventbutton):
 
         if eventbutton.button == 1:
             self.app.on_clipsapp_action()
+        # if eventbutton.button == 3:
+        #     self.window_menu = Gtk.Menu()
+        #     one_min = Gtk.MenuItem()
+        #     one_min.props.label = "Disable 1 min"
+        #     one_min.connect("activate", self.on_menu_activate)
+        #     self.window_menu.append(one_min)
+        #     self.window_menu.show_all()
+        #     self.window_menu.popup_at_widget(button, Gdk.Gravity.NORTH, Gdk.Gravity.SOUTH_WEST, None)
+
+    def on_menu_activate(self, menuitem):
+        print(menuitem.props.label)
+
+    def generate_headerbar(self):
+        self.searchentry = Gtk.SearchEntry()
+        self.searchentry.props.placeholder_text = "Search Clips"
+        self.searchentry.props.hexpand = False
+        self.searchentry.props.name = "search-entry"
+
+        self.searchentry.connect("focus-in-event", self.on_searchbar_activate, "in")
+        self.searchentry.connect("focus-out-event", self.on_searchbar_activate, "out")
+        # self.searchentry.connect_after("delete-text", self.on_searchbar_activate, "delete")
+        # self.searchentry.connect("icon-press", self.on_quicksearch_activate)
+        
+        self.searchentry.connect("search-changed", self.on_search_entry_changed)
+        self.searchentry.connect("key-press-event", self.on_search_entry_key_pressed)
+
+        searchbar = Gtk.Grid()
+        searchbar.props.name = "search-bar"
+        searchbar.props.hexpand = True
+        searchbar.props.halign = Gtk.Align.START
+        searchbar.attach(self.searchentry, 0, 0, 1, 1)
+
+        overlay = Gtk.Overlay()
+        overlay.add(searchbar)
+
+        headerbar = Gtk.HeaderBar()
+        headerbar.props.show_close_button = self.gio_settings.get_value("show-close-button")
+        headerbar.props.has_subtitle = False
+        headerbar.props.custom_title = overlay
+        return headerbar
+
+    def generate_statusbar(self):
+        self.total_clips_label = Gtk.Label("Clips: {total}".format(total=self.props.application.total_clips))
+        self.total_clips_label.props.has_tooltip = True
+        self.total_clips_label.connect("query-tooltip", self.on_total_clips_tooltip)
+        status = Gtk.Grid()
+        status.props.name = "app-statusbar"
+        status.props.halign = Gtk.Align.START
+        status.props.valign = Gtk.Align.CENTER
+        status.props.hexpand = True
+        status.props.margin_left = 3
+        status.attach(self.total_clips_label, 0, 0, 1, 1)
+        return status
+
+    def generate_actionbar(self):
+        self.clipsapp_toggle = Gtk.Button(image=Gtk.Image().new_from_icon_name("com.github.hezral.clips-enabled-symbolic", Gtk.IconSize.SMALL_TOOLBAR))
+        self.clipsapp_toggle.props.name = "app-action-enable"
+        self.clipsapp_toggle.props.has_tooltip = True
+        self.clipsapp_toggle.props.can_focus = False
+        self.clipsapp_toggle.props.tooltip_text = "Clipboard Monitoring: Enabled"
+        self.clipsapp_toggle.connect("button-press-event", self.on_button_press)
+        
+        actionbar = Gtk.Grid()
+        actionbar.props.name = "app-actionbar"
+        actionbar.props.halign = Gtk.Align.START
+        actionbar.props.valign = Gtk.Align.CENTER
+        actionbar.props.margin_left = 3
+        actionbar.attach(self.clipsapp_toggle, 0, 0, 1, 1)
+        return actionbar
+
+    def generate_viewswitch(self):
+        self.view_switch = Granite.ModeSwitch.from_icon_name("com.github.hezral.clips-flowbox-symbolic", "com.github.hezral.clips-settings-symbolic")
+        self.view_switch.props.valign = Gtk.Align.CENTER
+        self.view_switch.props.halign = Gtk.Align.END
+        self.view_switch.props.margin = 4
+        self.view_switch.props.name = "view-switch"
+        self.view_switch.get_children()[1].props.can_focus = False
+        self.view_switch.connect_after("notify::active", self.on_view_visible)
+        return self.view_switch
+
     def update_total_clips_label(self, event, count=1):
         total_clips = int(self.total_clips_label.props.label.split(": ")[1])
         if event == "add":
@@ -381,3 +389,5 @@ class ClipsWindow(Gtk.ApplicationWindow):
         tooltip.set_custom(None)
         tooltip.set_custom(grid)
         return True
+
+
