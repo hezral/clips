@@ -105,10 +105,25 @@
             <summary>Shake sensitivity</summary>
             <description>Shake sensitivity</description>
         </key>
-        <key type="s" name="version">
-            <default>"1.0.3"</default>
-            <summary>Current version</summary>
-            <description>Current version</description>
+        <key name="pos-x" type="i">
+            <default>360</default>
+            <summary>Horizontal position</summary>
+            <description>Saved horizontal position of main window</description>
+        </key>
+        <key name="pos-y" type="i">
+            <default>640</default>
+            <summary>Vertical position</summary>
+            <description>Saved vertical position of main window</description>
+        </key>
+        <key name="window-width" type="i">
+            <default>480</default>
+            <summary>Window width</summary>
+            <description>Saved width of main window</description>
+        </key>
+        <key name="window-height" type="i">
+            <default>480</default>
+            <summary>Window height</summary>
+            <description>Saved height of main window</description>
         </key>
     </schema>
 </schemalist>

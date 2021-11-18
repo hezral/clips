@@ -126,25 +126,25 @@ class ClipsWindow(Gtk.ApplicationWindow):
             setattr(geometry, 'min_width', min_width)
             self.set_geometry_hints(None, geometry, Gdk.WindowHints.MIN_SIZE)
 
-    def generate_headerbar(self):
-        self.searchentry = Gtk.SearchEntry()
-        self.searchentry.props.placeholder_text = "Search Clips" #"Search Clips\u2026"
-        self.searchentry.props.hexpand = False
-        self.searchentry.props.name = "search-entry"
+    def save_window_state(self, *args):
+        w, h = self.get_size()
+        x, y = self.get_position()
 
-        self.searchentry.connect("focus-in-event", self.on_searchbar_activate, "in")
-        self.searchentry.connect("focus-out-event", self.on_searchbar_activate, "out")
-        # self.searchentry.connect_after("delete-text", self.on_searchbar_activate, "delete")
-        # self.searchentry.connect("icon-press", self.on_quicksearch_activate)
-        
-        self.searchentry.connect("search-changed", self.on_search_entry_changed)
-        self.searchentry.connect("key-press-event", self.on_search_entry_key_pressed)
+        self.app.gio_settings.set_int("pos-x", x)
+        self.app.gio_settings.set_int("pos-y", y)
+        self.app.gio_settings.set_int("window-height", h)
+        self.app.gio_settings.set_int("window-width", w)
+        print("saved window state:", self.app.gio_settings.get_int("pos-x"), self.app.gio_settings.get_int("pos-y"))
 
-        # sourceapp_appchooser_popover = ClipsFilterPopover(self.app, self.searchentry)
-        # sourceapp_filter = Gtk.Button(image=Gtk.Image().new_from_icon_name("application-default-icon", Gtk.IconSize.LARGE_TOOLBAR))
-        # sourceapp_filter.props.always_show_image = True
-        # sourceapp_filter.props.halign = Gtk.Align.END
-        # sourceapp_filter.connect("clicked", self.on_sourceapp_filter, sourceapp_appchooser_popover)
+    def move_window(self, *args):
+        # print("map", self.app.gio_settings.get_int("pos-x"), self.app.gio_settings.get_int("pos-y"))
+        self.save_window_state()
+        self.move(self.app.gio_settings.get_int("pos-x"), self.app.gio_settings.get_int("pos-y"))
+
+    def on_close_window(self, window=None, event=None):
+        self.save_window_state()
+        # print(event, self.app.gio_settings.get_int("pos-x"), self.app.gio_settings.get_int("pos-y"))
+        return False
 
         #------ searchbar ----#
         searchbar = Gtk.Grid()
