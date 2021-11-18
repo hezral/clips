@@ -1445,10 +1445,9 @@ def do_webview_screenshot(uri, out_file_path):
     def get_snapshot(webview, result, callback, *args):
         snapshot = webview.get_snapshot_finish(result)
         snapshot.write_to_png(out_file_path)
-        # offscreen_window.destroy()
+        GLib.idle_add(self_destroy, (webview, offscreen_window))
 
-    def loaded_handler(webview, event):
-        # print(locals())
+    def loaded_handler(webview, event, offscreen_window):
         if event.value_name == "WEBKIT_LOAD_FINISHED":
             try:
                 webview.get_snapshot(WebKit2.SnapshotRegion.FULL_DOCUMENT, WebKit2.SnapshotOptions.TRANSPARENT_BACKGROUND, None, get_snapshot, None)
@@ -1456,6 +1455,20 @@ def do_webview_screenshot(uri, out_file_path):
                 import traceback
                 traceback.print_exc()
                 pass
+
+    def self_destroy(data):
+        webview = data[0]
+        offscreen_window = data[1]
+        webview.try_close()
+        webview.destroy()
+        webview = None
+        # del webview
+        # print(webview)
+        offscreen_window.destroy()
+        offscreen_window = None
+        # del offscreen_window
+        # print(offscreen_window)
+        # file.close()
     
     webview = WebKit2.WebView()
     webview.props.zoom_level = 1
