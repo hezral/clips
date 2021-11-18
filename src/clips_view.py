@@ -702,10 +702,6 @@ class ClipsContainer(Gtk.EventBox):
 
         action_notify_box = self.clip_action_notify_revealer.get_children()[0]
 
-        # remove previous widgets
-        # for child in action_notify_box.get_children():
-        #     child.destroy()
- 
         if action == "protect":
             if "yes" in self.protected:
                 protected_container = self.app.utils.get_widget_by_name(self, "protected-container", 0, doPrint=False)
@@ -743,10 +739,6 @@ class ClipsContainer(Gtk.EventBox):
                 self.app.utils.open_file_gio(self.cache_file)
 
         elif action == "copy":
-            # icon = Gtk.Image().new_from_icon_name("process-completed", Gtk.IconSize.SMALL_TOOLBAR)
-            # label = Gtk.Label("Copied to clipboard")
-            # action_notify_box.attach(icon, 0, 0, 1, 1)
-            # action_notify_box.attach(label, 1, 0, 1, 1)
             copy_result = False
             temp_file_uri = ""
             title = "Copy Content"
@@ -1030,10 +1022,10 @@ class ImageContainer(DefaultContainer):
 
         if "gif" in self.type:
             pixbuf = GdkPixbuf.PixbufAnimationIter.get_pixbuf(self.iter)
-            pixbuf_fitted = GdkPixbuf.Pixbuf.new(pixbuf.get_colorspace(), pixbuf.get_has_alpha(), pixbuf.get_bits_per_sample(), width, height)
         else:
             pixbuf = self.pixbuf_original
-            pixbuf_fitted = GdkPixbuf.Pixbuf.new(pixbuf.get_colorspace(), pixbuf.get_has_alpha(), pixbuf.get_bits_per_sample(), width, height)
+
+        pixbuf_fitted = GdkPixbuf.Pixbuf.new(pixbuf.get_colorspace(), pixbuf.get_has_alpha(), pixbuf.get_bits_per_sample(), width, height)
 
         if int(width * self.ratio_h_w) < height:
             scaled_pixbuf = pixbuf.scale_simple(int(height * self.ratio_w_h), height, GdkPixbuf.InterpType.BILINEAR)
@@ -1057,7 +1049,8 @@ class ImageContainer(DefaultContainer):
             x = abs((width - scaled_pixbuf.props.width) / 2)
             scaled_pixbuf.copy_area(x, y, width, height, pixbuf_fitted, 0, 0)
             # Set coordinates for cairo surface since this has been fitted, it should be (0, 0) coordinate
-            x = y = 0
+            y = 0
+            x = 0
             final_pixbuf = pixbuf_fitted
 
         # cairo_context.set_operator(cairo.Operator.SOURCE)
