@@ -14,6 +14,9 @@ from Xlib.protocol.rq import Event
 
 import threading
 
+import gi
+from gi.repository import GLib
+
 from datetime import datetime
 
 class ActiveWindowManager():
@@ -66,6 +69,9 @@ class ActiveWindowManager():
 
         self.app = gtk_application
 
+        # x11 = ctypes.cdll.LoadLibrary('libX11.so')
+        # x11.XInitThreads()
+        
         # Connect to the X server and get the root window
         self.disp = Display()
         self.root = self.disp.screen().root
@@ -214,4 +220,4 @@ class ActiveWindowManager():
 
     def handle_change(self, new_state: dict):
         """Replace this with whatever you want to actually do"""
-        self.callback(new_state['title'])
+        GLib.idle_add(self.callback, new_state['title'])
