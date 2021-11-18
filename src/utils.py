@@ -154,17 +154,6 @@ def get_mimetype_icon(mimetype):
     # print("Mimetype {0} can use icon file {1}".format(mimetype,icon_name))
     return icon_name
 
-def get_all_apps_gio():
-    ''' Function to get all apps installed on system using Gio '''
-    import gi, os
-    from gi.repository import Gio, GLib
-
-    # probably not a good idea
-    os.environ['XDG_DATA_DIRS'] = os.environ['XDG_DATA_DIRS'] + os.path.join(GLib.get_home_dir(),".local/share/flatpak/exports/share") + ":/var/lib/flatpak/exports/share:/usr/local/share:/usr/share:/var/lib/snapd/desktop:/run/host/usr/share"
-    os.environ['PATH'] = os.environ['PATH'] + os.path.join(GLib.get_home_dir(),".local/bin") + ":/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin:/run/host/usr/bin:/usr/share"
-
-    return Gio.AppInfo.get_all()
-
 def get_all_apps(app=None):
     ''' Function to get all apps installed on system using desktop files in standard locations for flatpak, snap, native '''
     import gi, os, re
@@ -268,123 +257,6 @@ def get_all_apps(app=None):
         return all_apps[app]
     else:
         return all_apps
-
-def get_active_appinfo_xprop():
-    import subprocess
-    import re
-    import os
-   
-    source_app = None
-    source_icon = None
-    break_out = False
-    all_apps = get_all_apps()
-
-    # root = subprocess.Popen(['xprop', '-root', '_NET_CLIENT_LIST'], stdout=subprocess.PIPE)
-    # stdout, stderr = root.communicate()
-    # m = re.findall(b'(?P<one>\w+)', stdout)
-    # for window_id in m:
-    #     if window_id != b'_NET_CLIENT_LIST' and window_id != b'WINDOW' and window_id != b'window' and window_id != b'id':
-    #         break_out = False
-
-    root = subprocess.Popen(['xprop', '-root', '_NET_ACTIVE_WINDOW'], stdout=subprocess.PIPE)
-    stdout, stderr = root.communicate()
-    m = re.search(b'^_NET_ACTIVE_WINDOW.* ([\w]+)$', stdout)
-    if m != None:
-        window_id = m.group(1)
-        window = subprocess.Popen(['xprop', '-id', window_id], stdout=subprocess.PIPE)
-        stdout, stderr = window.communicate()
-        output = stdout.decode("utf-8")
-
-        wm_name = re.search("WM_NAME\(\w+\) = (?P<name>.+)*", output)
-        wm_class = re.search("WM_CLASS\(\w+\) = (?P<name>.+)*", output)
-        bamf_desktop_file = re.search("_BAMF_DESKTOP_FILE\(\w+\) = (?P<name>.+)*", output)
-        gtk_application_id = re.search("_GTK_APPLICATION_ID\(\w+\) = (?P<name>.+)*", output)
-
-        if break_out is False and bamf_desktop_file != None:
-            bamf_desktop_file = bamf_desktop_file.group(1).replace('"','')
-            try:
-                for key in all_apps.keys():
-                    if os.path.basename(bamf_desktop_file.lower()) == os.path.basename(all_apps[key][-1].lower()):
-                        source_app = key
-                        source_icon = all_apps[key][0]
-                        break_out = True
-                        break
-            except:
-                pass
-
-        if break_out is False and gtk_application_id != None:
-            gtk_application_id = gtk_application_id.group(1).replace('"','')
-            try:
-                for key in all_apps.keys():
-                    if gtk_application_id.lower() == all_apps[key][0].lower():
-                        source_app = key
-                        source_icon = all_apps[key][0]
-                        break_out = True
-                        break
-            except:
-                pass
-
-        if break_out is False and wm_name != None:
-            if " - " in wm_name.group(1):
-                wm_name = wm_name.group(1).replace('"',"").split(" - ")[-1]
-            else:
-                wm_name = wm_name.group(1).replace('"',"")
-            try:
-                for key in all_apps.keys():
-                    if all_apps[key][1] != None:
-                        app_name = key.lower()
-                        app_icon = all_apps[key][0].lower()
-                        startup_wm_name = all_apps[key][1].lower()
-                        if wm_name.lower() == app_name or wm_name.lower() == startup_wm_name or wm_name.lower() in app_icon:
-                            source_app = key
-                            source_icon = all_apps[key][0]
-                            break_out = True
-                            break
-            except:
-                pass
-
-        if break_out is False and wm_class != None:
-            wm_class_keys = wm_class.group(1).replace('"',"").split(",")
-            for wm_class_key in wm_class_keys:
-                try:
-                    for key in all_apps.keys():
-                        app_name = key.lower()
-                        app_icon = all_apps[key][0]
-                        startup_wm_name = all_apps[key][1]
-                        if wm_class_key.lower() == app_name or wm_class_key.lower() == startup_wm_name or wm_class_key.lower() in app_icon:
-                            source_app = key
-                            source_icon = all_apps[key][0]
-                            break_out = True
-                            break
-                except:
-                    pass
-                    if break_out is False and "-" in wm_class_key:
-                        for wm_class_subkey in wm_class_key.split("-"):
-                            try:
-                                for key in all_apps.keys():
-                                    if all_apps[key][1] != None:
-                                        app_name = key.lower()
-                                        app_icon = all_apps[key][0]
-                                        startup_wm_name = all_apps[key][1]
-                                        if wm_class_subkey.lower() == app_name or wm_class_subkey.lower() == startup_wm_name or wm_class_subkey.lower() in app_icon:
-                                            source_app = key
-                                            source_icon = all_apps[key][0]
-                                            break_out = True
-                                            break
-                            except:
-                                pass
-                        break
-
-        if break_out is False and source_app is None and source_icon is None:
-            workspace = subprocess.Popen(['xprop', '-root', '-notype', '_NET_DESKTOP_NAMES'], stdout=subprocess.PIPE)
-            stdout, stderr = workspace.communicate()
-            m = re.search(b"_NET_DESKTOP_NAMES.* = (?P<name>.+)$", stdout)
-            if m != None:
-                workspace_name = m.group(1).decode("utf-8").replace('"',"") + ": unknown app"
-            source_app = workspace_name # if no active window, fallback to workspace name
-            source_icon = "application-default-icon"
-
-    return source_app, source_icon
 
 def get_active_appinfo_xlib(data=None):
     source_app = None
@@ -509,161 +381,6 @@ def get_active_appinfo_xlib(data=None):
 
     return source_app, source_icon
 
-def get_running_appinfo_xlib():
-    source_app = None
-    source_icon = None
-    all_apps = get_all_apps()
-
-    import os
-    import Xlib
-    import Xlib.display
-
-    display = Xlib.display.Display()
-    root = display.screen().root
-
-    NET_CLIENT_LIST = display.intern_atom('_NET_CLIENT_LIST')
-    NET_DESKTOP_NAMES = display.intern_atom('_NET_DESKTOP_NAMES')
-    NET_ACTIVE_WINDOW = display.intern_atom('_NET_ACTIVE_WINDOW')
-    GTK_APPLICATION_ID = display.intern_atom('_GTK_APPLICATION_ID')
-    WM_NAME = display.intern_atom('WM_NAME')
-    WM_CLASS = display.intern_atom('WM_CLASS')
-    BAMF_DESKTOP_FILE = display.intern_atom('_BAMF_DESKTOP_FILE')
-
-    try:
-        window_id_list = root.get_full_property(NET_CLIENT_LIST, Xlib.X.AnyPropertyType).value
-        print(type(window_id_list), window_id_list)
-        for window_id in window_id_list:
-            window = display.create_resource_object('window', window_id)
-            print(window_id)
-            
-            for key in sorted(all_apps.keys()):
-
-                app_name = key.split("#")[0].lower()
-                app_icon = all_apps[key][0].lower()
-                if all_apps[key][1] is not None:
-                    startup_wm_class = all_apps[key][1].lower()
-                else:
-                    startup_wm_class = None
-                desktop_file_path = all_apps[key][3].lower()
-
-                if window.get_full_property(BAMF_DESKTOP_FILE, 0):
-                    bamf_desktop_file = window.get_full_property(BAMF_DESKTOP_FILE, 0).value.replace(b'\x00',b' ').decode("utf-8").lower()
-                    # print("utils.py: os.path.basename(bamf_desktop_file) == os.path.basename(desktop_file_path): {0}, xlib: {1}, all_apps: {2}".format(os.path.basename(bamf_desktop_file) == os.path.basename(desktop_file_path), os.path.basename(bamf_desktop_file), os.path.basename(desktop_file_path)))
-                    if os.path.basename(bamf_desktop_file) == os.path.basename(desktop_file_path):
-                        if "#" in key:
-                            source_app = key.split("#")[0]
-                        else:
-                            source_app = key
-                        source_icon = all_apps[key][0]
-                        break_point = "bamf_desktop_file"
-                        break
-
-                elif window.get_full_property(GTK_APPLICATION_ID, 0):
-                    gtk_application_id = window.get_full_property(GTK_APPLICATION_ID, 0).value.replace(b'\x00',b' ').decode("utf-8").lower()
-                    # print("utils.py: gtk_application_id == app_icon", gtk_application_id == app_icon, gtk_application_id, app_icon)
-                    if gtk_application_id == app_icon:
-                        if "#" in key:
-                            source_app = key.split("#")[0]
-                        else:
-                            source_app = key
-                        source_icon = all_apps[key][0]
-                        break_point = "gtk_application_id"
-                        break
-
-                elif window.get_full_property(WM_CLASS, 0):
-                    wm_class = window.get_full_property(WM_CLASS, 0).value.replace(b'\x00',b',').decode("utf-8")
-                    wm_class_keys = wm_class.split(",")
-                    for wm_class_key in wm_class_keys:
-                        if wm_class_key != '':
-                            # if wm_class_key.lower() == app_name or wm_class_key.lower() == startup_wm_class or wm_class_key.lower() in app_icon:
-                            if wm_class_key.lower() in app_icon:
-                                # print("utils.py: key: {0}, all_apps[key]: {1}".format(key, all_apps[key]))
-                                # print("utils.py: wm_class_key.lower() == app_name: {0}, wm_class_key: {1}, app_name: {2}".format(wm_class_key.lower() == app_name, wm_class_key, app_name))
-                                # print("utils.py: wm_class_key.lower() == startup_wm_class: {0}, wm_class_key: {1}, startup_wm_class: {2}".format(wm_class_key.lower() == startup_wm_class, wm_class_key, startup_wm_class))
-                                # print("utils.py: wm_class_key.lower() in app_icon: {0}, wm_class_key: {1}, app_icon: {2}".format(wm_class_key.lower() in app_icon, wm_class_key, app_icon))
-                                # print("\n")
-                                if "#" in key:
-                                    source_app = key.split("#")[0]
-                                else:
-                                    source_app = key
-                                source_icon = all_apps[key][0]
-                                break_point = "wm_class_key, {0}".format(all_apps[key])
-                                break
-                            elif "-" in wm_class_key:
-                                # print("utils.py: wm_class_key.split("-")", wm_class_key.split("-"))
-                                for wm_class_subkey in wm_class_key.split("-"):
-                                    if wm_class_subkey.lower() == app_name or wm_class_subkey.lower() == startup_wm_class or wm_class_subkey.lower() in app_icon:
-                                        # print("utils.py: wm_class_subkey", wm_class_subkey)
-                                        # print("utils.py: key, all_apps[key]", key, all_apps[key])
-                                        # print("utils.py: wm_class_subkey.lower() == app_name", wm_class_subkey.lower() == app_name, wm_class_subkey)
-                                        # print("utils.py: wm_class_subkey.lower() == startup_wm_class", wm_class_subkey.lower() == startup_wm_class, wm_class_subkey)
-                                        # print("utils.py: wm_class_subkey.lower() in app_icon", wm_class_subkey.lower() in app_icon, wm_class_subkey)
-                                        if "#" in key:
-                                            source_app = key.split("#")[0]
-                                        else:
-                                            source_app = key
-                                        source_icon = all_apps[key][0]
-                                        break_point = "wm_class_subkey, {0}".format(all_apps[key])
-                                        break
-
-                elif window.get_full_property(WM_NAME, 0):
-                    wm_name = window.get_full_property(WM_NAME, 0).value.decode("utf-8").lower()
-                    if " - " in wm_name:
-                        wm_name = wm_name.split(" - ")[-1]
-                    if startup_wm_class != None:
-                        if wm_name == app_name or wm_name == startup_wm_class or wm_name in app_icon:
-                            # print("utils.py: key, all_apps[key]", key, all_apps[key])
-                            # print("utils.py: wm_name == app_name", wm_name == app_name, wm_name)
-                            # print("utils.py: wm_name == startup_wm_class", wm_name == startup_wm_class, wm_name)
-                            # print("utils.py: wm_name in app_icon", wm_name in app_icon, wm_name)
-                            if "#" in key:
-                                source_app = key.split("#")[0]
-                            else:
-                                source_app = key
-                            source_icon = all_apps[key][0]
-                            break_point = "wm_name, {0}".format(all_apps[key])
-                            break
-                
-            if source_app is None and source_icon is None:
-                workspace = root.get_full_property(NET_DESKTOP_NAMES, Xlib.X.AnyPropertyType).value.replace(b'\x00',b'').decode("utf-8")
-                source_app = workspace + ": unknown app" # if no active window, fallback to workspace name
-                source_icon = "application-default-icon"
-
-    except Xlib.error.XError: #simplify dealing with BadWindow
-        source_app = None
-        source_icon = None
-
-def get_active_app_window_alt():
-    import gi
-    gi.require_version("Wnck", "3.0")
-    gi.require_version("Bamf", "3")
-    from gi.repository import Bamf, Wnck, Gio
-   
-    matcher = Bamf.Matcher()
-    screen = Wnck.Screen.get_default()
-    screen.force_update()
-    all_apps = Gio.AppInfo.get_all()
-
-    bamf_active_win = matcher.get_active_window() 
-    bamf_active_app = matcher.get_active_application()
-    wnck_active_win = screen.get_active_window()
-    wnck_active_app = wnck_active_win.get_application()
-
-    if bamf_active_app is not None and wnck_active_app is not None:
-        try:
-            appinfo = [child for child in all_apps if bamf_active_app.get_name().lower() in child.get_name().lower() or bamf_active_app.get_name().lower() in child.get_display_name().lower()][0]
-        except:
-            appinfo = [child for child in all_apps if wnck_active_app.get_name().lower() in child.get_name().lower() or wnck_active_app.get_name().lower() in child.get_display_name().lower()][0]
-
-        source_app = appinfo.get_name()
-        source_icon = appinfo.get_icon().to_string()
-
-    else: 
-        source_app = screen.get_active_workspace().get_name() # if no active window, fallback to workspace name
-        source_icon = "preferences-desktop-wallpaper"
-
-    return source_app, source_icon
-
 def get_appinfo(app):
     all_apps = get_all_apps()
     try:
@@ -689,32 +406,6 @@ def get_appinfo_gio(app):
             icon_name = "application-default-icon"
     return app_name, icon_name
 
-def get_window_by_gtk_application_id_xlib(gtk_application_id):
-    ''' Function to get window using the gtk_application_id from NET_WM '''
-    import Xlib
-    import Xlib.display
-
-    display = Xlib.display.Display()
-    root = display.screen().root
-
-    NET_CLIENT_LIST = display.intern_atom('_NET_CLIENT_LIST')
-    GTK_APPLICATION_ID = display.intern_atom('_GTK_APPLICATION_ID')
-
-    root.change_attributes(event_mask=Xlib.X.FocusChangeMask)
-    try:
-        window_id = root.get_full_property(NET_CLIENT_LIST, Xlib.X.AnyPropertyType).value
-        for id in window_id:
-            window = display.create_resource_object('window', id)
-            window.change_attributes(event_mask=Xlib.X.PropertyChangeMask)
-            if window.get_full_property(GTK_APPLICATION_ID, 0):
-                if window.get_full_property(GTK_APPLICATION_ID, 0).value.decode("utf-8") == gtk_application_id:
-                    break
-
-    except Xlib.error.XError: #simplify dealing with BadWindow
-        window = None
-
-    return window
-
 def get_active_window_xlib():
     ''' Function to get active window '''
     import Xlib
@@ -733,63 +424,6 @@ def get_active_window_xlib():
         window = None
 
     return window
-
-def get_window_id_by_gtk_application_id_xlib(gtk_application_id):
-    ''' Function to get window using the gtk_application_id from NET_WM '''
-    import Xlib
-    import Xlib.display
-
-    display = Xlib.display.Display()
-    root = display.screen().root
-
-    NET_CLIENT_LIST = display.intern_atom('_NET_CLIENT_LIST')
-    GTK_APPLICATION_ID = display.intern_atom('_GTK_APPLICATION_ID')
-
-    root.change_attributes(event_mask=Xlib.X.FocusChangeMask)
-    try:
-        window_ids = root.get_full_property(NET_CLIENT_LIST, Xlib.X.AnyPropertyType).value
-        for window_id in window_ids:
-            window = display.create_resource_object('window', window_id)
-            window.change_attributes(event_mask=Xlib.X.PropertyChangeMask)
-            if window.get_full_property(GTK_APPLICATION_ID, 0):
-                if window.get_full_property(GTK_APPLICATION_ID, 0).value.decode("utf-8") == gtk_application_id:
-                    break
-
-    except Xlib.error.XError: #simplify dealing with BadWindow
-        window_id = None
-
-    return window_id
-
-def get_active_window_id_xlib():
-    ''' Function to get active window '''
-    import Xlib
-    import Xlib.display
-
-    display = Xlib.display.Display()
-    root = display.screen().root
-
-    NET_ACTIVE_WINDOW = display.intern_atom('_NET_ACTIVE_WINDOW')
-
-    root.change_attributes(event_mask=Xlib.X.FocusChangeMask)
-    try:
-        window_id = root.get_full_property(NET_ACTIVE_WINDOW, Xlib.X.AnyPropertyType).value[0]
-    except Xlib.error.XError: #simplify dealing with BadWindow
-        window_id = None
-
-    return window_id
-
-def set_active_window_by_pointer():
-    ''' Function to set window as active based on where the mouse pointer is located '''
-    import Xlib
-    from Xlib.display import Display
-    from Xlib import X
-
-    display = Display()
-    root = display.screen().root
-    window = root.query_pointer().child
-    window.set_input_focus(X.RevertToParent, X.CurrentTime)
-    window.configure(stack_mode=X.Above)
-    display.sync()
 
 def set_active_window_by_xwindow(window):
     ''' Function to set window as active based on x window '''
@@ -841,71 +475,6 @@ def get_widget_by_name(widget, child_name, level, doPrint=False):
             if child is not None:
                 found = get_widget_by_name(child, child_name, level+1, doPrint) # //search the child
                 if found: return found
-
-def clone_widget(widget):
-    widget2=widget.__class__()
-    for prop in dir(widget):
-        if prop.startswith("set_") and prop not in ["set_buffer"]:
-            prop_value=None
-            try:
-                prop_value=getattr(widget, prop.replace("set_","get_") )()
-            except:
-                try:
-                    prop_value=getattr(widget, prop.replace("set_","") )
-                except:
-                    continue
-            if prop_value == None:
-                continue
-            try:
-                getattr(widget2, prop)( prop_value ) 
-            except:
-                pass
-    return widget2
-
-def get_active_window_application_id():
-    ''' Function to get active window '''
-    import Xlib
-    import Xlib.display
-
-    display = Xlib.display.Display()
-    root = display.screen().root
-
-    NET_ACTIVE_WINDOW = display.intern_atom('_NET_ACTIVE_WINDOW')
-    GTK_APPLICATION_ID = display.intern_atom('_GTK_APPLICATION_ID')
-
-    root.change_attributes(event_mask=Xlib.X.FocusChangeMask)
-    try:
-        window_id = root.get_full_property(NET_ACTIVE_WINDOW, Xlib.X.AnyPropertyType).value[0]
-        window = display.create_resource_object('window', window_id)
-        try:
-            print(window.get_full_property(GTK_APPLICATION_ID, 0).value.replace(b'\x00',b' ').decode("utf-8").lower())
-            return window.get_full_property(GTK_APPLICATION_ID, 0).value.replace(b'\x00',b' ').decode("utf-8").lower()
-        except:
-            return None
-    except Xlib.error.XError: #simplify dealing with BadWindow
-        return None
-
-def get_active_window_wm_class():
-    ''' Function to get active window '''
-    import Xlib
-    import Xlib.display
-
-    display = Xlib.display.Display()
-    root = display.screen().root
-
-    NET_ACTIVE_WINDOW = display.intern_atom('_NET_ACTIVE_WINDOW')
-    WM_CLASS = display.intern_atom('WM_CLASS')
-
-    root.change_attributes(event_mask=Xlib.X.FocusChangeMask)
-    try:
-        window_id = root.get_full_property(NET_ACTIVE_WINDOW, Xlib.X.AnyPropertyType).value[0]
-        window = display.create_resource_object('window', window_id)
-        try:
-            return window.get_full_property(WM_CLASS, 0).value.replace(b'\x00',b' ').decode("utf-8").lower()
-        except:
-            return None
-    except Xlib.error.XError: #simplify dealing with BadWindow
-        return None
 
 #-------------------------------------------------------------------------------------------------------
 # Color Validation Functions
@@ -1070,76 +639,6 @@ def to_rgb(color_string):
         return rgb, a
     else:
         return rgb, float(a)
-
-#-------------------------------------------------------------------------------------------------------
-
-def open_file_xdg(filepath):
-    ''' Function to view file using default application via xdg-open'''
-    import subprocess
-    try:
-        subprocess.Popen(['xdg-open', filepath])
-    except:
-        print("Unable to launch {filepath}".format(filepath=filepath))
-        pass
-
-def open_url_gtk(url):
-    ''' Function to view file using default application via Gtk'''
-    import gi
-    gi.require_version('Gtk', '3.0')
-    from gi.repository import Gtk, Gdk
-    try:
-        Gtk.show_uri_on_window(None, url, Gdk.CURRENT_TIME)
-    except:
-        print("Unable to launch {url}".format(url=url))
-        pass
-
-def open_file_gio(filepath):
-    ''' Function to view file using default application via Gio'''
-    import gi
-    from gi.repository import Gio
-    view_file = Gio.File.new_for_path(filepath)
-    if view_file.query_exists():
-        try:
-            Gio.AppInfo.launch_default_for_uri(uri=view_file.get_uri(), context=None)
-        except:
-            print("Unable to launch {file}".format(file=view_file))
-            pass
-
-def open_url_email(uri):
-    ''' Function to open email links using default application via Gio'''
-    import gi
-    from gi.repository import Gio
-    try:
-        Gio.AppInfo.launch_default_for_uri(uri, None)
-    except:
-        print("Unable to launch {uri}".format(uri=uri))
-        pass
-
-def reveal_file_gio(window, path):
-    ''' Function to open email links using default application via Gtk'''
-    import gi, os
-    gi.require_version('Gtk', '3.0')
-    from gi.repository import Gtk, Gdk, Gio
-    path_dir = os.path.dirname(path)
-    file = Gio.File.new_for_path(path_dir)
-    try:
-        Gtk.show_uri_on_window(window, file.get_uri(), Gdk.CURRENT_TIME)
-    except:
-        pass
-
-def reveal_file_gio2(files):
-    ''' Function to open email links using default application via Gio'''
-    import gi
-    from gi.repository import Gio, GLib, Gdk
-    app_info = Gio.AppInfo.get_default_for_type("inode/directory", True)
-    if isinstance(files, list):
-        try:
-            app_info.launch_uris(files, None)
-        except:
-            pass
-    else:
-        view_file = Gio.File.new_for_path(files)
-        Gio.AppInfo.launch_default_for_uri(uri=view_file.get_uri(), context=None)
 
 #-------------------------------------------------------------------------------------------------------
 
@@ -1473,7 +972,6 @@ def do_webview_screenshot(uri, out_file_path):
     webview = WebKit2.WebView()
     webview.props.zoom_level = 1
     webview.props.expand = True
-    webview.connect("load-changed", loaded_handler)
 
     file = open(uri, "r")
     alt_file_uri = uri.replace("html", "txt")
@@ -1502,6 +1000,11 @@ def do_webview_screenshot(uri, out_file_path):
     offscreen_window.set_size_request(snapshot_width, 160)
     offscreen_window.add(webview)
     offscreen_window.show_all()
+
+    webview.connect("load-changed", loaded_handler, offscreen_window)
+
+#-------------------------------------------------------------------------------------------------------
+
 def open_url_gtk(url):
     ''' Function to view file using default application via Gtk'''
     import gi
