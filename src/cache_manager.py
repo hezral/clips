@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # SPDX-FileCopyrightText: 2021 Adi Hezral <hezral@gmail.com>
 
-import signal
+import time
 import os
 import hashlib
 import sqlite3
@@ -18,6 +18,7 @@ class CacheManager():
 
     main_window = None
     clipboard_monitoring = False
+    queue = []
 
     def __init__(self, gtk_application=None, clipboard_manager=None):
 
@@ -374,7 +375,6 @@ class CacheManager():
                 file.write(alt_content.get_data())
                 file.close()
 
-
                 # condition for html content where bg and text is same color
                 # file_read = open(temp_cache_uri, "r")
                 # content = file_read.read()
@@ -405,15 +405,15 @@ class CacheManager():
 
             # save thumbnail if available
             if thumbnail is not None:
-                if content_type == "html":
-                    self.app.utils.do_webview_screenshot(uri=cache_uri, out_file_path=temp_cache_thumbnail_uri)
-                else:
-                    file = open(temp_cache_thumbnail_uri,"wb")
-                    file.write(thumbnail.get_data())
-                    file.close()
                 cache_thumbnail_file = checksum + "-thumb" + ".png"
                 cache_thumbnail_uri = self.cache_filedir + '/' + cache_thumbnail_file
-                GLib.timeout_add(250, os.renames, temp_cache_thumbnail_uri, cache_thumbnail_uri) #add timeout for it to catchup and now the temp file is there
+                if content_type == "html":
+                    self.app.utils.do_webview_screenshot(uri=cache_uri, out_file_path=cache_thumbnail_uri)
+                    # GLib.timeout_add(250, os.renames, temp_cache_thumbnail_uri, cache_thumbnail_uri) #add timeout for it to catchup and now the temp file is there
+                else:
+                    file = open(cache_thumbnail_uri,"wb")
+                    file.write(thumbnail.get_data())
+                    file.close()
             
             from datetime import datetime
             if "http" in type:
@@ -442,22 +442,56 @@ class CacheManager():
             pixbuf.savev(source_icon_cache, 'png', [], []) # save to icon cache folder
 
             record = (str(target), created, source, source_app, source_icon, cache_file, type, protected)
-
             clips_view = self.main_window.clips_view
 
-            # print(datetime.now(), "start populating clip content")
-        
             # check duplicates using checksum
             if len(self.check_duplicate(checksum)) == 0:
                 self.add_record(record) # add to database
+                
                 new_record = self.select_record(self.db_cursor.lastrowid)[0] # prepare record for gui
+
+                # self.queue_update_cache(new_record)
                 # clips_view.new_clip(new_record) # add to gui
-                GLib.timeout_add(250, clips_view.new_clip, new_record) # add to gui
+                GLib.timeout_add(750, clips_view.new_clip, new_record) # add to gui
             else:
                 self.update_cache_on_recopy(checksum)
-
-            self.check_total_clips()
             
+            self.check_total_clips()
+
+
+    def queue_update_cache(self, record):
+        print(record)
+        id = record[0]
+        self.main_window.clips_view.new_clip(record)
+
+        try:
+            print("success")
+            self.main_window.clips_view.new_clip(record)
+        except:
+            flowboxchild = [child for child in self.main_window.clips_view.flowbox.get_children() if child.get_children()[0].id == id]
+            print(flowboxchild)
+            if flowboxchild is None:
+                print("failed")
+                return self.queue_update_cache(record)
+
+        self.check_total_clips()
+        # if len(self.queue) != 0:
+        #     for item in self.queue:
+        #         try:
+        #             id = item[0]
+        #             record = item[1]
+        #             self.main_window.clips_view.new_clip(record)
+        #             self.queue.pop(item)
+        #         except:
+        #             self.queue.append((id, record))
+        #             return self.queue_update_cache
+        # else:
+        #     try:
+        #         self.main_window.clips_view.new_clip(record)
+        #     except:
+        #         self.queue.append((id, record))
+        #         return self.queue_update_cache
+        
     def update_cache_on_recopy(self, cache_file=None, checksum=None):
         if checksum is None:
             checksum = os.path.splitext(cache_file)[0].split("/")[-1]
@@ -509,7 +543,6 @@ class CacheManager():
         self.main_window.clips_view.flowbox.invalidate_sort()
 
     def check_total_clips(self):
-        # total = len(self.load_clips())
         self.main_window.on_view_visible()
 
     def load_source_apps(self):
