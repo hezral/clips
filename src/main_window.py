@@ -51,6 +51,11 @@ class ClipsWindow(Gtk.ApplicationWindow):
         self.add(self.main_view)
         self.show_all()
 
+        self.connect("map", self.save_window_state)
+        self.connect("delete-event", self.on_close_window)
+        self.connect("hide", self.on_close_window)
+        self.connect("destroy", self.on_close_window)
+
     def set_display_settings(self):
         if not self.gio_settings.get_value("persistent-mode"):
             if self.app.window_manager is not None:
