@@ -1,10 +1,9 @@
 <div align="center">
 
-![icon](data/icons/128/com.github.hezral.clips.svg)
+![icon](data/icons/128.svg)
 
 </div>
 
-[![Build Status](https://travis-ci.com/hezral/clips.svg?branch=master)](https://travis-ci.com/hezral/clips)
 
 If you like what i make, it would really be nice to have someone buy me a coffee
 <div align="center">
