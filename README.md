@@ -36,7 +36,15 @@ If you like what i make, it would really be nice to have someone buy me a coffee
 
 ## Installation
 
-## Build using flatpak
+
+### Install from elementary flatpak remote
+
+```
+flatpak remote-add --if-not-exists --system appcenter https://flatpak.elementary.io/repo.flatpakrepo
+flatpak install com.github.hezral.clips
+```
+
+### Build using flatpak
 * requires that you have flatpak-builder installed
 * flatpak enabled
 * flathub remote enabled
