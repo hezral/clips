@@ -13,6 +13,8 @@ import os
 from datetime import datetime
 import time
 
+import chardet
+
 global stop_threads
 
 class ClipsView(Gtk.Grid):
