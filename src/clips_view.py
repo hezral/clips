@@ -336,8 +336,14 @@ class ClipsContainer(Gtk.EventBox):
             self.content = WordContainer(self.cache_file, self.type, app)
         elif "files" in self.type:
             is_files = True
-            with open(self.cache_file) as file:
+
+            file = open(self.cache_file, "rb")
+            encoding_name = chardet.detect(file.read())["encoding"]
+            file.close()
+
+            with open(self.cache_file, encoding=encoding_name) as file:
                 file_content = file.readlines()
+                
             file_count = len(file_content)
             if file_count == 1:
                 file_content = file_content[0].replace("copy","").replace("file://","").strip().replace("%20", " ").replace("\n","")
@@ -725,12 +731,22 @@ class ClipsContainer(Gtk.EventBox):
 
         elif action == "view":
             if "url" in self.type:
-                with open(self.cache_file) as file:
+                file = open(self.cache_file, "rb")
+                encoding_name = chardet.detect(file.read())["encoding"]
+                file.close()
+
+                with open(self.cache_file, encoding=encoding_name) as file:
                     lines = file.readlines()
                 self.app.utils.open_url_gtk(lines[0].replace('\n',''))
             elif "files" in self.type:
-                with open(self.cache_file) as file:
+
+                file = open(self.cache_file, "rb")
+                encoding_name = chardet.detect(file.read())["encoding"]
+                file.close()
+
+                with open(self.cache_file, encoding=encoding_name) as file:
                     file_content = file.readlines()
+
                 if len(file_content) == 1:
                     file_path = file_content[0].replace("copy","").replace("file://","").strip().replace("%20", " ")
                     self.app.file_manager.show_files_in_file_manager(file_path)
@@ -1126,7 +1142,11 @@ class PlainTextContainer(DefaultContainer):
     def __init__(self, filepath, type, app, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        with open(filepath) as file:
+        file = open(filepath, "rb")
+        encoding_name = chardet.detect(file.read())["encoding"]
+        file.close()
+
+        with open(filepath, encoding=encoding_name) as file:
             firstNlines = file.readlines()[0:10] #put here the interval you want
         self.content = ''.join(firstNlines)
 
@@ -1252,13 +1272,22 @@ class FilesContainer(DefaultContainer):
         self.iconstack_overlay.props.valign = Gtk.Align.FILL
         self.iconstack_overlay.props.halign = Gtk.Align.FILL
         
-        with open(filepath) as file:
+        file = open(filepath, "rb")
+        encoding_name = chardet.detect(file.read())["encoding"]
+        file.close()
+
+        with open(filepath, encoding=encoding_name) as file:
             file_content = file.readlines()
 
         file_count = len(file_content)
 
         mime_type = None
-        with open(filepath) as file:
+
+        file = open(filepath, "rb")
+        encoding_name = chardet.detect(file.read())["encoding"]
+        file.close()
+
+        with open(filepath, encoding=encoding_name) as file:
             file_content = file.readlines()
             for line in file_content:
                 if "file://" in line:
@@ -1379,8 +1408,13 @@ class FilesContainerPopover(Gtk.Popover):
         self.flowbox.connect("child-activated", self.on_files_activated)
 
         mime_type = None
-        with open(filepath) as file:
-            file_content = file.readlines()
+        
+        file = open(filepath, "rb")
+        encoding_name = chardet.detect(file.read())["encoding"]
+        file.close()
+
+        with open(filepath, encoding=encoding_name) as file:
+            self.content  = file.readlines()
             for line in file_content:
                 if "file://" in line:
                     line = line.replace("copy","").replace("file://","").strip().replace("%20", " ")
@@ -1590,7 +1624,11 @@ class UrlContainer(DefaultContainer):
 
         self.props.name = "url-container"
 
-        with open(filepath) as file:
+        file = open(filepath, "rb")
+        encoding_name = chardet.detect(file.read())["encoding"]
+        file.close()
+
+        with open(filepath, encoding=encoding_name) as file:
             self.content  = file.readlines()
 
         domain = app.utils.get_domain(self.content[0].replace("\n",""))
@@ -1647,7 +1685,11 @@ class EmailContainer(DefaultContainer):
 
         self.label = "Email"
 
-        with open(filepath) as file:
+        file = open(filepath, "rb")
+        encoding_name = chardet.detect(file.read())["encoding"]
+        file.close()
+
+        with open(filepath, encoding=encoding_name) as file:
             self.content  = file.readlines()
 
         domain = self.content[0].split("@")[-1].replace("\n","")

@@ -936,6 +936,7 @@ def do_webview_screenshot(uri, out_file_path):
     out_file_path: full path to the png file export
     """
     import os
+    import chardet
     import gi
     gi.require_version('Gtk', '3.0')
     gi.require_version('WebKit2', '4.0')
@@ -973,15 +974,30 @@ def do_webview_screenshot(uri, out_file_path):
     webview.props.zoom_level = 1
     webview.props.expand = True
 
-    file = open(uri, "r")
-    alt_file_uri = uri.replace("html", "txt")
-    
-    content = file.read()
+    file = open(uri, "rb")
+    encoding_name = chardet.detect(file.read())["encoding"]
+    file.close()
+
+    with open(uri, encoding=encoding_name) as file:
+        content  = file.read()
+
+    # file = open(uri, "r", encoding=encoding_name)
+    # content = file.read()
     webview.load_html(content)
 
+    alt_file_uri = uri.replace("html", "txt")
     if os.path.exists(alt_file_uri):
-        alt_file = open(uri.replace("html", "txt"), "r")
-        lines = alt_file.readlines()
+
+        alt_file = open(alt_file_uri, "rb")
+        encoding_name = chardet.detect(alt_file.read())["encoding"]
+        alt_file.close()
+
+        with open(alt_file_uri, encoding=encoding_name) as alt_file:
+            lines  = alt_file.readlines()
+
+        # alt_file = open(uri.replace("html", "txt"), "r", encoding=encoding_name)
+        # lines = alt_file.readlines()
+
         line_char_counts = []
         for line in lines:
             line_chars = line.split(' ')

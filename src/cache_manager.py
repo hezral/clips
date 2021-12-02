@@ -259,7 +259,12 @@ class CacheManager():
         alt_cache_file = cache_file.replace("html", "txt")
 
         if 'http' in clip_type:
-            with open(cache_file) as file:
+            
+            file = open(cache_file, "rb")
+            encoding_name = chardet.detect(file.read())["encoding"]
+            file.close()
+
+            with open(cache_file, encoding=encoding_name) as file:
                 content  = file.readlines()[0] # returns a list with 1 item
             checksum = os.path.splitext(cache_file)[0].split("/")[-1]
             domain = self.app.utils.get_domain(content)
@@ -337,8 +342,16 @@ class CacheManager():
             if 'files' in content_type:
                 lines = []
                 excluded_file_types_list_values = self.app.gio_settings.get_value("file-types").get_strv()
-                file_read = open(temp_cache_uri, "r")
-                line_content = file_read.readlines()
+
+                file = open(temp_cache_uri, "rb")
+                encoding_name = chardet.detect(file.read())["encoding"]
+                file.close()
+
+                with open(temp_cache_uri, encoding=encoding_name) as file_read:
+                    line_content = file_read.readlines()
+
+                # file_read = open(temp_cache_uri, "r")
+                # line_content = file_read.readlines()
 
                 if len(line_content) == 1:
                     line = line_content[0].replace("copy","").replace("file://","").strip().replace("%20", " ")
