@@ -61,11 +61,16 @@
   </content_rating>
 
   <releases>
-    <release version="1.0.6" date="2021-11-03">
+    <release version="1.0.7" date="2021-12-04">
       <description>
-        <p>*New* Shortcut keys changed to CTRL for more natural use, credits to @marcinjahn</p>
-        <p>*Improved* Clip action icons arranged for better context, credits to @marcinjahn</p>
-        <p>*Improved* Html clip thumbnails quality</p>
+        <p>*Improved* text encoding detection</p>
+        <p>*Improved* app detection</p>
+        <p>*Improved* reveal file action</p>
+        <p>*Improved* UI behaviour</p>
+        <p>*New* saved window state behaviour</p>
+        <p>*New* filter by file types</p>
+        <p>*New* filter by keywords</p>
+        <p>*Fixed* bugs and issues</p>
       </description>
     </release>
   </releases>

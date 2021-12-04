@@ -1,7 +1,12 @@
-com.github.hezral.clips (1.0.6) precise; urgency=low
+com.github.hezral.clips (1.0.7) precise; urgency=low
 
-  * *New* Shortcut keys changed to CTRL for more natural use, credits to @marcinjahn
-  * Improved* Clip action icons arranged for better context, credits to @marcinjahn
-  * Improved* Html clip thumbnails quality
+  *Improved* text encoding detection
+  *Improved* app detection
+  *Improved* reveal file action
+  *Improved* UI behaviour
+  *New* saved window state behaviour
+  *New* filter by file types
+  *New* filter by keywords
+  *Fixed* bugs and issues
 
- -- Adi Hezral <hezral@gmail.com>  Thu, 4 Nov 2021 00:00:00 +0800
+ -- Adi Hezral <hezral@gmail.com>  Sat, 4 Dec 2021 00:00:00 +0800
