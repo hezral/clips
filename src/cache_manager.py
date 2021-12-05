@@ -333,7 +333,10 @@ class CacheManager():
  
             # condition if certain keywords is excluded from copy events
             excluded_keywords_list_values = self.app.gio_settings.get_value("keywords").get_strv()
-            keyword_match = [source_app.lower(), content.get_data().decode("utf-8").lower(), file_extension.lower(), content_type.lower(), additional_desc.lower()]
+            if "text" in str(target):
+                keyword_match = [source_app.lower(), str(target), content.get_data().decode("utf-8").lower(), file_extension.lower(), content_type.lower(), additional_desc.lower()]
+            else:
+                keyword_match = [source_app.lower(), str(target), file_extension.lower(), content_type.lower(), additional_desc.lower()]
             keyword_match_joined = ' '.join(keyword_match)
             if any(i.lower() in keyword_match_joined for i in excluded_keywords_list_values):
                 return
