@@ -1,4 +1,4 @@
-com.github.hezral.clips (1.0.7) precise; urgency=low
+com.github.hezral.clips (1.0.8) precise; urgency=low
 
   *Improved* text encoding detection
   *Improved* app detection
@@ -9,4 +9,4 @@ com.github.hezral.clips (1.0.7) precise; urgency=low
   *New* filter by keywords
   *Fixed* bugs and issues
 
- -- Adi Hezral <hezral@gmail.com>  Sat, 4 Dec 2021 00:00:00 +0800
+ -- Adi Hezral <hezral@gmail.com>  Sun, 5 Dec 2021 00:00:00 +0800

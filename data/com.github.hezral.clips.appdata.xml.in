@@ -61,7 +61,7 @@
   </content_rating>
 
   <releases>
-    <release version="1.0.7" date="2021-12-04">
+    <release version="1.0.8" date="2021-12-05">
       <description>
         <p>*Improved* text encoding detection</p>
         <p>*Improved* app detection</p>
