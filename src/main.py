@@ -113,14 +113,15 @@ class Application(Gtk.Application):
         self.running = True
 
     @utils.run_async
+    @utils.metrics
     def load_clips_fromdb(self, clips):
-        
+
         def first_clip(clip): #load first clip to focus 
             self.main_window.clips_view.new_clip(clip)
             self.main_window.clips_view.flowbox.select_child(self.main_window.clips_view.flowbox.get_child_at_index(0))
             self.main_window.clips_view.flowbox.get_child_at_index(0).grab_focus()
 
-        GLib.idle_add(first_clip,clips[-1])
+        GLib.idle_add(first_clip, clips[-1])
         time.sleep(0.01)
 
         for clip in reversed(clips[-25:]):
