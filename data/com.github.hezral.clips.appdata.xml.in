@@ -79,7 +79,7 @@
     <value key="x-appcenter-color-primary">#7D30E8</value>
     <value key="x-appcenter-color-primary-text">#FFFFFF</value>
     <value key="x-appcenter-suggested-price">10.00</value>
-    <value key="x-appcenter-stripe">pk_live_51J03F1AXT8Az6AYFEiPc5mgpv7vUSWDnw135TmPT4tUbB2CJLwG19e3NxEuC7Zbz3VkXg7BygUQOTf7x6UDhSAn8005gq9ywZy</value>
+    <value key="x-appcenter-stripe">pk_live_51J03F1AXT8Az6AYFPmMLLnYikVDwlbwGCGnjiCny6fsbJufM07LuXGCoFkitOhlipcPrEffMfXnLCXVz6s8czXi2003j4asVFa</value>
   </custom>
 
 </component>
