@@ -12,6 +12,8 @@ from .info_view import InfoView
 
 class ClipsWindow(Gtk.ApplicationWindow):
 
+    position = []
+
     def __init__(self, *args, **kwargs):
         super().__init__(
                         title="Clips", 
@@ -55,6 +57,8 @@ class ClipsWindow(Gtk.ApplicationWindow):
         self.connect("delete-event", self.on_close_window)
         self.connect("hide", self.on_close_window)
         self.connect("destroy", self.on_close_window)
+        self.connect("key-press-event", self.on_search_as_you_type)
+        # self.connect("configure-event", self.on_configure_event)
 
     def set_display_settings(self):
         if not self.gio_settings.get_value("persistent-mode"):
@@ -66,44 +70,64 @@ class ClipsWindow(Gtk.ApplicationWindow):
         
         if self.gio_settings.get_value("always-on-top"):
             self.set_keep_above(True)
-        
-        self.connect("key-press-event", self.on_search_as_you_type)
 
-    def set_main_window_size(self, column_number=None, view=None, min_size=[], max_size=[]):
+    def set_main_window_size(self, column_number=None, windowhints=None, base_size=[], min_size=[], max_size=[]):
         if column_number is None:
             column_number = self.gio_settings.get_int("min-column-number")
-        
-        default_height = 450
-        default_width = 340
-        min_width = 340
+
+        if len(base_size) == 0:
+            base_width, base_height = [340, 450]
+
+        if len(min_size) == 0:
+            min_width, min_height = [base_width, base_height]
+
+        if len(max_size) == 0:
+            max_width, max_height = [base_width, base_height]
+
+        # min_width, min_height = min_size
+        # min_width = 340
+
+        geometry_attr = ['base_width', 'base_height']
+        geometry_attr = ['min_width', 'min_height']
+        geometry_attr = ['max_width', 'max_height']
+
         proceed = True
 
         if column_number == 1:
-            default_width = min_width = 360
+            base_width = min_width = 360
 
         elif column_number == 2:
-            default_width = min_width = 600
+            base_width = min_width = 600
 
         elif column_number == 3:
-            default_width = min_width = 800
+            base_width = min_width = 800
 
         elif column_number == 4:
-            default_width = min_width = 958
+            base_width = min_width = 958
         
         elif column_number == 5:
-            default_width = 1100
+            base_width = 1100
             min_width = 958
 
         # elif column_number > 5:
         #     proceed = False
         
         if proceed:
-            self.resize(default_width, default_height)
-            self.set_size_request(min_width, default_height)            
+            self.resize(base_width, base_height)
+            self.set_size_request(min_width, base_height)            
             geometry = Gdk.Geometry()
-            setattr(geometry, 'min_height', default_height)
+            
             setattr(geometry, 'min_width', min_width)
+            setattr(geometry, 'min_height', min_height)
+
+            # setattr(geometry, 'max_width', max_width)
+            # setattr(geometry, 'max_height', max_height)
+            
+            # setattr(geometry, 'base_width', base_width)
+            # setattr(geometry, 'base_height', base_height)
+
             self.set_geometry_hints(None, geometry, Gdk.WindowHints.MIN_SIZE)
+            # self.set_geometry_hints(None, geometry, Gdk.WindowHints.MIN_SIZE | Gdk.WindowHints.MAX_SIZE | Gdk.WindowHints.BASE_SIZE)
 
     def save_window_state(self, *args):
         w, h = self.get_size()
@@ -113,7 +137,6 @@ class ClipsWindow(Gtk.ApplicationWindow):
         self.app.gio_settings.set_int("pos-y", y)
         self.app.gio_settings.set_int("window-height", h)
         self.app.gio_settings.set_int("window-width", w)
-        print("saved window state:", self.app.gio_settings.get_int("pos-x"), self.app.gio_settings.get_int("pos-y"))
 
     def move_window(self, *args):
         # print("map", self.app.gio_settings.get_int("pos-x"), self.app.gio_settings.get_int("pos-y"))
@@ -124,6 +147,9 @@ class ClipsWindow(Gtk.ApplicationWindow):
         self.save_window_state()
         # print(event, self.app.gio_settings.get_int("pos-x"), self.app.gio_settings.get_int("pos-y"))
         return False
+
+    def on_configure_event(self, widget, event):
+        print(event.x, event.y)
 
     def on_search_as_you_type(self, window, eventkey):
         proceed = False
@@ -234,6 +260,7 @@ class ClipsWindow(Gtk.ApplicationWindow):
         if action is not None:
             if action == "settings-view":
                 self.stack.set_visible_child(self.settings_view)
+                # self.set_main_window_size(min_size=)
                 self.view_switch.props.active = True
                 self.settings_view.scrolled_window.grab_focus()
             if action == "clips-view":
@@ -249,6 +276,7 @@ class ClipsWindow(Gtk.ApplicationWindow):
         if view_switch is not None:
             if view_switch.props.active:
                 self.stack.set_visible_child(self.settings_view)
+                # self.set_main_window_size(min_size=)
                 self.settings_view.show_all()
                 self.info_view.hide()
                 self.clips_view.hide()
