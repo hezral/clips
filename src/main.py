@@ -312,7 +312,7 @@ class Application(Gtk.Application):
                 self.main_window.clips_view.flowbox.props.homogeneous = True
                 self.main_window.clips_view.flowbox.props.max_children_per_line = 1
                 self.main_window.clips_view.flowbox.props.min_children_per_line = 1
-                self.main_window.settings_view.on_min_column_number_changed(1)
+                self.main_window.set_main_window_size(column_number=1)
             else:
                 for flowboxchild in self.main_window.clips_view.flowbox.get_children():
                     if flowboxchild.get_children()[0].type not in ["plaintext", "html"]:
