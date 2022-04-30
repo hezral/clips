@@ -130,5 +130,10 @@
             <summary>Shake to reveal</summary>
             <description>Shake to reveal</description>
         </key>
+            <key type="b" name="text-mode">
+            <default>false</default>
+            <summary>Text clips only mode</summary>
+            <description>Toggle between text clips only and full clips mode</description>
+        </key>
     </schema>
 </schemalist>

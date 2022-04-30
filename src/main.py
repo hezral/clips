@@ -49,11 +49,17 @@ class Application(Gtk.Application):
         self.granite_settings = Granite.Settings.get_default()
         
         self.utils = utils
+
         self.logger = logger
         if self.gio_settings.get_value("debug-mode"):
             self.logger.setLevel(logging.DEBUG)
+            format_str = "%(levelname)s: %(asctime)s %(pathname)s, %(funcName)s:%(lineno)d: %(message)s"
+            formatter = logging.Formatter(format_str)
+            for handler in self.logger.handlers:
+                handler.setFormatter(formatter)
         else:
             self.logger.setLevel(logging.INFO)
+
         self.logger.info("startup")
 
         self.clipboard_manager = ClipboardManager(gtk_application=self)
@@ -175,6 +181,7 @@ class Application(Gtk.Application):
         self.create_action("hide", self.on_hide_action, "Escape")
         self.create_action("quit", self.on_quit_action, "<Ctrl>Q")
         self.create_action("search", self.on_search_action, "<Ctrl>F")
+        self.create_action("text-mode", self.on_text_mode, "<Ctrl>T")
         self.create_action("enable_app", self.on_clipsapp_action, "<Ctrl>period")
         self.create_action("settings-view", self.on_switch_views, "<Ctrl>Right")
         self.create_action("clips-view", self.on_switch_views, "<Ctrl>Left")
@@ -287,6 +294,35 @@ class Application(Gtk.Application):
     def on_quit_action(self, action, param):
         if self.main_window is not None:
             self.main_window.destroy()
+
+    def on_text_mode(self, action=None, param=None):
+        hidden = 0
+
+        if self.main_window is not None:
+
+            for flowboxchild in self.main_window.clips_view.flowbox.get_children():
+                if flowboxchild.get_children()[0].type not in ["plaintext", "html"]:
+                    if not flowboxchild.is_visible():
+                        hidden += 1
+
+            if hidden == 0:
+                for flowboxchild in self.main_window.clips_view.flowbox.get_children():
+                    if flowboxchild.get_children()[0].type not in ["plaintext", "html"]:
+                        flowboxchild.hide()
+                self.main_window.clips_view.flowbox.props.homogeneous = True
+                self.main_window.clips_view.flowbox.props.max_children_per_line = 1
+                self.main_window.clips_view.flowbox.props.min_children_per_line = 1
+                self.main_window.settings_view.on_min_column_number_changed(1)
+            else:
+                for flowboxchild in self.main_window.clips_view.flowbox.get_children():
+                    if flowboxchild.get_children()[0].type not in ["plaintext", "html"]:
+                        flowboxchild.show_all()
+
+                self.main_window.clips_view.flowbox.props.homogeneous = False
+                self.main_window.clips_view.flowbox.props.max_children_per_line = 8
+                self.main_window.clips_view.flowbox.props.min_children_per_line = self.gio_settings.get_int("min-column-number")
+                self.main_window.settings_view.on_min_column_number_changed(self.gio_settings.get_int("min-column-number"))
+
 
     def on_prefers_color_scheme(self, *args):
         prefers_color_scheme = self.granite_settings.get_prefers_color_scheme()
