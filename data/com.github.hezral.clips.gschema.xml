@@ -125,5 +125,10 @@
             <summary>Window height</summary>
             <description>Saved height of main window</description>
         </key>
+        <key type="b" name="debug-mode">
+            <default>false</default>
+            <summary>Shake to reveal</summary>
+            <description>Shake to reveal</description>
+        </key>
     </schema>
 </schemalist>

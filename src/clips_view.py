@@ -167,7 +167,7 @@ class ClipsView(Gtk.Grid):
 
     def on_edge_reached(self, scrolledwindow, position):
         if position.value_name == "GTK_POS_BOTTOM":
-            print(datetime.now(), "loading next items")
+            ...
 
     def on_child_activated(self, flowbox, flowboxchild):
         selected = len(flowbox.get_selected_children())
@@ -373,7 +373,7 @@ class ClipsContainer(Gtk.EventBox):
         elif "mail" in self.type:
             self.content = EmailContainer(self.cache_file, self.type, app, self.cache_filedir)
         else:
-            print("clips_view.py:", "FallbackContainer:", self.cache_file, self.type)
+            self.app.logger.debug("clips_view.py:", "FallbackContainer:", self.cache_file, self.type)
             self.content = FallbackContainer(self.cache_file, self.type, app)
 
         self.extended_info = self.content.label
@@ -769,7 +769,6 @@ class ClipsContainer(Gtk.EventBox):
                         import tempfile
                         temp_filename = next(tempfile._get_candidate_names()) + tempfile.gettempprefix()
                         temp_file_uri = os.path.join(tempfile.gettempdir(), temp_filename)
-                        print(temp_file_uri)
                         with open(temp_file_uri, 'wb') as file:
                             file.write(decrypted_data)
                             file.close()
@@ -852,8 +851,6 @@ class ClipsContainer(Gtk.EventBox):
             self.app.main_window.update_total_clips_label("delete")
 
         else:
-            print(action[0])
-            print(action[1])
             pass
 
     def quick_paste(self):
@@ -1025,7 +1022,7 @@ class ImageContainer(DefaultContainer):
         '''
         Function to implement cool hover > zoom image effect
         '''
-        print(locals())
+        ...
 
     def draw(self, drawing_area, cairo_context, hover_scale=1):
         '''
@@ -1593,7 +1590,7 @@ class WordContainer(DefaultContainer):
         elif not os.path.exists(filepath):
             pass
         else:
-            print(filepath, ": special file (socket, FIFO, device file)" )
+            self.app.logger.debug("{0}: special file (socket, FIFO, device file)".format(filepath))
             pass
                         
         icons = Gio.content_type_get_icon(mime_type)

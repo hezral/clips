@@ -173,7 +173,7 @@ class SettingsView(Gtk.Grid):
         others = SettingsGroup("Other", (add_shortcut, protected_mode, unprotect_timeout, reset_password, quick_paste, shake_reveal, shake_sensitivity))
         self.flowbox.add(others)
 
-        # help -------------------------------------------------
+        # support -------------------------------------------------
         view_guides = SubSettings(type="button", name="view-help", label="Guides", sublabel="Guides on how to use Clips", separator=True, params=("View Guides", Gtk.Image().new_from_icon_name("help-contents", Gtk.IconSize.LARGE_TOOLBAR),))
         view_guides.button.connect("clicked", self.on_button_clicked)
         
@@ -183,10 +183,16 @@ class SettingsView(Gtk.Grid):
         buyme_coffee = SubSettings(type="button", name="buy-me-coffee", label="Show Support", sublabel="Thanks for supporting me!", separator=True, params=("Coffee Time", Gtk.Image().new_from_icon_name("com.github.hezral.clips-coffee", Gtk.IconSize.LARGE_TOOLBAR), ))
         buyme_coffee.button.connect("clicked", self.on_button_clicked)
 
-        whats_new = SubSettings(type="button", name="whats-new", label="Whats New", sublabel="Latest release details", separator=False, params=("What's New", Gtk.Image().new_from_icon_name("software-update-available", Gtk.IconSize.LARGE_TOOLBAR), ))
+        whats_new = SubSettings(type="button", name="whats-new", label="Whats New", sublabel="Latest release details", separator=True, params=("What's New", Gtk.Image().new_from_icon_name("software-update-available", Gtk.IconSize.LARGE_TOOLBAR), ))
         whats_new.button.connect("clicked", self.on_button_clicked)
 
-        help = SettingsGroup("Support", (view_guides, report_issue, buyme_coffee, whats_new))
+        debug_mode = SubSettings(type="switch", name="debug-mode", label="Debug Mode", sublabel="For troubleshooting (restart required)",separator=False)
+        self.gio_settings.bind("debug-mode", debug_mode.switch, "active", Gio.SettingsBindFlags.DEFAULT)
+
+        debug_log = SubSettings(type="button", name="debug-log", label=None, sublabel="View debug log", separator=False, params=("Debug Log", Gtk.Image().new_from_icon_name("bug", Gtk.IconSize.LARGE_TOOLBAR), ))
+        debug_log.button.connect("clicked", self.on_button_clicked)
+
+        help = SettingsGroup("Support", (view_guides, report_issue, buyme_coffee, whats_new, debug_mode, debug_log))
         self.flowbox.add(help)
 
         for child in self.flowbox.get_children():
@@ -276,6 +282,9 @@ class SettingsView(Gtk.Grid):
 
         if name == "add-shortcut":
             Gtk.show_uri_on_window(None, "settings://input/keyboard/shortcuts", GLib.get_current_time())
+
+        if name == "debug-log":
+            self.app.file_manager.show_files_in_file_manager(self.app.debug_log)
 
         if name == "reset-password":
 
@@ -570,9 +579,9 @@ class SubSettings(Gtk.Grid):
             if item not in settings_values:
                 settings_values.append(item)
                 gio_settings.set_strv(key_name, settings_values)
-                print(item, "added in {name} list".format(name=key_name))
+                # print(item, "added in {name} list".format(name=key_name))
             else:
-                print(item, "already in {name} list".format(name=key_name))
+                # print(item, "already in {name} list".format(name=key_name))
                 skip_add = True
 
         if skip_add is False:
@@ -620,9 +629,9 @@ class SubSettings(Gtk.Grid):
             settings_values.remove(selected_row.app_name)
             gio_settings.set_strv(key_name, settings_values)
             selected_row.destroy()
-            print(selected_row.app_name, "removed from {name} list".format(name=key_name))
-        else:
-            print(selected_row.app_name, "not in {name} list".format(name=key_name))
+            # print(selected_row.app_name, "removed from {name} list".format(name=key_name))
+        # else:
+            # print(selected_row.app_name, "not in {name} list".format(name=key_name))
         
     def on_row_selected(self, listbox, listboxrow):
         last_row_idx = self.last_row_selected_idx
@@ -698,7 +707,8 @@ class ListChooserPopover(Gtk.Popover):
         self.popdown()
 
     def on_edget_overshot(self, *args):
-        print("on-edge-overshot", locals())
+        ...
+        # print("on-edge-overshot", locals())
         # private void on_edge_overshot (Gtk.PositionType position) {
         #     if (position == Gtk.PositionType.BOTTOM) {
         #         app_list_box.load_next_apps ()

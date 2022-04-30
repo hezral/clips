@@ -149,7 +149,7 @@ class ClipsWindow(Gtk.ApplicationWindow):
         return False
 
     def on_configure_event(self, widget, event):
-        print(event.x, event.y)
+        self.app.logger.debug(event.x, event.y)
 
     def on_search_as_you_type(self, window, eventkey):
         proceed = False
@@ -320,7 +320,7 @@ class ClipsWindow(Gtk.ApplicationWindow):
         #     self.window_menu.popup_at_widget(button, Gdk.Gravity.NORTH, Gdk.Gravity.SOUTH_WEST, None)
 
     def on_menu_activate(self, menuitem):
-        print(menuitem.props.label)
+        self.app.logger.debug(menuitem.props.label)
 
     def generate_headerbar(self):
         self.searchentry = Gtk.SearchEntry()

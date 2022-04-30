@@ -84,10 +84,10 @@ class ClipboardManager():
                             if source_app in self.get_settings("protected-apps"):
                                 protected = "yes"
 
-                        print("clipboard event captured:", self.events, active_app)
+                        self.app.logger.debug("clipboard event captured:", self.events, active_app)
                         return target, content, source_app, source_icon, created, protected, thumbnail, file_extension, content_type, alt_content, alt_file_extension, additional_desc
             else:
-                print("clipboard event ignored:", self.events, event_id, active_app)
+                self.app.logger.debug("clipboard event ignored:", self.events, event_id, active_app)
                 pass
 
     def get_clipboard_contents(self, clipboard, event, active_app):

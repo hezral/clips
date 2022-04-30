@@ -60,8 +60,7 @@ class CacheManager():
         cursor = connection.cursor()
         cursor.execute("PRAGMA database_list;")
         curr_table = cursor.fetchall()
-        print(datetime.now(), "open_db")
-        print("Found ClipsDB", curr_table)
+        self.app.logger.info("Found ClipsDB {0}".format(curr_table))
         return connection, cursor
 
     def create_table(self, database_cursor):
@@ -222,7 +221,7 @@ class CacheManager():
         else:
             print("No records found for auto housekeeping")
 
-        print(datetime.now(), "finish auto-housekeeping")
+        self.app.logger.info("finish auto-housekeeping")
 
         last_run = datetime.now()
         last_run_short = datetime.strftime(last_run, '%a, %d %B %Y, %-I:%M:%S %p')
@@ -476,18 +475,18 @@ class CacheManager():
 
 
     def queue_update_cache(self, record):
-        print(record)
+        # print(record)
         id = record[0]
         self.main_window.clips_view.new_clip(record)
 
         try:
-            print("success")
+            # print("success")
             self.main_window.clips_view.new_clip(record)
         except:
             flowboxchild = [child for child in self.main_window.clips_view.flowbox.get_children() if child.get_children()[0].id == id]
-            print(flowboxchild)
+            # print(flowboxchild)
             if flowboxchild is None:
-                print("failed")
+                # print("failed")
                 return self.queue_update_cache(record)
 
         self.check_total_clips()

@@ -55,7 +55,7 @@ class ShakeListener():
             on_scroll=None)
         self.listener.start()
         self.running = True
-        print(datetime.now(), "shake_listener started")
+        self.app.logger.info("shake_listener started")
 
     def remove_listener(self, *args):
         self.listener.stop()
@@ -93,8 +93,8 @@ class ShakeListener():
                 # details11 = "self.max_x-self.min_x > SHAKE_DIST:{0}".format(self.max_x-self.min_x > SHAKE_DIST)
                 # update = "{0}\n{1}\n{2}\n{3}\n{4}\n{5}\n{6}\n{7}\n{8}\n{9}\n{10}\n{11}\n".format(state, details1, details2, details3, details4, details5, details6, details7, details8, details9, details10, details11)
                 # update = state
-                # print(update)
-                # print(x,y)
+                # self.app.logger.debug(update)
+                # self.app.logger.debug(x,y)
 
                 self.now_x = x
                 if self.now_x < self.old_x:

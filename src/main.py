@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # SPDX-FileCopyrightText: 2021 Adi Hezral <hezral@gmail.com>
 
+import logging
 import sys
 import os
 import gi
@@ -19,7 +20,9 @@ from . import utils
 from datetime import datetime
 import time
 
-import logging
+id = "com.github.hezral.clips"
+debug_log = os.path.join(os.path.dirname(GLib.get_user_data_dir()), id + ".log")
+logger = utils.init_logger(id, debug_log)
 
 class Application(Gtk.Application):
 
@@ -32,6 +35,7 @@ class Application(Gtk.Application):
     window_manager = None
     main_window = None
     total_clips = 0
+    debug_log = debug_log
 
     def __init__(self):
         super().__init__()
@@ -46,10 +50,16 @@ class Application(Gtk.Application):
         self.gtk_settings = Gtk.Settings().get_default()
         self.granite_settings = Granite.Settings.get_default()
         self.utils = utils
+        self.logger = logger
+        if self.gio_settings.get_value("debug-mode"):
+            self.logger.setLevel(logging.DEBUG)
+        else:
+            self.logger.setLevel(logging.INFO)
+        self.logger.info("startup")
         self.clipboard_manager = ClipboardManager(gtk_application=self)
         self.cache_manager = CacheManager(gtk_application=self, clipboard_manager=self.clipboard_manager)
         self.window_manager = ActiveWindowManager(gtk_application=self)
-        self.file_manager = FileManagerBackend()
+        self.file_manager = FileManagerBackend(gtk_application=self)
         self.create_shakelistener()
 
         # prepend custom path for icon theme
@@ -139,7 +149,7 @@ class Application(Gtk.Application):
             # print(datetime.now(), "loading {0}".format(clip[0]))
             time.sleep(0.10)
 
-        print(datetime.now(), "finish load_clips")
+        self.logger.info("finish load_clips")
 
     def do_command_line(self, command_line):
         options = command_line.get_options_dict()
@@ -148,7 +158,7 @@ class Application(Gtk.Application):
 
         if "test" in options:
             # This is printed on the main instance
-            print("Test argument recieved: %s" % options["test"])
+            self.logger.debug("Test argument recieved: %s" % options["test"])
 
         self.activate()
         return 0
@@ -249,9 +259,9 @@ class Application(Gtk.Application):
                 self.main_window.clipsapp_toggle.props.tooltip_text = "Clipboard Monitoring: Disabled"
                 self.main_window.clipsapp_toggle.get_style_context().add_class("app-action-disabled")
                 self.main_window.clipsapp_toggle.get_style_context().remove_class("app-action-enabled")
-                print(datetime.now(), "clipboard monitoring disabled")
+                self.logger.info("clipboard monitoring disabled")
             except:
-                print(datetime.now(), "clipboard monitoring disabling failed")
+                self.logger.info("clipboard monitoring disabling failed")
         elif self.cache_manager.clipboard_monitoring is False or param == "disable":
             try:
                 self.clipboard_manager.clipboard.connect("owner-change", self.cache_manager.update_cache, self.clipboard_manager)
@@ -259,11 +269,9 @@ class Application(Gtk.Application):
                 self.main_window.clipsapp_toggle.props.tooltip_text = "Clipboard Monitoring: Enabled"
                 self.main_window.clipsapp_toggle.get_style_context().add_class("app-action-enabled")
                 self.main_window.clipsapp_toggle.get_style_context().remove_class("app-action-disabled")
-                print(datetime.now(), "clipboard monitoring enabled")
+                self.logger.info("clipboard monitoring enabled")
             except:
-                print(datetime.now(), "clipboard monitoring enabling failed")
-            
-
+                self.logger.info("clipboard monitoring enabling failed")
     def on_hide_action(self, action, param):
         if self.main_window is not None:
             self.main_window.hide()

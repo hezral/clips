@@ -104,10 +104,10 @@ class ActiveWindowManager():
         self.thread = threading.Thread(target=init_manager)
         self.thread.daemon = True
         self.thread.start()
-        print(datetime.now(), "active_window_manager started")
+        self.app.logger.info("active_window_manager started")
 
     def _stop(self):
-        print(datetime.now(), "active_window_manager stopped")
+        self.app.logger.info("active_window_manager stopped")
         self.stop_thread = True
 
     @contextmanager

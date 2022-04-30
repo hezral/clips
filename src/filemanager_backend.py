@@ -7,13 +7,14 @@ from pydbus import SessionBus
 from gi.repository import GObject, Gio
 
 class FileManagerBackend(GObject.GObject):
-    def __init__(self):
+    def __init__(self, gtk_application=None):
         GObject.GObject.__init__(self)
 
         self.bus = SessionBus()
+        self.app = gtk_application
         # self.proxy = self.bus.get("org.freedesktop.FileManager1", "/org/freedesktop/FileManager1")
         self.proxy = self.bus.get(".FileManager1")
-        print(datetime.now(), "file manager backend started")
+        self.app.logger.info("file manager backend started")
 
     def show_files_in_file_manager(self, path):
         uri = Gio.File.new_for_path(path)
@@ -21,5 +22,4 @@ class FileManagerBackend(GObject.GObject):
 
     def show_folders_in_file_manager(self, path):
         uri = Gio.File.new_for_path(path)
-        print(uri.get_uri())
         self.proxy.ShowFolders([uri.get_uri()], "")

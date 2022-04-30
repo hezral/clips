@@ -3,6 +3,58 @@
 
 from datetime import datetime
 
+
+#-------------------------------------------------------------------------------------------------------
+# https://www.blog.pythonlibrary.org/2016/06/09/python-how-to-create-an-exception-logging-decorator/
+
+
+def init_logger(id, logfile):
+    """
+    Creates a logging object and returns it
+    """
+    import sys
+    import logging
+    
+    logger = logging.getLogger(id)
+    logger.setLevel(logging.NOTSET)
+
+    file_handler = logging.FileHandler(logfile)
+    
+    # format_str = "%(levelname)s: %(asctime)s %(pathname)s, %(funcName)s:%(lineno)d: %(message)s"
+    format_str = "%(levelname)s: %(asctime)s %(funcName)s:%(lineno)d: %(message)s"
+    formatter = logging.Formatter(format_str)
+    file_handler.setFormatter(formatter)
+
+    stream_handler = logging.StreamHandler(sys.stdout)
+    stream_handler.setFormatter(formatter) 
+
+    logger.addHandler(file_handler)
+    logger.addHandler(stream_handler)
+
+    return logger
+
+def exception_logger(logger):
+    """
+    A decorator that wraps the passed in function and logs exceptions should one occur
+    
+    @param logger: a logging object
+    """
+    
+    def decorator(func):
+    
+        def wrapper(*args, **kwargs):
+            try:
+                return func(*args, **kwargs)
+            except:
+                err = "There was an exception in  "
+                err += func.__name__
+                logger.exception(err)
+            
+            # re-raise the exception
+            raise
+        return wrapper
+    return decorator
+
 #-------------------------------------------------------------------------------------------------------
 
 from datetime import timedelta
@@ -10,7 +62,8 @@ from functools import wraps
 from timeit import default_timer as timer
 from typing import Any, Callable, Optional
 
-def metrics(func: Optional[Callable] = None, name: Optional[str] = None, hms: Optional[bool] = False) -> Any:
+# def metrics(func: Optional[Callable] = None, name: Optional[str] = None, hms: Optional[bool] = False) -> Any:
+def metrics(func=None, name=None, hms=False, logger=None):
     """Decorator to show execution time.
 
     :param func: Decorated function
@@ -22,18 +75,17 @@ def metrics(func: Optional[Callable] = None, name: Optional[str] = None, hms: Op
     def decorator(fn):
         @wraps(fn)
         def wrapper(*args, **kwargs):
-            comment = f"{datetime.now()} execution time of {name or fn.__name__}:"
+            comment = f"execution time of {name or fn.__name__}:"
             t = timer()
             result = fn(*args, **kwargs)
             te = timer() - t
 
-            # # Log metrics
             # from common import log
             # logger = log.withPrefix('[METRICS]')
             if hms:
-                print(f"{comment} {timedelta(seconds=te)}")
+                logger.debug(f"{comment} {timedelta(seconds=te)}")
             else:
-                print(f"{comment} {te:>.6f} sec")
+                logger.debug(f"{comment} {te:>.6f} sec")
 
             return result
         return wrapper
