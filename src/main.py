@@ -1,7 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # SPDX-FileCopyrightText: 2021 Adi Hezral <hezral@gmail.com>
 
-from distutils.debug import DEBUG
 import logging
 import sys
 import os
@@ -56,7 +55,6 @@ class Application(Gtk.Application):
         else:
             self.logger.setLevel(logging.INFO)
         self.logger.info("startup")
-        self.logger.debug("startup")
 
         self.clipboard_manager = ClipboardManager(gtk_application=self)
         self.cache_manager = CacheManager(gtk_application=self, clipboard_manager=self.clipboard_manager)
