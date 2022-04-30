@@ -21,7 +21,7 @@ def init_logger(id, logfile):
     file_handler = logging.FileHandler(logfile)
     
     # format_str = "%(levelname)s: %(asctime)s %(pathname)s, %(funcName)s:%(lineno)d: %(message)s"
-    format_str = "%(levelname)s: %(asctime)s %(funcName)s:%(lineno)d: %(message)s"
+    format_str = "%(levelname)s: %(asctime)s %(message)s"
     formatter = logging.Formatter(format_str)
     file_handler.setFormatter(formatter)
 
