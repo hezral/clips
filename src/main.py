@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # SPDX-FileCopyrightText: 2021 Adi Hezral <hezral@gmail.com>
 
+from distutils.debug import DEBUG
 import logging
 import sys
 import os
@@ -26,7 +27,7 @@ logger = utils.init_logger(id, debug_log)
 
 class Application(Gtk.Application):
 
-    app_id = "com.github.hezral.clips"
+    app_id = id
     running = False
     app_startup = True
     clipboard_manager = None
@@ -40,8 +41,6 @@ class Application(Gtk.Application):
     def __init__(self):
         super().__init__()
 
-        print(datetime.now(), "startup")
-
         self.props.application_id = self.app_id
         self.props.flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE
         self.add_main_option("test", ord("t"), GLib.OptionFlags.NONE, GLib.OptionArg.NONE, "Command line test", None)
@@ -49,6 +48,7 @@ class Application(Gtk.Application):
         self.gio_settings = Gio.Settings(schema_id=self.app_id)
         self.gtk_settings = Gtk.Settings().get_default()
         self.granite_settings = Granite.Settings.get_default()
+        
         self.utils = utils
         self.logger = logger
         if self.gio_settings.get_value("debug-mode"):
@@ -56,6 +56,8 @@ class Application(Gtk.Application):
         else:
             self.logger.setLevel(logging.INFO)
         self.logger.info("startup")
+        self.logger.debug("startup")
+
         self.clipboard_manager = ClipboardManager(gtk_application=self)
         self.cache_manager = CacheManager(gtk_application=self, clipboard_manager=self.clipboard_manager)
         self.window_manager = ActiveWindowManager(gtk_application=self)
@@ -88,42 +90,52 @@ class Application(Gtk.Application):
         provider.load_from_path(os.path.join(os.path.dirname(__file__), "data", "application.css"))
         Gtk.StyleContext.add_provider_for_screen(Gdk.Screen.get_default(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
 
-    def do_activate(self):
-
-        if self.main_window is None:
-            self.main_window = ClipsWindow(application=self)
-            self.add_window(self.main_window)
-            self.cache_manager.main_window = self.main_window
-
         if self.app_startup is True:
             if self.gio_settings.get_value("auto-housekeeping"):
-                print(datetime.now(), "start auto-housekeeping")
-                print(datetime.now(), "auto-retention-period", self.gio_settings.get_int("auto-retention-period"))
+                self.logger.info("start auto-housekeeping")
+                self.logger.info("auto-retention-period", self.gio_settings.get_int("auto-retention-period"))
                 self.cache_manager.auto_housekeeping(self.gio_settings.get_int("auto-retention-period"))
 
-            if self.gio_settings.get_value("hide-on-startup"):
-                self.main_window.hide()
+    def do_activate(self):
+        # no window
+        if self.main_window is None:
+            self.logger.info("no window: initializing window")
+            self.main_window = ClipsWindow(application=self)
+            self.add_window(self.main_window)
 
-            print(datetime.now(), "start load_clips")
-            clips = self.cache_manager.load_clips()
-            
-            if len(clips) != 0:
-                self.load_clips_fromdb(clips)
-            
-            self.app_startup = False
-            self.main_window.on_view_visible()
-
-        else:
-            if self.main_window.is_visible():
+            if self.app_startup and self.gio_settings.get_value("hide-on-startup"):
+                self.logger.info("app startup: hide on startup enabled")
                 self.main_window.hide()
             else:
                 self.main_window.present()
-                # self.main_window.save_window_state()
+                self.main_window.on_view_visible()
 
-        self.running = True
+            self.cache_manager.main_window = self.main_window
+            clips = self.cache_manager.load_clips()
+            if len(clips) != 0:
+                self.load_clips_fromdb(clips)
+        
+            self.app_startup = False
+            self.running = True
+
+            # delayed trigger to avoid clash with persistent mode getting triggered on window display event
+            GLib.timeout_add(250, self.main_window.set_display_settings, None)
+
+        # window hidden
+        else:
+            self.logger.info("window visible")
+
+            if self.main_window.is_visible():
+                self.main_window.hide()
+
+            else:
+                for window in self.get_windows():
+                    window.destroy()
+                self.main_window = None
+                self.do_activate()
 
     @utils.run_async
-    @utils.metrics
+    @utils.metrics(logger=logger)
     def load_clips_fromdb(self, clips):
 
         def first_clip(clip): #load first clip to focus 
@@ -136,17 +148,14 @@ class Application(Gtk.Application):
 
         for clip in reversed(clips[-25:]):
             GLib.idle_add(self.main_window.clips_view.new_clip, clip)
-            # print(datetime.now(), "loading {0}".format(clip[0]))
             time.sleep(0.01)
 
         for clip in reversed(clips[-50:-25]):
             GLib.idle_add(self.main_window.clips_view.new_clip, clip)
-            # print(datetime.now(), "loading {0}".format(clip[0]))
             time.sleep(0.05)
 
         for clip in reversed(clips[:-50]):
             GLib.idle_add(self.main_window.clips_view.new_clip, clip)
-            # print(datetime.now(), "loading {0}".format(clip[0]))
             time.sleep(0.10)
 
         self.logger.info("finish load_clips")
@@ -272,6 +281,7 @@ class Application(Gtk.Application):
                 self.logger.info("clipboard monitoring enabled")
             except:
                 self.logger.info("clipboard monitoring enabling failed")
+            
     def on_hide_action(self, action, param):
         if self.main_window is not None:
             self.main_window.hide()

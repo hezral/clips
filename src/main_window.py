@@ -48,7 +48,7 @@ class ClipsWindow(Gtk.ApplicationWindow):
 
         self.set_titlebar(self.generate_headerbar())
         self.get_style_context().add_class("rounded")
-        self.set_display_settings()
+        # self.set_display_settings()
         self.set_main_window_size()
         self.add(self.main_view)
         self.show_all()
@@ -60,7 +60,7 @@ class ClipsWindow(Gtk.ApplicationWindow):
         self.connect("key-press-event", self.on_search_as_you_type)
         # self.connect("configure-event", self.on_configure_event)
 
-    def set_display_settings(self):
+    def set_display_settings(self, data):
         if not self.gio_settings.get_value("persistent-mode"):
             if self.app.window_manager is not None:
                 self.app.window_manager._run(callback=self.on_persistent_mode)
@@ -173,7 +173,7 @@ class ClipsWindow(Gtk.ApplicationWindow):
 
     def on_persistent_mode(self, wm_class):
         if wm_class is not None:
-           if self.app.props.application_id not in wm_class:
+            if self.app.props.application_id not in wm_class:
                 self.hide()
 
     def on_search_entry_key_pressed(self, search_entry, eventkey):
