@@ -162,7 +162,9 @@ class InfoView(Gtk.Grid):
             self.flowbox.add(help_settings)
 
             help_clip_extra_actions = HelpSubView(prefer_dark_style, image_name="help_clip_extra_actions", subtitle_text="Copy plaintext & Force delete")
+            help_text_mode = HelpSubView(prefer_dark_style, image_name="help_textmode", subtitle_text="Filter text clips instantly")
             self.flowbox.add(help_clip_extra_actions)
+            self.flowbox.add(help_text_mode)
 
             for child in self.flowbox.get_children():
                 child.props.can_focus = False

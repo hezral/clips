@@ -114,6 +114,8 @@ image_sources = [
   join_paths('images', 'help_settings_light' + '.png'),
   join_paths('images', 'help_switch_views_dark' + '.png'),
   join_paths('images', 'help_switch_views_light' + '.png'),
+  join_paths('images', 'help_textmode_dark' + '.png'),
+  join_paths('images', 'help_textmode_light' + '.png'),
 ]
 imagesdir = join_paths(pkgdatadir, 'clips', 'data', 'images')
 install_data(image_sources, install_dir: imagesdir)
