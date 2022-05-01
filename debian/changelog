@@ -1,12 +1,8 @@
-com.github.hezral.clips (1.0.9) precise; urgency=low
+com.github.hezral.clips (1.1.0) precise; urgency=low
 
-  *Improved* text encoding detection
-  *Improved* app detection
-  *Improved* reveal file action
-  *Improved* UI behaviour
-  *New* saved window state behaviour
-  *New* filter by file types
-  *New* filter by keywords
-  *Fixed* bugs and issues
+  Improved app window focus during launch/redisplay
+  Fixed issues with maximizing window causing crash
+  Added logging and debug mode
+  Added new text mode toggle using Ctrl+T
 
- -- Adi Hezral <hezral@gmail.com>  Fri, 10 Dec 2021 00:00:00 +0800
+ -- Adi Hezral <hezral@gmail.com>  Fri, 1 May 2022 00:00:00 +0800

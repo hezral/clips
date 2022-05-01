@@ -61,16 +61,12 @@
   </content_rating>
 
   <releases>
-    <release version="1.0.9" date="2021-12-10">
+    <release version="1.1.0" date="2022-05-01">
       <description>
-        <p>*Improved* text encoding detection</p>
-        <p>*Improved* app detection</p>
-        <p>*Improved* reveal file action</p>
-        <p>*Improved* UI behaviour</p>
-        <p>*New* saved window state behaviour</p>
-        <p>*New* filter by file types</p>
-        <p>*New* filter by keywords</p>
-        <p>*Fixed* bugs and issues</p>
+        <p>Improved app window focus during launch/redisplay</p>
+        <p>Fixed issues with maximizing window causing crash</p>
+        <p>Added logging and debug mode</p>
+        <p>Added new text mode toggle using Ctrl+T</p>
       </description>
     </release>
   </releases>
@@ -79,7 +75,7 @@
     <value key="x-appcenter-color-primary">#7D30E8</value>
     <value key="x-appcenter-color-primary-text">#FFFFFF</value>
     <value key="x-appcenter-suggested-price">10.00</value>
-    <value key="x-appcenter-stripe">pk_live_51J03F1AXT8Az6AYFPmMLLnYikVDwlbwGCGnjiCny6fsbJufM07LuXGCoFkitOhlipcPrEffMfXnLCXVz6s8czXi2003j4asVFa</value>
+    <value key="x-appcenter-stripe">pk_live_51J03F1AXT8Az6AYF8zNgNjWQdgv9evFSXNlwpf6cLjg9VsQ0Z04Wqd0Vkbo5PalO6L5ZPaaJXFkx6tuvcvXFiKfF00cYD6MaSh</value>
   </custom>
 
 </component>
