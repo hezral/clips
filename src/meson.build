@@ -24,6 +24,7 @@ clips_sources = [
   'main.py',
   'main_window.py',
   'utils.py',
+  'utils_wayland.py',
   'cache_manager.py',
   'clipboard_manager.py',
   'clips_supported.py',
@@ -32,7 +33,11 @@ clips_sources = [
   'info_view.py',
   'settings_view.py',
   'shake_listener.py',
-  'active_window_manager.py',
+  'active_window_manager_x11.py',
+  'active_window_manager_wayland.py',
   'filemanager_backend.py',
+  'screenshot_webkit.py',
+  'screenshot_webkit2.py',
+  'screenshot_playwright.py',
 ]
 install_data(clips_sources, install_dir: moduledir)

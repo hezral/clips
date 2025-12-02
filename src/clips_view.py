@@ -4,8 +4,8 @@
 from os.path import basename
 import gi
 gi.require_version('Gtk', '3.0')
-gi.require_version('WebKit2', '4.0')
-from gi.repository import Gtk, WebKit2, GdkPixbuf, Pango, Gdk, Gio, GLib
+# gi.require_version('WebKit2', '4.0')
+from gi.repository import Gtk, GdkPixbuf, Pango, Gdk, Gio, GLib
 import cairo
 from . import custom_widgets
 

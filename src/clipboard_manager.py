@@ -8,6 +8,7 @@ from gi.repository import Gtk, Gdk
 from datetime import datetime
 
 from . import clips_supported
+from .utils import log_function_calls
 
 class ClipboardManager():
 
@@ -16,16 +17,20 @@ class ClipboardManager():
     events = []
     proceed = True
 
+    @log_function_calls
     def __init__(self, gtk_application=None):
         super().__init__()
 
         self.app = gtk_application
         self.clips_supported = clips_supported
 
+    @log_function_calls
     def get_settings(self, gio_settings_keyname):
         return self.app.gio_settings.get_value(gio_settings_keyname).get_strv()
 
+    @log_function_calls
     def clipboard_changed(self, clipboard, event):
+        self.app.logger.debug(f"clipboard_changed called with clipboard: {clipboard} and event: {event}")
 
         # print("active app:", active_app)
         # print("selection owner:", event.owner)
@@ -66,7 +71,7 @@ class ClipboardManager():
             self.proceed = True
 
         # exclude apps
-        active_app, active_app_icon = self.app.utils.get_active_appinfo_xlib()
+        active_app, active_app_icon = self.app.utils.get_active_appinfo()
 
         if active_app != "Clips":
             if active_app not in self.get_settings("excluded-apps"):
@@ -84,13 +89,17 @@ class ClipboardManager():
                             if source_app in self.get_settings("protected-apps"):
                                 protected = "yes"
 
-                        self.app.logger.debug("clipboard event captured:", self.events, active_app)
+                        self.app.logger.debug(f"clipboard event captured: {self.events}, {active_app}")
                         return target, content, source_app, source_icon, created, protected, thumbnail, file_extension, content_type, alt_content, alt_file_extension, additional_desc
             else:
-                self.app.logger.debug("clipboard event ignored:", self.events, event_id, active_app)
+                self.app.logger.debug(f"clipboard event ignored: {self.events}, {event_id}, {active_app}")
                 pass
 
+    @log_function_calls
     def get_clipboard_contents(self, clipboard, event, active_app):
+        self.app.logger.debug(
+            f"get_clipboard_contents called with clipboard: {clipboard}, event: {event}, and active_app: {active_app}"
+        )
         
         clip_saved = False
         alt_target = None
@@ -99,11 +108,13 @@ class ClipboardManager():
 
         for supported_target in self.clips_supported.supported_targets:   
             for target in clipboard.wait_for_targets()[1]:
+                self.app.logger.debug(f"Processing target: {target}")
                 if target not in self.clips_supported.excluded_targets and supported_target[0] in str(target) and clip_saved is False:
                     proceed = True
 
                     content = clipboard.wait_for_contents(target)
                     if content is not None:
+                        self.app.logger.debug(f"Content retrieved for target: {target}, content: {content}")
 
                         file_extension = supported_target[1]
                         additional_desc = supported_target[2]
@@ -174,4 +185,15 @@ class ClipboardManager():
 
                             clip_saved = True
 
+                            self.app.logger.debug(
+                                f"Returning clipboard data: "
+                                f"target={target}, "
+                                f"content={content}, "
+                                f"thumbnail={thumbnail}, "
+                                f"file_extension={file_extension}, "
+                                f"additional_desc={additional_desc}, "
+                                f"content_type={content_type}, "
+                                f"alt_content={alt_content}, "
+                                f"alt_file_extension={alt_file_extension}"
+                            )
                             return target, content, thumbnail, file_extension, additional_desc, content_type, alt_content, alt_file_extension

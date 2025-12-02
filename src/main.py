@@ -12,10 +12,14 @@ from gi.repository import Gtk, Gio, GLib, Gdk, Granite
 from .main_window import ClipsWindow
 from .clipboard_manager import ClipboardManager
 from .cache_manager import CacheManager
-from .shake_listener import ShakeListener
-from .active_window_manager import ActiveWindowManager
-from .filemanager_backend import FileManagerBackend
+# from .shake_listener import ShakeListener
 from . import utils
+from .utils import log_function_calls
+if utils.is_wayland_session():
+    from .active_window_manager_wayland import ActiveWindowManager
+else:
+    from .active_window_manager_x11 import ActiveWindowManager
+from .filemanager_backend import FileManagerBackend
 
 from datetime import datetime
 import time
@@ -37,6 +41,7 @@ class Application(Gtk.Application):
     total_clips = 0
     debug_log = debug_log
 
+    @log_function_calls
     def __init__(self):
         super().__init__()
 
@@ -51,14 +56,14 @@ class Application(Gtk.Application):
         self.utils = utils
 
         self.logger = logger
-        if self.gio_settings.get_value("debug-mode"):
-            self.logger.setLevel(logging.DEBUG)
-            format_str = "%(levelname)s: %(asctime)s %(pathname)s, %(funcName)s:%(lineno)d: %(message)s"
-            formatter = logging.Formatter(format_str)
-            for handler in self.logger.handlers:
-                handler.setFormatter(formatter)
-        else:
-            self.logger.setLevel(logging.INFO)
+        # if self.gio_settings.get_value("debug-mode"):
+        self.logger.setLevel(logging.DEBUG)
+        format_str = "%(levelname)s: %(asctime)s %(filename)s, %(funcName)s:%(lineno)d: %(message)s"
+        formatter = logging.Formatter(format_str)
+        for handler in self.logger.handlers:
+            handler.setFormatter(formatter)
+        # else:
+        #     self.logger.setLevel(logging.INFO)
 
         self.logger.info("startup")
 
@@ -76,6 +81,7 @@ class Application(Gtk.Application):
         self.icon_theme.prepend_search_path(os.path.join(GLib.get_home_dir(), ".local/share/flatpak/exports/share/icons"))
         self.icon_theme.prepend_search_path(os.path.join(os.path.dirname(__file__), "data", "icons"))
 
+    @log_function_calls
     def do_startup(self):
         Gtk.Application.do_startup(self)
 
@@ -100,6 +106,7 @@ class Application(Gtk.Application):
                 self.logger.info("auto-retention-period", self.gio_settings.get_int("auto-retention-period"))
                 self.cache_manager.auto_housekeeping(self.gio_settings.get_int("auto-retention-period"))
 
+    @log_function_calls
     def do_activate(self):
         # no window
         if self.main_window is None:
@@ -140,6 +147,7 @@ class Application(Gtk.Application):
 
     @utils.run_async
     @utils.metrics(logger=logger)
+    @log_function_calls
     def load_clips_fromdb(self, clips):
 
         def first_clip(clip): #load first clip to focus 
@@ -164,6 +172,7 @@ class Application(Gtk.Application):
 
         self.logger.info("finish load_clips")
 
+    @log_function_calls
     def do_command_line(self, command_line):
         options = command_line.get_options_dict()
         # convert GVariantDict -> GVariant -> dict
@@ -176,6 +185,7 @@ class Application(Gtk.Application):
         self.activate()
         return 0
             
+    @log_function_calls
     def create_app_actions(self):
         # app actions
         self.create_action("hide", self.on_hide_action, "Escape")
@@ -208,12 +218,14 @@ class Application(Gtk.Application):
         self.create_action("quick_copy8", self.on_clip_actions, "<Ctrl>8")
         self.create_action("quick_copy9", self.on_clip_actions, "<Ctrl>9")
 
+    @log_function_calls
     def create_action(self, name, callback, shortcutkey):
         action = Gio.SimpleAction.new(name, None)
         action.connect("activate", callback)
         self.add_action(action)
         self.set_accels_for_action("app.{name}".format(name=name), [shortcutkey])
 
+    @log_function_calls
     def on_search_action(self, action, param):
         if self.main_window is not None and self.main_window.is_visible() and self.main_window.searchentry.has_focus() is False:
             self.main_window.searchentry.grab_focus()
@@ -222,6 +234,7 @@ class Application(Gtk.Application):
             self.main_window.clips_view.flowbox.select_child(self.main_window.clips_view.flowbox.get_child_at_index(0))
             self.main_window.clips_view.flowbox.get_child_at_index(0).grab_focus()
     
+    @log_function_calls
     def on_clip_actions(self, action, param):
         if len(self.main_window.clips_view.flowbox.get_selected_children()) != 0:
 
@@ -250,10 +263,12 @@ class Application(Gtk.Application):
                     clips_container = flowboxchild.get_children()[0]
                     clips_container.on_clip_action(action=action.props.name)
 
+    @log_function_calls
     def on_switch_views(self, action, param):
         if self.main_window is not None:
             self.main_window.on_view_visible(action=action.props.name)
 
+    @log_function_calls
     def on_column_number_action(self, action, param):
         if self.main_window is not None:
             current_column_number = self.gio_settings.get_int("min-column-number")
@@ -265,6 +280,7 @@ class Application(Gtk.Application):
             if new_column_number != 0:
                 self.main_window.settings_view.on_min_column_number_changed(new_column_number)
 
+    @log_function_calls
     def on_clipsapp_action(self, action=None, param=None):
         if self.cache_manager.clipboard_monitoring is True:
             try:
@@ -287,14 +303,17 @@ class Application(Gtk.Application):
             except:
                 self.logger.info("clipboard monitoring enabling failed")
             
+    @log_function_calls
     def on_hide_action(self, action, param):
         if self.main_window is not None:
             self.main_window.hide()
 
+    @log_function_calls
     def on_quit_action(self, action, param):
         if self.main_window is not None:
             self.main_window.destroy()
 
+    @log_function_calls
     def on_text_mode(self, action=None, param=None):
         hidden = 0
 
@@ -323,11 +342,12 @@ class Application(Gtk.Application):
                 self.main_window.clips_view.flowbox.props.min_children_per_line = self.gio_settings.get_int("min-column-number")
                 self.main_window.settings_view.on_min_column_number_changed(self.gio_settings.get_int("min-column-number"))
 
-
+    @log_function_calls
     def on_prefers_color_scheme(self, *args):
         prefers_color_scheme = self.granite_settings.get_prefers_color_scheme()
         self.gtk_settings.set_property("gtk-application-prefer-dark-theme", prefers_color_scheme)
 
+    @log_function_calls
     def create_shakelistener(self, *args):
         if self.shake_listener is not None:
             self.shake_listener.listener.stop()
@@ -335,6 +355,7 @@ class Application(Gtk.Application):
         if self.gio_settings.get_value("shake-reveal"):
             self.shake_listener = ShakeListener(app=self, reveal_callback=self.do_activate, sensitivity=self.gio_settings.get_int("shake-sensitivity"))
 
+@log_function_calls
 def main(version):
     app = Application()
     return app.run(sys.argv)

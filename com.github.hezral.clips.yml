@@ -1,12 +1,14 @@
-app-id: com.github.hezral.clips
+id: com.github.hezral.clips
 runtime: io.elementary.Platform
-runtime-version: '6'
+runtime-version: '8.2'
 sdk: io.elementary.Sdk
 command: com.github.hezral.clips
 finish-args:
   - --share=ipc
   - --socket=wayland
   - --socket=fallback-x11
+  - --device=dri # GPU/DRI access for WebKit rendering
+  - --env=LIBGL_ALWAYS_SOFTWARE=1 #force software rendering if GPU fails
 
   # network access for clips to retrieve basic info on URLs
   - --share=network
@@ -42,6 +44,11 @@ finish-args:
   # talking to FileManager1 to use ShowItems() function to reveal and select/highlight file in default file manager
   # source file: filemanager_backend.py
   - --talk-name=org.freedesktop.FileManager1
+
+# build-options:
+#   env:
+#     - "GSETTINGS_SCHEMA_DIR=/app/share/glib-2.0/schemas"
+#     - "XDG_DATA_DIRS=/app/share"
 
 modules:
   - name: chardet
@@ -122,10 +129,28 @@ modules:
       - type: git
         url: https://github.com/astrand/xclip.git
 
-  - name: libpwquality
+  - name: wl-clipboard
+    buildsystem: meson
+    build-options:
+      config-opts:
+      - '-Dfishcompletiondir=no'
     sources:
       - type: git
-        url: https://github.com/libpwquality/libpwquality.git
+        url: https://github.com/bugaevc/wl-clipboard.git
+
+  - name: wtype
+    buildsystem: meson
+    sources:
+      - type: git
+        url: https://github.com/atx/wtype.git
+
+  - name: libpwquality
+    sources:
+      #- type: git
+        #url: https://github.com/libpwquality/libpwquality.git
+      - type: archive
+        url: https://github.com/libpwquality/libpwquality/archive/refs/tags/libpwquality-1.4.4.tar.gz
+        sha256: 11dcbe877f6e330119a4dab1d426930d6df011c4890eb7a7f6655834e398b40e
 
   - name: clips
     buildsystem: meson

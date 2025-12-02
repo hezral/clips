@@ -1,6 +1,14 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # SPDX-FileCopyrightText: 2021 Adi Hezral <hezral@gmail.com>
 
+import os
+
+def is_wayland_session():
+    return "WAYLAND_DISPLAY" in os.environ
+
+if is_wayland_session():
+    from .utils_wayland import get_active_appinfo_wayland, paste_from_clipboard_wayland, copy_to_clipboard_wayland, copy_files_to_clipboard_wayland
+
 from datetime import datetime
 
 
@@ -54,6 +62,38 @@ def exception_logger(logger):
             raise
         return wrapper
     return decorator
+
+def log_function_calls(func):
+    """
+    A decorator that logs the entry and exit of a function, including its arguments and return value.
+    Attempts to find a logger from `self.logger`, `self.app.logger`, or falls back to the `logging` module directly.
+    """
+    from functools import wraps
+    import logging # Import logging here to ensure it's available
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        # Try to get logger from instance (self.logger or self.app.logger)
+        local_logger = None
+        if args and hasattr(args[0], 'logger'):
+            local_logger = args[0].logger
+        elif args and hasattr(args[0], 'app') and hasattr(args[0].app, 'logger'):
+            local_logger = args[0].app.logger
+        
+        # Fallback to root logger if no specific logger found
+        logger_to_use = local_logger if local_logger else logging.getLogger()
+
+        # Prepare arguments for logging (exclude 'self' for methods)
+        log_args = args[1:] if args and hasattr(args[0], '__class__') and isinstance(args[0], object) else args
+
+        logger_to_use.debug(f"Entering: {func.__name__} with args: {log_args} and kwargs: {kwargs}")
+        
+        result = func(*args, **kwargs)
+        
+        logger_to_use.debug(f"Exiting: {func.__name__} with return value: {result}")
+        return result
+    return wrapper
+
 
 #-------------------------------------------------------------------------------------------------------
 
@@ -347,7 +387,13 @@ def get_all_apps(app=None):
     else:
         return all_apps
 
-def get_active_appinfo_xlib(data=None):
+def get_active_appinfo(data=None):
+    if is_wayland_session():
+        return get_active_appinfo_wayland(data)
+    else:
+        return _get_active_appinfo_xlib(data)
+
+def _get_active_appinfo_xlib(data=None):
     source_app = None
     source_icon = None
     all_apps = get_all_apps()
@@ -495,7 +541,14 @@ def get_appinfo_gio(app):
             icon_name = "application-default-icon"
     return app_name, icon_name
 
-def get_active_window_xlib():
+def get_active_window():
+    if is_wayland_session():
+        # TODO: Implement for Wayland
+        return None
+    else:
+        return _get_active_window_xlib()
+
+def _get_active_window_xlib():
     ''' Function to get active window '''
     import Xlib
     import Xlib.display
@@ -514,7 +567,14 @@ def get_active_window_xlib():
 
     return window
 
-def set_active_window_by_xwindow(window):
+def set_active_window(window):
+    if is_wayland_session():
+        # TODO: Implement for Wayland
+        pass
+    else:
+        _set_active_window_by_xwindow(window)
+
+def _set_active_window_by_xwindow(window):
     ''' Function to set window as active based on x window '''
     import Xlib
     from Xlib.display import Display
@@ -851,6 +911,12 @@ def is_valid_email(str):
 #-------------------------------------------------------------------------------------------------------
 
 def copy_to_clipboard(clipboard_target, file, type=None):
+    if is_wayland_session():
+        return copy_to_clipboard_wayland(clipboard_target, file, type)
+    else:
+        return _copy_to_clipboard_xclip(clipboard_target, file, type)
+
+def _copy_to_clipboard_xclip(clipboard_target, file, type=None):
     ''' Function to copy files to clipboard '''
     from subprocess import Popen, PIPE
 
@@ -866,6 +932,12 @@ def copy_to_clipboard(clipboard_target, file, type=None):
         return False
 
 def copy_files_to_clipboard(uris):
+    if is_wayland_session():
+        return copy_files_to_clipboard_wayland(uris)
+    else:
+        return _copy_files_to_clipboard_xclip(uris)
+
+def _copy_files_to_clipboard_xclip(uris):
     ''' Function to copy files to clipboard from a string of uris in file:// format '''
     from subprocess import Popen, PIPE
     try:
@@ -876,6 +948,12 @@ def copy_files_to_clipboard(uris):
         return False
 
 def paste_from_clipboard():
+    if is_wayland_session():
+        return paste_from_clipboard_wayland()
+    else:
+        return _paste_from_clipboard_xlib()
+
+def _paste_from_clipboard_xlib():
     '''
     Function to paste from clipboard based on where the mouse pointer is hovering
     '''

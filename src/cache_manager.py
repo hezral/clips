@@ -13,6 +13,7 @@ from urllib.parse import urlparse
 from datetime import datetime
 
 import chardet
+from .utils import log_function_calls
 
 class CacheManager():
 
@@ -20,6 +21,7 @@ class CacheManager():
     clipboard_monitoring = False
     queue = []
 
+    @log_function_calls
     def __init__(self, gtk_application=None, clipboard_manager=None):
 
         # initiatialize gtk_application and clipboard_manager
@@ -55,6 +57,7 @@ class CacheManager():
         except (OSError, sqlite3.Error) as error:
             print("Exception: ", error)
 
+    @log_function_calls
     def open_db(self, database_file):
         connection = sqlite3.connect(database_file) 
         cursor = connection.cursor()
@@ -63,6 +66,7 @@ class CacheManager():
         self.app.logger.info("Found ClipsDB {0}".format(curr_table))
         return connection, cursor
 
+    @log_function_calls
     def create_table(self, database_cursor):
         # Initializes the database with the ClipsDB table
         database_cursor.execute('''
@@ -79,6 +83,7 @@ class CacheManager():
             );
             ''')
 
+    @log_function_calls
     def load_clips(self):
         # get lastrow id
         last_id = self.db_cursor.execute('SELECT max(id) FROM ClipsDB')
@@ -109,6 +114,7 @@ class CacheManager():
 
         return records
 
+    @log_function_calls
     def add_record(self, data_tuple):
         sqlite_insert_with_param = '''
             INSERT INTO 'ClipsDB'
@@ -123,6 +129,7 @@ class CacheManager():
         except sqlite3.Error as error:
             print("Exception sqlite3.Error: ", error) #add logging
 
+    @log_function_calls
     def update_record_on_recopy(self, checksum):
         data_param = (str(checksum + "%"),) #pass in a sequence ie list
         sqlite_with_param = '''
@@ -149,6 +156,7 @@ class CacheManager():
 
         return created_updated
 
+    @log_function_calls
     def delete_record(self, id, cache_file, clip_type):
         data_param = (str(id),) #pass in a sequence ie list
         sqlite_with_param = '''
@@ -163,6 +171,7 @@ class CacheManager():
         self.delete_cache_file(cache_file, clip_type)
         self.check_total_clips()
     
+    @log_function_calls
     def delete_all_record(self):
         sqlite_with_param = '''
             DELETE FROM 'ClipsDB'
@@ -179,6 +188,7 @@ class CacheManager():
         self.check_total_clips()
         self.main_window.update_total_clips_label("delete", count)
 
+    @log_function_calls
     def auto_housekeeping(self, days, manual_run=False):
         days_param = "-" + str(days) + " " + "day"
         data_param = (days_param,) #pass in a sequence ie list
@@ -228,6 +238,7 @@ class CacheManager():
         run_autohousekeeping= self.app.utils.get_widget_by_name(widget=self.main_window.settings_view, child_name="run-housekeeping-now", level=0)
         run_autohousekeeping.sublabel_text.props.label = last_run_short
 
+    @log_function_calls
     def select_record(self, id):
         data_param = (str(id),) #pass in a sequence ie list
         sqlite_with_param = '''
@@ -241,6 +252,7 @@ class CacheManager():
         #     print("db:", type(row), row)
         return records
 
+    @log_function_calls
     def get_id_by_checksum(self, checksum):
         data_param = (checksum + "%",) #pass in a sequence ie list
         sqlite_with_param = '''
@@ -252,6 +264,7 @@ class CacheManager():
         records = self.db_cursor.fetchall()
         return records[0][0]
 
+    @log_function_calls
     def delete_cache_file(self, cache_file, clip_type):
 
         thumbnail_file = os.path.splitext(cache_file)[0]+'-thumb.png'
@@ -282,6 +295,7 @@ class CacheManager():
         except OSError:
             return OSError
 
+    @log_function_calls
     def delete_all_cache_file(self):
         for directory in (self.cache_filedir, self.icon_cache_filedir):
             for filename in os.listdir(directory):
@@ -291,10 +305,12 @@ class CacheManager():
                 except Exception as e:
                     print('Failed to delete %s. Reason: %s' % (file_path, e))
 
+    # @log_function_calls
     def get_checksum(self, data):
         checksum = hashlib.md5(data).hexdigest()
         return checksum
 
+    @log_function_calls
     def check_duplicate(self, checksum):
         data_param = (checksum + "%",) #pass in a sequence ie list
         sqlite_with_param = '''
@@ -306,6 +322,7 @@ class CacheManager():
         records = self.db_cursor.fetchall()
         return records
 
+    @log_function_calls
     def update_cache(self, clipboard, event, clipboard_manager):
 
         data_tuple = clipboard_manager.clipboard_changed(clipboard, event)
@@ -473,7 +490,7 @@ class CacheManager():
             
             self.check_total_clips()
 
-
+    @log_function_calls
     def queue_update_cache(self, record):
         # print(record)
         id = record[0]
@@ -507,6 +524,7 @@ class CacheManager():
         #         self.queue.append((id, record))
         #         return self.queue_update_cache
         
+    @log_function_calls
     def update_cache_on_recopy(self, cache_file=None, checksum=None):
         if checksum is None:
             checksum = os.path.splitext(cache_file)[0].split("/")[-1]
@@ -535,6 +553,7 @@ class CacheManager():
         
         self.main_window.clips_view.flowbox.invalidate_sort()
 
+    @log_function_calls
     def update_cache_on_newdata(self, cache_file=None, checksum=None):
         
         # get the id for the clip that was updated
@@ -557,9 +576,11 @@ class CacheManager():
 
         self.main_window.clips_view.flowbox.invalidate_sort()
 
+    @log_function_calls
     def check_total_clips(self):
         self.main_window.on_view_visible()
 
+    @log_function_calls
     def load_source_apps(self):
         sqlite_with_param = '''
             SELECT DISTINCT source_app FROM 'ClipsDB'
@@ -568,6 +589,7 @@ class CacheManager():
         records = self.db_cursor.fetchall()
         return records
 
+    @log_function_calls
     def get_total_clips(self):
         sqlite_with_param = '''
             SELECT count(id) FROM 'ClipsDB'
@@ -576,6 +598,7 @@ class CacheManager():
         records = self.db_cursor.fetchall()
         return records
 
+    @log_function_calls
     def get_total_clips_by_type(self):
         sqlite_with_param = '''
             SELECT type, count(id) FROM 'ClipsDB' group by type
@@ -584,6 +607,7 @@ class CacheManager():
         records = self.db_cursor.fetchall()
         return records
 
+    @log_function_calls
     def get_data_for_liststore(self):
         sqlite_with_param = '''
             SELECT distinct type FROM 'ClipsDB'
@@ -592,6 +616,7 @@ class CacheManager():
         records = self.db_cursor.fetchall()
         return records
 
+    @log_function_calls
     def encrypt_file(self, cache_uri, reencrypt=False, passphrase=None):
         do_authenticate, authenticate_data = self.app.utils.do_authentication("get")
         if do_authenticate:
@@ -616,6 +641,7 @@ class CacheManager():
                     os.renames(encrypted_file, cache_file)
                     return os.path.split(cache_file)[1]
 
+    @log_function_calls
     def reset_protected_clips(self, password):
         protected = "yes"
         data_param = (protected, )
