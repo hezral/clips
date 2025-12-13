@@ -46,7 +46,6 @@ class ClipsView(Gtk.Grid):
         scrolled_window.props.expand = True
         scrolled_window.props.hscrollbar_policy = Gtk.PolicyType.NEVER
         scrolled_window.add(self.flowbox)
-        # scrolled_window.connect("edge-reached", self.on_edge_reached)
 
         self.multi_delete_revealer = self.generate_multi_delete_revealer()
 
@@ -113,29 +112,19 @@ class ClipsView(Gtk.Grid):
                 contents_single_keyword = [str(clips_container.id), clips_container.type.lower(), clips_container.target.lower(), clips_container.source_app.lower(), clips_container.created_short.lower(), clips_container.extended_info.lower()]
                 contents_multi_keyword = ' '.join(contents_single_keyword)
 
-            # check if multi keyword search
             if "," in search_text:
-                # check if grouped keyword 
                 if '"' in search_text:
                     search_text = search_text.replace('"',"")
-
-                # split into multi keyword list
                 search_texts = search_text.split(",")
-
-                # remove any begin/end whitespace
                 search_texts = [text.lstrip(' ') for text in search_texts]
                 search_texts = [text.rstrip(' ') for text in search_texts]
-
-                # print("multi-keyword-match", search_texts, contents_multi_keyword)
                 if all(i in contents_multi_keyword for i in search_texts):
                     return True
                 else:
                     return False
             else:
-                # print("single-keyword-match", search_text)
                 if '"' in search_text:
                     search_text = search_text.replace('"',"")
-
                 if any(search_text in keyword for keyword in contents_single_keyword):
                     return True
                 else:
@@ -156,18 +145,10 @@ class ClipsView(Gtk.Grid):
         cache_file = os.path.join(app.cache_manager.cache_filedir, clip[6])
         new_flowboxchild = [child for child in self.flowbox.get_children() if child.get_children()[0].id == id]
 
-        # add the new clip if cache_file exists
         if os.path.exists(cache_file) and len(new_flowboxchild) == 0:
             self.flowbox.add(ClipsContainer(self.app, clip, app.cache_manager.cache_filedir, app.utils))
-            
-            # if app_startup is False:
             main_window.update_total_clips_label("add")
-
             self.flowbox.show_all()
-
-    def on_edge_reached(self, scrolledwindow, position):
-        if position.value_name == "GTK_POS_BOTTOM":
-            ...
 
     def on_child_activated(self, flowbox, flowboxchild):
         selected = len(flowbox.get_selected_children())
@@ -187,7 +168,6 @@ class ClipsView(Gtk.Grid):
             flowboxchild.get_children()[0].clip_action_revealer.set_reveal_child(True)
             flowboxchild.get_children()[0].source_icon_revealer.set_reveal_child(True)
             flowboxchild.grab_focus()
-            # flowboxchild.get_children()[0].on_clip_action(action="copy")
 
     def on_child_multi_selected(self, flowbox, flowboxchild):
         for flowboxchild in self.flowbox.get_selected_children():
@@ -196,7 +176,6 @@ class ClipsView(Gtk.Grid):
             clips_container.clip_action_revealer.set_reveal_child(False)
             clips_container.source_icon_revealer.set_reveal_child(False)
             clips_container.select_button.get_style_context().add_class("clip-selected")
-
         self.delete_selected_button.props.label = "Delete ({count})".format(count=str(len(self.flowbox.get_selected_children()))) 
 
     def on_child_multi_unselected(self, clips_container):
@@ -205,25 +184,6 @@ class ClipsView(Gtk.Grid):
         self.delete_selected_button.props.label = "Delete ({count})".format(count=str(len(self.flowbox.get_selected_children())))
         if len(self.flowbox.get_selected_children()) == 0:
             self.off_multi_select()
-
-    def on_selected_children_changed(self, flowbox):
-        selected = len(flowbox.get_selected_children())
-
-        if selected == 0:
-            pass
-        if selected == 1:
-            pass
-        if selected > 1:
-            self.multi_delete_revealer.set_reveal_child(True)
-            flowbox.handler_block(flowbox.on_child_activated_handler_id)
-            
-            for child in flowbox.get_children():
-                clips_container = child.get_children()[0]
-                clips_container.handler_block(clips_container.on_cursor_entering_clip_handler_id)
-                clips_container.handler_block(clips_container.on_cursor_leaving_clip_handler_id)
-                clips_container.handler_block(clips_container.on_double_clicked_clip_handler_id)
-                clips_container.clip_action_notify_revealer.set_reveal_child(False)
-                clips_container.clip_overlay_revealer.set_reveal_child(False)
 
     def on_select_all(self, button):
         if button.props.name == "select-all-off":
@@ -241,7 +201,6 @@ class ClipsView(Gtk.Grid):
             self.delete_selected_button.props.label = "Delete ({count})".format(count=str(len(self.flowbox.get_selected_children())))
 
     def on_delete_selected(self, button):
-        selected = self.flowbox.get_selected_children()
         for flowboxchild in self.flowbox.get_selected_children():
             clips_container = flowboxchild.get_children()[0]
             clips_container.on_clip_action(action="multi-delete")
@@ -290,7 +249,7 @@ class ClipsView(Gtk.Grid):
         if self.flowbox.get_child_at_index(self.current_selected_flowboxchild_index) is not None:
             self.flowbox.select_child(self.flowbox.get_child_at_index(self.current_selected_flowboxchild_index))
 
-    def on_child_count(self, flowbox, object):
+    def on_child_count(self, flowbox, obj):
         if len(flowbox.get_children()) == 1:
             flowbox.props.homogeneous = True
             flowbox.props.max_children_per_line = 1
@@ -299,23 +258,19 @@ class ClipsView(Gtk.Grid):
             flowbox.props.max_children_per_line = 8
 
 
-# ----------------------------------------------------------------------------------------------------
-
 class ClipsContainer(Gtk.EventBox):
 
     def __init__(self, app, clip, cache_filedir, utils, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.props.name = "clip-container"
-
         self.app = app
         self.scale = self.get_scale_factor()
         self.cache_filedir = cache_filedir
         self.id = clip[0]
         self.target = clip[1]
         self.created = datetime.strptime(clip[2], '%Y-%m-%d %H:%M:%S.%f')
-        self.created_short = datetime.strptime(clip[2], '%Y-%m-%d %H:%M:%S.%f')
-        self.created_short = self.created_short.strftime('%a, %b %d %Y, %H:%M:%S')
+        self.created_short = self.created.strftime('%a, %b %d %Y, %H:%M:%S')
         self.fuzzytimestamp = self.app.utils.get_fuzzy_timestamp(self.created)
         self.source = clip[3]
         self.source_app = clip[4]
@@ -323,11 +278,10 @@ class ClipsContainer(Gtk.EventBox):
         self.cache_file = clip[6]
         self.type = clip[7]
         self.protected = clip[8]
-        # self.info_text = "id: {id}\nformat: {format}\ntype: {type}".format(id=self.id, format=self.target, type=self.type)
         self.cache_file = os.path.join(self.cache_filedir, self.cache_file)
         self.content = None
 
-        #------ container types, refer to clips_supported.py ----#
+        # Container types based on clips_supported.py
         if "office/spreadsheet" in self.type:
             self.content = SpreadsheetContainer(self.cache_file, self.type, app)
         elif "office/presentation" in self.type:
@@ -336,16 +290,12 @@ class ClipsContainer(Gtk.EventBox):
             self.content = WordContainer(self.cache_file, self.type, app)
         elif "files" in self.type:
             is_files = True
-
             file = open(self.cache_file, "rb")
             encoding_name = chardet.detect(file.read())["encoding"]
             file.close()
-
             with open(self.cache_file, encoding=encoding_name) as file:
                 file_content = file.readlines()
-                
-            file_count = len(file_content)
-            if file_count == 1:
+            if len(file_content) == 1:
                 file_content = file_content[0].replace("copy","").replace("file://","").strip().replace("%20", " ").replace("\n","")
                 if os.path.exists(file_content):
                     mime_type, val = Gio.content_type_guess(file_content, data=None)
@@ -357,9 +307,15 @@ class ClipsContainer(Gtk.EventBox):
         elif "image" in self.type:
             self.content = ImageContainer(self.cache_file, self.type, app)
         elif "html" in self.type:
-            self.content = HtmlContainer(self.cache_file, self.type, app)
-        # elif "html" in self.type and self.protected == "yes":
-        #     self.content = ProtectedContainer(self.cache_file, self.type, app)
+            thumbnail = os.path.splitext(self.cache_file)[0]+'-thumb.png'
+            # Only use HtmlContainer if thumbnail already exists (from previous session)
+            # Don't generate screenshots during startup to avoid window errors
+            if os.path.exists(thumbnail):
+                self.content = HtmlContainer(self.cache_file, self.type, app)
+            else:
+                # Use PlainTextContainer if no thumbnail available
+                # New HTML content will get screenshots from cache_manager
+                self.content = PlainTextContainer(self.cache_file, self.type, app)
         elif "richtext" in self.type:
             self.content = FilesContainer(self.cache_file, self.type, app)
         elif "plaintext" in self.type and self.protected == "no":
@@ -373,15 +329,13 @@ class ClipsContainer(Gtk.EventBox):
         elif "mail" in self.type:
             self.content = EmailContainer(self.cache_file, self.type, app, self.cache_filedir)
         else:
-            self.app.logger.debug("clips_view.py:", "FallbackContainer:", self.cache_file, self.type)
+            self.app.logger.debug("clips_view.py: FallbackContainer: " + self.cache_file + " " + self.type)
             self.content = FallbackContainer(self.cache_file, self.type, app)
 
         self.extended_info = self.content.label
-
         self.clip_action_notify_revealer = self.generate_clip_action_notify()
         self.clip_overlay_revealer = self.generate_clip_overlay()
 
-        #------ construct ----#
         self.container_overlay = Gtk.Overlay()
         self.container_overlay.props.name = "clip-container-overlay"
         self.container_overlay.add(self.content)
@@ -398,7 +352,6 @@ class ClipsContainer(Gtk.EventBox):
         self.set_size_request(200, 160)
         self.props.expand = True
 
-        # handle mouse enter/leave events on the flowboxchild
         self.on_cursor_entering_clip_handler_id = self.connect("enter-notify-event", self.on_cursor_entering_clip)
         self.on_cursor_leaving_clip_handler_id = self.connect("leave-notify-event", self.on_cursor_leaving_clip)
         self.on_double_clicked_clip_handler_id = self.connect("button-press-event", self.on_double_clicked_clip)
@@ -410,7 +363,6 @@ class ClipsContainer(Gtk.EventBox):
         button.props.halign = Gtk.Align.END
         button.props.valign = Gtk.Align.START
         button.props.can_focus = False
-        # button.props.margin_right = 3
         button.connect("clicked", self.on_clip_select)
         button.get_style_context().add_class("clip-select")
         return button
@@ -426,93 +378,16 @@ class ClipsContainer(Gtk.EventBox):
         button.set_size_request(30, 30)
         button.connect("clicked", self.on_clip_action, actionname)
         return button
-    
-    def generate_clip_info(self):
-        id = Gtk.Label("ID: " + str(self.id))
-        id.props.hexpand = True
-        id.props.halign = Gtk.Align.START
-        id_icon = Gtk.Image().new_from_icon_name("com.github.hezral.clips", Gtk.IconSize.LARGE_TOOLBAR)
-
-        cache_file = Gtk.Label("Cache: " + os.path.basename(self.cache_file))
-        cache_file.props.hexpand = True
-        cache_file.props.halign = Gtk.Align.START
-
-        source_app = Gtk.Label("Source: " + self.source_app)
-        source_app.props.hexpand = True
-        source_app.props.halign = Gtk.Align.START
-        source_app_icon = Gtk.Image().new_from_icon_name("application-default-icon", Gtk.IconSize.LARGE_TOOLBAR)
-
-        created = Gtk.Label("Created: " + self.created_short)
-        created.props.hexpand = True
-        created.props.halign = Gtk.Align.START        
-        created_icon = Gtk.Image().new_from_icon_name("preferences-system-time", Gtk.IconSize.LARGE_TOOLBAR)
-
-        type = Gtk.Label()
-        type.props.label = "Type (Format): {type} ({target})".format(type=self.type, target=self.target)
-        type.props.hexpand = True
-        type.props.halign = Gtk.Align.START
-        if "office/spreadsheet" in self.type:
-            type_icon = "x-office-spreadsheet"
-        elif "office/presentation" in self.type:
-            type_icon = "x-office-presentation"
-        elif "office/word" in self.type:
-            type_icon = "x-office-document"
-        elif "files" in self.type:
-            type_icon = "folder-documents"
-        elif "image" in self.type:
-            type_icon = "image-x-generic"
-        elif "html" in self.type:
-            type_icon = "text-html"
-        elif "richtext" in self.type:
-            type_icon = "x-office-document"
-        elif "plaintext" in self.type:
-            type_icon = "text-x-generic"
-        elif "color" in self.type:
-            type_icon = "preferences-color"
-        elif "url" in self.type:
-            type_icon = "applications-internet"
-        elif "mail" in self.type:
-            type_icon = "mail-sent"
-        else:
-            type_icon = "application-octet-stream"
-        type_icon = Gtk.Image().new_from_icon_name(type_icon, Gtk.IconSize.LARGE_TOOLBAR)
-
-        extended_info = Gtk.Label("Extended Info: " + self.extended_info)
-        extended_info.props.hexpand = True
-        extended_info.props.halign = Gtk.Align.START    
-        extended_icon = Gtk.Image().new_from_icon_name("tag", Gtk.IconSize.LARGE_TOOLBAR)
-
-        grid = Gtk.Grid()
-        grid.props.margin = 6
-        grid.props.row_spacing = 6
-        grid.props.column_spacing = 6
-
-        grid.attach(id_icon, 0, 0, 1, 1)
-        grid.attach(id, 1, 0, 1, 1)
-        grid.attach(cache_file, 1, 1, 1, 1)
-        grid.attach(source_app_icon, 0, 2, 1, 1)
-        grid.attach(source_app, 1, 2, 1, 1)
-        grid.attach(created_icon, 0, 3, 1, 1)
-        grid.attach(created, 1, 3, 1, 1)
-        grid.attach(type_icon, 0, 4, 1, 1)
-        grid.attach(type, 1, 4, 1, 1)
-        grid.attach(extended_icon, 0, 5, 1, 1)
-        grid.attach(extended_info, 1, 5, 1, 1)
-        grid.show_all()
-
-        return grid
 
     def generate_clip_action_notify(self):
         action_notify_box = Gtk.Grid()
         action_notify_box.props.name = "clip-action-notify"
         action_notify_box.props.column_spacing = 6
         action_notify_box.props.halign = action_notify_box.props.valign = Gtk.Align.CENTER
-
         icon = Gtk.Image().new_from_icon_name("process-completed", Gtk.IconSize.SMALL_TOOLBAR)
         label = Gtk.Label("Copied to clipboard")
         action_notify_box.attach(icon, 0, 0, 1, 1)
         action_notify_box.attach(label, 1, 0, 1, 1)
-
         clip_action_notify_revealer = Gtk.Revealer()
         clip_action_notify_revealer.props.name = "clip-action-notify-revealer"
         clip_action_notify_revealer.props.can_focus = False
@@ -586,7 +461,7 @@ class ClipsContainer(Gtk.EventBox):
         clip_overlay_revealer.props.name = "clip-action-revealer"    
         clip_overlay_revealer.props.transition_type = Gtk.RevealerTransitionType.CROSSFADE
         clip_overlay_revealer.add(grid)
-        clip_overlay_revealer.props.can_focus = False # this breaks keyboard navigation!, disable it
+        clip_overlay_revealer.props.can_focus = False
         
         return clip_overlay_revealer
 
@@ -602,7 +477,6 @@ class ClipsContainer(Gtk.EventBox):
 
     def generate_source_icon(self):
         icon_size = 32 * self.scale
-        
         try: 
             icon_pixbuf = self.app.icon_theme.load_icon(self.source_icon, icon_size, 0)
             pixbuf = icon_pixbuf.scale_simple(icon_size, icon_size, True)
@@ -628,8 +502,39 @@ class ClipsContainer(Gtk.EventBox):
         icon.props.name = "clip-source-app-icon-overlay"
         icon.props.has_tooltip = True
         icon.connect("query-tooltip", self.on_tooltip)
-
         return icon
+
+    def generate_clip_info(self):
+        id_label = Gtk.Label("ID: " + str(self.id))
+        id_label.props.hexpand = True
+        id_label.props.halign = Gtk.Align.START
+        cache_file_label = Gtk.Label("Cache: " + os.path.basename(self.cache_file))
+        cache_file_label.props.hexpand = True
+        cache_file_label.props.halign = Gtk.Align.START
+        source_app_label = Gtk.Label("Source: " + self.source_app)
+        source_app_label.props.hexpand = True
+        source_app_label.props.halign = Gtk.Align.START
+        created_label = Gtk.Label("Created: " + self.created_short)
+        created_label.props.hexpand = True
+        created_label.props.halign = Gtk.Align.START
+        type_label = Gtk.Label("Type: {type} ({target})".format(type=self.type, target=self.target))
+        type_label.props.hexpand = True
+        type_label.props.halign = Gtk.Align.START
+        extended_label = Gtk.Label("Info: " + self.extended_info)
+        extended_label.props.hexpand = True
+        extended_label.props.halign = Gtk.Align.START
+        
+        grid = Gtk.Grid()
+        grid.props.margin = 6
+        grid.props.row_spacing = 6
+        grid.attach(id_label, 0, 0, 1, 1)
+        grid.attach(cache_file_label, 0, 1, 1, 1)
+        grid.attach(source_app_label, 0, 2, 1, 1)
+        grid.attach(created_label, 0, 3, 1, 1)
+        grid.attach(type_label, 0, 4, 1, 1)
+        grid.attach(extended_label, 0, 5, 1, 1)
+        grid.show_all()
+        return grid
 
     def on_clip_select(self, button):
         if self.app.main_window.clips_view.multi_select_mode:
@@ -645,52 +550,34 @@ class ClipsContainer(Gtk.EventBox):
 
     def on_double_clicked_clip(self, widget, eventbutton):
         if eventbutton.type.value_name == "GDK_2BUTTON_PRESS":
-            # if self.app.main_window.clips_view.multi_select_mode:
-            #     self.app.main_window.clips_view.flowbox.unselect_child(self.get_parent())
-            # else:
             self.on_clip_action(button=None, action="copy")
 
     def on_cursor_entering_clip(self, widget, eventcrossing):
         self.get_parent().get_style_context().add_class("hover")
-        
         self.clip_overlay_revealer.set_reveal_child(True)
         self.clip_action_revealer.set_reveal_child(True)
         self.source_icon_revealer.set_reveal_child(True)
-
         image_container = self.app.utils.get_widget_by_name(widget=self, child_name="image-container", level=0)
         if image_container is not None:
             if "gif" in image_container.type:
-                # image_container.animation_func()
                 image_container.stop_threads = False
                 import threading
                 image_container.play_gif_thread = threading.Thread(target=image_container.animation_func)
                 image_container.play_gif_thread.start()
-                
-        # add zoom effect on hovering an image container
-        # content = utils.get_widget_by_name(widget=flowboxchild, child_name="image-container", level=0)
-        # if content is not None:
-        #     content.hover()
 
     def on_cursor_leaving_clip(self, widget, eventcrossing):
         self.get_parent().get_style_context().remove_class("hover")
-
         flowboxchild = self.get_parent()
-
         if flowboxchild.is_selected():
             self.clip_overlay_revealer.set_reveal_child(True)
-            self.clip_overlay_revealer.grab_focus()
         else: 
             self.clip_overlay_revealer.set_reveal_child(False)
-        
         if self.clip_action_notify_revealer.get_child_revealed():
             self.clip_action_notify_revealer.set_reveal_child(False)
-
         flowboxchild_selected = self.app.main_window.clips_view.flowbox.get_selected_children()
-
         if len(flowboxchild_selected) != 0:
             if flowboxchild_selected[0].get_children()[0].clip_action_notify_revealer.get_child_revealed():
                 flowboxchild_selected[0].get_children()[0].clip_action_notify_revealer.set_reveal_child(False)
-        
         image_container = self.app.utils.get_widget_by_name(widget=self, child_name="image-container", level=0)
         if image_container is not None:
             if "gif" in image_container.type:
@@ -700,14 +587,9 @@ class ClipsContainer(Gtk.EventBox):
                     image_container.play_gif_thread = None
 
     def on_clip_action(self, button=None, action=None, validated=False, data=None):
-
-        def display_action_notify(action_notify_box):
-            ...
-
         flowboxchild = self.get_parent()
         flowbox = self.app.main_window.clips_view.flowbox
         flowbox.select_child(flowboxchild)
-
         action_notify_box = self.clip_action_notify_revealer.get_children()[0]
 
         if action == "protect":
@@ -726,27 +608,20 @@ class ClipsContainer(Gtk.EventBox):
         elif action == "reveal":
             self.app.file_manager.show_files_in_file_manager(self.cache_file)
 
-        elif action == "info":
-            self.clip_info_revealer.set_reveal_child(True)
-
         elif action == "view":
             if "url" in self.type:
                 file = open(self.cache_file, "rb")
                 encoding_name = chardet.detect(file.read())["encoding"]
                 file.close()
-
                 with open(self.cache_file, encoding=encoding_name) as file:
                     lines = file.readlines()
                 self.app.utils.open_url_gtk(lines[0].replace('\n',''))
             elif "files" in self.type:
-
                 file = open(self.cache_file, "rb")
                 encoding_name = chardet.detect(file.read())["encoding"]
                 file.close()
-
                 with open(self.cache_file, encoding=encoding_name) as file:
                     file_content = file.readlines()
-
                 if len(file_content) == 1:
                     file_path = file_content[0].replace("copy","").replace("file://","").strip().replace("%20", " ")
                     self.app.file_manager.show_files_in_file_manager(file_path)
@@ -757,11 +632,18 @@ class ClipsContainer(Gtk.EventBox):
                 self.app.utils.open_file_gio(self.cache_file)
 
         elif action == "copy":
+            self.app.logger.debug(f"clips_view.py: Copy action triggered for type={self.type}, target={self.target}, id={self.id}")
             copy_result = False
             temp_file_uri = ""
             title = "Copy Content"
             callback = self.on_authenticated
-            
+
+            # Set flag to prevent clipboard monitoring from capturing our own copy operation
+            # This prevents the window from becoming unresponsive on Wayland
+            if hasattr(self.app, 'clipboard_manager'):
+                self.app.clipboard_manager._skip_clipboard_monitoring = True
+                self.app.logger.debug("Set _skip_clipboard_monitoring flag before copy")
+
             if "yes" in self.protected:
                 if validated:
                     decrypt, decrypted_data = self.app.utils.do_encryption("decrypt", data, self.cache_file)
@@ -771,13 +653,24 @@ class ClipsContainer(Gtk.EventBox):
                         temp_file_uri = os.path.join(tempfile.gettempdir(), temp_filename)
                         with open(temp_file_uri, 'wb') as file:
                             file.write(decrypted_data)
-                            file.close()
                         copy_result = self.app.utils.copy_to_clipboard(self.target, temp_file_uri, self.type)
-                        
                 else:
                     self.authenticate_dialog = self.on_authenticate(title, action, callback)
+                    # Clear flag if we're showing authentication dialog
+                    if hasattr(self.app, 'clipboard_manager'):
+                        self.app.clipboard_manager._skip_clipboard_monitoring = False
             else:
                copy_result = self.app.utils.copy_to_clipboard(self.target, self.cache_file, self.type)
+
+            # Clear flag after a short delay
+            if hasattr(self.app, 'clipboard_manager'):
+                def clear_flag():
+                    self.app.clipboard_manager._skip_clipboard_monitoring = False
+                    self.app.logger.debug("Cleared _skip_clipboard_monitoring flag after copy")
+                    return False
+                GLib.timeout_add(500, clear_flag)  # 500ms delay
+
+            self.app.logger.debug(f"clips_view.py: Copy action completed, result={copy_result}")
 
             if copy_result:
                 action_notify_box.show_all()
@@ -787,24 +680,25 @@ class ClipsContainer(Gtk.EventBox):
                     os.remove(temp_file_uri)
                 self.quick_paste()
 
-            if validated is False and copy_result is False and button is None:
-                label = Gtk.Label("Authentication failed")
-                action_notify_box.show_all()
-                self.clip_action_notify_revealer.set_reveal_child(False)
-
         elif action == "copy-plaintext":
-            # icon = Gtk.Image().new_from_icon_name("process-completed", Gtk.IconSize.SMALL_TOOLBAR)
-            # label = Gtk.Label("Copied to clipboard")
-            # action_notify_box.attach(icon, 0, 0, 1, 1)
-            # action_notify_box.attach(label, 1, 0, 1, 1)
-            copy_result = False
-            temp_file_uri = ""
-            
             alt_target = "text/plain;charset=utf-8"
             alt_type = "text"
             alt_cache_file = self.cache_file.replace("html", "txt")
 
+            # Set flag to prevent clipboard monitoring from capturing our own copy operation
+            if hasattr(self.app, 'clipboard_manager'):
+                self.app.clipboard_manager._skip_clipboard_monitoring = True
+                self.app.logger.debug("Set _skip_clipboard_monitoring flag before copy-plaintext")
+
             copy_result = self.app.utils.copy_to_clipboard(alt_target, alt_cache_file, alt_type)
+
+            # Clear flag after a short delay
+            if hasattr(self.app, 'clipboard_manager'):
+                def clear_flag():
+                    self.app.clipboard_manager._skip_clipboard_monitoring = False
+                    self.app.logger.debug("Cleared _skip_clipboard_monitoring flag after copy-plaintext")
+                    return False
+                GLib.timeout_add(500, clear_flag)  # 500ms delay
 
             if copy_result:
                 action_notify_box.show_all()
@@ -812,7 +706,7 @@ class ClipsContainer(Gtk.EventBox):
                 self.app.cache_manager.update_cache_on_recopy(self.cache_file)
                 self.quick_paste()
 
-        elif action == "force_delete" or action[0] == "force_delete":
+        elif action == "force_delete" or (isinstance(action, tuple) and action[0] == "force_delete"):
             current_flowbox_index = flowboxchild.get_index() - 1
             self.app.cache_manager.delete_record(self.id, self.cache_file, self.type)
             self.app.main_window.update_total_clips_label("delete")
@@ -843,19 +737,32 @@ class ClipsContainer(Gtk.EventBox):
                 action_type="destructive",
                 size=[250, -1],
                 data="force_delete"
-                )
+            )
 
         elif action == "multi-delete":
             flowboxchild.destroy()
             self.app.cache_manager.delete_record(self.id, self.cache_file, self.type)
             self.app.main_window.update_total_clips_label("delete")
 
-        else:
-            pass
-
     def quick_paste(self):
+        """
+        Quickly paste clipboard contents to the previously active window.
+        
+        On X11: Can explicitly set the active window before pasting.
+        On Wayland: Cannot control window focus due to security model.
+                   The paste goes to whatever window receives focus after
+                   Clips hides (usually the previously focused window).
+        """
+        from .display_backend import is_wayland
+        
         def paste(data=None):
-            self.app.utils.set_active_window_by_xwindow(self.app.utils.get_active_window_xlib())
+            if not is_wayland():
+                try:
+                    self.app.utils.set_active_window_by_xwindow(
+                        self.app.utils.get_active_window_xlib()
+                    )
+                except Exception as e:
+                    self.app.logger.debug(f"X11 window activation: {e}")
             self.app.utils.paste_from_clipboard()
             self.app.on_clipsapp_action()
 
@@ -864,10 +771,10 @@ class ClipsContainer(Gtk.EventBox):
             self.app.on_clipsapp_action()
             GLib.timeout_add(100, paste, None)
 
-    def update_timestamp_on_clips(self, datetime):
-        self.created = datetime
-        self.created_short = datetime.strftime('%a, %b %d %Y, %H:%M:%S')
-        self.fuzzytimestamp = self.app.utils.get_fuzzy_timestamp(datetime)
+    def update_timestamp_on_clips(self, dt):
+        self.created = dt
+        self.created_short = dt.strftime('%a, %b %d %Y, %H:%M:%S')
+        self.fuzzytimestamp = self.app.utils.get_fuzzy_timestamp(dt)
         self.fuzzytimestamp_label.props.label = self.fuzzytimestamp
 
     def on_tooltip(self, widget, x, y, keyboard_mode, tooltip):
@@ -875,33 +782,24 @@ class ClipsContainer(Gtk.EventBox):
         tooltip.set_custom(self.generate_clip_info())
         return True
 
-    def on_notify_action_hide(self, clip_action_notify, event):
-        clip_action_notify.set_reveal_child(False)
-        clip_action_notify.props.can_focus = False
-
     def on_authenticate(self, title, action, callback, data=None):
-        if action == "protect":
-            action_label = "reveal"
-        else:
-            action_label = action
-
+        action_label = "reveal" if action == "protect" else action
         password_editor = custom_widgets.PasswordEditor(
             main_label="Password required to {0} content".format(action_label), 
             gtk_application=self.app,
             type="authenticate",
-            auth_callback=callback, #callback if user press enter in password entry field
-            action=action) 
-        
+            auth_callback=callback,
+            action=action)
         authenticate_dialog = custom_widgets.CustomDialog(
             dialog_parent_widget=self,
             dialog_title=title,
             dialog_content_widget=password_editor,
             action_button_label="Authenticate",
             action_button_name="authenticate",
-            action_callback=password_editor.on_current_password_entry_activated, #callback if user click on authenticate button
+            action_callback=password_editor.on_current_password_entry_activated,
             action_type="suggested",
             size=[250,-1],
-            )
+        )
         return authenticate_dialog
 
     def on_authenticated(self, action=None):
@@ -914,13 +812,11 @@ class ClipsContainer(Gtk.EventBox):
                 pass
 
     def on_revealcontent_timeout(self, label, content):
-
         def update_label(timeout):
             label.props.label = "{message} ({i})\n".format(message=content,i=timeout)
 
         @self.app.utils.run_async
         def timeout_label(self, label):
-            
             import time
             for i in reversed(range(1, self.app.gio_settings.get_int(key="unprotect-timeout"), 1)):
                 GLib.idle_add(update_label, (i))
@@ -929,23 +825,20 @@ class ClipsContainer(Gtk.EventBox):
 
         timeout_label(self, label)
 
-# ----------------------------------------------------------------------------------------------------
 
+# Container classes
 class DefaultContainer(Gtk.Grid):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
         self.props.name = "default-container"
         self.props.halign = self.props.valign = Gtk.Align.FILL
         self.props.expand = True
         self.get_style_context().add_class("clip-containers")
 
-# ----------------------------------------------------------------------------------------------------
 
 class FallbackContainer(DefaultContainer):
     def __init__(self, filepath, type, app, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
         self.content = Gtk.Label(type)
         self.content.props.wrap_mode = Pango.WrapMode.CHAR
         self.content.props.max_width_chars = 23
@@ -953,25 +846,19 @@ class FallbackContainer(DefaultContainer):
         self.content.props.selectable = False
         self.content.props.expand = True
         self.content.props.ellipsize = Pango.EllipsizeMode.END
-        
         self.props.margin = 10
-        self.props.margin_left = self.props.margin_right = 10
         self.props.name = "default-container"
         self.attach(self.content, 0, 0, 1, 1)
-
         self.label = str(len(type)) + " chars"
 
-# ----------------------------------------------------------------------------------------------------
 
 class ImageContainer(DefaultContainer):
-
     stop_threads = False
     play_gif_thread = None
     alpha = False
 
     def __init__(self, filepath, type, app, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
         self.type = type
         self.filepath = filepath
         if "gif" in self.type:
@@ -987,27 +874,17 @@ class ImageContainer(DefaultContainer):
             self.pixbuf_original_width = self.pixbuf_original.props.width
             if self.pixbuf_original.get_has_alpha():
                 self.alpha = True
-
         if self.alpha and "thumb" not in filepath:
             self.get_style_context().add_class("checkerboard")
-
         self.ratio_h_w = self.pixbuf_original_height / self.pixbuf_original_width
         self.ratio_w_h = self.pixbuf_original_width / self.pixbuf_original_height
-    
         drawing_area = Gtk.DrawingArea()
         drawing_area.props.expand = True
         drawing_area.connect("draw", self.draw)
         drawing_area.props.can_focus = False
- 
         self.props.name = "image-container"
         self.attach(drawing_area, 0, 0, 1, 1)
-
         self.label = "{width} x {height} px".format(width=str(self.pixbuf_original_width), height=str(self.pixbuf_original_height))
-
-    def animation_loop_func(self, *args):
-        self.iter.advance()
-        GLib.timeout_add(self.iter.get_delay_time(), self.animation_func, None)
-        self.queue_draw()
 
     def animation_func(self, *args):
         import time
@@ -1018,136 +895,81 @@ class ImageContainer(DefaultContainer):
             if self.stop_threads:
                 break
 
-    def hover(self, *args):
-        '''
-        Function to implement cool hover > zoom image effect
-        '''
-        ...
-
     def draw(self, drawing_area, cairo_context, hover_scale=1):
-        '''
-        Forked and ported from https://github.com/elementary/greeter/blob/master/src/Widgets/BackgroundImage.vala
-        '''
         from math import pi
-
         scale = self.get_scale_factor()
         width = self.get_allocated_width() * scale * hover_scale
         height = self.get_allocated_height() * scale * hover_scale
-        radius = 4 * scale #Off-by-one to prevent light bleed
-
+        radius = 4 * scale
         if "gif" in self.type:
             pixbuf = GdkPixbuf.PixbufAnimationIter.get_pixbuf(self.iter)
         else:
             pixbuf = self.pixbuf_original
-
         pixbuf_fitted = GdkPixbuf.Pixbuf.new(pixbuf.get_colorspace(), pixbuf.get_has_alpha(), pixbuf.get_bits_per_sample(), width, height)
-
         if int(width * self.ratio_h_w) < height:
             scaled_pixbuf = pixbuf.scale_simple(int(height * self.ratio_w_h), height, GdkPixbuf.InterpType.BILINEAR)
         else:
             scaled_pixbuf = pixbuf.scale_simple(width, int(width * self.ratio_h_w), GdkPixbuf.InterpType.BILINEAR)
-
         if self.pixbuf_original_width * self.pixbuf_original_height < width * height:
-            # Find the offset we need to center the source pixbuf on the destination since its smaller
             y = abs((height - self.pixbuf_original_height) / 2)
             x = abs((width - self.pixbuf_original_width) / 2)
             final_pixbuf = self.pixbuf_original
         elif "thumb" in self.filepath:
-            # take top left corner for thumbnails
             y = 0
             x = 0
-            # new_subpixbuf = self.pixbuf_original.new_subpixbuf(0, 0, width, height) ##removed << causes app to crash
-            # final_pixbuf = new_subpixbuf ##removed << causes app to crash
             final_pixbuf = self.pixbuf_original
         else:
-            # Find the offset we need to center the source pixbuf on the destination
             y = abs((height - scaled_pixbuf.props.height) / 2)
             x = abs((width - scaled_pixbuf.props.width) / 2)
             scaled_pixbuf.copy_area(x, y, width, height, pixbuf_fitted, 0, 0)
-            # Set coordinates for cairo surface since this has been fitted, it should be (0, 0) coordinate
             y = 0
             x = 0
             final_pixbuf = pixbuf_fitted
-
-        # cairo_context.set_operator(cairo.Operator.SOURCE)
-
         cairo_context.save()
         cairo_context.scale(1.0 / scale, 1.0 / scale)
         cairo_context.new_sub_path()
-
-        # draws rounded rectangle
-        cairo_context.arc(width - radius, radius, radius, 0-pi/2, 0) # top-right-corner
-        cairo_context.arc(width - radius, height - radius, radius, 0, pi/2) # bottom-right-corner
-        cairo_context.arc(radius, height - radius, radius, pi/2, pi) # bottom-left-corner
-        cairo_context.arc(radius, radius, radius, pi, pi + pi/2) # top-left-corner
-    
+        cairo_context.arc(width - radius, radius, radius, 0-pi/2, 0)
+        cairo_context.arc(width - radius, height - radius, radius, 0, pi/2)
+        cairo_context.arc(radius, height - radius, radius, pi/2, pi)
+        cairo_context.arc(radius, radius, radius, pi, pi + pi/2)
         cairo_context.close_path()
-
         Gdk.cairo_set_source_pixbuf(cairo_context, final_pixbuf, x, y)
-
         cairo_context.clip()
         cairo_context.paint()
         cairo_context.restore()
 
-# ----------------------------------------------------------------------------------------------------
 
 class ColorContainer(DefaultContainer):
     def __init__(self, filepath, type, app, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        self.content = open(filepath, "r")
-        self.content = self.content.read()
-
+        self.content = open(filepath, "r").read()
         rgb, a = app.utils.to_rgb(self.content)
-
-        color_code = "rgba({red},{green},{blue},{alpha})".format(red=str(rgb[0]),green=str(rgb[1]),blue=str(rgb[2]),alpha=str(a))
-
+        color_code = "rgba({r},{g},{b},{a})".format(r=rgb[0],g=rgb[1],b=rgb[2],a=a)
         if app.utils.is_light_color(rgb) == "light" and a >= 0.5:
             font_color = "rgba(0,0,0,0.85)"
-        elif app.utils.is_light_color(rgb) == "dark" and a >= 0.5:
-            font_color = "rgba(255,255,255,0.85)"
-        if app.utils.is_light_color(rgb) == "light" and a <= 0.5:
-            font_color = "rgba(0,0,0,0.85)"
-        elif app.utils.is_light_color(rgb) == "dark" and a <= 0.5:
-            font_color = "rgba(0,0,0,0.85)"
-
-        color_content_css = ".color-container-bg {background-color: " + color_code + "; color: " + font_color + ";}"
-        # font_css = ".color-content {letter-spacing: 1px; font-weight: bold; font-size: 120%; opacity: 0.8;}"
-        css = color_content_css
+        else:
+            font_color = "rgba(255,255,255,0.85)" if a >= 0.5 else "rgba(0,0,0,0.85)"
+        css = ".color-container-bg {background-color: " + color_code + "; color: " + font_color + ";}"
         provider = Gtk.CssProvider()
         provider.load_from_data(bytes(css.encode()))
-
         self.content = Gtk.Label(self.content)
         self.content.props.expand = True
         self.content.get_style_context().add_provider(provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
-        self.content.props.name = "color-container-content"
-
-        # add checkerboard background for colors with alpha less than 1
         if str(a) != "1":
             self.get_style_context().add_class("checkerboard")
-
         self.get_style_context().add_provider(provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
         self.get_style_context().add_class("color-container-bg")
-
         self.props.name = "color-container"
         self.attach(self.content, 0, 0, 1, 1)
-
         self.label = type.split("/")[1].upper()
 
-# ----------------------------------------------------------------------------------------------------
 
 class PlainTextContainer(DefaultContainer):
     def __init__(self, filepath, type, app, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        file = open(filepath, "rb")
-        encoding_name = chardet.detect(file.read())["encoding"]
-        file.close()
-
-        with open(filepath, encoding=encoding_name) as file:
-            firstNlines = file.readlines()[0:10] #put here the interval you want
+        with open(filepath, encoding="utf-8", errors="replace") as file:
+            firstNlines = file.readlines()[0:10]
         self.content = ''.join(firstNlines)
-
         self.content = Gtk.Label(self.content)
         self.content.props.wrap_mode = Pango.WrapMode.CHAR
         self.content.props.max_width_chars = 23
@@ -1155,603 +977,282 @@ class PlainTextContainer(DefaultContainer):
         self.content.props.selectable = False
         self.content.props.expand = True
         self.content.props.ellipsize = Pango.EllipsizeMode.END
-
         self.props.margin = 10
-        self.props.margin_left = self.props.margin_right = 10
         self.props.name = "plaintext-container"
         self.attach(self.content, 0, 0, 1, 1)
-
         i = 0
-        with open(filepath) as file:
+        with open(filepath, encoding="utf-8", errors="replace") as file:
             for i, l in enumerate(file):
                 pass
-
         if not i+1 < 10:
             lines = Gtk.Label(str(i+1-10) + " lines more...")
             lines.props.halign = Gtk.Align.END
             self.attach(lines, 0, 1, 1, 1)
-
         self.label = str(len(self.content.props.label)) + " chars"
 
-# ----------------------------------------------------------------------------------------------------
 
 class HtmlContainer(ImageContainer):
     def __init__(self, filepath, type, app, *args, **kwargs):
-
         thumbnail = os.path.splitext(filepath)[0]+'-thumb.png'
-        if not os.path.exists(thumbnail):
-            app.utils.do_webview_screenshot(uri=filepath, out_file_path=thumbnail)
-
+        # Screenshot is generated before this container is created
+        # See ClipsContainer.__init__ for HTML type handling
         super().__init__(thumbnail, type, app)
-
-        self.content = open(filepath, "r")
-        self.content = self.content.read()
-
+        self.content = open(filepath, "r").read()
         css_bg_color = app.utils.get_css_background_color(self.content)
-        css_txt_color = app.utils.get_css_text_color(self.content)
-
-        # if css_bg_color is not None and css_bg_color != css_txt_color:
         if css_bg_color is not None:
             rgb, a = app.utils.to_rgb(css_bg_color)
-            color_code = "rgba({red},{green},{blue},{alpha})".format(red=str(rgb[0]),green=str(rgb[1]),blue=str(rgb[2]),alpha=str(a))
+            color_code = "rgba({r},{g},{b},{a})".format(r=rgb[0],g=rgb[1],b=rgb[2],a=a)
         else:
             color_code = "@theme_base_color"
-
         html_content_css = ".html-container-bg {{background-color: {0};}}".format(color_code)
-
         provider = Gtk.CssProvider()
         provider.load_from_data(bytes(html_content_css.encode()))
-
         self.get_style_context().add_provider(provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
         self.get_style_context().add_class("html-container-bg")
-
         self.props.name = "html-container"
-
         self.type = type
-
         self.label = str(len(self.content)) + " chars"
 
-class HtmlContainer_Webview(DefaultContainer):
-    def __init__(self, filepath, type, app, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self.content = open(filepath, "r")
-        self.content = self.content.read()
-
-        webview = WebKit2.WebView()
-        webview.props.zoom_level = 0.85
-        webview.load_html(self.content)
-        webview.props.expand = True
-        webview.props.can_focus = False
-        # webview.props.sensitive = True
-        websettings = webview.get_settings()
-
-        if hasattr(websettings, "set_hardware_acceleration_policy"):
-            websettings.set_hardware_acceleration_policy(WebKit2.HardwareAccelerationPolicy.ALWAYS)
-
-        # print(webview.get_child())
-        css_bg_color = app.utils.get_css_background_color(self.content)
-
-        if css_bg_color is not None:
-            rgb, a = app.utils.to_rgb(css_bg_color)
-            color_code = "rgba({red},{green},{blue},{alpha})".format(red=str(rgb[0]),green=str(rgb[1]),blue=str(rgb[2]),alpha=str(a))
-            webview_bg_color = Gdk.RGBA(red=float(rgb[0] / 255), green=float(rgb[1] / 255), blue=float(rgb[2] / 255), alpha=1)
-            webview.set_background_color(webview_bg_color)
-        else:
-            color_code = "@theme_base_color"
-            webview_bg_color = Gdk.RGBA(red=1.0000, green=1.0000, blue=1.0000, alpha=1.0000)
-            webview.set_background_color(webview_bg_color)
-
-        html_content_css = ".html-container-bg {background-color: " + color_code + ";}"
-        provider = Gtk.CssProvider()
-        provider.load_from_data(bytes(html_content_css.encode()))
-
-        self.get_style_context().add_provider(provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
-        self.get_style_context().add_class("html-container-bg")
-
-        self.props.name = "html-container"
-        self.attach(webview, 0, 0, 1, 1)
-
-        self.label = str(len(self.content)) + " chars"
-
-# ----------------------------------------------------------------------------------------------------
 
 class FilesContainer(DefaultContainer):
     def __init__(self, filepath, type, app, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
         self.app = app
         scale = self.get_scale_factor()
         self.icon_size = 72 * scale
         self.iconstack_offset = 0
-
         self.iconstack_overlay = Gtk.Overlay()
         self.iconstack_overlay.props.expand = True
-        self.iconstack_overlay.props.valign = Gtk.Align.FILL
-        self.iconstack_overlay.props.halign = Gtk.Align.FILL
-        
         file = open(filepath, "rb")
         encoding_name = chardet.detect(file.read())["encoding"]
         file.close()
-
         with open(filepath, encoding=encoding_name) as file:
             file_content = file.readlines()
-
-        file_count = len(file_content)
-
-        mime_type = None
-
-        file = open(filepath, "rb")
-        encoding_name = chardet.detect(file.read())["encoding"]
-        file.close()
-
-        with open(filepath, encoding=encoding_name) as file:
-            file_content = file.readlines()
-            for line in file_content:
-                if "file://" in line:
-                    line = line.replace("copy","").replace("file://","").strip().replace("%20", " ")
-                    if os.path.exists(line):
-                        if os.path.isdir(line):  
-                            mime_type = "inode/directory"
-                        elif os.path.isfile(line):  
-                            mime_type, val = Gio.content_type_guess(line, data=None)
-                        self.update_stack(line, mime_type)
-
+        for line in file_content:
+            if "file://" in line:
+                line = line.replace("copy","").replace("file://","").strip().replace("%20", " ")
+                if os.path.exists(line):
+                    mime_type = "inode/directory" if os.path.isdir(line) else Gio.content_type_guess(line, data=None)[0]
+                    self.update_stack(line, mime_type)
         self.props.name = "files-container"
         self.attach(self.iconstack_overlay, 0, 0, 1, 1)
-
         self.label = str(len(file_content)) + " files"
 
     def update_stack(self, path, mime_type):
-        icon = self.generate_default_icon(path, mime_type)
-        if "image" in mime_type and not "gif" in mime_type:
+        icon = self.generate_default_icon(mime_type)
+        if "image" in mime_type and "gif" not in mime_type:
             try:
-                icon = self.generate_image_icon(path)
+                icon = Gtk.Image()
+                icon.props.pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_size(path, self.icon_size, self.icon_size)
             except:
                 pass
-        if "gif" in mime_type:
-            icon = self.generate_gif_icon(path)
-
         icon.props.halign = icon.props.valign = Gtk.Align.CENTER
-
         import random
         if len(self.iconstack_overlay.get_children()) != 1:
             margin = random.randint(24,64) + self.iconstack_offset
-            set_margins = [icon.set_margin_bottom, icon.set_margin_top, icon.set_margin_left, icon.set_margin_right]
-            random.choice(set_margins)(margin)
-            random.choice(set_margins)(self.iconstack_offset + random.randint(10,1000) % 2)
-
+            random.choice([icon.set_margin_bottom, icon.set_margin_top, icon.set_margin_left, icon.set_margin_right])(margin)
         self.iconstack_overlay.add_overlay(icon)
+        self.iconstack_offset = 0 if self.iconstack_offset >= 30 else self.iconstack_offset + 2
 
-        if self.iconstack_offset >= 30:
-            self.iconstack_offset = 0
-        else:
-            self.iconstack_offset += 2
-
-    def generate_default_icon(self, path, mime_type):
+    def generate_default_icon(self, mime_type):
         icon = Gtk.Image()
         icons = Gio.content_type_get_icon(mime_type)
         for icon_name in icons.to_string().split():
-            if icon_name != "." and icon_name != "GThemedIcon":
+            if icon_name not in (".", "GThemedIcon"):
                 try:
-                    icon_pixbuf = self.app.icon_theme.load_icon(icon_name, self.icon_size, 0)
+                    icon.props.pixbuf = self.app.icon_theme.load_icon(icon_name, self.icon_size, 0)
                     break
                 except:
                     pass
-            if "generic" in icon_name:
-                try:
-                    icon_pixbuf = self.app.icon_theme.load_icon(icon_name, self.icon_size, 0)
-                    break
-                except:
-                    icon_pixbuf = self.app.icon_theme.load_icon("application-octet-stream", self.icon_size, 0)
-        icon.props.pixbuf = icon_pixbuf
         return icon
 
-    def generate_image_icon(self, path):
-        icon = Gtk.Image()
-        icon_pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_size(path, self.icon_size, self.icon_size)
-        icon.props.pixbuf = icon_pixbuf
-        return icon
-
-    def generate_gif_icon(self, path):
-        icon = Gtk.Image()
-        
-        pixbuf_original = GdkPixbuf.PixbufAnimation.new_from_file(path)
-        pixbuf_original_height = pixbuf_original.get_height()
-        pixbuf_original_width = pixbuf_original.get_width()
-        iter = pixbuf_original.get_iter()
-        for i in range(0, 250):
-            timeval = GLib.TimeVal()
-            timeval.tv_sec = int(str(GLib.get_real_time())[:-3])
-            iter.advance(timeval)
-            self.queue_draw()
-
-        ratio_h_w = pixbuf_original_height / pixbuf_original_width
-        ratio_w_h = pixbuf_original_width / pixbuf_original_height
-
-        if ratio_w_h > 1:
-            width = self.icon_size
-            height = int((10/16)*self.icon_size) + 1
-        else:
-            width = height = self.icon_size
-
-        pixbuf = GdkPixbuf.PixbufAnimationIter.get_pixbuf(iter)
-        pixbuf_fitted = GdkPixbuf.Pixbuf.new(pixbuf.get_colorspace(), pixbuf.get_has_alpha(), pixbuf.get_bits_per_sample(), width, height)
-
-        if int(width * ratio_h_w) < height:
-            scaled_pixbuf = pixbuf.scale_simple(int(height * ratio_w_h), height, GdkPixbuf.InterpType.BILINEAR)
-        else:
-            scaled_pixbuf = pixbuf.scale_simple(width, int(width * ratio_h_w), GdkPixbuf.InterpType.BILINEAR)
-        icon.props.pixbuf = scaled_pixbuf
-        return icon
 
 class FilesContainerPopover(Gtk.Popover):
     def __init__(self, filepath, type, app, parent, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
         self.app = app
-        scale = self.get_scale_factor()
-        self.icon_size = 48 * scale
-        self.iconstack_offset = 0
-
+        self.icon_size = 48 * self.get_scale_factor()
         self.flowbox = Gtk.FlowBox()
         self.flowbox.props.name = "files-popover-flowbox"
         self.flowbox.props.expand = True
-        self.flowbox.props.homogeneous = False
-        self.flowbox.props.row_spacing = 8
-        self.flowbox.props.column_spacing = 4
         self.flowbox.props.max_children_per_line = 3
         self.flowbox.props.min_children_per_line = 3
-        self.flowbox.props.valign = self.flowbox.props.halign = Gtk.Align.FILL
         self.flowbox.connect("child-activated", self.on_files_activated)
-
-        mime_type = None
-        
         file = open(filepath, "rb")
         encoding_name = chardet.detect(file.read())["encoding"]
         file.close()
-
         with open(filepath, encoding=encoding_name) as file:
-            self.content  = file.readlines()
-            for line in file_content:
+            for line in file.readlines():
                 if "file://" in line:
                     line = line.replace("copy","").replace("file://","").strip().replace("%20", " ")
                     if os.path.exists(line):
-                        if os.path.isdir(line):  
-                            mime_type = "inode/directory"
-                        elif os.path.isfile(line):  
-                            mime_type, val = Gio.content_type_guess(line, data=None)
-                        
-                        self.update_stack(line, mime_type)
-
-        # disable focus on flowboxchild items
-        for child in self.flowbox.get_children():
-            child.props.can_focus = False
-
+                        mime_type = "inode/directory" if os.path.isdir(line) else Gio.content_type_guess(line, data=None)[0]
+                        self.add_file_item(line, mime_type)
         scrolled_window = Gtk.ScrolledWindow()
-        scrolled_window.props.name = "files-popover-scrolledwindow"
         scrolled_window.props.expand = True
         scrolled_window.add(self.flowbox)
-
         grid = Gtk.Grid()
         grid.props.expand = True
-        grid.props.name = "files-popover-main-grid"
         grid.props.margin = 4
         grid.attach(scrolled_window, 0, 0, 1, 1)
-        
         self.props.name = "files-popover"
         self.props.position = Gtk.PositionType.BOTTOM
         self.props.relative_to = parent
-
-        if len(self.flowbox.get_children()) > 3:
-            self.set_size_request(320, 240)
-        else:
-            self.set_size_request(320, 160)
-        
+        self.set_size_request(320, 240 if len(self.flowbox.get_children()) > 3 else 160)
         self.add(grid)
-        self.connect("closed", self.on_closed)
+        self.connect("closed", lambda *a: self.destroy())
         self.show_all()
 
-    def on_closed(self, *args):
-        self.destroy()
-
     def on_files_activated(self, flowbox, flowboxchild):
-        flowboxchild.grab_focus()
-        file_grid = [child for child in flowboxchild.get_children() if isinstance(child, Gtk.Grid)][0]
+        file_grid = [c for c in flowboxchild.get_children() if isinstance(c, Gtk.Grid)][0]
         self.app.file_manager.show_files_in_file_manager(file_grid.props.name)
 
-    def update_stack(self, path, mime_type):
-        icon = self.generate_default_icon(path, mime_type)
-        if "image" in mime_type and not "gif" in mime_type:
-            try:
-                icon = self.generate_image_icon(path)
-            except:
-                pass
-        if "gif" in mime_type:
-            icon = self.generate_gif_icon(path)
-
-        icon.props.halign = icon.props.valign = Gtk.Align.CENTER
-
-        label = Gtk.Label(os.path.basename(path))
-        label.props.wrap_mode = Pango.WrapMode.CHAR
-        label.props.max_width_chars = 10
-        label.props.wrap = True
-        label.props.hexpand = True
-        label.props.justify = Gtk.Justification.CENTER
-        label.props.lines = 2
-        label.props.ellipsize = Pango.EllipsizeMode.END
-
-        file_grid = Gtk.Grid()
-        file_grid.props.expand = True
-        file_grid.props.margin = 4
-        file_grid.props.name = path
-        file_grid.props.has_tooltip = True
-        file_grid.props.halign = file_grid.props.valign = Gtk.Align.CENTER
-        file_grid.attach(icon, 0, 0, 1, 1)
-        file_grid.attach(label, 0, 1, 1, 1)
-        
-        self.flowbox.add(file_grid)
-
-    def generate_default_icon(self, path, mime_type):
+    def add_file_item(self, path, mime_type):
         icon = Gtk.Image()
         icons = Gio.content_type_get_icon(mime_type)
         for icon_name in icons.to_string().split():
-            if icon_name != "." and icon_name != "GThemedIcon":
+            if icon_name not in (".", "GThemedIcon"):
                 try:
-                    icon_pixbuf = self.app.icon_theme.load_icon(icon_name, self.icon_size, 0)
+                    icon.props.pixbuf = self.app.icon_theme.load_icon(icon_name, self.icon_size, 0)
                     break
                 except:
                     pass
-            if "generic" in icon_name:
-                try:
-                    icon_pixbuf = self.app.icon_theme.load_icon(icon_name, self.icon_size, 0)
-                    break
-                except:
-                    icon_pixbuf = self.app.icon_theme.load_icon("application-octet-stream", self.icon_size, 0)
-        icon.props.pixbuf = icon_pixbuf
-        return icon
+        label = Gtk.Label(os.path.basename(path))
+        label.props.max_width_chars = 10
+        label.props.ellipsize = Pango.EllipsizeMode.END
+        file_grid = Gtk.Grid()
+        file_grid.props.margin = 4
+        file_grid.props.name = path
+        file_grid.attach(icon, 0, 0, 1, 1)
+        file_grid.attach(label, 0, 1, 1, 1)
+        self.flowbox.add(file_grid)
 
-    def generate_image_icon(self, path):
-        icon = Gtk.Image()
-        icon_pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_size(path, self.icon_size, self.icon_size)
-        icon.props.pixbuf = icon_pixbuf
-        return icon
 
-    def generate_gif_icon(self, path):
-        icon = Gtk.Image()
-        
-        pixbuf_original = GdkPixbuf.PixbufAnimation.new_from_file(path)
-        pixbuf_original_height = pixbuf_original.get_height()
-        pixbuf_original_width = pixbuf_original.get_width()
-        iter = pixbuf_original.get_iter()
-        for i in range(0, 250):
-            timeval = GLib.TimeVal()
-            timeval.tv_sec = int(str(GLib.get_real_time())[:-3])
-            iter.advance(timeval)
-            self.queue_draw()
-
-        ratio_h_w = pixbuf_original_height / pixbuf_original_width
-        ratio_w_h = pixbuf_original_width / pixbuf_original_height
-
-        if ratio_w_h > 1:
-            width = self.icon_size
-            height = int((10/16)*self.icon_size) + 1
-        else:
-            width = height = self.icon_size
-
-        pixbuf = GdkPixbuf.PixbufAnimationIter.get_pixbuf(iter)
-        pixbuf_fitted = GdkPixbuf.Pixbuf.new(pixbuf.get_colorspace(), pixbuf.get_has_alpha(), pixbuf.get_bits_per_sample(), width, height)
-
-        if int(width * ratio_h_w) < height:
-            scaled_pixbuf = pixbuf.scale_simple(int(height * ratio_w_h), height, GdkPixbuf.InterpType.BILINEAR)
-        else:
-            scaled_pixbuf = pixbuf.scale_simple(width, int(width * ratio_h_w), GdkPixbuf.InterpType.BILINEAR)
-        icon.props.pixbuf = scaled_pixbuf
-        return icon
-
-# ----------------------------------------------------------------------------------------------------
-
-class SpreadsheetContainer(HtmlContainer_Webview):
+class SpreadsheetContainer(ImageContainer):
     def __init__(self, filepath, type, app, *args, **kwargs):
         thumbnail = os.path.splitext(filepath)[0]+'-thumb.png'
         super().__init__(thumbnail, type, app)
-        # super().__init__(filepath, type, app)
-
         self.props.name = "spreadsheet-container"
-
         self.label = "Spreadsheet"
 
-# ----------------------------------------------------------------------------------------------------
 
 class PresentationContainer(ImageContainer):
     def __init__(self, filepath, type, app, *args, **kwargs):
         thumbnail = os.path.splitext(filepath)[0]+'-thumb.png'
         super().__init__(thumbnail, type, app)
-
         self.props.name = "presentation-container"
-
         self.label = "Presentation"
 
-# ----------------------------------------------------------------------------------------------------
 
 class WordContainer(DefaultContainer):
     def __init__(self, filepath, type, app, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
         self.app = app
-        scale = self.get_scale_factor()
-        self.icon_size = 64 * scale
-        icon = None
-
-        if os.path.isdir(filepath):  
-            mime_type = "inode/directory"
-        elif os.path.isfile(filepath):  
-            mime_type, val = Gio.content_type_guess(filepath, data=None)
-        elif not os.path.exists(filepath):
-            pass
-        else:
-            self.app.logger.debug("{0}: special file (socket, FIFO, device file)".format(filepath))
-            pass
-                        
+        self.icon_size = 64 * self.get_scale_factor()
+        mime_type = Gio.content_type_guess(filepath, data=None)[0] if os.path.isfile(filepath) else "inode/directory"
         icons = Gio.content_type_get_icon(mime_type)
-        
         for icon_name in icons.to_string().split():
-            if icon_name != "." and icon_name != "GThemedIcon":
+            if icon_name not in (".", "GThemedIcon"):
                 try:
-                    icon_pixbuf = self.app.icon_theme.load_icon(icon_name, self.icon_size, 0)
-                    icon = Gtk.Image().new_from_pixbuf(icon_pixbuf)
+                    icon = Gtk.Image().new_from_pixbuf(self.app.icon_theme.load_icon(icon_name, self.icon_size, 0))
                     self.attach(icon, 0, 0, 1, 1)
                     break
                 except:
-                    pass # file not exist for this entry
-
+                    pass
         label = Gtk.Label("Preview with View action")
         label.props.margin_top = 10
         self.attach(label, 0, 1, 1, 1)
-
         self.props.name = "word-container"
         self.props.halign = self.props.valign = Gtk.Align.CENTER
-
         self.label = "Word Document"
 
-# ----------------------------------------------------------------------------------------------------
 
 class UrlContainer(DefaultContainer):
     def __init__(self, filepath, type, app, cache_filedir, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
         self.props.name = "url-container"
-
-        file = open(filepath, "rb")
-        encoding_name = chardet.detect(file.read())["encoding"]
-        file.close()
-
-        with open(filepath, encoding=encoding_name) as file:
-            self.content  = file.readlines()
-
+        with open(filepath, encoding="utf-8") as file:
+            self.content = file.readlines()
         domain = app.utils.get_domain(self.content[0].replace("\n",""))
         checksum = os.path.splitext(filepath)[0].split("/")[-1]
-        
-        self.favicon = self.update_favicon(cache_filedir, domain, checksum)
-
-        self.title = self.content[1]
-
-        title = Gtk.Label(self.title)
-        title.props.name = "url-container-title"
-        title.props.wrap_mode = Pango.WrapMode.WORD
-        title.props.max_width_chars = 20
-        title.props.wrap = True
-        title.props.hexpand = True
-        title.props.justify = Gtk.Justification.CENTER
-        title.props.lines = 3
-        title.props.ellipsize = Pango.EllipsizeMode.END
-        
-        domain = Gtk.Label(domain)
-
-        self.attach(self.favicon, 0, 0, 1, 1)
-        self.attach(title, 0, 1, 1, 1)
-        self.attach(domain, 0, 2, 1, 1)
-        self.props.margin = 10
-        self.props.valign = Gtk.Align.CENTER
-        self.props.halign = Gtk.Align.FILL
-        
-        self.label = "Internet URL"
-    
-    def update_favicon(self, cache_filedir, domain, checksum):
-        icon_size = 48 * self.get_scale_factor()
+        icon_size = 32 * self.get_scale_factor()
         favicon_file = os.path.join(cache_filedir[:-6],"icon", domain + "-" + checksum + ".ico")
-  
         try:
+            # Keep a reference to the pixbuf to avoid RuntimeWarning
+            pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_size(favicon_file, icon_size, icon_size)
             favicon = Gtk.Image()
-            favicon_pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_size(favicon_file, icon_size, icon_size)
-            favicon.props.pixbuf = favicon_pixbuf
+            favicon.props.pixbuf = pixbuf
         except:
             favicon = Gtk.Image().new_from_icon_name("applications-internet", Gtk.IconSize.LARGE_TOOLBAR)
             favicon.set_pixel_size(icon_size)
-        
-        favicon.props.margin_bottom = 10
+        # favicon.props.margin_bottom = 10
+        favicon.props.hexpand = True
+        favicon.props.vexpand = True
+        title = Gtk.Label(self.content[1] if len(self.content) > 1 else domain)
+        title.props.max_width_chars = 20
+        title.props.wrap = True
+        title.props.ellipsize = Pango.EllipsizeMode.NONE
+        title.props.justify = Gtk.Justification.CENTER
+        title.props.halign = Gtk.Align.FILL
+        title.props.hexpand = True
+        title.props.vexpand = True
+        domain_label = Gtk.Label(domain)
+        domain_label.props.halign = Gtk.Align.FILL
+        domain_label.props.hexpand = True
+        domain_label.props.vexpand = True
+        self.attach(favicon, 0, 0, 1, 1)
+        self.attach(title, 0, 1, 1, 1)
+        self.attach(domain_label, 0, 2, 1, 1)
+        self.props.margin = 10
+        self.props.valign = Gtk.Align.FILL
+        self.label = "Internet URL"
 
-        return favicon
-
-# ----------------------------------------------------------------------------------------------------
 
 class EmailContainer(DefaultContainer):
     def __init__(self, filepath, type, app, cache_filedir, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
         self.props.name = "email-container"
-
         self.label = "Email"
-
         file = open(filepath, "rb")
         encoding_name = chardet.detect(file.read())["encoding"]
         file.close()
-
         with open(filepath, encoding=encoding_name) as file:
-            self.content  = file.readlines()
-
+            self.content = file.readlines()
         domain = self.content[0].split("@")[-1].replace("\n","")
         checksum = os.path.splitext(filepath)[0].split("/")[-1]
-        
         icon_size = 48 * self.get_scale_factor()
         favicon_file = os.path.join(cache_filedir[:-6],"icon", domain + "-" + checksum + ".ico")
-        
         try:
+            # Keep a reference to the pixbuf to avoid RuntimeWarning
+            pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_size(favicon_file, icon_size, icon_size)
             favicon = Gtk.Image()
-            favicon_pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_size(favicon_file, icon_size, icon_size)
-            favicon.props.pixbuf = favicon_pixbuf
+            favicon.props.pixbuf = pixbuf
         except:
             favicon = Gtk.Image().new_from_icon_name("mail-send", Gtk.IconSize.LARGE_TOOLBAR)
             favicon.set_pixel_size(icon_size)
-            
         favicon.props.margin_bottom = 10
-
-        self.title = self.content[0].split(":")[-1].replace("\n","")
-
-        title = Gtk.Label(self.title)
-        title.props.name = "mail-container-title"
-        title.props.wrap_mode = Pango.WrapMode.WORD
+        title = Gtk.Label(self.content[0].split(":")[-1].replace("\n",""))
         title.props.max_width_chars = 40
         title.props.wrap = True
-        title.props.hexpand = True
-        title.props.justify = Gtk.Justification.CENTER
-        title.props.lines = 3
         title.props.ellipsize = Pango.EllipsizeMode.END
-
-        domain = Gtk.Label(domain)
-
+        domain_label = Gtk.Label(domain)
         self.attach(favicon, 0, 0, 1, 1)
         self.attach(title, 0, 1, 1, 1)
-        self.attach(domain, 0, 2, 1, 1)
+        self.attach(domain_label, 0, 2, 1, 1)
         self.props.margin = 10
         self.props.valign = Gtk.Align.CENTER
-        self.props.halign = Gtk.Align.FILL
 
-# ----------------------------------------------------------------------------------------------------
 
 class ProtectedContainer(DefaultContainer):
     def __init__(self, filepath, type, app, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
         self.props.name = "protected-container"
         self.label = "Protected Clips"
-
         self.props.margin = 10
-        self.props.margin_left = self.props.margin_right = 10
-
         self.content = Gtk.Label()
         self.content.props.label = "*********"
         self.content.props.hexpand = False
         self.content.props.max_width_chars = 23
-        self.content.props.wrap = False
-        self.content.props.expand = False
-        self.content.props.ellipsize = Pango.EllipsizeMode.NONE
-        self.content.props.wrap_mode = Pango.WrapMode.CHAR
-        self.content.props.max_width_chars = 23
-
         self.props.halign = self.props.valign = Gtk.Align.CENTER
-        self.props.expand = False
         self.props.hexpand = True
-
         self.attach(self.content, 0, 0, 1, 1)
-

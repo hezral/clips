@@ -61,9 +61,9 @@ class ClipsWindow(Gtk.ApplicationWindow):
         # self.connect("configure-event", self.on_configure_event)
 
     def set_display_settings(self, data):
-        if not self.gio_settings.get_value("persistent-mode"):
-            if self.app.window_manager is not None:
-                self.app.window_manager._run(callback=self.on_persistent_mode)
+        # Always start window_manager for active app detection (used by clipboard tracking)
+        if self.app.window_manager is not None and not self.app.window_manager.id_thread:
+            self.app.window_manager._run(callback=self.on_persistent_mode)
         
         if self.gio_settings.get_value("sticky-mode"):
             self.stick()
@@ -172,9 +172,12 @@ class ClipsWindow(Gtk.ApplicationWindow):
                 self.searchentry.grab_focus()
 
     def on_persistent_mode(self, wm_class):
-        if wm_class is not None:
-            if self.app.props.application_id not in wm_class:
-                self.hide()
+        # Only auto-hide the window if persistent-mode is disabled
+        # Window manager always runs for active app detection (clipboard tracking)
+        if not self.gio_settings.get_value("persistent-mode"):
+            if wm_class is not None:
+                if self.app.props.application_id not in wm_class:
+                    self.hide()
 
     def on_search_entry_key_pressed(self, search_entry, eventkey):
         key = Gdk.keyval_name(eventkey.keyval).lower()

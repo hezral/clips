@@ -4,6 +4,17 @@
 import logging
 import sys
 import os
+
+# Initialize XLib for thread-safety before any GTK/X11 operations
+# This fixes "Xlib is not thread-safe" errors when using WebKit
+try:
+    import ctypes
+    import ctypes.util
+    x11 = ctypes.cdll.LoadLibrary(ctypes.util.find_library('X11'))
+    x11.XInitThreads()
+except:
+    pass
+
 import gi
 gi.require_version('Gtk', '3.0')
 gi.require_version('Granite', '1.0')
@@ -15,10 +26,10 @@ from .cache_manager import CacheManager
 # from .shake_listener import ShakeListener
 from . import utils
 from .utils import log_function_calls
-if utils.is_wayland_session():
-    from .active_window_manager_wayland import ActiveWindowManager
-else:
-    from .active_window_manager_x11 import ActiveWindowManager
+
+# Use display_backend module for X11/Wayland detection
+from .display_backend import is_wayland, get_backend_name
+from .active_window_manager import ActiveWindowManager
 from .filemanager_backend import FileManagerBackend
 
 from datetime import datetime
@@ -56,16 +67,25 @@ class Application(Gtk.Application):
         self.utils = utils
 
         self.logger = logger
-        # if self.gio_settings.get_value("debug-mode"):
-        self.logger.setLevel(logging.DEBUG)
-        format_str = "%(levelname)s: %(asctime)s %(filename)s, %(funcName)s:%(lineno)d: %(message)s"
+        if self.gio_settings.get_value("debug-mode"):
+            self.logger.setLevel(logging.DEBUG)
+            format_str = "%(levelname)s: %(asctime)s %(filename)s, %(funcName)s:%(lineno)d: %(message)s"
+        else:
+            self.logger.setLevel(logging.INFO)
+            format_str = "%(levelname)s: %(asctime)s %(message)s"
         formatter = logging.Formatter(format_str)
         for handler in self.logger.handlers:
             handler.setFormatter(formatter)
-        # else:
-        #     self.logger.setLevel(logging.INFO)
 
         self.logger.info("startup")
+        self.logger.info(f"Display backend: {get_backend_name()}")
+
+        # Check WebKit2 availability
+        webkit_version = self._check_webkit_version()
+        if webkit_version:
+            self.logger.info(f"WebKit2 version: {webkit_version}")
+        else:
+            self.logger.warning("WebKit2 not available (URL screenshots disabled)")
 
         self.clipboard_manager = ClipboardManager(gtk_application=self)
         self.cache_manager = CacheManager(gtk_application=self, clipboard_manager=self.clipboard_manager)
@@ -81,9 +101,24 @@ class Application(Gtk.Application):
         self.icon_theme.prepend_search_path(os.path.join(GLib.get_home_dir(), ".local/share/flatpak/exports/share/icons"))
         self.icon_theme.prepend_search_path(os.path.join(os.path.dirname(__file__), "data", "icons"))
 
+    def _check_webkit_version(self):
+        """Check which WebKit2 version is available."""
+        import gi
+        for version in ['4.1', '4.0']:
+            try:
+                gi.require_version('WebKit2', version)
+                return version
+            except (ValueError, ImportError):
+                continue
+        return None
+
     @log_function_calls
     def do_startup(self):
         Gtk.Application.do_startup(self)
+
+        # Initialize clipboard monitoring after GTK display is ready
+        if hasattr(self, 'cache_manager') and self.cache_manager:
+            self.cache_manager.initialize_monitoring()
 
         # self.create_app_shortcut() # doesn't work in flatpak anymore
         self.create_app_actions()
@@ -282,26 +317,48 @@ class Application(Gtk.Application):
 
     @log_function_calls
     def on_clipsapp_action(self, action=None, param=None):
+        """
+        Toggle clipboard monitoring on/off.
+        
+        Called when user clicks the toggle button in main_window or uses Ctrl+.
+        Uses cache_manager's enable/disable methods which properly handle
+        both X11 (GTK) and Wayland (native protocol) monitoring.
+        """
         if self.cache_manager.clipboard_monitoring is True:
+            # Currently enabled -> disable
             try:
-                self.clipboard_manager.clipboard.disconnect_by_func(self.cache_manager.update_cache)
-                self.cache_manager.clipboard_monitoring = False
+                self.cache_manager.disable_clipboard_monitoring()
+                
+                # Update UI
                 self.main_window.clipsapp_toggle.props.tooltip_text = "Clipboard Monitoring: Disabled"
+                self.main_window.clipsapp_toggle.set_image(
+                    Gtk.Image().new_from_icon_name("com.github.hezral.clips-disabled-symbolic", Gtk.IconSize.SMALL_TOOLBAR)
+                )
+                self.main_window.clipsapp_toggle.props.name = "app-action-disable"
                 self.main_window.clipsapp_toggle.get_style_context().add_class("app-action-disabled")
                 self.main_window.clipsapp_toggle.get_style_context().remove_class("app-action-enabled")
                 self.logger.info("clipboard monitoring disabled")
-            except:
-                self.logger.info("clipboard monitoring disabling failed")
+                
+            except Exception as e:
+                self.logger.error(f"Failed to disable clipboard monitoring: {e}")
+                
         elif self.cache_manager.clipboard_monitoring is False or param == "disable":
+            # Currently disabled -> enable
             try:
-                self.clipboard_manager.clipboard.connect("owner-change", self.cache_manager.update_cache, self.clipboard_manager)
-                self.cache_manager.clipboard_monitoring = True
+                self.cache_manager.enable_clipboard_monitoring()
+                
+                # Update UI
                 self.main_window.clipsapp_toggle.props.tooltip_text = "Clipboard Monitoring: Enabled"
+                self.main_window.clipsapp_toggle.set_image(
+                    Gtk.Image().new_from_icon_name("com.github.hezral.clips-enabled-symbolic", Gtk.IconSize.SMALL_TOOLBAR)
+                )
+                self.main_window.clipsapp_toggle.props.name = "app-action-enable"
                 self.main_window.clipsapp_toggle.get_style_context().add_class("app-action-enabled")
                 self.main_window.clipsapp_toggle.get_style_context().remove_class("app-action-disabled")
                 self.logger.info("clipboard monitoring enabled")
-            except:
-                self.logger.info("clipboard monitoring enabling failed")
+                
+            except Exception as e:
+                self.logger.error(f"Failed to enable clipboard monitoring: {e}")
             
     @log_function_calls
     def on_hide_action(self, action, param):
@@ -311,6 +368,9 @@ class Application(Gtk.Application):
     @log_function_calls
     def on_quit_action(self, action, param):
         if self.main_window is not None:
+            # Stop clipboard monitoring before quit (cleans up Wayland monitor thread)
+            if self.cache_manager:
+                self.cache_manager.stop_clipboard_monitoring()
             self.main_window.destroy()
 
     @log_function_calls
@@ -359,4 +419,3 @@ class Application(Gtk.Application):
 def main(version):
     app = Application()
     return app.run(sys.argv)
-

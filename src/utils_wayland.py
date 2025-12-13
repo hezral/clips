@@ -101,29 +101,18 @@ def get_all_apps(app=None):
         return all_apps
 
 def get_active_appinfo_wayland(data=None):
+    """
+    Get active application info.
+    Note: AT-SPI access is restricted in flatpak sandbox, so this currently
+    returns "unknown app" on Wayland. Active window detection works on X11 only.
+    """
     desktop_env = os.environ.get("XDG_CURRENT_DESKTOP", "").lower()
-    source_app = None
-    source_icon = None
+    source_app = "unknown app"
+    source_icon = "application-default-icon"
 
-    if "gnome" in desktop_env or "pantheon" in desktop_env:
-        try:
-            bus = SessionBus()
-            shell_proxy = bus.get("org.gnome.Shell")
-            focused_app = shell_proxy.get_focus_app()
-            if focused_app:
-                all_apps = get_all_apps()
-                for app_name, app_info in all_apps.items():
-                    if focused_app.get_id() in app_info[3]: # app_info[3] is the desktop file path
-                        source_app = app_name.split("#")[0]
-                        source_icon = app_info[0]
-                        break
-        except Exception as e:
-            print(f"Failed to get active app info from GNOME Shell: {e}")
-            
-    if source_app is None:
-        source_app = "unknown app"
-        source_icon = "application-default-icon"
-        
+    print(f"[DEBUG] Desktop environment: {desktop_env}")
+    print(f"[DEBUG] Active window detection is not available on Wayland (flatpak sandbox restriction)")
+
     return source_app, source_icon
 
 def paste_from_clipboard_wayland():
@@ -137,37 +126,59 @@ def paste_from_clipboard_wayland():
         return False
 
 def copy_to_clipboard_wayland(clipboard_target, file, type=None):
+    """
+    Copy content to clipboard using wl-copy on Wayland.
+
+    Note: The caller should set clipboard_manager._skip_clipboard_monitoring flag
+    before calling this to prevent the clipboard monitor from capturing the change.
+    """
+    print(f"[DEBUG] copy_to_clipboard_wayland: target={clipboard_target}, type={type}, file={file}")
+
     if shutil.which("wl-copy") is not None:
         try:
             if "url" in type:
                 with open(file) as _file:
                     data = _file.readlines()[0].rstrip("\n")
-                    subprocess.run(["wl-copy", data], check=True)
+                    # Use Popen to avoid blocking - wl-copy needs to stay running in background
+                    print(f"[DEBUG] Starting wl-copy for URL (non-blocking)")
+                    subprocess.Popen(["wl-copy", data])
             elif "text/plain" in clipboard_target or "text" in type:
                 with open(file, 'r') as f:
                     content = f.read()
-                    subprocess.run(["wl-copy"], input=content.encode('utf-8'), check=True)
-            else: # for files, images, etc., wl-copy directly from file
-                subprocess.run(["wl-copy", "--type", clipboard_target, "-f", file], check=True)
+                    # Use Popen with PIPE for stdin, write asynchronously
+                    print(f"[DEBUG] Starting wl-copy for text (non-blocking)")
+                    proc = subprocess.Popen(["wl-copy"], stdin=subprocess.PIPE)
+                    # Write to stdin and close it, but don't wait for process to complete
+                    proc.stdin.write(content.encode('utf-8'))
+                    proc.stdin.close()
+            else: # for files, images, etc., pipe file content to wl-copy
+                # For images and binary files, read and pipe to stdin
+                # Use subprocess.run to ensure data is fully written before returning
+                print(f"[DEBUG] Starting wl-copy for image/file with type {clipboard_target}")
+                with open(file, 'rb') as f:
+                    subprocess.run(["wl-copy", "--type", clipboard_target], stdin=f, check=True)
+            print(f"[DEBUG] copy_to_clipboard_wayland: Successfully started wl-copy")
             return True
-        except subprocess.CalledProcessError:
+        except (subprocess.CalledProcessError, OSError, BrokenPipeError) as e:
+            print(f"[DEBUG] copy_to_clipboard_wayland: Error: {e}")
             return False
     else:
+        print(f"[DEBUG] copy_to_clipboard_wayland: wl-copy not found")
         return False
 
 def copy_files_to_clipboard_wayland(uris):
     if shutil.which("wl-copy") is not None:
         try:
-            # wl-copy expects file URIs directly
-            file_paths = []
-            for uri in uris.split('\n'):
-                if uri.startswith('file://'):
-                    file_paths.append(uri[7:]) # remove "file://"
-            
-            # wl-copy can take multiple files as arguments
-            subprocess.run(["wl-copy", "--type", "text/uri-list"] + [f"file://{p}" for p in file_paths], check=True)
+            # wl-copy expects URI list via stdin for text/uri-list type
+            # The uris parameter is already in the correct format (newline-separated file:// URIs)
+            print(f"[DEBUG] Starting wl-copy for files with text/uri-list")
+            proc = subprocess.Popen(["wl-copy", "--type", "text/uri-list"], stdin=subprocess.PIPE)
+            proc.stdin.write(uris.encode('utf-8'))
+            proc.stdin.close()
+            # Don't wait for the process - wl-copy needs to stay alive to serve clipboard
             return True
-        except subprocess.CalledProcessError:
+        except (OSError, BrokenPipeError) as e:
+            print(f"[DEBUG] copy_files_to_clipboard_wayland: Error: {e}")
             return False
     else:
         return False

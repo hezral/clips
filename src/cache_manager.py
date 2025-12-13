@@ -15,6 +15,10 @@ from datetime import datetime
 import chardet
 from .utils import log_function_calls
 
+# Import display backend detection
+from .display_backend import is_wayland, get_backend_name
+
+
 class CacheManager():
 
     main_window = None
@@ -30,8 +34,9 @@ class CacheManager():
             application_id = self.app.props.application_id
 
         if clipboard_manager is not None:
-            clipboard_manager.clipboard.connect("owner-change", self.update_cache, clipboard_manager)
-            self.clipboard_monitoring = True
+            self.clipboard_manager = clipboard_manager
+            # Note: clipboard monitoring will be set up later in initialize_monitoring()
+            # after GTK display is ready
 
         # initialize cache directory
         self.cache_dir = os.path.join(GLib.get_user_cache_dir(), application_id)
@@ -56,6 +61,128 @@ class CacheManager():
                 self.create_table(self.db_cursor)
         except (OSError, sqlite3.Error) as error:
             print("Exception: ", error)
+
+    # =========================================================================
+    # Clipboard Monitoring Setup
+    # =========================================================================
+
+    @log_function_calls
+    def initialize_monitoring(self):
+        """
+        Initialize clipboard monitoring after GTK display is ready.
+
+        This must be called from do_startup() in main.py after GTK has
+        initialized, not from __init__().
+        """
+        if self.clipboard_manager is not None:
+            self._setup_clipboard_monitoring()
+
+    @log_function_calls
+    def _setup_clipboard_monitoring(self):
+        """Setup clipboard monitoring based on display backend."""
+        self.app.logger.info(f"Display backend: {get_backend_name()}")
+        
+        if is_wayland():
+            # Try Wayland native monitoring first
+            if self.clipboard_manager.setup_wayland_monitoring(self.update_cache):
+                self.clipboard_monitoring = True
+                self.app.logger.info("Using Wayland data-control clipboard monitoring")
+            else:
+                # Fall back to GTK (limited on Wayland)
+                self._setup_gtk_monitoring()
+                self.app.logger.warning(
+                    "Wayland: Using GTK clipboard fallback. "
+                    "Monitoring only works when Clips has focus."
+                )
+        else:
+            # X11: Use standard GTK monitoring
+            self._setup_gtk_monitoring()
+            self.app.logger.info("Using X11 GTK clipboard monitoring")
+
+    @log_function_calls
+    def _setup_gtk_monitoring(self):
+        """Setup GTK clipboard owner-change monitoring."""
+        self.clipboard_manager.clipboard.connect(
+            "owner-change", 
+            self.update_cache, 
+            self.clipboard_manager
+        )
+        self.clipboard_monitoring = True
+
+    @log_function_calls
+    def enable_clipboard_monitoring(self):
+        """
+        Re-enable clipboard monitoring after disable.
+        
+        This is called by main.py's on_clipsapp_action() when the user
+        clicks the toggle button to re-enable monitoring.
+        """
+        if self.clipboard_monitoring:
+            self.app.logger.debug("Clipboard monitoring already enabled")
+            return True
+        
+        success = False
+        
+        if is_wayland():
+            # Try Wayland native monitoring first
+            if self.clipboard_manager.setup_wayland_monitoring(self.update_cache):
+                self.clipboard_monitoring = True
+                success = True
+                self.app.logger.info("Wayland clipboard monitoring enabled")
+            else:
+                # Fall back to GTK (limited on Wayland)
+                self._setup_gtk_monitoring()
+                success = True
+                self.app.logger.warning("Wayland: Using GTK clipboard fallback")
+        else:
+            # X11: Use standard GTK monitoring
+            self._setup_gtk_monitoring()
+            success = True
+            self.app.logger.info("X11 clipboard monitoring enabled")
+        
+        return success
+
+    @log_function_calls
+    def disable_clipboard_monitoring(self):
+        """
+        Temporarily disable clipboard monitoring.
+        
+        This is called by main.py's on_clipsapp_action() when the user
+        clicks the toggle button to disable monitoring.
+        """
+        if not self.clipboard_monitoring:
+            self.app.logger.debug("Clipboard monitoring already disabled")
+            return True
+        
+        # Stop Wayland monitor if running
+        if is_wayland() and self.clipboard_manager.wayland_monitor:
+            self.clipboard_manager.stop_wayland_monitoring()
+            self.app.logger.debug("Stopped Wayland clipboard monitor")
+        
+        # Disconnect GTK signal (works for both X11 and Wayland fallback)
+        try:
+            self.clipboard_manager.clipboard.disconnect_by_func(self.update_cache)
+            self.app.logger.debug("Disconnected GTK clipboard signal")
+        except TypeError:
+            # Signal was not connected (Wayland native mode)
+            pass
+        except Exception as e:
+            self.app.logger.debug(f"GTK disconnect: {e}")
+        
+        self.clipboard_monitoring = False
+        self.app.logger.info("Clipboard monitoring disabled")
+        return True
+
+    @log_function_calls
+    def stop_clipboard_monitoring(self):
+        """Stop and cleanup clipboard monitoring (called on app quit)."""
+        if is_wayland():
+            self.clipboard_manager.stop_wayland_monitoring()
+        self.clipboard_monitoring = False
+
+    # =========================================================================
+    # Original Methods (unchanged except update_cache signature)
+    # =========================================================================
 
     @log_function_calls
     def open_db(self, database_file):
@@ -221,8 +348,10 @@ class CacheManager():
                 self.db_cursor.execute(sqlite_with_param, data_param)
                 self.db_connection.commit()
                 if manual_run:
-                    flowboxchild = [child for child in self.app.main_window.clips_view.flowbox.get_children() if child.get_children()[0].id == id][0]
-                    flowboxchild.destroy()
+                    matching_children = [child for child in self.app.main_window.clips_view.flowbox.get_children() if child.get_children()[0].id == id]
+                    if matching_children:
+                        flowboxchild = matching_children[0]
+                        flowboxchild.destroy()
 
             if manual_run is False:
                 self.check_total_clips()
@@ -323,9 +452,23 @@ class CacheManager():
         return records
 
     @log_function_calls
-    def update_cache(self, clipboard, event, clipboard_manager):
-
-        data_tuple = clipboard_manager.clipboard_changed(clipboard, event)
+    def update_cache(self, clipboard, event, clipboard_manager, _wayland_data=None):
+        """
+        Update cache with new clipboard content.
+        
+        Args:
+            clipboard: GTK clipboard (may be None for Wayland)
+            event: Owner change event (may be None for Wayland)
+            clipboard_manager: ClipboardManager instance
+            _wayland_data: Pre-processed data tuple from Wayland monitor (optional)
+        """
+        # Get the processed clipboard data
+        if _wayland_data is not None:
+            # Wayland: data already processed
+            data_tuple = _wayland_data
+        else:
+            # X11: process via clipboard_manager
+            data_tuple = clipboard_manager.clipboard_changed(clipboard, event)
 
         if data_tuple is not None:
             target, content, source_app, source_icon, created, protected, thumbnail, file_extension, content_type, alt_content, alt_file_extension, additional_desc = data_tuple
@@ -407,19 +550,6 @@ class CacheManager():
                 file.write(alt_content.get_data())
                 file.close()
 
-                # condition for html content where bg and text is same color
-                # file_read = open(temp_cache_uri, "r")
-                # content = file_read.read()
-                # css_bg_color = self.app.utils.get_css_background_color(content)
-                # css_txt_color = self.app.utils.get_css_text_color(content)
-                # if css_bg_color == css_txt_color:
-                #     new_content = content.replace("background-color: {0}".format(css_bg_color), "background-color: rgb(255,255,255)")
-                #     new_content = new_content.replace("color: {0}".format(css_txt_color), "color: none")
-                #     file_read.close()
-                #     file_write = open(temp_cache_uri,"w")
-                #     file_write.write(new_content)
-                #     file_write.close()
-
             # get checksum value
             checksum = self.get_checksum(open(temp_cache_uri, 'rb').read())
 
@@ -439,9 +569,24 @@ class CacheManager():
             if thumbnail is not None:
                 cache_thumbnail_file = checksum + "-thumb" + ".png"
                 cache_thumbnail_uri = self.cache_filedir + '/' + cache_thumbnail_file
-                if content_type == "html":
-                    self.app.utils.do_webview_screenshot(uri=cache_uri, out_file_path=cache_thumbnail_uri)
-                    # GLib.timeout_add(250, os.renames, temp_cache_thumbnail_uri, cache_thumbnail_uri) #add timeout for it to catchup and now the temp file is there
+                if content_type in ("html", "url"):
+                    # DISABLED: Screenshot generation temporarily disabled
+                    # TODO: Re-enable after fixing WebKit OffscreenWindow issues
+                    # Generate screenshot for HTML and URL types using OffscreenWindow
+                    # This works independently of the main window
+                    # try:
+                    #     # Defer screenshot slightly to ensure GTK main loop is ready
+                    #     from gi.repository import GLib
+                    #     def generate_screenshot():
+                    #         try:
+                    #             self.app.utils.do_webview_screenshot(uri=cache_uri, out_file_path=cache_thumbnail_uri)
+                    #         except Exception as e:
+                    #             self.app.logger.debug(f"Screenshot generation failed: {e}")
+                    #         return False  # Don't repeat
+                    #     GLib.timeout_add(100, generate_screenshot)
+                    # except Exception as e:
+                    #     self.app.logger.debug(f"Screenshot scheduling failed: {e}")
+                    pass  # Screenshot generation disabled
                 else:
                     file = open(cache_thumbnail_uri,"wb")
                     file.write(thumbnail.get_data())
@@ -449,9 +594,6 @@ class CacheManager():
             
             from datetime import datetime
             if "http" in type:
-                # GLib.idle_add(self.app.utils.get_web_favicon, content.get_text(), self.icon_cache_filedir, cache_uri)
-                # with open(cache_uri, "a") as file:
-                #     file.write("\n"+self.app.utils.get_web_title(content.get_text()))
                 url = content.get_text()
                 self.app.utils.get_web_data(url, cache_uri, self.icon_cache_filedir, checksum)
 
@@ -474,55 +616,36 @@ class CacheManager():
             pixbuf.savev(source_icon_cache, 'png', [], []) # save to icon cache folder
 
             record = (str(target), created, source, source_app, source_icon, cache_file, type, protected)
-            clips_view = self.main_window.clips_view
 
             # check duplicates using checksum
             if len(self.check_duplicate(checksum)) == 0:
                 self.add_record(record) # add to database
-                
-                new_record = self.select_record(self.db_cursor.lastrowid)[0] # prepare record for gui
 
-                # self.queue_update_cache(new_record)
-                # clips_view.new_clip(new_record) # add to gui
-                GLib.timeout_add(750, clips_view.new_clip, new_record) # add to gui
+                # Only update UI if main window exists (may be None during startup)
+                if self.main_window is not None:
+                    new_record = self.select_record(self.db_cursor.lastrowid)[0] # prepare record for gui
+                    clips_view = self.main_window.clips_view
+                    GLib.timeout_add(750, clips_view.new_clip, new_record) # add to gui
             else:
                 self.update_cache_on_recopy(checksum)
-            
-            self.check_total_clips()
+
+            # Only check total clips if main window exists
+            if self.main_window is not None:
+                self.check_total_clips()
 
     @log_function_calls
     def queue_update_cache(self, record):
-        # print(record)
         id = record[0]
         self.main_window.clips_view.new_clip(record)
 
         try:
-            # print("success")
             self.main_window.clips_view.new_clip(record)
         except:
             flowboxchild = [child for child in self.main_window.clips_view.flowbox.get_children() if child.get_children()[0].id == id]
-            # print(flowboxchild)
             if flowboxchild is None:
-                # print("failed")
                 return self.queue_update_cache(record)
 
         self.check_total_clips()
-        # if len(self.queue) != 0:
-        #     for item in self.queue:
-        #         try:
-        #             id = item[0]
-        #             record = item[1]
-        #             self.main_window.clips_view.new_clip(record)
-        #             self.queue.pop(item)
-        #         except:
-        #             self.queue.append((id, record))
-        #             return self.queue_update_cache
-        # else:
-        #     try:
-        #         self.main_window.clips_view.new_clip(record)
-        #     except:
-        #         self.queue.append((id, record))
-        #         return self.queue_update_cache
         
     @log_function_calls
     def update_cache_on_recopy(self, cache_file=None, checksum=None):
@@ -531,7 +654,7 @@ class CacheManager():
 
         # update db with new timestamp and get the timestamp
         created_updated = self.update_record_on_recopy(checksum)
-        
+
         # get the id for the clip that was updated
         clip = self.check_duplicate(checksum)[0]
 
@@ -545,13 +668,18 @@ class CacheManager():
         type = clip[7]
         protected = clip[8]
         created_short = created_updated.strftime('%a, %b %d %Y, %H:%M:%S')
-        
-        # update timestamp
-        flowboxchild_updated = [child for child in self.main_window.clips_view.flowbox.get_children() if child.get_children()[0].id == id][0]
-        clips_container = flowboxchild_updated.get_children()[0]
-        clips_container.update_timestamp_on_clips(created_updated)
-        
-        self.main_window.clips_view.flowbox.invalidate_sort()
+
+        # Only update UI if main window exists and has clips loaded
+        if self.main_window is not None:
+            # Find the matching flowbox child
+            matching_children = [child for child in self.main_window.clips_view.flowbox.get_children() if child.get_children()[0].id == id]
+            if matching_children:
+                # update timestamp
+                flowboxchild_updated = matching_children[0]
+                clips_container = flowboxchild_updated.get_children()[0]
+                clips_container.update_timestamp_on_clips(created_updated)
+
+                self.main_window.clips_view.flowbox.invalidate_sort()
 
     @log_function_calls
     def update_cache_on_newdata(self, cache_file=None, checksum=None):
@@ -569,16 +697,22 @@ class CacheManager():
         type = clip[7]
         protected = clip[8]
         created_short = clip[9]
-        
-        # update timestamp
-        flowboxchild_updated = [child for child in self.main_window.clips_view.flowbox.get_children() if child.get_children()[0].id == id][0]
-        clips_container = flowboxchild_updated.get_children()[0]
 
-        self.main_window.clips_view.flowbox.invalidate_sort()
+        # Only update UI if main window exists and has clips loaded
+        if self.main_window is not None:
+            # Find the matching flowbox child
+            matching_children = [child for child in self.main_window.clips_view.flowbox.get_children() if child.get_children()[0].id == id]
+            if matching_children:
+                # update timestamp
+                flowboxchild_updated = matching_children[0]
+                clips_container = flowboxchild_updated.get_children()[0]
+
+                self.main_window.clips_view.flowbox.invalidate_sort()
 
     @log_function_calls
     def check_total_clips(self):
-        self.main_window.on_view_visible()
+        if self.main_window is not None:
+            self.main_window.on_view_visible()
 
     @log_function_calls
     def load_source_apps(self):
@@ -631,7 +765,6 @@ class CacheManager():
                         file.close()
                     os.remove(cache_uri)
                     shutil.move(temp_file_uri, cache_uri)
-                    # os.renames(temp_file_uri, cache_uri)
                     self.encrypt_file(cache_uri)
             else:
                 encrypt, encrypted_file = self.app.utils.do_encryption("encrypt", authenticate_data, cache_uri)
@@ -654,7 +787,6 @@ class CacheManager():
             self.db_cursor.execute(sqlite_with_param, data_param)
             rows = self.db_cursor.fetchall()
             if rows is not None:
-                # print(rows)
                 for row in rows:
                     id = row[0]
                     cache_file_uri = os.path.join(self.cache_filedir,row[1])

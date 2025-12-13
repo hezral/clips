@@ -8,6 +8,11 @@ import sys
 import signal
 import gettext
 
+# Enable access to system's AT-SPI bus
+if 'AT_SPI_BUS_ADDRESS' in os.environ:
+    del os.environ['AT_SPI_BUS_ADDRESS']
+
+
 VERSION = '@VERSION@'
 pkgdatadir = '@pkgdatadir@'
 localedir = '@localedir@'
@@ -18,6 +23,19 @@ gettext.install('clips', localedir)
 
 if __name__ == '__main__':
     import gi
+
+    # Check for debug flag before starting main application
+    if '--debug' in sys.argv or '-d' in sys.argv:
+        from clips import clips_supported
+        print("Clips", VERSION)
+        try:
+            clips_supported.debug()
+        except KeyboardInterrupt:
+            print("\n" + "=" * 60)
+            print("Debug mode exited.")
+            print("=" * 60)
+        finally:
+            sys.exit(0)
 
     from clips import main
     print("Clips", VERSION)

@@ -373,10 +373,10 @@ class SettingsView(Gtk.Grid):
         if self.is_visible():
 
             if name == "persistent-mode":
-                if switch.get_active():
-                    self.app.window_manager._stop()
-                else:
-                    self.app.window_manager._run(callback=main_window.on_persistent_mode)
+                # Window manager always runs for active app detection (clipboard tracking)
+                # No need to stop/start it when toggling persistent-mode
+                # The on_persistent_mode callback checks the setting to decide if window should auto-hide
+                pass
 
             if name == "sticky-mode":
                 if switch.get_active():

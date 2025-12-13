@@ -86,7 +86,7 @@ def get_clipboard_contents(clipboard, event, save_files):
         from . import utils
     except:
         import utils
-    print("Active App:", utils.get_active_appinfo_xlib())
+    print("Active App:", utils.get_active_appinfo())
     print("Current clipboard offers formats: ", len(clipboard.wait_for_targets()[1]))
     i=0
     for target in clipboard.wait_for_targets()[1]:
@@ -115,17 +115,53 @@ def debug():
     import gi
     gi.require_version('Gtk', '3.0')
     from gi.repository import Gtk, GLib
+    import os
 
-    # setup commandline quit
-    import signal
-    GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGINT, Gtk.main_quit) 
-    
+    print("=" * 60)
+    print("CLIPS DEBUG MODE")
+    print("=" * 60)
+
+    # Check desktop environment
+    desktop_env = os.environ.get("XDG_CURRENT_DESKTOP", "unknown")
+    session_type = os.environ.get("XDG_SESSION_TYPE", "unknown")
+    print(f"Desktop Environment: {desktop_env}")
+    print(f"Session Type: {session_type}")
+
+    # Check DBus availability
+    print("\nDBus Service Availability:")
+    try:
+        from pydbus import SessionBus
+        bus = SessionBus()
+        print("  ✓ DBus session bus connected")
+
+        # Check for GNOME Shell
+        try:
+            shell = bus.get("org.gnome.Shell", "/org/gnome/Shell")
+            print("  ✓ org.gnome.Shell available")
+
+            # Try to get shell methods
+            try:
+                introspection = shell._introspect_interface
+                print(f"    Available Shell interface: {introspection}")
+            except:
+                pass
+
+        except Exception as e:
+            print(f"  ✗ org.gnome.Shell NOT available: {e}")
+
+    except Exception as e:
+        print(f"  ✗ Failed to connect to DBus: {e}")
+
+    print("\n" + "=" * 60)
+
     # create clipboard and connect to event
     clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
     clipboard.connect('owner_change', get_clipboard_contents, False)
 
-    print("running in debug mode")
-    print("waiting for clipboard event")
+    print("Waiting for clipboard events...")
+    print("Copy something to the clipboard to see detected formats")
+    print("Press Ctrl+C to exit")
+    print("=" * 60)
 
     # run
     Gtk.main()
@@ -146,7 +182,7 @@ try:
     for currentArgument, currentValue in arguments:
  
         if currentArgument in ("-h", "--help"):
-            print ("For debug run with -d or --debug flag")
+            print ("To debug the clipboard formats supported run with -d or --debug flag")
              
         elif currentArgument in ("-d", "--debug"):
             # print ("Displaying file_name:", sys.argv[0])

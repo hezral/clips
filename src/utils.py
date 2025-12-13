@@ -387,10 +387,59 @@ def get_all_apps(app=None):
     else:
         return all_apps
 
-def get_active_appinfo(data=None):
+def get_active_appinfo(data=None, app=None):
+    """
+    Get active application info using the unified AT-SPI window manager.
+    Falls back to legacy X11 method if window manager not available.
+    """
+    # Use window_manager if available (works on both X11 and Wayland with AT-SPI)
+    if app and hasattr(app, 'window_manager') and app.window_manager:
+        app_name = app.window_manager.last_seen.get('title')
+        if hasattr(app, 'logger'):
+            app.logger.debug(f"get_active_appinfo: window_manager available, app_name from last_seen: {app_name}")
+        if app_name:
+            all_apps = get_all_apps()
+            # all_apps is a dict where keys are app names (strings) and values are lists:
+            # [app_icon, startup_wm_class, no_display, desktop_file_path, app_exec, flatpak]
+
+            # First try: exact match on display name
+            for app_key, app_info in all_apps.items():
+                if app_key.lower() == app_name.lower():
+                    app_icon = app_info[0]
+                    if hasattr(app, 'logger'):
+                        app.logger.debug(f"get_active_appinfo: Found matching app by name: {app_key}")
+                    return app_key, app_icon
+
+            # Second try: match against desktop file name (app ID)
+            # AT-SPI often returns app ID like "io.elementary.terminal" which matches the .desktop filename
+            for app_key, app_info in all_apps.items():
+                desktop_file_path = app_info[3]  # Index 3 is desktop_file_path
+                if desktop_file_path:
+                    # Extract filename without .desktop extension
+                    desktop_filename = os.path.basename(desktop_file_path)
+                    if desktop_filename.endswith('.desktop'):
+                        app_id = desktop_filename[:-8]  # Remove .desktop
+                        if app_id.lower() == app_name.lower():
+                            app_icon = app_info[0]
+                            if hasattr(app, 'logger'):
+                                app.logger.debug(f"get_active_appinfo: Found matching app by desktop ID: {app_key} (from {app_id})")
+                            return app_key, app_icon
+
+            # App name found but not in installed apps list
+            if hasattr(app, 'logger'):
+                app.logger.debug(f"get_active_appinfo: App name '{app_name}' not in installed apps, using default icon")
+            return app_name, 'application-default-icon'
+    elif app and hasattr(app, 'logger'):
+        app.logger.debug(f"get_active_appinfo: window_manager not available or not initialized")
+
+    # Fall back to legacy methods
     if is_wayland_session():
+        if app and hasattr(app, 'logger'):
+            app.logger.debug("get_active_appinfo: Falling back to Wayland method")
         return get_active_appinfo_wayland(data)
     else:
+        if app and hasattr(app, 'logger'):
+            app.logger.debug("get_active_appinfo: Falling back to X11 method")
         return _get_active_appinfo_xlib(data)
 
 def _get_active_appinfo_xlib(data=None):
@@ -805,7 +854,10 @@ def get_web_contents(url):
     ''' Function to get web contents '''
     import requests
     try:
-        contents = requests.get(url).text
+        response = requests.get(url)
+        # Ensure proper UTF-8 encoding
+        response.encoding = response.apparent_encoding or 'utf-8'
+        contents = response.text
         return contents
     except:
         return None
@@ -813,10 +865,12 @@ def get_web_contents(url):
 def get_web_title(contents, url):
     ''' Function to get web page title from url'''
     from urllib.parse import urlparse
+    import html
     if contents is not None:
         title_tag_open = "<title>"
         title_tag_close = "</title>"
         title = str(contents[contents.find(title_tag_open) + len(title_tag_open) : contents.find(title_tag_close)])
+        title = html.unescape(title)
     else:
         title = urlparse(url).netloc
     return title
@@ -865,7 +919,7 @@ def get_web_data(url, file_path=None, download_path='./', checksum='na'):
     icon_name = get_web_favicon(contents, url, download_path, checksum)
 
     if file_path is not None:
-        with open(file_path, "a") as file:
+        with open(file_path, "a", encoding="utf-8") as file:
             file.write("\n"+title)
             file.close
     return title, icon_name
@@ -1104,87 +1158,114 @@ def do_webview_screenshot(uri, out_file_path):
     """
     import os
     import chardet
+    import logging
     import gi
     gi.require_version('Gtk', '3.0')
-    gi.require_version('WebKit2', '4.0')
-    from gi.repository import Gtk, WebKit2, GLib
 
-    def get_snapshot(webview, result, callback, *args):
-        snapshot = webview.get_snapshot_finish(result)
-        snapshot.write_to_png(out_file_path)
-        GLib.idle_add(self_destroy, (webview, offscreen_window))
+    logger = logging.getLogger('com.github.hezral.clips')
 
-    def loaded_handler(webview, event, offscreen_window):
-        if event.value_name == "WEBKIT_LOAD_FINISHED":
+    try:
+        # Try different WebKit2 versions in order of preference
+        webkit_loaded = False
+        for version in ['4.1', '4.0']:
             try:
-                webview.get_snapshot(WebKit2.SnapshotRegion.FULL_DOCUMENT, WebKit2.SnapshotOptions.TRANSPARENT_BACKGROUND, None, get_snapshot, None)
-            except:
-                import traceback
-                traceback.print_exc()
-                pass
+                gi.require_version('WebKit2', version)
+                from gi.repository import WebKit2, GLib
+                webkit_loaded = True
+                break
+            except (ValueError, ImportError):
+                continue
 
-    def self_destroy(data):
-        webview = data[0]
-        offscreen_window = data[1]
-        webview.try_close()
-        webview.destroy()
-        webview = None
-        # del webview
-        # print(webview)
-        offscreen_window.destroy()
-        offscreen_window = None
-        # del offscreen_window
-        # print(offscreen_window)
-        # file.close()
-    
-    webview = WebKit2.WebView()
-    webview.props.zoom_level = 1
-    webview.props.expand = True
+        if not webkit_loaded:
+            logger.warning("WebKit2 not available, skipping URL screenshot")
+            return
 
-    file = open(uri, "rb")
-    encoding_name = chardet.detect(file.read())["encoding"]
-    file.close()
+        from gi.repository import Gtk, GLib
 
-    with open(uri, encoding=encoding_name) as file:
-        content  = file.read()
+        def get_snapshot(webview, result, callback, *args):
+            snapshot = webview.get_snapshot_finish(result)
+            snapshot.write_to_png(out_file_path)
+            GLib.idle_add(self_destroy, (webview, offscreen_window))
 
-    # file = open(uri, "r", encoding=encoding_name)
-    # content = file.read()
-    webview.load_html(content)
+        def loaded_handler(webview, event, offscreen_window):
+            if event.value_name == "WEBKIT_LOAD_FINISHED":
+                try:
+                    webview.get_snapshot(WebKit2.SnapshotRegion.FULL_DOCUMENT, WebKit2.SnapshotOptions.TRANSPARENT_BACKGROUND, None, get_snapshot, None)
+                except:
+                    import traceback
+                    traceback.print_exc()
+                    pass
 
-    alt_file_uri = uri.replace("html", "txt")
-    if os.path.exists(alt_file_uri):
+        def self_destroy(data):
+            webview = data[0]
+            offscreen_window = data[1]
+            webview.try_close()
+            webview.destroy()
+            webview = None
+            # del webview
+            # print(webview)
+            offscreen_window.destroy()
+            offscreen_window = None
+            # del offscreen_window
+            # print(offscreen_window)
+            # file.close()
 
-        alt_file = open(alt_file_uri, "rb")
-        encoding_name = chardet.detect(alt_file.read())["encoding"]
-        alt_file.close()
+        webview = WebKit2.WebView()
+        webview.props.zoom_level = 1
+        webview.props.expand = True
 
-        with open(alt_file_uri, encoding=encoding_name) as alt_file:
-            lines  = alt_file.readlines()
+        file = open(uri, "rb")
+        encoding_name = chardet.detect(file.read())["encoding"]
+        file.close()
 
-        # alt_file = open(uri.replace("html", "txt"), "r", encoding=encoding_name)
-        # lines = alt_file.readlines()
+        with open(uri, encoding=encoding_name) as file:
+            content  = file.read()
 
-        line_char_counts = []
-        for line in lines:
-            line_chars = line.split(' ')
-            line_char_counts.append(len(' '.join(line_chars)))
-        
-        if max(line_char_counts) < 50:
-            snapshot_width = 256
-        elif max(line_char_counts) < 100:
-            snapshot_width = 512
+        # file = open(uri, "r", encoding=encoding_name)
+        # content = file.read()
+        webview.load_html(content)
+
+        alt_file_uri = uri.replace("html", "txt")
+        if os.path.exists(alt_file_uri):
+
+            alt_file = open(alt_file_uri, "rb")
+            encoding_name = chardet.detect(alt_file.read())["encoding"]
+            alt_file.close()
+
+            with open(alt_file_uri, encoding=encoding_name) as alt_file:
+                lines  = alt_file.readlines()
+
+            # alt_file = open(uri.replace("html", "txt"), "r", encoding=encoding_name)
+            # lines = alt_file.readlines()
+
+            line_char_counts = []
+            for line in lines:
+                line_chars = line.split(' ')
+                line_char_counts.append(len(' '.join(line_chars)))
+
+            if max(line_char_counts) < 50:
+                snapshot_width = 256
+            elif max(line_char_counts) < 100:
+                snapshot_width = 512
+            else:
+                snapshot_width = 1024
         else:
-            snapshot_width = 1024
-    else:
-        snapshot_width = 256
+            snapshot_width = 256
 
-    offscreen_window = Gtk.OffscreenWindow()
-    offscreen_window.set_size_request(snapshot_width, 160)
-    offscreen_window.add(webview)
-    offscreen_window.show_all()
+        offscreen_window = Gtk.OffscreenWindow()
+        offscreen_window.set_size_request(snapshot_width, 160)
+        offscreen_window.add(webview)
+        offscreen_window.show_all()
 
-    webview.connect("load-changed", loaded_handler, offscreen_window)
+        # Ensure the window is realized before WebKit tries to use it
+        offscreen_window.realize()
+
+        webview.connect("load-changed", loaded_handler, offscreen_window)
+
+    except Exception as e:
+        logger.error(f"Screenshot generation failed: {e}")
+        import traceback
+        traceback.print_exc()
 
 #-------------------------------------------------------------------------------------------------------
 
