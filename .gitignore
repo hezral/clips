@@ -38,3 +38,6 @@ build-dir/
 
 # VSCode
 .vscode/
+
+# AI
+CLAUDE.md
