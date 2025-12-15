@@ -8,11 +8,6 @@ import sys
 import signal
 import gettext
 
-# Enable access to system's AT-SPI bus
-if 'AT_SPI_BUS_ADDRESS' in os.environ:
-    del os.environ['AT_SPI_BUS_ADDRESS']
-
-
 VERSION = '@VERSION@'
 pkgdatadir = '@pkgdatadir@'
 localedir = '@localedir@'

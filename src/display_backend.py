@@ -68,9 +68,9 @@ def is_wayland() -> bool:
     return detect_display_backend() == DisplayBackend.WAYLAND
 
 
-def is_x11() -> bool:
-    """Check if running on X11."""
-    return detect_display_backend() == DisplayBackend.X11
+# def is_x11() -> bool:
+#     """Check if running on X11."""
+#     return detect_display_backend() == DisplayBackend.X11
 
 
 def is_wayland_session() -> bool:
@@ -81,3 +81,25 @@ def is_wayland_session() -> bool:
 def get_backend_name() -> str:
     """Get human-readable backend name for logging."""
     return detect_display_backend().value
+
+
+def is_wayland_session_actual() -> bool:
+    """
+    Check if the actual session is Wayland, ignoring GDK_BACKEND override.
+
+    This is useful for determining clipboard monitoring strategy:
+    - If session is Wayland, we should try Wayland clipboard monitoring
+    - Even if GDK_BACKEND is forcing X11 mode for GTK
+    """
+    xdg_session_type = os.environ.get('XDG_SESSION_TYPE', '').lower()
+    wayland_display = os.environ.get('WAYLAND_DISPLAY')
+
+    # Check XDG_SESSION_TYPE first
+    if xdg_session_type == 'wayland':
+        return True
+
+    # Fallback: check for WAYLAND_DISPLAY
+    if wayland_display:
+        return True
+
+    return False

@@ -139,7 +139,7 @@ class ClipsView(Gtk.Grid):
         return date1 < date2
 
     def new_clip(self, clip):
-        app = self.get_toplevel().props.application
+        app = self.app
         main_window = self.get_toplevel()
         id = clip[0]
         cache_file = os.path.join(app.cache_manager.cache_filedir, clip[6])

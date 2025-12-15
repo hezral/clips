@@ -23,8 +23,8 @@ clips_sources = [
   '__init__.py',
   'main.py',
   'main_window.py',
+  'constants.py',
   'utils.py',
-  'utils_wayland.py',
   'cache_manager.py',
   'clipboard_manager.py',
   'clipboard_monitor_wayland.py',
@@ -42,3 +42,4 @@ clips_sources = [
   'filemanager_backend.py'
 ]
 install_data(clips_sources, install_dir: moduledir)
+install_subdir('sub_utils', install_dir: moduledir)

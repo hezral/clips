@@ -34,8 +34,9 @@ from .filemanager_backend import FileManagerBackend
 
 from datetime import datetime
 import time
+from .constants import APP_ID
 
-id = "com.github.hezral.clips"
+id = APP_ID
 debug_log = os.path.join(os.path.dirname(GLib.get_user_data_dir()), id + ".log")
 logger = utils.init_logger(id, debug_log)
 
@@ -71,7 +72,7 @@ class Application(Gtk.Application):
             self.logger.setLevel(logging.DEBUG)
             format_str = "%(levelname)s: %(asctime)s %(filename)s, %(funcName)s:%(lineno)d: %(message)s"
         else:
-            self.logger.setLevel(logging.INFO)
+            self.logger.setLevel(logging.DEBUG)
             format_str = "%(levelname)s: %(asctime)s %(message)s"
         formatter = logging.Formatter(format_str)
         for handler in self.logger.handlers:

@@ -3,23 +3,56 @@
 
 from datetime import datetime
 
-from pydbus import SessionBus
-from gi.repository import GObject, Gio
+from gi.repository import GObject, Gio, GLib
 
 class FileManagerBackend(GObject.GObject):
     def __init__(self, gtk_application=None):
         GObject.GObject.__init__(self)
 
-        self.bus = SessionBus()
         self.app = gtk_application
-        # self.proxy = self.bus.get("org.freedesktop.FileManager1", "/org/freedesktop/FileManager1")
-        self.proxy = self.bus.get(".FileManager1")
-        self.app.logger.info("file manager backend started")
+        try:
+            self.proxy = Gio.DBusProxy.new_for_bus_sync(
+                Gio.BusType.SESSION,
+                Gio.DBusProxyFlags.NONE,
+                None,
+                "org.freedesktop.FileManager1",
+                "/org/freedesktop/FileManager1",
+                "org.freedesktop.FileManager1",
+                None,
+            )
+            self.app.logger.info("file manager backend started")
+        except Exception as e:
+            self.app.logger.error(f"Failed to initialize file manager backend: {e}")
+            self.proxy = None
 
     def show_files_in_file_manager(self, path):
+        if not self.proxy:
+            return
+
         uri = Gio.File.new_for_path(path)
-        self.proxy.ShowItems([uri.get_uri()], "")
+        try:
+            self.proxy.call_sync(
+                "ShowItems",
+                GLib.Variant("(ass)", ([uri.get_uri()], "")),
+                Gio.DBusCallFlags.NONE,
+                -1,
+                None
+            )
+        except Exception as e:
+            self.app.logger.error(f"Failed to show items: {e}")
 
     def show_folders_in_file_manager(self, path):
+        if not self.proxy:
+            return
+
         uri = Gio.File.new_for_path(path)
-        self.proxy.ShowFolders([uri.get_uri()], "")
+        try:
+            self.proxy.call_sync(
+                "ShowFolders",
+                GLib.Variant("(ass)", ([uri.get_uri()], "")),
+                Gio.DBusCallFlags.NONE,
+                -1,
+                None
+            )
+        except Exception as e:
+            self.app.logger.error(f"Failed to show folders: {e}")

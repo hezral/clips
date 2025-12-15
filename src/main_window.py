@@ -48,7 +48,6 @@ class ClipsWindow(Gtk.ApplicationWindow):
 
         self.set_titlebar(self.generate_headerbar())
         self.get_style_context().add_class("rounded")
-        # self.set_display_settings()
         self.set_main_window_size()
         self.add(self.main_view)
         self.show_all()
@@ -58,11 +57,10 @@ class ClipsWindow(Gtk.ApplicationWindow):
         self.connect("hide", self.on_close_window)
         self.connect("destroy", self.on_close_window)
         self.connect("key-press-event", self.on_search_as_you_type)
-        # self.connect("configure-event", self.on_configure_event)
 
     def set_display_settings(self, data):
         # Always start window_manager for active app detection (used by clipboard tracking)
-        if self.app.window_manager is not None and not self.app.window_manager.id_thread:
+        if self.app.window_manager is not None:
             self.app.window_manager._run(callback=self.on_persistent_mode)
         
         if self.gio_settings.get_value("sticky-mode"):
@@ -77,12 +75,18 @@ class ClipsWindow(Gtk.ApplicationWindow):
 
         if len(base_size) == 0:
             base_width, base_height = [340, 450]
+        else:
+            base_width, base_height = base_size
 
         if len(min_size) == 0:
             min_width, min_height = [base_width, base_height]
+        else:
+            min_width, min_height = min_size
 
         if len(max_size) == 0:
             max_width, max_height = [base_width, base_height]
+        else:
+            max_width, max_height = max_size
 
         # min_width, min_height = min_size
         # min_width = 340
@@ -105,7 +109,7 @@ class ClipsWindow(Gtk.ApplicationWindow):
         elif column_number == 4:
             base_width = min_width = 958
         
-        elif column_number == 5:
+        elif column_number >= 5:
             base_width = 1100
             min_width = 958
 
@@ -148,9 +152,6 @@ class ClipsWindow(Gtk.ApplicationWindow):
         # print(event, self.app.gio_settings.get_int("pos-x"), self.app.gio_settings.get_int("pos-y"))
         return False
 
-    def on_configure_event(self, widget, event):
-        self.app.logger.debug(event.x, event.y)
-
     def on_search_as_you_type(self, window, eventkey):
         proceed = False
         # print(Gdk.keyval_name(eventkey.keyval), len(Gdk.keyval_name(eventkey.keyval)), eventkey.state.value_names, len(eventkey.state.value_names))
@@ -171,12 +172,12 @@ class ClipsWindow(Gtk.ApplicationWindow):
             if self.is_visible() and self.searchentry.has_focus() is False:
                 self.searchentry.grab_focus()
 
-    def on_persistent_mode(self, wm_class):
+    def on_persistent_mode(self, app_title):
         # Only auto-hide the window if persistent-mode is disabled
-        # Window manager always runs for active app detection (clipboard tracking)
         if not self.gio_settings.get_value("persistent-mode"):
-            if wm_class is not None:
-                if self.app.props.application_id not in wm_class:
+            self.app.logger.info(f"Persistent Mode Check App Title: {app_title}")
+            if app_title is not None:
+                if self.app.props.application_id not in app_title:
                     self.hide()
 
     def on_search_entry_key_pressed(self, search_entry, eventkey):
@@ -262,11 +263,15 @@ class ClipsWindow(Gtk.ApplicationWindow):
 
         if action is not None:
             if action == "settings-view":
+                current_width, current_height = self.get_size()
+                self.set_main_window_size(column_number=2, base_size=[0, current_height], min_size=[0, 450])
                 self.stack.set_visible_child(self.settings_view)
                 # self.set_main_window_size(min_size=)
                 self.view_switch.props.active = True
                 self.settings_view.scrolled_window.grab_focus()
             if action == "clips-view":
+                current_width, current_height = self.get_size()
+                self.set_main_window_size(column_number=self.gio_settings.get_int("min-column-number"), base_size=[0, current_height], min_size=[0, 450])
                 self.stack.set_visible_child(self.clips_view)
                 self.view_switch.props.active = False
             if action == "help-view":
@@ -278,12 +283,16 @@ class ClipsWindow(Gtk.ApplicationWindow):
 
         if view_switch is not None:
             if view_switch.props.active:
+                current_width, current_height = self.get_size()
+                self.set_main_window_size(column_number=2, base_size=[0, current_height], min_size=[0, 450])
                 self.stack.set_visible_child(self.settings_view)
                 # self.set_main_window_size(min_size=)
                 self.settings_view.show_all()
                 self.info_view.hide()
                 self.clips_view.hide()
             else:
+                current_width, current_height = self.get_size()
+                self.set_main_window_size(column_number=self.gio_settings.get_int("min-column-number"), base_size=[0, current_height], min_size=[0, 450])
                 if total_clips_in_db == 0:
                     if self.gio_settings.get_boolean("first-run"):
                         self.info_view.welcome_view = self.info_view.generate_welcome_view()

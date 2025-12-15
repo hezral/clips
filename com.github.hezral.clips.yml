@@ -8,12 +8,14 @@ finish-args:
   - --socket=wayland
   - --socket=x11  # Required for X11 mode and active window monitoring
   - --socket=session-bus  # Required for DBus access
-  - --socket=system-bus  # Required for AT-SPI accessibility bus
   - --device=dri # GPU/DRI access for WebKit rendering
   - --env=LIBGL_ALWAYS_SOFTWARE=1 #force software rendering if GPU fails
 
   # Force X11 mode for reliable background clipboard monitoring (Wayland has sandbox limitations)
   - --env=GDK_BACKEND=x11
+
+  # Enable wl-clipboard polling for Firefox compatibility on Wayland
+  - --env=CLIPS_ENABLE_WL_CLIPBOARD_POLLING=1
 
   # network access for clips to retrieve basic info on URLs
   - --share=network
@@ -57,6 +59,8 @@ finish-args:
 
   # AT-SPI accessibility bus for active window detection
   - --filesystem=xdg-run/at-spi:ro
+  # - --talk-name=org.a11y.Bus # not working in flatpak for now
+
 
 # build-options:
 #   env:
@@ -111,6 +115,14 @@ modules:
         - --share=network
     build-commands:
       - "pip3 install --prefix=${FLATPAK_DEST} pynput"
+
+  - name: weasyprint
+    buildsystem: simple
+    build-options:
+      build-args:
+        - --share=network
+    build-commands:
+      - "pip3 install --prefix=${FLATPAK_DEST} weasyprint pymupdf"
 
   - name: libx11-dev
     buildsystem: autotools
