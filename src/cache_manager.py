@@ -16,7 +16,7 @@ import chardet
 from .utils import log_function_calls
 
 # Import display backend detection
-from .display_backend import is_wayland, get_backend_name
+from .display_backend import get_backend_name
 
 
 class CacheManager():
@@ -82,22 +82,9 @@ class CacheManager():
         """Setup clipboard monitoring based on display backend."""
         self.app.logger.info(f"Display backend: {get_backend_name()}")
         
-        if is_wayland():
-            # Try Wayland native monitoring first
-            if self.clipboard_manager.setup_wayland_monitoring(self.update_cache):
-                self.clipboard_monitoring = True
-                self.app.logger.info("Using Wayland data-control clipboard monitoring")
-            else:
-                # Fall back to GTK (limited on Wayland)
-                self._setup_gtk_monitoring()
-                self.app.logger.warning(
-                    "Wayland: Using GTK clipboard fallback. "
-                    "Monitoring only works when Clips has focus."
-                )
-        else:
-            # X11: Use standard GTK monitoring
-            self._setup_gtk_monitoring()
-            self.app.logger.info("Using X11 GTK clipboard monitoring")
+        # Use standard GTK monitoring for both X11 and Wayland (via XWayland)
+        self._setup_gtk_monitoring()
+        self.app.logger.info("Using GTK clipboard monitoring")
 
     @log_function_calls
     def _setup_gtk_monitoring(self):
@@ -121,26 +108,10 @@ class CacheManager():
             self.app.logger.debug("Clipboard monitoring already enabled")
             return True
         
-        success = False
-        
-        if is_wayland():
-            # Try Wayland native monitoring first
-            if self.clipboard_manager.setup_wayland_monitoring(self.update_cache):
-                self.clipboard_monitoring = True
-                success = True
-                self.app.logger.info("Wayland clipboard monitoring enabled")
-            else:
-                # Fall back to GTK (limited on Wayland)
-                self._setup_gtk_monitoring()
-                success = True
-                self.app.logger.warning("Wayland: Using GTK clipboard fallback")
-        else:
-            # X11: Use standard GTK monitoring
-            self._setup_gtk_monitoring()
-            success = True
-            self.app.logger.info("X11 clipboard monitoring enabled")
-        
-        return success
+        # Use standard GTK monitoring
+        self._setup_gtk_monitoring()
+        self.app.logger.info("Clipboard monitoring enabled")
+        return True
 
     @log_function_calls
     def disable_clipboard_monitoring(self):
@@ -154,18 +125,10 @@ class CacheManager():
             self.app.logger.debug("Clipboard monitoring already disabled")
             return True
         
-        # Stop Wayland monitor if running
-        if is_wayland() and self.clipboard_manager.wayland_monitor:
-            self.clipboard_manager.stop_wayland_monitoring()
-            self.app.logger.debug("Stopped Wayland clipboard monitor")
-        
-        # Disconnect GTK signal (works for both X11 and Wayland fallback)
+        # Disconnect GTK signal
         try:
             self.clipboard_manager.clipboard.disconnect_by_func(self.update_cache)
             self.app.logger.debug("Disconnected GTK clipboard signal")
-        except TypeError:
-            # Signal was not connected (Wayland native mode)
-            pass
         except Exception as e:
             self.app.logger.debug(f"GTK disconnect: {e}")
         
@@ -176,9 +139,7 @@ class CacheManager():
     @log_function_calls
     def stop_clipboard_monitoring(self):
         """Stop and cleanup clipboard monitoring (called on app quit)."""
-        if is_wayland():
-            self.clipboard_manager.stop_wayland_monitoring()
-        self.clipboard_monitoring = False
+        self.disable_clipboard_monitoring()
 
     # =========================================================================
     # Original Methods (unchanged except update_cache signature)
@@ -570,23 +531,10 @@ class CacheManager():
                 cache_thumbnail_file = checksum + "-thumb" + ".png"
                 cache_thumbnail_uri = self.cache_filedir + '/' + cache_thumbnail_file
                 if content_type in ("html", "url"):
-                    # DISABLED: Screenshot generation temporarily disabled
-                    # TODO: Re-enable after fixing WebKit OffscreenWindow issues
-                    # Generate screenshot for HTML and URL types using OffscreenWindow
-                    # This works independently of the main window
-                    # try:
-                    #     # Defer screenshot slightly to ensure GTK main loop is ready
-                    #     from gi.repository import GLib
-                    #     def generate_screenshot():
-                    #         try:
-                    #             self.app.utils.do_webview_screenshot(uri=cache_uri, out_file_path=cache_thumbnail_uri)
-                    #         except Exception as e:
-                    #             self.app.logger.debug(f"Screenshot generation failed: {e}")
-                    #         return False  # Don't repeat
-                    #     GLib.timeout_add(100, generate_screenshot)
-                    # except Exception as e:
-                    #     self.app.logger.debug(f"Screenshot scheduling failed: {e}")
-                    pass  # Screenshot generation disabled
+                    try:
+                        self.app.utils.do_webview_screenshot(uri=cache_uri, out_file_path=cache_thumbnail_uri)
+                    except Exception as e:
+                        self.app.logger.debug(f"Screenshot generation failed: {e}")
                 else:
                     file = open(cache_thumbnail_uri,"wb")
                     file.write(thumbnail.get_data())

@@ -72,7 +72,7 @@ class Application(Gtk.Application):
             self.logger.setLevel(logging.DEBUG)
             format_str = "%(levelname)s: %(asctime)s %(filename)s, %(funcName)s:%(lineno)d: %(message)s"
         else:
-            self.logger.setLevel(logging.DEBUG)
+            self.logger.setLevel(logging.INFO)
             format_str = "%(levelname)s: %(asctime)s %(message)s"
         formatter = logging.Formatter(format_str)
         for handler in self.logger.handlers:

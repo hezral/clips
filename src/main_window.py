@@ -175,7 +175,7 @@ class ClipsWindow(Gtk.ApplicationWindow):
     def on_persistent_mode(self, app_title):
         # Only auto-hide the window if persistent-mode is disabled
         if not self.gio_settings.get_value("persistent-mode"):
-            self.app.logger.info(f"Persistent Mode Check App Title: {app_title}")
+            self.app.logger.debug(f"Persistent Mode Check App Title: {app_title}")
             if app_title is not None:
                 if self.app.props.application_id not in app_title:
                     self.hide()

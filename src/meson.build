@@ -27,10 +27,7 @@ clips_sources = [
   'utils.py',
   'cache_manager.py',
   'clipboard_manager.py',
-  'clipboard_monitor_wayland.py',
-  'clipboard_monitor_wlclipboard.py',
-  'clipboard_monitor_dbus.py',
-  'clips_clipboard_daemon.py',
+
   'clips_supported.py',
   'clips_view.py',
   'custom_widgets.py',
