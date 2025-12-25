@@ -27,7 +27,6 @@ clips_sources = [
   'utils.py',
   'cache_manager.py',
   'clipboard_manager.py',
-
   'clips_supported.py',
   'clips_view.py',
   'custom_widgets.py',

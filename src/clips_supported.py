@@ -127,33 +127,6 @@ def debug():
     print(f"Desktop Environment: {desktop_env}")
     print(f"Session Type: {session_type}")
 
-    # Check DBus availability
-    print("\nDBus Service Availability:")
-    try:
-        from pydbus import SessionBus
-        bus = SessionBus()
-        print("  ✓ DBus session bus connected")
-
-        # Check for GNOME Shell
-        try:
-            shell = bus.get("org.gnome.Shell", "/org/gnome/Shell")
-            print("  ✓ org.gnome.Shell available")
-
-            # Try to get shell methods
-            try:
-                introspection = shell._introspect_interface
-                print(f"    Available Shell interface: {introspection}")
-            except:
-                pass
-
-        except Exception as e:
-            print(f"  ✗ org.gnome.Shell NOT available: {e}")
-
-    except Exception as e:
-        print(f"  ✗ Failed to connect to DBus: {e}")
-
-    print("\n" + "=" * 60)
-
     # create clipboard and connect to event
     clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
     clipboard.connect('owner_change', get_clipboard_contents, False)

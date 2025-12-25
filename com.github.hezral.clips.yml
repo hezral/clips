@@ -76,14 +76,6 @@ modules:
     build-commands:
       - "pip3 install --prefix=${FLATPAK_DEST} chardet"
 
-  - name: pydbus
-    buildsystem: simple
-    build-options:
-      build-args:
-        - --share=network
-    build-commands:
-      - "pip3 install --prefix=${FLATPAK_DEST} pydbus"
-
   - name: requests
     buildsystem: simple
     build-options:

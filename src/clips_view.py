@@ -914,10 +914,11 @@ class ImageContainer(DefaultContainer):
             y = abs((height - self.pixbuf_original_height) / 2)
             x = abs((width - self.pixbuf_original_width) / 2)
             final_pixbuf = self.pixbuf_original
-        elif "thumb" in self.filepath:
-            y = 0
-            x = 0
-            final_pixbuf = self.pixbuf_original
+        # removed as we can do proper html content screenshot now
+        # elif "thumb" in self.filepath:
+        #     y = 0
+        #     x = 0
+        #     final_pixbuf = self.pixbuf_original
         else:
             y = abs((height - scaled_pixbuf.props.height) / 2)
             x = abs((width - scaled_pixbuf.props.width) / 2)
