@@ -1,20 +1,35 @@
 from .app_data import get_all_apps
 from .session import is_wayland_session
 from .wayland_utils import get_active_appinfo_wayland
+from .logging_utils import log_function_calls
 import os
 
+
+@log_function_calls
 def get_active_appinfo(data=None, app=None):
+
     """
     Get active application info using the unified AT-SPI window manager.
     Falls back to legacy X11 method if window manager not available.
     """
     # Use window_manager if available (works on both X11 and Wayland with AT-SPI)
-    if app and hasattr(app, 'window_manager') and app.window_manager:
-        app_name = None
-        app_name = app.window_manager.last_seen.get('title')
+    wm = None
+    if app:
+        if hasattr(app, 'window_manager'):
+            wm = app.window_manager
+        elif hasattr(app, 'last_seen'): # Likely the window_manager itself
+            wm = app
 
-        if hasattr(app, 'logger'):
-            app.logger.debug(f"get_active_appinfo: window_manager available, app_name: {app_name}")
+    if wm:
+        app_name = wm.last_seen.get('title')
+
+        # Robust logging that works whether app is Application or WindowManager
+        logger = getattr(app, 'logger', None)
+        if not logger and hasattr(wm, 'app'):
+            logger = getattr(wm.app, 'logger', None)
+            
+        if logger:
+            logger.debug(f"get_active_appinfo: window_manager available, app_name: {app_name}")
         if app_name:
             all_apps = get_all_apps()
             # all_apps is a dict where keys are app names (strings) and values are lists:
@@ -37,15 +52,36 @@ def get_active_appinfo(data=None, app=None):
                     desktop_filename = os.path.basename(desktop_file_path)
                     if desktop_filename.endswith('.desktop'):
                         app_id = desktop_filename[:-8]  # Remove .desktop
-                        if app_id.lower() == app_name.lower():
+                        if app_id.lower() == app_name.lower() or app_id.lower().endswith("." + app_name.lower()):
                             app_icon = app_info[0]
                             if hasattr(app, 'logger'):
                                 app.logger.debug(f"get_active_appinfo: Found matching app by desktop ID: {app_key} (from {app_id})")
                             return app_key, app_icon
 
-            # App name found but not in installed apps list
+            # Third try: match against StartupWMClass
+            for app_key, app_info in all_apps.items():
+                startup_wm_class = app_info[1]  # Index 1 is StartupWMClass
+                if startup_wm_class and startup_wm_class.lower() == app_name.lower():
+                    app_icon = app_info[0]
+                    if hasattr(app, 'logger'):
+                        app.logger.debug(f"get_active_appinfo: Found matching app by StartupWMClass: {app_key} (class: {startup_wm_class})")
+                    return app_key, app_icon
+
+            # Fourth try: match against Exec binary name
+            for app_key, app_info in all_apps.items():
+                app_exec = app_info[4]  # Index 4 is app_exec
+                if app_exec:
+                    # Clean up exec string (remove path and arguments)
+                    binary_name = os.path.basename(app_exec.split()[0]).lower()
+                    if binary_name == app_name.lower():
+                        app_icon = app_info[0]
+                        if hasattr(app, 'logger'):
+                            app.logger.debug(f"get_active_appinfo: Found matching app by Exec name: {app_key} (binary: {binary_name})")
+                        return app_key, app_icon
+
+            # App name found but not in installed apps list after all tries
             if hasattr(app, 'logger'):
-                app.logger.debug(f"get_active_appinfo: App name '{app_name}' not in installed apps, using default icon")
+                app.logger.debug(f"get_active_appinfo: App name '{app_name}' not in installed apps after all matching attempts, using default icon")
             return app_name, 'application-default-icon'
     elif app and hasattr(app, 'logger'):
         app.logger.debug(f"get_active_appinfo: window_manager not available or not initialized")
@@ -60,7 +96,9 @@ def get_active_appinfo(data=None, app=None):
             app.logger.debug("get_active_appinfo: Falling back to X11 method")
         return _get_active_appinfo_xlib(data)
 
+@log_function_calls
 def _get_active_appinfo_xlib(data=None):
+
     source_app = None
     source_icon = None
     all_apps = get_all_apps()

@@ -1,13 +1,19 @@
 from .session import is_wayland_session
+from .logging_utils import log_function_calls
 
+
+@log_function_calls
 def get_active_window():
+
     if is_wayland_session():
         # TODO: Implement for Wayland
         return None
     else:
         return _get_active_window_xlib()
 
+@log_function_calls
 def _get_active_window_xlib():
+
     ''' Function to get active window '''
     import Xlib
     import Xlib.display
@@ -26,14 +32,18 @@ def _get_active_window_xlib():
 
     return window
 
+@log_function_calls
 def set_active_window(window):
+
     if is_wayland_session():
         # TODO: Implement for Wayland
         pass
     else:
         _set_active_window_by_xwindow(window)
 
+@log_function_calls
 def _set_active_window_by_xwindow(window):
+
     ''' Function to set window as active based on x window '''
     import Xlib
     from Xlib.display import Display

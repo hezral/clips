@@ -14,9 +14,6 @@ finish-args:
   # Force X11 mode for reliable background clipboard monitoring (Wayland has sandbox limitations)
   - --env=GDK_BACKEND=x11
 
-  # Enable wl-clipboard polling for Firefox compatibility on Wayland
-  - --env=CLIPS_ENABLE_WL_CLIPBOARD_POLLING=1
-
   # network access for clips to retrieve basic info on URLs
   - --share=network
 
@@ -38,9 +35,9 @@ finish-args:
   - --filesystem=xdg-data/flatpak/exports/share/applications:ro
   - --filesystem=xdg-data/flatpak/exports/share/icons:ro
   # read-only access to get installed system legacy apps based on .desktop files
-  - --filesystem=/usr/share/applications:ro
-  - --filesystem=/usr/share/icons:ro
-  - --filesystem=/usr/share/pixmaps:ro
+  # - --filesystem=/usr/share/applications:ro
+  # - --filesystem=/usr/share/icons:ro
+  # - --filesystem=/usr/share/pixmaps:ro
   # read-only access to get installed user legacy apps based on .desktop files
   - --filesystem=~/.local/share/applications:ro
   - --filesystem=~/.local/share/icons:ro
@@ -52,20 +49,10 @@ finish-args:
   # source file: filemanager_backend.py
   - --talk-name=org.freedesktop.FileManager1
 
-  # DBus clipboard daemon for background clipboard monitoring
-  # source files: clips_clipboard_daemon.py, clipboard_monitor_dbus.py
-  - --own-name=com.github.hezral.clips.Clipboard
-  - --talk-name=com.github.hezral.clips.Clipboard
 
   # AT-SPI accessibility bus for active window detection
   - --filesystem=xdg-run/at-spi:ro
   # - --talk-name=org.a11y.Bus # not working in flatpak for now
-
-
-# build-options:
-#   env:
-#     - "GSETTINGS_SCHEMA_DIR=/app/share/glib-2.0/schemas"
-#     - "XDG_DATA_DIRS=/app/share"
 
 modules:
   - name: chardet

@@ -1,4 +1,8 @@
+from .logging_utils import log_function_calls
+
+@log_function_calls
 def do_webview_screenshot(uri, out_file_path):
+
     """
     function to load html/url and save snapshot of the full page in png using WeasyPrint and PyMuPDF
     uri: can be local uri like a html file, or internet url

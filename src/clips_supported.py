@@ -81,12 +81,12 @@ supported_targets = (spreadsheet_libreoffice_target,
                     utf8text_target, 
                     plaintext_target, )
 
-def get_clipboard_contents(clipboard, event, save_files):
+def get_clipboard_contents(clipboard, event, save_files, app=None):
     try:
         from . import utils
     except:
         import utils
-    print("Active App:", utils.get_active_appinfo())
+    print("Active App:", utils.get_active_appinfo(app=app))
     print("Current clipboard offers formats: ", len(clipboard.wait_for_targets()[1]))
     i=0
     for target in clipboard.wait_for_targets()[1]:
@@ -116,9 +116,12 @@ def debug():
     gi.require_version('Gtk', '3.0')
     from gi.repository import Gtk, GLib
     import os
+    try:
+        from .active_window_manager import ActiveWindowManager
+    except:
+        from active_window_manager import ActiveWindowManager
 
-    print("=" * 60)
-    print("CLIPS DEBUG MODE")
+    print("Clips Debug Mode")
     print("=" * 60)
 
     # Check desktop environment
@@ -127,9 +130,13 @@ def debug():
     print(f"Desktop Environment: {desktop_env}")
     print(f"Session Type: {session_type}")
 
+    # Initialize window manager for app detection
+    window_manager = ActiveWindowManager()
+    window_manager._run(callback=lambda x: None) # Empty callback just to start it
+
     # create clipboard and connect to event
     clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
-    clipboard.connect('owner_change', get_clipboard_contents, False)
+    clipboard.connect('owner_change', get_clipboard_contents, False, window_manager)
 
     print("Waiting for clipboard events...")
     print("Copy something to the clipboard to see detected formats")

@@ -6,11 +6,15 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gio, Pango, GObject, Gdk, GLib, Granite
 from . import custom_widgets
 from . import utils
+from .utils import log_function_calls
+
 
 # ----------------------------------------------------------------------------------------------------
 
 class SettingsView(Gtk.Grid):
+    @log_function_calls
     def __init__(self, app, *args, **kwargs):
+
         super().__init__(*args, **kwargs)
 
         self.app = app
@@ -159,18 +163,19 @@ class SettingsView(Gtk.Grid):
         unprotect_timeout.spinbutton.connect("value-changed", self.on_spinbutton_activated)
         self.gio_settings.bind("unprotect-timeout", unprotect_timeout.spinbutton, "value", Gio.SettingsBindFlags.DEFAULT)
 
-        quick_paste = SubSettings(type="switch", name="quick-paste", label="Quick paste", sublabel="Paste contents in active window after copy action",separator=True)
-        self.gio_settings.bind("quick-paste", quick_paste.switch, "active", Gio.SettingsBindFlags.DEFAULT)
+        # quick_paste = SubSettings(type="switch", name="quick-paste", label="Quick paste", sublabel="Paste contents in active window after copy action",separator=True)
+        # self.gio_settings.bind("quick-paste", quick_paste.switch, "active", Gio.SettingsBindFlags.DEFAULT)
 
-        shake_reveal = SubSettings(type="switch", name="shake-reveal", label="Shake to reveal   ! experimental !", sublabel="Shake mouse to reveal app",separator=True)
-        # shake_reveal.switch.connect_after("notify::active", self.on_switch_activated)
-        self.app.gio_settings.bind("shake-reveal", shake_reveal.switch, "active", Gio.SettingsBindFlags.DEFAULT)
+        # shake_reveal = SubSettings(type="switch", name="shake-reveal", label="Shake to reveal   ! experimental !", sublabel="Shake mouse to reveal app",separator=True)
+        # # shake_reveal.switch.connect_after("notify::active", self.on_switch_activated)
+        # self.app.gio_settings.bind("shake-reveal", shake_reveal.switch, "active", Gio.SettingsBindFlags.DEFAULT)
 
-        shake_sensitivity = SubSettings(type="spinbutton", name="shake-sensitivity", label="Shake sensitivity", sublabel="Adjust shake to reveal sensitivity", separator=False, params=(3,10,1))
-        shake_sensitivity.spinbutton.connect("value-changed", self.on_spinbutton_activated)
-        self.app.gio_settings.bind("shake-sensitivity", shake_sensitivity.spinbutton, "value", Gio.SettingsBindFlags.DEFAULT)
+        # shake_sensitivity = SubSettings(type="spinbutton", name="shake-sensitivity", label="Shake sensitivity", sublabel="Adjust shake to reveal sensitivity", separator=False, params=(3,10,1))
+        # shake_sensitivity.spinbutton.connect("value-changed", self.on_spinbutton_activated)
+        # self.app.gio_settings.bind("shake-sensitivity", shake_sensitivity.spinbutton, "value", Gio.SettingsBindFlags.DEFAULT)
 
-        others = SettingsGroup("Other", (add_shortcut, protected_mode, unprotect_timeout, reset_password, quick_paste, shake_reveal, shake_sensitivity))
+        # others = SettingsGroup("Other", (add_shortcut, protected_mode, unprotect_timeout, reset_password, quick_paste, shake_reveal, shake_sensitivity))
+        others = SettingsGroup("Other", (add_shortcut, protected_mode, unprotect_timeout, reset_password))
         self.flowbox.add(others)
 
         # support -------------------------------------------------
@@ -188,17 +193,22 @@ class SettingsView(Gtk.Grid):
 
         debug_mode = SubSettings(type="switch", name="debug-mode", label="Debug Mode", sublabel="For troubleshooting (restart required)",separator=False)
         self.gio_settings.bind("debug-mode", debug_mode.switch, "active", Gio.SettingsBindFlags.DEFAULT)
+        debug_verbose_mode = SubSettings(type="checkbutton", name="debug-verbose-mode", label=None, sublabel=None, separator=True, params=("Verbose logging",))
+        self.gio_settings.bind("debug-verbose-mode", debug_verbose_mode.checkbutton, "active", Gio.SettingsBindFlags.DEFAULT)
+        # debug_verbose_mode.checkbutton.connect_after("notify::active", self.on_checkbutton_activated, debug_verbose_mode)
 
         debug_log = SubSettings(type="button", name="debug-log", label=None, sublabel="View debug log", separator=False, params=("Debug Log", Gtk.Image().new_from_icon_name("bug", Gtk.IconSize.LARGE_TOOLBAR), ))
         debug_log.button.connect("clicked", self.on_button_clicked)
 
-        help = SettingsGroup("Support", (view_guides, report_issue, buyme_coffee, whats_new, debug_mode, debug_log))
+        help = SettingsGroup("Support", (view_guides, report_issue, buyme_coffee, whats_new, debug_mode, debug_verbose_mode, debug_log))
         self.flowbox.add(help)
 
         for child in self.flowbox.get_children():
             child.props.can_focus = False
 
+    @log_function_calls
     def on_checkbutton_activated(self, checkbutton, gparam, widget):
+
         name = checkbutton.get_name()
         theme_switch = widget
         if name == "theme-optin":
@@ -228,7 +238,9 @@ class SettingsView(Gtk.Grid):
         else:
             theme_switch.switch.props.active = True
         
+    @log_function_calls
     def on_button_clicked(self, button, params=None):
+
         name = button.get_name()
 
         if name == "excluded-apps" or name == "protected-apps":
@@ -346,7 +358,9 @@ class SettingsView(Gtk.Grid):
                 reset_password_button = params.button
                 reset_password_button.emit("clicked")
 
-    def on_spinbutton_activated(self, spinbutton):        
+    @log_function_calls
+    def on_spinbutton_activated(self, spinbutton):
+        
         name = spinbutton.get_name()
         main_window = self.get_toplevel()
 
@@ -366,7 +380,9 @@ class SettingsView(Gtk.Grid):
                     self.app.shake_listener.needed_shake_count = spinbutton.props.value
                     # print(self.app.shake_listener.needed_shake_count)
 
+    @log_function_calls
     def on_switch_activated(self, switch, gparam):
+
         name = switch.get_name()
         main_window = self.get_toplevel()
         
@@ -407,7 +423,9 @@ class SettingsView(Gtk.Grid):
                         child.destroy()
                     main_window.info_view.help_view = main_window.info_view.generate_help_view()
 
+    @log_function_calls
     def on_min_column_number_changed(self, value):
+
         main_window = self.get_toplevel()
         main_window.set_main_window_size(column_number=value)
         main_window.clips_view.flowbox.props.min_children_per_line = value
@@ -415,7 +433,9 @@ class SettingsView(Gtk.Grid):
             main_window.info_view.flowbox.props.min_children_per_line = value
         self.gio_settings.set_int(key="min-column-number", value=value)
 
+    @log_function_calls
     def on_entry_activated(self, entry, params):
+
         new_keyword = entry.props.text
         subsettings = params[0]
         subsettings.add_listboxrow(new_keyword, None, add_new=True)

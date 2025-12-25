@@ -8,8 +8,12 @@ from gi.repository import Gio, GLib
 from ..constants import APP_ID
 
 logger = logging.getLogger(APP_ID)
+from .logging_utils import log_function_calls
 
+
+@log_function_calls
 def get_active_appinfo_wayland(data=None):
+
     """
     Get active application info.
     Note: AT-SPI access is restricted in flatpak sandbox, so this currently
@@ -24,7 +28,9 @@ def get_active_appinfo_wayland(data=None):
 
     return source_app, source_icon
 
+@log_function_calls
 def paste_from_clipboard_wayland():
+
     if shutil.which("wtype") is not None:
         try:
             subprocess.run(["wtype", "-M", "ctrl", "-P", "v", "-m", "ctrl"], check=True)
@@ -34,7 +40,9 @@ def paste_from_clipboard_wayland():
     else:
         return False
 
+@log_function_calls
 def copy_to_clipboard_wayland(clipboard_target, file, type=None):
+
     """
     Copy content to clipboard using wl-copy on Wayland.
 
@@ -75,7 +83,9 @@ def copy_to_clipboard_wayland(clipboard_target, file, type=None):
         logger.debug(f"copy_to_clipboard_wayland: wl-copy not found")
         return False
 
+@log_function_calls
 def copy_files_to_clipboard_wayland(uris):
+
     if shutil.which("wl-copy") is not None:
         try:
             # wl-copy expects URI list via stdin for text/uri-list type

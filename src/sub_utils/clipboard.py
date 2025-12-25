@@ -4,14 +4,20 @@ from .wayland_utils import (
     copy_files_to_clipboard_wayland,
     paste_from_clipboard_wayland
 )
+from .logging_utils import log_function_calls
 
+
+@log_function_calls
 def copy_to_clipboard(clipboard_target, file, type=None):
+
     if is_wayland_session():
         return copy_to_clipboard_wayland(clipboard_target, file, type)
     else:
         return _copy_to_clipboard_xclip(clipboard_target, file, type)
 
+@log_function_calls
 def _copy_to_clipboard_xclip(clipboard_target, file, type=None):
+
     ''' Function to copy files to clipboard '''
     from subprocess import Popen, PIPE
 
@@ -26,13 +32,17 @@ def _copy_to_clipboard_xclip(clipboard_target, file, type=None):
     except:
         return False
 
+@log_function_calls
 def copy_files_to_clipboard(uris):
+
     if is_wayland_session():
         return copy_files_to_clipboard_wayland(uris)
     else:
         return _copy_files_to_clipboard_xclip(uris)
 
+@log_function_calls
 def _copy_files_to_clipboard_xclip(uris):
+
     ''' Function to copy files to clipboard from a string of uris in file:// format '''
     from subprocess import Popen, PIPE
     try:
@@ -42,13 +52,17 @@ def _copy_files_to_clipboard_xclip(uris):
     except:
         return False
 
+@log_function_calls
 def paste_from_clipboard():
+
     if is_wayland_session():
         return paste_from_clipboard_wayland()
     else:
         return _paste_from_clipboard_xlib()
 
+@log_function_calls
 def _paste_from_clipboard_xlib():
+
     '''
     Function to paste from clipboard based on where the mouse pointer is hovering
     '''

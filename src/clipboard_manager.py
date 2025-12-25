@@ -25,6 +25,7 @@ class ClipboardManager():
         self._clipboard = None
 
     @property
+
     def clipboard(self):
         """Lazy initialization of clipboard to ensure GDK display is ready."""
         if self._clipboard is None:
@@ -37,6 +38,7 @@ class ClipboardManager():
 
     @log_function_calls
     def get_settings(self, gio_settings_keyname):
+
         return self.app.gio_settings.get_value(gio_settings_keyname).get_strv()
 
     # =========================================================================
@@ -45,6 +47,7 @@ class ClipboardManager():
 
     @log_function_calls
     def clipboard_changed(self, clipboard, event, _wayland_data=None):
+
         """
         Handle clipboard change events.
         
@@ -120,6 +123,7 @@ class ClipboardManager():
 
     @log_function_calls
     def get_clipboard_contents(self, clipboard, event, active_app):
+
         self.app.logger.debug(
             f"get_clipboard_contents called with clipboard: {clipboard}, event: {event}, and active_app: {active_app}"
         )
@@ -131,61 +135,69 @@ class ClipboardManager():
 
         for supported_target in self.clips_supported.supported_targets:   
             for target in clipboard.wait_for_targets()[1]:
-                self.app.logger.debug(f"Processing target: {target}")
+                # self.app.logger.debug(f"Processing target: {target}")
                 if target not in self.clips_supported.excluded_targets and supported_target[0] in str(target) and clip_saved is False:
                     proceed = True
+                    self.app.logger.debug(f"Processing target: {target}")
 
                     content = clipboard.wait_for_contents(target)
                     if content is not None:
-                        self.app.logger.debug(f"Content retrieved for target: {target}, content: {content}")
 
+                        target_type = supported_target[0]
                         file_extension = supported_target[1]
                         additional_desc = supported_target[2]
                         content_type = supported_target[3]
                         thumbnail = supported_target[4]
 
+                        self.app.logger.debug(f"Content retrieved for app: {active_app}, target: {target}, target_type: {target_type}")
+
                         # only get the right target for these types
-                        if "WPS" in active_app and not "WPS" in supported_target[2]:
+
+                        if "Web" in active_app and "text/uri-list" in str(target):
+                            self.app.logger.info("Skipping text/uri-list for Web app to allow image/png processing")
                             proceed = False
 
-                        if "Libre" in active_app and not "Libre" in supported_target[2]:
+                        if "WPS" in active_app and not "WPS" in additional_desc:
                             proceed = False
 
-                        if "WPS Spreadsheets" in supported_target[2] or "LibreOffice Calc" in supported_target[2]:
+                        if "Libre" in active_app and not "Libre" in additional_desc:
+                            proceed = False
+
+                        if "WPS Spreadsheets" in additional_desc or "LibreOffice Calc" in additional_desc:
                             target = Gdk.Atom.intern('text/html', False)
 
-                        if "WPS Writer" in supported_target[2] or "LibreOffice Writer" in supported_target[2]:
+                        if "WPS Writer" in additional_desc or "LibreOffice Writer" in additional_desc:
                             target = Gdk.Atom.intern('text/rtf', False)
 
-                        if "LibreOffice Impress" in supported_target[2]:
+                        if "LibreOffice Impress" in additional_desc:
                             target = Gdk.Atom.intern('application/x-openoffice-embed-source-xml;windows_formatname="Star Embed Source (XML)"', False)
 
-                        if "text/html" in supported_target[0]:
+                        if "text/html" in target_type:
                             alt_target = Gdk.Atom.intern('text/plain', False)
                             alt_file_extension = "txt"
 
-                        if "text/plain;charset=utf-8" in supported_target[0] and "color" in supported_target[3]:
+                        if "text/plain;charset=utf-8" in target_type and "color" in content_type:
                             if clipboard.wait_for_contents(target).get_text() is not None:
                                 if self.app.utils.is_valid_color_code(clipboard.wait_for_contents(target).get_text().strip()):
                                     content_type = "color/" + self.app.utils.is_valid_color_code(content.get_text().strip())[1]
                                 else:
                                     proceed = False
 
-                        if ("text/plain;charset=utf-8" in supported_target[0] or "text/plain" in supported_target[0]) and "url" in supported_target[3]:
+                        if ("text/plain;charset=utf-8" in target_type  or "text/plain" in target_type) and "url" in content_type:
                             if clipboard.wait_for_contents(target).get_text() is not None:
                                 if self.app.utils.is_valid_url(clipboard.wait_for_contents(target).get_text().strip()):
                                     content_type = "url/" + clipboard.wait_for_contents(target).get_text().split(":")[0]
                                 else:
                                     proceed = False
 
-                        if ("text/plain;charset=utf-8" in supported_target[0] or "text/plain" in supported_target[0]) and "mail" in supported_target[3]:
+                        if ("text/plain;charset=utf-8" in target_type or "text/plain" in target_type) and "mail" in content_type:
                             if clipboard.wait_for_contents(target).get_text() is not None:
                                 if self.app.utils.is_valid_email(clipboard.wait_for_contents(target).get_text().strip()):
                                     content_type = "mail"
                                 else:
                                     proceed = False
 
-                        if ("text/plain;charset=utf-8" in supported_target[0] or "text/plain" in supported_target[0]) and "files" in supported_target[3]:
+                        if ("text/plain;charset=utf-8" in target_type or "text/plain" in target_type) and "files" in content_type:
                             if clipboard.wait_for_contents(target).get_text() is not None:
                                 if self.app.utils.is_valid_unix_uri(clipboard.wait_for_contents(target).get_text().strip().splitlines()[-1].replace("file://","")):
                                     content_type = "files"

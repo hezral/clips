@@ -4,6 +4,8 @@
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk, GLib
+from .utils import log_function_calls
+
 
 import time
 from datetime import datetime
@@ -20,7 +22,9 @@ SHOWING_TIMEOUT = 2500 #ms
 NEEDED_SHAKE_COUNT = 5
 
 class ShakeListener():
+    @log_function_calls
     def __init__(self, app, reveal_callback, sensitivity=5, *args, **kwargs):
+
         
         self.app = app
         self.reveal_callback = reveal_callback
@@ -28,7 +32,9 @@ class ShakeListener():
         self.init_listener()
         self.needed_shake_count = sensitivity
 
+    @log_function_calls
     def init_variables(self, *args):
+
         self.showing_timestamp = datetime.now()
         self.shake_slice_timestamp = datetime.now()
         self.shake_timeout_timestamp = datetime.now()
@@ -48,7 +54,9 @@ class ShakeListener():
         self.showing = False
         self.isShaking = False
 
+    @log_function_calls
     def init_listener(self, *args):
+
         self.listener = mouse.Listener(
             on_move=self.detect_mouse_movement,
             on_click=None,
@@ -57,7 +65,9 @@ class ShakeListener():
         self.running = True
         self.app.logger.info("shake_listener started")
 
+    @log_function_calls
     def remove_listener(self, *args):
+
         self.listener.stop()
         self.listener = mouse.Listener(
             on_move=None,
@@ -66,7 +76,9 @@ class ShakeListener():
         self.listener.stop()
         self.running = False
 
+    @log_function_calls
     def on_mouse_click(self, x, y, button, pressed):
+
         if pressed:
             try:
                 if button.name == "left":
@@ -76,7 +88,9 @@ class ShakeListener():
         else:
             self.mouse_pressed = False
 
+    @log_function_calls
     def detect_mouse_movement(self, x, y):
+
         if self.app.main_window is not None:
             if not self.app.main_window.is_visible():
                 # state = "is_shaking:{0}, shake_count:{1}, showing:{2}".format(self.isShaking, self.shake_count, self.showing)
@@ -115,7 +129,9 @@ class ShakeListener():
 
                 self.is_shaking()
 
+    @log_function_calls
     def is_shaking(self):
+
         self.isShaking = False
 
         self.shake_timeout_timestamp_diff = int((datetime.now()-self.shake_timeout_timestamp).total_seconds()*1000)
@@ -139,7 +155,9 @@ class ShakeListener():
                 GLib.idle_add(self.reveal_app, None)
                 self.init_variables()
 
+    @log_function_calls
     def reveal_app(self, *args):
+
         self.showing = True
         self.reveal_callback()
         # self.listener.stop()

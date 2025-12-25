@@ -1,4 +1,8 @@
+from .logging_utils import log_function_calls
+
+@log_function_calls
 def get_mimetype_icon(mimetype):
+
     import gi
     gi.require_version('Gtk', '3.0')
     from gi.repository import Gio, Gtk

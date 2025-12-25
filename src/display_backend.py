@@ -9,6 +9,8 @@ Provides robust X11 vs Wayland detection, replacing the simple env check.
 import os
 from enum import Enum
 from typing import Optional
+from .sub_utils.logging_utils import log_function_calls
+
 
 
 class DisplayBackend(Enum):
@@ -20,7 +22,9 @@ class DisplayBackend(Enum):
 _detected_backend: Optional[DisplayBackend] = None
 
 
+@log_function_calls
 def detect_display_backend() -> DisplayBackend:
+
     """
     Detect the current display backend with proper precedence.
     
@@ -63,7 +67,9 @@ def detect_display_backend() -> DisplayBackend:
     return _detected_backend
 
 
+@log_function_calls
 def is_wayland() -> bool:
+
     """Check if running on Wayland."""
     return detect_display_backend() == DisplayBackend.WAYLAND
 
@@ -73,17 +79,23 @@ def is_wayland() -> bool:
 #     return detect_display_backend() == DisplayBackend.X11
 
 
+@log_function_calls
 def is_wayland_session() -> bool:
+
     """Alias for backward compatibility with existing utils.is_wayland_session()."""
     return is_wayland()
 
 
+@log_function_calls
 def get_backend_name() -> str:
+
     """Get human-readable backend name for logging."""
     return detect_display_backend().value
 
 
+@log_function_calls
 def is_wayland_session_actual() -> bool:
+
     """
     Check if the actual session is Wayland, ignoring GDK_BACKEND override.
 

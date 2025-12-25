@@ -9,12 +9,16 @@ from gi.repository import Gtk, Granite, Gdk, GLib
 from .clips_view import ClipsView
 from .settings_view import SettingsView
 from .info_view import InfoView
+from .utils import log_function_calls
+
 
 class ClipsWindow(Gtk.ApplicationWindow):
 
     position = []
 
+    @log_function_calls
     def __init__(self, *args, **kwargs):
+
         super().__init__(
                         title="Clips", 
                         name = "main-window",
@@ -58,7 +62,9 @@ class ClipsWindow(Gtk.ApplicationWindow):
         self.connect("destroy", self.on_close_window)
         self.connect("key-press-event", self.on_search_as_you_type)
 
+    @log_function_calls
     def set_display_settings(self, data):
+
         # Always start window_manager for active app detection (used by clipboard tracking)
         if self.app.window_manager is not None:
             self.app.window_manager._run(callback=self.on_persistent_mode)
@@ -69,7 +75,9 @@ class ClipsWindow(Gtk.ApplicationWindow):
         if self.gio_settings.get_value("always-on-top"):
             self.set_keep_above(True)
 
-    def set_main_window_size(self, column_number=None, windowhints=None, base_size=[], min_size=[], max_size=[]):
+    @log_function_calls
+    def set_main_window_size(self, column_number=None, windowhints=None, base_size=[], min_size=[], max_size=[]) :
+
         if column_number is None:
             column_number = self.gio_settings.get_int("min-column-number")
 
@@ -133,7 +141,9 @@ class ClipsWindow(Gtk.ApplicationWindow):
             self.set_geometry_hints(None, geometry, Gdk.WindowHints.MIN_SIZE)
             # self.set_geometry_hints(None, geometry, Gdk.WindowHints.MIN_SIZE | Gdk.WindowHints.MAX_SIZE | Gdk.WindowHints.BASE_SIZE)
 
+    @log_function_calls
     def save_window_state(self, *args):
+
         w, h = self.get_size()
         x, y = self.get_position()
 
@@ -142,17 +152,23 @@ class ClipsWindow(Gtk.ApplicationWindow):
         self.app.gio_settings.set_int("window-height", h)
         self.app.gio_settings.set_int("window-width", w)
 
+    @log_function_calls
     def move_window(self, *args):
+
         # print("map", self.app.gio_settings.get_int("pos-x"), self.app.gio_settings.get_int("pos-y"))
         self.save_window_state()
         self.move(self.app.gio_settings.get_int("pos-x"), self.app.gio_settings.get_int("pos-y"))
 
+    @log_function_calls
     def on_close_window(self, window=None, event=None):
+
         self.save_window_state()
         # print(event, self.app.gio_settings.get_int("pos-x"), self.app.gio_settings.get_int("pos-y"))
         return False
 
+    @log_function_calls
     def on_search_as_you_type(self, window, eventkey):
+
         proceed = False
         # print(Gdk.keyval_name(eventkey.keyval), len(Gdk.keyval_name(eventkey.keyval)), eventkey.state.value_names, len(eventkey.state.value_names))
 
@@ -180,13 +196,17 @@ class ClipsWindow(Gtk.ApplicationWindow):
                 if self.app.props.application_id not in app_title:
                     self.hide()
 
+    @log_function_calls
     def on_search_entry_key_pressed(self, search_entry, eventkey):
+
         key = Gdk.keyval_name(eventkey.keyval).lower()
         if self.clips_view.flowbox.get_child_at_index(0) is not None and key == "down": 
             self.clips_view.flowbox.select_child(self.clips_view.flowbox.get_child_at_index(0))
             self.clips_view.flowbox.get_child_at_index(0).grab_focus()
 
+    @log_function_calls
     def on_searchbar_activate(self, searchentry, event, type):
+
 
         searchbar = self.searchentry.get_parent()
 
@@ -206,13 +226,17 @@ class ClipsWindow(Gtk.ApplicationWindow):
                 self.searchentry.props.primary_icon_name = "system-search-symbolic"
                 self.searchentry.props.name = "search-entry"
 
+    @log_function_calls
     def on_search_entry_changed(self, search_entry):
+
         self.searchentry.props.primary_icon_name = "system-search-symbolic"
         if self.stack.get_visible_child() == self.clips_view:
             self.clips_view.flowbox.invalidate_filter()
             self.clips_view.flowbox_filter_func(search_entry)
 
+    @log_function_calls
     def on_view_visible(self, view_switch=None, gparam=None, action=None):
+
 
         # app startup
         # first-run: welcome_view + help_view
@@ -318,7 +342,9 @@ class ClipsWindow(Gtk.ApplicationWindow):
             else:
                 self.searchentry.props.sensitive = False
         
+    @log_function_calls
     def on_button_press(self, button, eventbutton):
+
 
         if eventbutton.button == 1:
             self.app.on_clipsapp_action()
@@ -331,10 +357,14 @@ class ClipsWindow(Gtk.ApplicationWindow):
         #     self.window_menu.show_all()
         #     self.window_menu.popup_at_widget(button, Gdk.Gravity.NORTH, Gdk.Gravity.SOUTH_WEST, None)
 
+    @log_function_calls
     def on_menu_activate(self, menuitem):
+
         self.app.logger.debug(menuitem.props.label)
 
+    @log_function_calls
     def generate_headerbar(self):
+
         self.searchentry = Gtk.SearchEntry()
         self.searchentry.props.placeholder_text = "Search Clips"
         self.searchentry.props.hexpand = False
@@ -363,7 +393,9 @@ class ClipsWindow(Gtk.ApplicationWindow):
         headerbar.props.custom_title = overlay
         return headerbar
 
+    @log_function_calls
     def generate_statusbar(self):
+
         self.total_clips_label = Gtk.Label("Clips: {total}".format(total=self.props.application.total_clips))
         self.total_clips_label.props.has_tooltip = True
         self.total_clips_label.connect("query-tooltip", self.on_total_clips_tooltip)
@@ -376,7 +408,9 @@ class ClipsWindow(Gtk.ApplicationWindow):
         status.attach(self.total_clips_label, 0, 0, 1, 1)
         return status
 
+    @log_function_calls
     def generate_actionbar(self):
+
         self.clipsapp_toggle = Gtk.Button(image=Gtk.Image().new_from_icon_name("com.github.hezral.clips-enabled-symbolic", Gtk.IconSize.SMALL_TOOLBAR))
         self.clipsapp_toggle.props.name = "app-action-enable"
         self.clipsapp_toggle.props.has_tooltip = True
@@ -392,7 +426,9 @@ class ClipsWindow(Gtk.ApplicationWindow):
         actionbar.attach(self.clipsapp_toggle, 0, 0, 1, 1)
         return actionbar
 
+    @log_function_calls
     def generate_viewswitch(self):
+
         self.view_switch = Granite.ModeSwitch.from_icon_name("com.github.hezral.clips-flowbox-symbolic", "com.github.hezral.clips-settings-symbolic")
         self.view_switch.props.valign = Gtk.Align.CENTER
         self.view_switch.props.halign = Gtk.Align.END
@@ -402,7 +438,9 @@ class ClipsWindow(Gtk.ApplicationWindow):
         self.view_switch.connect_after("notify::active", self.on_view_visible)
         return self.view_switch
 
+    @log_function_calls
     def update_total_clips_label(self, event, count=1):
+
         total_clips = int(self.total_clips_label.props.label.split(": ")[1])
         if event == "add":
             total_clips = total_clips + count
@@ -410,7 +448,9 @@ class ClipsWindow(Gtk.ApplicationWindow):
             total_clips = total_clips - count
         self.total_clips_label.props.label = "Clips: {total}".format(total=total_clips)
 
+    @log_function_calls
     def on_total_clips_tooltip(self, widget, x, y, keyboard_mode, tooltip):
+
         grid = Gtk.Grid()
         grid.props.column_spacing = 4
         grid.props.row_spacing = 2

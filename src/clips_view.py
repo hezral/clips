@@ -8,6 +8,8 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GdkPixbuf, Pango, Gdk, Gio, GLib
 import cairo
 from . import custom_widgets
+from .utils import log_function_calls
+
 
 import os
 from datetime import datetime
@@ -23,7 +25,9 @@ class ClipsView(Gtk.Grid):
     multi_select_mode = False
     filter_count = 0
 
+    @log_function_calls
     def __init__(self, app, *args, **kwargs):
+
         super().__init__(*args, **kwargs)
 
         self.app = app
@@ -58,7 +62,9 @@ class ClipsView(Gtk.Grid):
         self.props.expand = True
         self.attach(self.clips_view_overlay, 0, 0, 1, 1)
 
+    @log_function_calls
     def generate_multi_delete_revealer(self):
+
         self.select_all_button = Gtk.Button(label="Select All")
         self.select_all_button.props.halign = Gtk.Align.START
         self.select_all_button.props.hexpand = True
@@ -138,9 +144,11 @@ class ClipsView(Gtk.Grid):
         date2 = child2.get_children()[0].created
         return date1 < date2
 
+    @log_function_calls
     def new_clip(self, clip):
+
         app = self.app
-        main_window = self.get_toplevel()
+        main_window = self.app.main_window
         id = clip[0]
         cache_file = os.path.join(app.cache_manager.cache_filedir, clip[6])
         new_flowboxchild = [child for child in self.flowbox.get_children() if child.get_children()[0].id == id]
@@ -150,7 +158,9 @@ class ClipsView(Gtk.Grid):
             main_window.update_total_clips_label("add")
             self.flowbox.show_all()
 
+    @log_function_calls
     def on_child_activated(self, flowbox, flowboxchild):
+
         selected = len(flowbox.get_selected_children())
 
         if selected == 1:
@@ -169,7 +179,9 @@ class ClipsView(Gtk.Grid):
             flowboxchild.get_children()[0].source_icon_revealer.set_reveal_child(True)
             flowboxchild.grab_focus()
 
+    @log_function_calls
     def on_child_multi_selected(self, flowbox, flowboxchild):
+
         for flowboxchild in self.flowbox.get_selected_children():
             clips_container = flowboxchild.get_children()[0]
             clips_container.clip_overlay_revealer.set_reveal_child(True)
@@ -178,14 +190,18 @@ class ClipsView(Gtk.Grid):
             clips_container.select_button.get_style_context().add_class("clip-selected")
         self.delete_selected_button.props.label = "Delete ({count})".format(count=str(len(self.flowbox.get_selected_children()))) 
 
+    @log_function_calls
     def on_child_multi_unselected(self, clips_container):
+
         clips_container.clip_overlay_revealer.set_reveal_child(False)
         self.app.main_window.clips_view.flowbox.unselect_child(clips_container.get_parent())
         self.delete_selected_button.props.label = "Delete ({count})".format(count=str(len(self.flowbox.get_selected_children())))
         if len(self.flowbox.get_selected_children()) == 0:
             self.off_multi_select()
 
+    @log_function_calls
     def on_select_all(self, button):
+
         if button.props.name == "select-all-off":
             self.flowbox.select_all()
             for flowboxchild in self.flowbox.get_selected_children():
@@ -200,21 +216,27 @@ class ClipsView(Gtk.Grid):
             self.select_all_button.props.label = "Select All"
             self.delete_selected_button.props.label = "Delete ({count})".format(count=str(len(self.flowbox.get_selected_children())))
 
+    @log_function_calls
     def on_delete_selected(self, button):
+
         for flowboxchild in self.flowbox.get_selected_children():
             clips_container = flowboxchild.get_children()[0]
             clips_container.on_clip_action(action="multi-delete")
             flowboxchild.destroy()
         self.off_multi_select()
 
+    @log_function_calls
     def on_cancel_multi_delete(self, button):
+
         self.off_multi_select()
         self.flowbox.unselect_all()
         self.select_all_button.props.name = "select-all-off"
         self.select_all_button.props.label = "Select All"
         self.delete_selected_button.props.label = "Delete ({count})".format(count=str(len(self.flowbox.get_selected_children())))
     
+    @log_function_calls
     def on_multi_select(self):
+
         self.flowbox.connect("child-activated", self.on_child_multi_selected)
         self.multi_delete_revealer.set_reveal_child(True)
         self.flowbox.props.selection_mode = Gtk.SelectionMode.MULTIPLE
@@ -229,7 +251,9 @@ class ClipsView(Gtk.Grid):
         self.delete_selected_button.props.label = "Delete ({count})".format(count=str(len(self.flowbox.get_selected_children())))
         self.multi_select_mode = True
 
+    @log_function_calls
     def off_multi_select(self):
+
         self.flowbox.disconnect_by_func(self.on_child_multi_selected)
         self.multi_delete_revealer.set_reveal_child(False)
         self.flowbox.props.selection_mode = Gtk.SelectionMode.SINGLE
@@ -260,7 +284,9 @@ class ClipsView(Gtk.Grid):
 
 class ClipsContainer(Gtk.EventBox):
 
+    @log_function_calls
     def __init__(self, app, clip, cache_filedir, utils, *args, **kwargs):
+
         super().__init__(*args, **kwargs)
 
         self.props.name = "clip-container"
@@ -586,7 +612,9 @@ class ClipsContainer(Gtk.EventBox):
                     image_container.play_gif_thread.join()
                     image_container.play_gif_thread = None
 
+    @log_function_calls
     def on_clip_action(self, button=None, action=None, validated=False, data=None):
+
         flowboxchild = self.get_parent()
         flowbox = self.app.main_window.clips_view.flowbox
         flowbox.select_child(flowboxchild)

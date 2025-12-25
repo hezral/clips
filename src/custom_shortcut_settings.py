@@ -6,6 +6,8 @@
 # Full credits goes to original author.
 
 from gi.repository import Gio
+from .utils import log_function_calls
+
 
 #------------------CLASS-SEPARATOR------------------#
 
@@ -17,7 +19,9 @@ RELOCATABLE_SCHEMA_PATH_TEMLPATE = "/org/gnome/settings-daemon/plugins/media-key
 MAX_SHORTCUTS = 100
 
 class CustomShortcutSettings():
+    @log_function_calls
     def __init__(self, *args, **kwargs):
+
         # super().__init__(*args, **kwargs)
 
         self.available = False
@@ -35,20 +39,28 @@ class CustomShortcutSettings():
             self.available = True
 
     # checked
+    @log_function_calls
     def get_relocatable_schemas(self):
+
         return self.gio_settings.get_strv(KEY + "s")
 
     # checked
+    @log_function_calls
     def get_relocatable_schema_path(self, i):
+
         return RELOCATABLE_SCHEMA_PATH_TEMLPATE % i
 
     # checked
+    @log_function_calls
     def get_relocatable_schema_settings(self, relocatable_schema):
+
         relocatable_schema_settings = Gio.Settings.new_with_path(SCHEMA + "." + KEY, relocatable_schema)
         return relocatable_schema_settings
     
     # checked
+    @log_function_calls
     def create_shortcut(self):
+
         if self.available:
             for i in range(0, MAX_SHORTCUTS, 1):
                 new_relocatable_schema = self.get_relocatable_schema_path(i)
@@ -60,7 +72,9 @@ class CustomShortcutSettings():
         else:
             return None
 
+    @log_function_calls
     def relocatable_schema_is_used(self, new_relocatable_schema):
+
         relocatable_schemas = self.get_relocatable_schemas()
         
         for relocatable_schema in relocatable_schemas:
@@ -70,13 +84,17 @@ class CustomShortcutSettings():
         return False
     
     # checked
+    @log_function_calls
     def add_relocatable_schema(self, new_relocatable_schema):
+
         relocatable_schemas = self.get_relocatable_schemas()
         relocatable_schemas.append(new_relocatable_schema)
         self.gio_settings.set_strv(KEY + "s", relocatable_schemas)
         self.apply_settings(self.gio_settings)
 
+    @log_function_calls
     def reset_relocatable_schema(self, relocatable_schema):
+
         relocatable_settings = self.get_relocatable_schema_settings(relocatable_schema)
         relocatable_settings.reset("name")
         relocatable_settings.reset("command")
@@ -84,7 +102,9 @@ class CustomShortcutSettings():
         self.apply_settings(relocatable_settings)
 
     # checked
+    @log_function_calls
     def edit_shortcut(self, relocatable_schema, shortcut):
+
         if self.available:
             relocatable_settings = self.get_relocatable_schema_settings(relocatable_schema)
             relocatable_settings.set_string("binding", shortcut)
@@ -92,7 +112,9 @@ class CustomShortcutSettings():
             return True
 
     # checked
+    @log_function_calls
     def edit_command(self, relocatable_schema, command):
+
         if self.available:
             relocatable_settings = self.get_relocatable_schema_settings(relocatable_schema)
             relocatable_settings.set_string("command", command)
@@ -101,7 +123,9 @@ class CustomShortcutSettings():
             return True
 
     # checked
+    @log_function_calls
     def list_custom_shortcuts(self):
+
         if self.available:
             list = []
             for relocatable_schema in self.get_relocatable_schemas():
@@ -109,13 +133,17 @@ class CustomShortcutSettings():
             return list
 
     # checked
+    @log_function_calls
     def create_custom_shortcut_object(self, relocatable_schema):
+
         relocatable_settings = self.get_relocatable_schema_settings(relocatable_schema)
         binding = relocatable_settings.get_string("binding")
         command = relocatable_settings.get_string("command")
         return binding, command, relocatable_schema # returns a tuple
 
     # checked
+    @log_function_calls
     def apply_settings(self, settings):
+
         settings.apply()
         Gio.Settings.sync()

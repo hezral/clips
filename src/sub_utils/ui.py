@@ -2,8 +2,12 @@ import logging
 import logging
 from ..constants import APP_ID
 logger = logging.getLogger(APP_ID)
+from .logging_utils import log_function_calls
 
+
+@log_function_calls
 def get_widget_by_name(widget, child_name, level, doPrint=False):
+
     '''
     Function to find widgets using its parent
     https://stackoverflow.com/questions/20461464/how-do-i-iterate-through-all-Gtk-children-in-pyGtk-recursively

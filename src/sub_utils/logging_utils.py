@@ -53,20 +53,43 @@ def log_function_calls(func):
     """
     A decorator that logs the entry and exit of a function, including its arguments and return value.
     Attempts to find a logger from `self.logger`, `self.app.logger`, or falls back to the `logging` module directly.
+    Controlled by the 'debug-verbose-mode' GSetting.
     """
     from functools import wraps
-    import logging # Import logging here to ensure it's available
+    import logging
+    from gi.repository import Gio
 
     @wraps(func)
     def wrapper(*args, **kwargs):
-        # Try to get logger from instance (self.logger or self.app.logger)
+        # Try to get settings and logger from instance
+        settings = None
         local_logger = None
-        if args and hasattr(args[0], 'logger'):
-            local_logger = args[0].logger
-        elif args and hasattr(args[0], 'app') and hasattr(args[0].app, 'logger'):
-            local_logger = args[0].app.logger
         
+        if args:
+            instance = args[0]
+            if hasattr(instance, 'gio_settings'):
+                settings = instance.gio_settings
+            elif hasattr(instance, 'app') and hasattr(instance.app, 'gio_settings'):
+                settings = instance.app.gio_settings
+                
+            if hasattr(instance, 'logger'):
+                local_logger = instance.logger
+            elif hasattr(instance, 'app') and hasattr(instance.app, 'logger'):
+                local_logger = instance.app.logger
+
         from ..constants import APP_ID
+        
+        # If we couldn't find settings on the instance, try to get them globally
+        if not settings:
+            try:
+                settings = Gio.Settings.new(APP_ID)
+            except:
+                pass
+
+        # If we have settings and debug-verbose-mode is off, just run the function
+        if settings and not settings.get_boolean("debug-verbose-mode"):
+            return func(*args, **kwargs)
+
         # Fallback to app logger if no specific logger found
         logger_to_use = local_logger if local_logger else logging.getLogger(APP_ID)
 

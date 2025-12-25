@@ -127,8 +127,13 @@
         </key>
         <key type="b" name="debug-mode">
             <default>false</default>
-            <summary>Shake to reveal</summary>
-            <description>Shake to reveal</description>
+            <summary>Enable debug mode</summary>
+            <description>Enable debug mode</description>
+        </key>
+        <key type="b" name="debug-verbose-mode">
+            <default>false</default>
+            <summary>Enable verbose debug mode</summary>
+            <description>Enable verbose debug mode</description>
         </key>
             <key type="b" name="text-mode">
             <default>false</default>

@@ -9,6 +9,8 @@ import os
 resource_path = os.path.join(os.path.dirname(__file__), "data", "images")
 
 from . import custom_widgets
+from .utils import log_function_calls
+
 
 class InfoView(Gtk.Grid):
 
@@ -16,7 +18,9 @@ class InfoView(Gtk.Grid):
     welcome_view = None
     noclips_view = None
 
+    @log_function_calls
     def __init__(self, app, title, description, icon, *args, **kwargs):
+
         super().__init__(*args, **kwargs)
         
         self.props.name = "info-view"
@@ -29,7 +33,9 @@ class InfoView(Gtk.Grid):
         self.props.expand = True
         self.props.valign = self.props.halign = Gtk.Align.FILL
 
+    @log_function_calls
     def generate_welcome_view(self):
+
         self.clear_info_view()
 
         self.password_editor = custom_widgets.PasswordEditor(
@@ -108,7 +114,9 @@ class InfoView(Gtk.Grid):
         
         self.show_all()
 
+    @log_function_calls
     def generate_help_view(self):
+
         self.clear_info_view()
         
         self.flowbox = Gtk.FlowBox()
@@ -176,7 +184,9 @@ class InfoView(Gtk.Grid):
         else:
             pass
 
+    @log_function_calls
     def generate_noclips_view(self):
+
         self.clear_info_view()
 
         grid = Gtk.Grid()
@@ -202,11 +212,15 @@ class InfoView(Gtk.Grid):
         self.attach(grid, 0, 0, 1, 1)
         self.show_all()
     
+    @log_function_calls
     def clear_info_view(self):
+
         for child in self.get_children():
             child.destroy()
 
+    @log_function_calls
     def on_button_clicked(self, button=None, entry=None, label=None, button2=None):
+
         if button.props.name == "getstarted":
             self.get_style_context().add_class("info-view-fader")
             self.app.main_window.on_view_visible(action="help-view")
@@ -217,7 +231,9 @@ class InfoView(Gtk.Grid):
             self.gio_settings.set_boolean("first-run", False)
             self.gio_settings.set_boolean("protected-mode", False)
 
+    @log_function_calls
     def on_set_password(self):
+
         self.setpassword_button.destroy()
         self.skippassword_button.destroy()
         self.app.on_clipsapp_action()
@@ -227,7 +243,9 @@ class InfoView(Gtk.Grid):
 # ----------------------------------------------------------------------------------------------------
 
 class HelpSubView(Gtk.Grid):
+    @log_function_calls
     def __init__(self, prefer_dark_theme, image_name, subtitle_text, *args, **kwargs):
+
         super().__init__(*args, **kwargs)
 
         self.props.name = "help-subview"

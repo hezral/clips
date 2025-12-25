@@ -68,6 +68,7 @@ class CacheManager():
 
     @log_function_calls
     def initialize_monitoring(self):
+
         """
         Initialize clipboard monitoring after GTK display is ready.
 
@@ -79,6 +80,7 @@ class CacheManager():
 
     @log_function_calls
     def _setup_clipboard_monitoring(self):
+
         """Setup clipboard monitoring based on display backend."""
         self.app.logger.info(f"Display backend: {get_backend_name()}")
         
@@ -88,6 +90,7 @@ class CacheManager():
 
     @log_function_calls
     def _setup_gtk_monitoring(self):
+
         """Setup GTK clipboard owner-change monitoring."""
         self.clipboard_manager.clipboard.connect(
             "owner-change", 
@@ -98,6 +101,7 @@ class CacheManager():
 
     @log_function_calls
     def enable_clipboard_monitoring(self):
+
         """
         Re-enable clipboard monitoring after disable.
         
@@ -115,6 +119,7 @@ class CacheManager():
 
     @log_function_calls
     def disable_clipboard_monitoring(self):
+
         """
         Temporarily disable clipboard monitoring.
         
@@ -138,6 +143,7 @@ class CacheManager():
 
     @log_function_calls
     def stop_clipboard_monitoring(self):
+
         """Stop and cleanup clipboard monitoring (called on app quit)."""
         self.disable_clipboard_monitoring()
 
@@ -147,6 +153,7 @@ class CacheManager():
 
     @log_function_calls
     def open_db(self, database_file):
+
         connection = sqlite3.connect(database_file) 
         cursor = connection.cursor()
         cursor.execute("PRAGMA database_list;")
@@ -172,7 +179,8 @@ class CacheManager():
             ''')
 
     @log_function_calls
-    def load_clips(self):
+    def load_clips(self) :
+
         # get lastrow id
         last_id = self.db_cursor.execute('SELECT max(id) FROM ClipsDB')
         last_id = last_id.fetchone()[0]
@@ -204,6 +212,7 @@ class CacheManager():
 
     @log_function_calls
     def add_record(self, data_tuple):
+
         sqlite_insert_with_param = '''
             INSERT INTO 'ClipsDB'
             ('target', 'created', 'source', 'source_app', 'source_icon', 'cache_file', 'type', 'protected') 
@@ -218,7 +227,8 @@ class CacheManager():
             print("Exception sqlite3.Error: ", error) #add logging
 
     @log_function_calls
-    def update_record_on_recopy(self, checksum):
+    def update_record_on_recopy(self, checksum) :
+
         data_param = (str(checksum + "%"),) #pass in a sequence ie list
         sqlite_with_param = '''
             SELECT created, cache_file FROM 'ClipsDB'
@@ -246,6 +256,7 @@ class CacheManager():
 
     @log_function_calls
     def delete_record(self, id, cache_file, clip_type):
+
         data_param = (str(id),) #pass in a sequence ie list
         sqlite_with_param = '''
             DELETE FROM 'ClipsDB'
@@ -261,6 +272,7 @@ class CacheManager():
     
     @log_function_calls
     def delete_all_record(self):
+
         sqlite_with_param = '''
             DELETE FROM 'ClipsDB'
             '''
@@ -278,6 +290,7 @@ class CacheManager():
 
     @log_function_calls
     def auto_housekeeping(self, days, manual_run=False):
+
         days_param = "-" + str(days) + " " + "day"
         data_param = (days_param,) #pass in a sequence ie list
         sqlite_with_param = '''
@@ -357,6 +370,7 @@ class CacheManager():
     @log_function_calls
     def delete_cache_file(self, cache_file, clip_type):
 
+
         thumbnail_file = os.path.splitext(cache_file)[0]+'-thumb.png'
         alt_cache_file = cache_file.replace("html", "txt")
 
@@ -387,6 +401,7 @@ class CacheManager():
 
     @log_function_calls
     def delete_all_cache_file(self):
+
         for directory in (self.cache_filedir, self.icon_cache_filedir):
             for filename in os.listdir(directory):
                 file_path = os.path.join(directory, filename)
@@ -414,6 +429,7 @@ class CacheManager():
 
     @log_function_calls
     def update_cache(self, clipboard, event, clipboard_manager, _wayland_data=None):
+
         """
         Update cache with new clipboard content.
         

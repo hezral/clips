@@ -1,6 +1,10 @@
+from .logging_utils import log_function_calls
 _apps_cache = None
 
+
+@log_function_calls
 def get_all_apps(app=None):
+
     ''' Function to get all apps installed on system using desktop files in standard locations for flatpak, snap, native '''
     import gi, os, logging
     from gi.repository import Gio, GLib
@@ -103,7 +107,9 @@ def get_all_apps(app=None):
     else:
         return all_apps
 
+@log_function_calls
 def get_appinfo(app):
+
     all_apps = get_all_apps()
     try:
         return app, all_apps[app][0]

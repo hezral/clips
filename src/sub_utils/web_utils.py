@@ -4,8 +4,12 @@ from .time_utils import get_fuzzy_timestamp
 from ..constants import APP_ID
 
 logger = logging.getLogger(APP_ID)
+from .logging_utils import log_function_calls
 
+
+@log_function_calls
 def get_domain(url):
+
     ''' Function to get domain from url '''
     from urllib.parse import urlparse
     result = urlparse(url).netloc
@@ -15,7 +19,9 @@ def get_domain(url):
         domain = '.'.join(result.split('.'))
     return domain
 
+@log_function_calls
 def get_web_contents(url):
+
     ''' Function to get web contents '''
     import requests
     try:
@@ -27,7 +33,9 @@ def get_web_contents(url):
     except:
         return None
 
+@log_function_calls
 def get_web_title(contents, url):
+
     ''' Function to get web page title from url'''
     from urllib.parse import urlparse
     import html
@@ -40,7 +48,9 @@ def get_web_title(contents, url):
         title = urlparse(url).netloc
     return title
 
+@log_function_calls
 def get_web_favicon(contents, url, download_path='./', checksum='na'):
+
     ''' Function to get web page favicon from a url '''
     LARGE_FAVICON = r"<link\srel\=\"(apple-touch-icon-precomposed|apple-touch-icon)\"\s(.*(\/.*)+?|href)\=\".*(\/.*)+?\""
     SMALL_FAVICON = r"<link\srel\=\"(icon|shortcut icon)\"\s(.*(\/.*)+?|href)\=\".*(\/.*)+?\""
@@ -77,7 +87,9 @@ def get_web_favicon(contents, url, download_path='./', checksum='na'):
         open(icon_name, 'wb').write(r.content)
         return icon_name
 
+@log_function_calls
 def get_web_data(url, file_path=None, download_path='./', checksum='na'):
+
     ''' Function to get web data '''
     contents = get_web_contents(url)
     title = get_web_title(contents, url)
@@ -89,7 +101,9 @@ def get_web_data(url, file_path=None, download_path='./', checksum='na'):
             file.close
     return title, icon_name
 
+@log_function_calls
 def get_web_data_threaded(url, file_path, download_path='./'):
+
     ''' Function to get web data threaded '''
     import concurrent.futures
     with concurrent.futures.ThreadPoolExecutor() as executor:
@@ -98,7 +112,9 @@ def get_web_data_threaded(url, file_path, download_path='./'):
         # print(return_value)
         logger.debug(get_fuzzy_timestamp(datetime.now()))
 
+@log_function_calls
 def open_url_gtk(url):
+
     ''' Function to view file using default application via Gtk'''
     import gi
     gi.require_version('Gtk', '3.0')
@@ -109,7 +125,9 @@ def open_url_gtk(url):
         logger.error("Unable to launch {url}".format(url=url))
         pass
 
+@log_function_calls
 def open_file_gio(filepath):
+
     ''' Function to view file using default application via Gio'''
     import gi
     from gi.repository import Gio

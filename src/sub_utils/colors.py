@@ -1,6 +1,10 @@
 from .validators import validate_string_with_regex
+from .logging_utils import log_function_calls
 
+
+@log_function_calls
 def is_valid_color_code(str):
+
     '''
     Function validate is any of the HEX, RGB, RGBA, HSL, HSLA color code
     Function validate hexadecimal color code
@@ -19,7 +23,9 @@ def is_valid_color_code(str):
         else:
             pass
 
+@log_function_calls
 def hsl_to_rgb(hslcode):
+
     ''' Function to convert hsl string to RGB color code '''
 
     import colorsys
@@ -28,7 +34,9 @@ def hsl_to_rgb(hslcode):
     rgb = (int(r*255), int(g*255), int(b*255))
     return rgb
 
+@log_function_calls
 def hex_to_rgb(hexcode):
+
     '''
     Function to convert hexadecimal string to RGB color code
     https://stackoverflow.com/a/29643643/14741406
@@ -37,7 +45,9 @@ def hex_to_rgb(hexcode):
     rgb = tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
     return rgb
 
+@log_function_calls
 def is_light_color(rgb=[0,0,0]):
+
     '''
     Function to determine light or dark color using RGB values
     https://stackoverflow.com/a/58270890/14741406
@@ -50,7 +60,9 @@ def is_light_color(rgb=[0,0,0]):
     else:
         return 'dark'
 
+@log_function_calls
 def get_css_background_color(str):
+
     '''
     function to extract background-color from html files
     https://stackoverflow.com/a/4894134/14741406
@@ -73,7 +85,9 @@ def get_css_background_color(str):
             if validate_string_with_regex(css_background_color, regex[1]):
                 return css_background_color
 
+@log_function_calls
 def get_css_text_color(str):
+
     '''
     function to extract background-color from html files
     https://stackoverflow.com/a/4894134/14741406
@@ -96,7 +110,9 @@ def get_css_text_color(str):
             if validate_string_with_regex(css_text_color, regex[1]):
                 return css_text_color
 
+@log_function_calls
 def to_rgb(color_string):
+
     '''
     Function to convert color codes to string by stripping other caharcters and returning rgba codes in tuple format
     '''

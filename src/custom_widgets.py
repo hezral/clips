@@ -5,9 +5,13 @@ import gi
 gi.require_version('Gtk', '3.0')
 gi.require_version('Granite', '1.0')
 from gi.repository import Gtk, Granite, GObject, Gdk, Pango, GLib
+from .utils import log_function_calls
+
 
 class CustomDialog(Gtk.Window):
+    @log_function_calls
     def __init__(self, dialog_parent_widget, dialog_title, dialog_content_widget, action_button_label, action_button_name, action_callback, action_type, size=None, data=None, *args, **kwargs):
+
         super().__init__(*args, **kwargs)
 
         parent_window = dialog_parent_widget.get_toplevel()
@@ -85,7 +89,9 @@ class PasswordEditor(Gtk.Grid):
 
     is_authenticated = False
 
+    @log_function_calls
     def __init__(self, main_label, gtk_application, type, callback=None, auth_callback=None, action=None, *args, **kwargs):
+
         super().__init__(*args, **kwargs)
 
         # GObject.signal_new(signal_name, object_class, GObject.SIGNAL-flags, return_type, param_types)
@@ -153,7 +159,9 @@ class PasswordEditor(Gtk.Grid):
             self.password_entry.grab_focus()
 
 
+    @log_function_calls
     def generate_authenticate_fields(self):
+
 
         self.current_password_entry = Gtk.Entry()
         self.current_password_entry.props.visibility = False
@@ -184,7 +192,9 @@ class PasswordEditor(Gtk.Grid):
         self.add(self.current_password_entry)
         self.add(self.current_password_error_revealer)
 
+    @log_function_calls
     def generate_editor_fields(self):
+
         self.password_entry_headerlabel = Granite.HeaderLabel("Choose a Password")
 
         self.password_entry = Granite.ValidatedEntry()
@@ -240,14 +250,18 @@ class PasswordEditor(Gtk.Grid):
         self.add(self.confirm_entry)
         self.add(self.confirm_entry_revealer)
 
+    @log_function_calls
     def on_current_password_entry_changed(self, entry):
+
         if len(entry.props.text) > 0:
             entry.set_icon_from_icon_name(Gtk.EntryIconPosition.SECONDARY, "go-jump-symbolic")
         else:
             entry.set_icon_from_icon_name(Gtk.EntryIconPosition.SECONDARY, None)
         self.current_password_error_revealer.set_reveal_child(False)
 
+    @log_function_calls
     def on_current_password_entry_activated(self, *args):
+
         if self.type == "authenticate":
             if self.password_authentication():
                 self.auth_callback(action=self.action)
@@ -260,15 +274,21 @@ class PasswordEditor(Gtk.Grid):
     def on_current_password_entry_focus_out(self, entry, eventfocus):
         self.password_authentication()
 
+    @log_function_calls
     def on_password_entry_changed(self, validate_entry):
+
         validate_entry.props.is_valid = self.check_password()
         self.validate_form(validate_entry)
 
+    @log_function_calls
     def on_confirm_entry_changed(self, validate_entry):
+
         validate_entry.props.is_valid = self.confirm_password()
         self.validate_form(validate_entry)
 
+    @log_function_calls
     def password_authentication(self, *args):
+
         self.current_password_entry.set_icon_from_icon_name(Gtk.EntryIconPosition.SECONDARY, "process-working-symbolic")
         self.current_password_entry.get_style_context().add_class("spin")
 
@@ -298,7 +318,9 @@ class PasswordEditor(Gtk.Grid):
             validate_entry.props.is_valid = True
         self.emit("validation-changed", [validate_entry])
 
+    @log_function_calls
     def check_password(self):
+
         if self.password_entry.props.text == "":
             self.confirm_entry.props.text = ""
             self.confirm_entry.props.sensitive = False
@@ -348,7 +370,9 @@ class PasswordEditor(Gtk.Grid):
 
         return False
 
+    @log_function_calls
     def confirm_password(self):
+
         if self.confirm_entry.props.text != "":
             if self.password_entry.props.text != self.confirm_entry.props.text:
                 self.confirm_entry.set_icon_from_icon_name(Gtk.EntryIconPosition.SECONDARY, "process-error-symbolic")
@@ -366,7 +390,9 @@ class PasswordEditor(Gtk.Grid):
 
         return False
 
+    @log_function_calls
     def reset_password(self, button, params=None):
+
         
         cancel_button = params[1]
         if self.password_entry.props.text != "" and self.current_password_entry.props.text != "":
@@ -383,7 +409,9 @@ class PasswordEditor(Gtk.Grid):
                         self.result_label.set_text("Password set failed: {error}".format(error=set_password[1]))
                     self.result_label_revealer.set_reveal_child(True)
 
+    @log_function_calls
     def set_password(self, button, params=None):
+
 
         if self.password_entry.props.text != "":
             if self.password_entry.props.text == self.confirm_entry.props.text:
@@ -396,7 +424,9 @@ class PasswordEditor(Gtk.Grid):
                     self.result_label.set_text("Password set failed: {error}".format(error=set_password[1]))
                 self.result_label_revealer.set_reveal_child(True)
 
+    @log_function_calls
     def timeout_on_setpassword(self):
+
 
         def update_label(timeout):
             self.result_label.props.label = "Password succesfully set ({i})".format(i=timeout)

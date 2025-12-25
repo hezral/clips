@@ -4,9 +4,13 @@
 from datetime import datetime
 
 from gi.repository import GObject, Gio, GLib
+from .utils import log_function_calls
+
 
 class FileManagerBackend(GObject.GObject):
+    @log_function_calls
     def __init__(self, gtk_application=None):
+
         GObject.GObject.__init__(self)
 
         self.app = gtk_application
@@ -25,7 +29,9 @@ class FileManagerBackend(GObject.GObject):
             self.app.logger.error(f"Failed to initialize file manager backend: {e}")
             self.proxy = None
 
+    @log_function_calls
     def show_files_in_file_manager(self, path):
+
         if not self.proxy:
             return
 
@@ -41,7 +47,9 @@ class FileManagerBackend(GObject.GObject):
         except Exception as e:
             self.app.logger.error(f"Failed to show items: {e}")
 
+    @log_function_calls
     def show_folders_in_file_manager(self, path):
+
         if not self.proxy:
             return
 

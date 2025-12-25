@@ -17,12 +17,16 @@ import gi
 gi.require_version('GLib', '2.0')
 gi.require_version('Gio', '2.0')
 from gi.repository import GLib, Gio
+from .utils import log_function_calls
+
 
 
 class ActiveWindowManager():
     """Wayland-compatible active window manager using AT-SPI event subscription."""
 
+    @log_function_calls
     def __init__(self, gtk_application=None):
+
         super().__init__()
         self.app = gtk_application
         self.last_seen = {'title': None}
@@ -30,7 +34,9 @@ class ActiveWindowManager():
         self.main_loop = None
         self._initialized = False  # Track if manager has been started
         
+    @log_function_calls
     def _get_property(self, connection, destination, path, interface, prop_name):
+
         """Helper to read properties using raw Gio DBus calls."""
         try:
             ret = connection.call_sync(
@@ -50,7 +56,9 @@ class ActiveWindowManager():
                 self.app.logger.debug(f"Error getting property {prop_name}: {e}")
             return None
 
+    @log_function_calls
     def _on_signal(self, connection, sender_name, object_path, interface_name, signal_name, parameters, user_data):
+
         """Event callback for AT-SPI signals."""
         # Unpack parameters
         args = parameters.unpack()
@@ -82,15 +90,14 @@ class ActiveWindowManager():
             element_name = self._get_property(connection, sender_name, object_path, "org.a11y.atspi.Accessible", "Name")
 
             # Cleanup strings for display
-            display_app = app_name if app_name else f"Unknown({sender_name})"
-            display_element = element_name if element_name else "Untitled"
+            display_app = app_name if app_name and app_name != "" else f"Unknown app ({sender_name})"
+            display_element = element_name if element_name and element_name != "" else "Untitled"
 
-            # Always update and trigger callback (removed deduping to fix persistent mode)
-            # This ensures the callback runs even when clicking back to the same app
+            # Always update and trigger callback
             self.last_seen['title'] = display_app
             
             if self.app:
-                self.app.logger.info(f"Active app changed to: {display_app} - {display_element}")
+                self.app.logger.debug(f"Active app changed to: {display_app} - {display_element}")
             
             # Trigger the callback
             self.handle_change(self.last_seen)
@@ -99,7 +106,9 @@ class ActiveWindowManager():
             if self.app:
                 self.app.logger.debug(f"Error in signal handler: {e}")
 
+    @log_function_calls
     def _run(self, callback):
+
         """Initialize AT-SPI event subscription."""
         self.callback = callback
         
@@ -177,7 +186,9 @@ class ActiveWindowManager():
             if self.app:
                 self.app.logger.info("active_window_manager (AT-SPI event-driven) started")
 
+    @log_function_calls
     def _stop(self):
+
         """Stop the active window manager."""
         if self.app:
             self.app.logger.info("active_window_manager (AT-SPI) stopped")
@@ -194,7 +205,9 @@ class ActiveWindowManager():
         
         self._initialized = False
 
+    @log_function_calls
     def handle_change(self, new_state: dict):
+
         """This method is called when the active window changes."""
         if self.callback:
             GLib.idle_add(self.callback, new_state['title'])

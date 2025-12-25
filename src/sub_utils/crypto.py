@@ -6,8 +6,12 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from hashlib import sha1
 import base64
 import os
+from .logging_utils import log_function_calls
 
+
+@log_function_calls
 def do_encryption(action, passphrase, filepath):
+
     def key_func(action, passphrase, filepath):
         password = passphrase.encode()
         if action == "encrypt":

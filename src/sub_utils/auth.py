@@ -1,6 +1,10 @@
 import keyring
+from .logging_utils import log_function_calls
 
+
+@log_function_calls
 def do_authentication(action, password=None):
+
 
     def set_password(password):
         try:
