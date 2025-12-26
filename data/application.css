@@ -17,7 +17,10 @@
 /* ------------------------------ */
 
 /* -- app styling -- */
-window, decoration, grid#main-view, stack {
+window,
+decoration,
+grid#main-view,
+stack {
     border-bottom-right-radius: 6px;
     border-bottom-left-radius: 6px;
 }
@@ -45,8 +48,8 @@ grid#app-statusbar {
 
 grid#search-bar {
     padding: 1px;
-    }
-    
+}
+
 entry#search-entry {
     box-shadow: none;
     background-image: none;
@@ -74,6 +77,7 @@ stack {
     border-bottom-right-radius: 4px;
     border-bottom-left-radius: 4px;
 }
+
 /* ------------------------------ */
 
 
@@ -102,26 +106,49 @@ frame#settings-group-frame {
 }
 
 .alternate-row {
-    background-color:rgba(125, 48, 232, 0.05);
+    background-color: rgba(125, 48, 232, 0.05);
 }
+
 /* ------------------------------ */
 
 @keyframes crossfader {
-    0% { opacity: 0; } 
-    03.33% { opacity: 0; }
-    06.66% { opacity: 0; }
-    09.99% { opacity: 0; }
-    13.33% { opacity: 0; }
-    16.65% { opacity: 0.75; }
-    100% { opacity: 1; }	
+    0% {
+        opacity: 0;
+    }
+
+    03.33% {
+        opacity: 0;
+    }
+
+    06.66% {
+        opacity: 0;
+    }
+
+    09.99% {
+        opacity: 0;
+    }
+
+    13.33% {
+        opacity: 0;
+    }
+
+    16.65% {
+        opacity: 0.75;
+    }
+
+    100% {
+        opacity: 1;
+    }
 }
 
 grid#plaintext-container {
     font-size: 95%;
 }
 
-grid#html-container, grid#spreadsheet-container {
-    padding: 4px;
+grid#html-container,
+grid#spreadsheet-container,
+grid#presentation-container {
+    padding: 5px;
 }
 
 .clip-container-animated {
@@ -132,28 +159,29 @@ grid#html-container, grid#spreadsheet-container {
     border-radius: 5px;
     box-shadow:
         0 0 0 1px rgba(125, 48, 232, 1),
-        0 2px 5px  rgba(0,0,0,0.16),
-        0 2px 5px  rgba(0,0,0,0.23),
-        0 14px 28px  rgba(0,0,0,0);
+        0 2px 5px rgba(0, 0, 0, 0.16),
+        0 2px 5px rgba(0, 0, 0, 0.23),
+        0 14px 28px rgba(0, 0, 0, 0);
 }
 
-.clip-containers, grid#clip-container-grid {
+.clip-containers,
+grid#clip-container-grid {
     border-radius: 4px;
 }
-    
-flowbox#flowbox > flowboxchild {
+
+flowbox#flowbox>flowboxchild {
     border-radius: 5px;
     border-style: solid;
     border-width: 1px;
-    border-color: rgba(0,0,0,0.3);
+    border-color: rgba(0, 0, 0, 0.3);
     background-color: transparent;
     animation: crossfader 0.25s ease-in-out forwards;
 }
 
 /* handle html container selected state */
 /* flowbox#flowbox > flowboxchild:selected > widget#clip-container > grid#clip-container-grid > overlay > .html-container-bg { */
-    /* background-image: linear-gradient(to bottom, rgba(125, 48, 232, 0.3), rgba(125, 48, 232, 0.3)); */
-    /* opacity: 0.9; */
+/* background-image: linear-gradient(to bottom, rgba(125, 48, 232, 0.3), rgba(125, 48, 232, 0.3)); */
+/* opacity: 0.9; */
 /* } */
 
 /* flowbox#flowbox > flowboxchild:selected > widget#clip-container > grid#clip-container-grid {
@@ -162,28 +190,28 @@ flowbox#flowbox > flowboxchild {
     border-width: 2px;
     border-radius: 3px;
 } */
-    
-flowbox#flowbox > flowboxchild:selected {
-    border-color: rgba(125,48,232,1);
+
+flowbox#flowbox>flowboxchild:selected {
+    border-color: rgba(125, 48, 232, 1);
     box-shadow:
-        0 0 0 1px rgba(125,48,232,0.24),
-        0 2px 5px  rgba(125,48,232,0.32),
-        0 2px 5px  rgba(125,48,232,0.46),
-        0 14px 28px  rgba(125,48,232,0);
+        0 0 0 1px rgba(125, 48, 232, 0.24),
+        0 2px 5px rgba(125, 48, 232, 0.32),
+        0 2px 5px rgba(125, 48, 232, 0.46),
+        0 14px 28px rgba(125, 48, 232, 0);
     background-color: rgba(125, 48, 232, 0.3);
 }
 
-flowbox#flowbox > flowboxchild:selected > widget#clip-container > grid#clip-container-grid > grid#clip-info {
-    text-shadow: 0px 1px 2px rgba(0,0,0, 0.5);
-    background-color: rgba(255,255,255,0.2);
+flowbox#flowbox>flowboxchild:selected>widget#clip-container>grid#clip-container-grid>grid#clip-info {
+    text-shadow: 0px 1px 2px rgba(0, 0, 0, 0.5);
+    background-color: rgba(255, 255, 255, 0.2);
 }
 
-flowbox#flowbox > flowboxchild:selected > widget#clip-container > grid#clip-container-grid {
+flowbox#flowbox>flowboxchild:selected>widget#clip-container>grid#clip-container-grid {
     border-color: rgba(125, 48, 232, 1);
 }
 
-flowbox#flowbox > flowboxchild:backdrop > widget#clip-container > grid#clip-container-grid > grid#clip-info {
-    text-shadow: 0px 1px 2px rgba(0,0,0, 0.2);
+flowbox#flowbox>flowboxchild:backdrop>widget#clip-container>grid#clip-container-grid>grid#clip-info {
+    text-shadow: 0px 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 
@@ -233,7 +261,8 @@ grid#clip-action {
     color: white;
 }
 
-label#clip-timestamp, label#clip-content-label {
+label#clip-timestamp,
+label#clip-content-label {
     font-size: 80%;
     font-weight: bold;
 }
@@ -268,7 +297,7 @@ button#clip-action-button {
     opacity: 1;
    
 } */
-    
+
 /* button#clip-action-button:active {
     border-color: rgba(255,255,255,0.5);
     background-color: rgba(0,0,0,0.7);
@@ -282,7 +311,7 @@ button#clip-action-button:disabled {
      */
 
 grid#clip-action-notify {
-    background-color: rgba(0,0,0,0.75);
+    background-color: rgba(0, 0, 0, 0.75);
     color: white;
     padding: 8px;
     padding-left: 12px;
@@ -291,7 +320,8 @@ grid#clip-action-notify {
     font-weight: bold;
 }
 
-button#app-action-enable, button#app-action-protect {
+button#app-action-enable,
+button#app-action-protect {
     border-style: none;
     box-shadow: none;
     padding: 2px;
@@ -305,25 +335,28 @@ button#app-action-enable, button#app-action-protect {
     opacity: 0.35;
 }
 
-button#app-action-enable:hover, button#app-action-protect:hover {
+button#app-action-enable:hover,
+button#app-action-protect:hover {
     opacity: 0.75;
 }
 
-button#app-action-enable:active, button#app-action-protect:active {
+button#app-action-enable:active,
+button#app-action-protect:active {
     opacity: 1;
 }
 
 label#color-container-content {
-    letter-spacing: 1px; 
-    font-weight: bold; 
-    font-size: 120%; 
+    letter-spacing: 1px;
+    font-weight: bold;
+    font-size: 120%;
     opacity: 0.8;
 }
 
-label#url-container-title, label#mail-container-title{
-    letter-spacing: 1px; 
-    font-weight: bold; 
-    font-size: 105%; 
+label#url-container-title,
+label#mail-container-title {
+    letter-spacing: 1px;
+    font-weight: bold;
+    font-size: 105%;
 }
 
 label#files-container-more {
@@ -341,12 +374,14 @@ label#files-container-more {
     animation: crossfader 0.5s ease-in-out forwards;
 }
 
-label#welcome-view-title, label#noclips-view-title {
+label#welcome-view-title,
+label#noclips-view-title {
     color: alpha(@theme_text_color, 0.6);
     animation: crossfader 1.0s ease-in-out forwards;
 }
 
-label#welcome-view-sublabel, label#noclips-view-sublabel {
+label#welcome-view-sublabel,
+label#noclips-view-sublabel {
     color: alpha(@theme_text_color, 0.5);
     animation: crossfader 1.25s ease-in-out forwards;
 }
@@ -361,39 +396,81 @@ grid#setpassword {
     color: alpha(red, 0.75);
 } */
 
-button#setpassword, button#revealpassword {
+button#setpassword,
+button#revealpassword {
     outline-style: none;
 }
-  
-button#setpassword:active, button#revealpassword:active {
+
+button#setpassword:active,
+button#revealpassword:active {
     opacity: 0.75;
 }
 
 @keyframes fade-in {
-    0% { opacity: 0.35; } 
-    03.33% { opacity: 0.35; }
-    06.66% { opacity: 0.35; }
-    09.99% { opacity: 0.35; }
-    13.33% { opacity: 0.35; }
-    16.65% { opacity: 0.5; }
-    100% { opacity: 1; }	
+    0% {
+        opacity: 0.35;
+    }
+
+    03.33% {
+        opacity: 0.35;
+    }
+
+    06.66% {
+        opacity: 0.35;
+    }
+
+    09.99% {
+        opacity: 0.35;
+    }
+
+    13.33% {
+        opacity: 0.35;
+    }
+
+    16.65% {
+        opacity: 0.5;
+    }
+
+    100% {
+        opacity: 1;
+    }
 }
 
 @keyframes fade-out {
-    0% { opacity: 1; } 
-    03.33% { opacity: 1; }
-    06.66% { opacity: 1; }
-    09.99% { opacity: 1; }
-    13.33% { opacity: 1; }
-    16.65% { opacity: 0.5; }
-    100% { opacity: 0.35; }	
+    0% {
+        opacity: 1;
+    }
+
+    03.33% {
+        opacity: 1;
+    }
+
+    06.66% {
+        opacity: 1;
+    }
+
+    09.99% {
+        opacity: 1;
+    }
+
+    13.33% {
+        opacity: 1;
+    }
+
+    16.65% {
+        opacity: 0.5;
+    }
+
+    100% {
+        opacity: 0.35;
+    }
 }
 
 .setpassword-waiting {
     opacity: 0.35;
     animation: fade-out 0.2s ease-in-out forwards;
 }
-  
+
 .setpassword-ready {
     animation: fade-in 0.2s ease-in-out forwards;
     opacity: 1;
@@ -403,12 +480,14 @@ button#setpassword:active, button#revealpassword:active {
 
 .checkerboard {
     background-image:
-      linear-gradient(45deg, rgba(0,0,0,0.1) 25%, transparent 25%), 
-      linear-gradient(135deg, rgba(0,0,0,0.1) 25%, transparent 25%),
-      linear-gradient(45deg, transparent 75%, rgba(0,0,0,0.1) 75%),
-      linear-gradient(135deg, transparent 75%, rgba(0,0,0,0.1) 75%);
-    background-size:24px 24px; /* Must be a square */
-    background-position:0 0, 12px 0, 12px -12px, 0px 12px; /* Must be half of one side of the square */
+        linear-gradient(45deg, rgba(0, 0, 0, 0.1) 25%, transparent 25%),
+        linear-gradient(135deg, rgba(0, 0, 0, 0.1) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, rgba(0, 0, 0, 0.1) 75%),
+        linear-gradient(135deg, transparent 75%, rgba(0, 0, 0, 0.1) 75%);
+    background-size: 24px 24px;
+    /* Must be a square */
+    background-position: 0 0, 12px 0, 12px -12px, 0px 12px;
+    /* Must be half of one side of the square */
 }
 
 image#clip-source-app-icon-overlay {

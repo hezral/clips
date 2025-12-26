@@ -885,10 +885,11 @@ class ImageContainer(DefaultContainer):
     play_gif_thread = None
     alpha = False
 
-    def __init__(self, filepath, type, app, *args, **kwargs):
+    def __init__(self, filepath, type, app, scale_mode="fill", *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.type = type
         self.filepath = filepath
+        self.scale_mode = scale_mode
         if "gif" in self.type:
             self.pixbuf_original = GdkPixbuf.PixbufAnimation.new_from_file(filepath)
             self.pixbuf_original_height = self.pixbuf_original.get_height()
@@ -926,34 +927,68 @@ class ImageContainer(DefaultContainer):
     def draw(self, drawing_area, cairo_context, hover_scale=1):
         from math import pi
         scale = self.get_scale_factor()
-        width = self.get_allocated_width() * scale * hover_scale
-        height = self.get_allocated_height() * scale * hover_scale
+        width = int(self.get_allocated_width() * scale * hover_scale)
+        height = int(self.get_allocated_height() * scale * hover_scale)
         radius = 4 * scale
+        
         if "gif" in self.type:
             pixbuf = GdkPixbuf.PixbufAnimationIter.get_pixbuf(self.iter)
         else:
             pixbuf = self.pixbuf_original
-        pixbuf_fitted = GdkPixbuf.Pixbuf.new(pixbuf.get_colorspace(), pixbuf.get_has_alpha(), pixbuf.get_bits_per_sample(), width, height)
-        if int(width * self.ratio_h_w) < height:
-            scaled_pixbuf = pixbuf.scale_simple(int(height * self.ratio_w_h), height, GdkPixbuf.InterpType.BILINEAR)
-        else:
-            scaled_pixbuf = pixbuf.scale_simple(width, int(width * self.ratio_h_w), GdkPixbuf.InterpType.BILINEAR)
-        if self.pixbuf_original_width * self.pixbuf_original_height < width * height:
-            y = abs((height - self.pixbuf_original_height) / 2)
-            x = abs((width - self.pixbuf_original_width) / 2)
-            final_pixbuf = self.pixbuf_original
-        # removed as we can do proper html content screenshot now
-        # elif "thumb" in self.filepath:
-        #     y = 0
-        #     x = 0
-        #     final_pixbuf = self.pixbuf_original
-        else:
-            y = abs((height - scaled_pixbuf.props.height) / 2)
-            x = abs((width - scaled_pixbuf.props.width) / 2)
-            scaled_pixbuf.copy_area(x, y, width, height, pixbuf_fitted, 0, 0)
+
+        if self.scale_mode == "fit":
+            # "Aspect Fit" (Contain) - show the entire image within the allocated area
+            if self.ratio_h_w * width > height:
+                new_h = height
+                new_w = height * self.ratio_w_h
+            else:
+                new_w = width
+                new_h = width * self.ratio_h_w
+            
+            final_pixbuf = pixbuf.scale_simple(int(new_w), int(new_h), GdkPixbuf.InterpType.BILINEAR)
+            x = (width - final_pixbuf.get_width()) / 2
+            y = (height - final_pixbuf.get_height()) / 2
+
+        elif self.scale_mode == "height":
+            # "Fit to Height" - Scale height to match, crop sides if wide, center horizontally
+            new_h = height
+            new_w = height * self.ratio_w_h
+            
+            final_pixbuf = pixbuf.scale_simple(int(new_w), int(new_h), GdkPixbuf.InterpType.BILINEAR)
+            # Center the scaled image horizontally (crops sides if new_w > width)
+            x = (width - final_pixbuf.get_width()) / 2
             y = 0
+        elif self.scale_mode == "natural-left":
+            # "Natural Left" - show image at its natural size, aligned to the left, centered vertically
+            final_pixbuf = pixbuf
             x = 0
-            final_pixbuf = pixbuf_fitted
+            y = (height - final_pixbuf.get_height()) / 2
+        else:
+            # "Aspect Fill" (Cover) - default behavior
+            # Choose scale factor to cover the entire area
+            if self.ratio_h_w * width < height:
+                new_h = height
+                new_w = height * self.ratio_w_h
+            else:
+                new_w = width
+                new_h = width * self.ratio_h_w
+            
+            # Avoid upscaling small images in 'fill' mode if they fit
+            if self.pixbuf_original_width < width and self.pixbuf_original_height < height:
+                final_pixbuf = pixbuf
+            else:
+                scaled_pixbuf = pixbuf.scale_simple(int(new_w), int(new_h), GdkPixbuf.InterpType.BILINEAR)
+                # Create a pixbuf of exact target size and copy area to it (cropping)
+                final_pixbuf = GdkPixbuf.Pixbuf.new(pixbuf.get_colorspace(), pixbuf.get_has_alpha(), pixbuf.get_bits_per_sample(), width, height)
+                
+                # Source x/y for the crop (centered)
+                src_x = max(0, (scaled_pixbuf.get_width() - width) / 2)
+                src_y = max(0, (scaled_pixbuf.get_height() - height) / 2)
+                scaled_pixbuf.copy_area(int(src_x), int(src_y), width, height, final_pixbuf, 0, 0)
+            
+            x = (width - final_pixbuf.get_width()) / 2
+            y = (height - final_pixbuf.get_height()) / 2
+
         cairo_context.save()
         cairo_context.scale(1.0 / scale, 1.0 / scale)
         cairo_context.new_sub_path()
@@ -1025,7 +1060,7 @@ class HtmlContainer(ImageContainer):
         thumbnail = os.path.splitext(filepath)[0]+'-thumb.png'
         # Screenshot is generated before this container is created
         # See ClipsContainer.__init__ for HTML type handling
-        super().__init__(thumbnail, type, app)
+        super().__init__(thumbnail, type, app, scale_mode="natural-left")
         self.content = open(filepath, "r").read()
         css_bg_color = app.utils.get_css_background_color(self.content)
         if css_bg_color is not None:
@@ -1160,7 +1195,7 @@ class FilesContainerPopover(Gtk.Popover):
 class SpreadsheetContainer(ImageContainer):
     def __init__(self, filepath, type, app, *args, **kwargs):
         thumbnail = os.path.splitext(filepath)[0]+'-thumb.png'
-        super().__init__(thumbnail, type, app)
+        super().__init__(thumbnail, type, app, scale_mode="natural-left")
         self.props.name = "spreadsheet-container"
         self.label = "Spreadsheet"
 
@@ -1168,7 +1203,7 @@ class SpreadsheetContainer(ImageContainer):
 class PresentationContainer(ImageContainer):
     def __init__(self, filepath, type, app, *args, **kwargs):
         thumbnail = os.path.splitext(filepath)[0]+'-thumb.png'
-        super().__init__(thumbnail, type, app)
+        super().__init__(thumbnail, type, app, scale_mode="natural-left")
         self.props.name = "presentation-container"
         self.label = "Presentation"
 

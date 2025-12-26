@@ -38,6 +38,7 @@ html_target = ("text/html", "html", "HTML Formt", "html", True) # chrome, firefo
 # html_webkit_target = ("org.webkitgtk.WebKit.custom-pasteboard-data", "html", "HTML Format for Epiphany", "html", False) # epiphany
 
 # image types
+image_gif_target = ("image/gif", "gif", "GIF Format", "image", False)
 image_png_target = ("image/png", "png", "PNG Format", "image", False)
 image_svg_target = ("image/x-inkscape-svg", "svg", "SVG Format", "image", False)
 
