@@ -342,7 +342,6 @@ class Application(Gtk.Application):
                 self.main_window.clipsapp_toggle.props.name = "app-action-disable"
                 self.main_window.clipsapp_toggle.get_style_context().add_class("app-action-disabled")
                 self.main_window.clipsapp_toggle.get_style_context().remove_class("app-action-enabled")
-                self.logger.info("clipboard monitoring disabled")
                 
             except Exception as e:
                 self.logger.error(f"Failed to disable clipboard monitoring: {e}")
@@ -360,7 +359,6 @@ class Application(Gtk.Application):
                 self.main_window.clipsapp_toggle.props.name = "app-action-enable"
                 self.main_window.clipsapp_toggle.get_style_context().add_class("app-action-enabled")
                 self.main_window.clipsapp_toggle.get_style_context().remove_class("app-action-disabled")
-                self.logger.info("clipboard monitoring enabled")
                 
             except Exception as e:
                 self.logger.error(f"Failed to enable clipboard monitoring: {e}")

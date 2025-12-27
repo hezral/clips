@@ -47,7 +47,7 @@ class ShakeListener():
         # 5 -> 8 reversals
         # 10 -> 4 reversals
         self.needed_reversals = max(3, 13 - int(float(sensitivity)))
-        self.app.logger.info(f"Shake sensitivity updated: {sensitivity} (needed_reversals: {self.needed_reversals})")
+        self.app.logger.debug(f"Shake sensitivity updated: {sensitivity} (needed_reversals: {self.needed_reversals})")
 
     @log_function_calls
     def init_variables(self, *args):
@@ -134,7 +134,7 @@ class ShakeListener():
             self.reversals.append(now)
             self.app.logger.debug(f"Reversal detected! Window count: {len(self.reversals)}/{self.needed_reversals}")
             if len(self.reversals) >= self.needed_reversals:
-                self.app.logger.info("SHAKE DETECTED!")
+                self.app.logger.debug("SHAKE DETECTED!")
                 self.reversals = []
                 return True
 

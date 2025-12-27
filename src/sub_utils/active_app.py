@@ -1,8 +1,11 @@
 from .app_data import get_all_apps
 from .session import is_wayland_session
-from .wayland_utils import get_active_appinfo_wayland
 from .logging_utils import log_function_calls
 import os
+import logging
+from ..constants import APP_ID
+
+logger = logging.getLogger(APP_ID)
 
 
 @log_function_calls
@@ -218,5 +221,23 @@ def _get_active_appinfo_xlib(data=None):
     except Xlib.error.XError: #simplify dealing with BadWindow
         source_app = None
         source_icon = None
+
+    return source_app, source_icon
+
+
+@log_function_calls
+def get_active_appinfo_wayland(data=None):
+
+    """
+    Get active application info.
+    Note: AT-SPI access is restricted in flatpak sandbox, so this currently
+    returns "unknown app" on Wayland. Active window detection works on X11 only.
+    """
+    desktop_env = os.environ.get("XDG_CURRENT_DESKTOP", "").lower()
+    source_app = "unknown app"
+    source_icon = "application-default-icon"
+
+    logger.debug(f"Desktop environment: {desktop_env}")
+    logger.debug(f"Active window detection is not available on Wayland (flatpak sandbox restriction)")
 
     return source_app, source_icon
