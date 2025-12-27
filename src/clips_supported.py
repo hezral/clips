@@ -53,8 +53,8 @@ utf8text_target = ("text/plain;charset=utf-8", "txt", "Plain Text Format", "plai
 plaintext_target = ("text/plain", "txt", "Plain Text Format", "plaintext", False)
 
 # custom types, not a real clipboard data type
-url1_target = ("text/plain;charset=utf-8", "txt", "Internet URL", "url", False)
-url2_target = ("text/plain", "txt", "Internet URL", "url", False)
+url1_target = ("text/plain;charset=utf-8", "txt", "Internet URL", "url", True)
+url2_target = ("text/plain", "txt", "Internet URL", "url", True)
 mail1_target = ("text/plain;charset=utf-8", "txt", "Email", "mail", False)
 mail2_target = ("text/plain", "txt", "email", "mail", False)
 color_target = ("text/plain;charset=utf-8", "txt", "Color Codes", "color", False)

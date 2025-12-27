@@ -49,10 +49,8 @@ finish-args:
   # source file: filemanager_backend.py
   - --talk-name=org.freedesktop.FileManager1
 
-
   # AT-SPI accessibility bus for active window detection
   - --filesystem=xdg-run/at-spi:ro
-  # - --talk-name=org.a11y.Bus # not working in flatpak for now
 
 modules:
   - name: chardet

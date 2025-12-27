@@ -30,12 +30,9 @@ clips_sources = [
   'clips_supported.py',
   'clips_view.py',
   'custom_widgets.py',
-  'display_backend.py',
   'info_view.py',
   'settings_view.py',
-  'shake_listener.py',
   'active_window_manager.py',
-  'filemanager_backend.py'
 ]
 install_data(clips_sources, install_dir: moduledir)
 install_subdir('sub_utils', install_dir: moduledir)

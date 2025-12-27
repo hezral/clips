@@ -53,10 +53,10 @@ def _copy_files_to_clipboard_xclip(uris):
         return False
 
 @log_function_calls
-def paste_from_clipboard():
+def paste_from_clipboard(app=None):
 
     if is_wayland_session():
-        return paste_from_clipboard_wayland()
+        return paste_from_clipboard_wayland(app)
     else:
         return _paste_from_clipboard_xlib()
 

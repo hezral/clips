@@ -4,7 +4,7 @@
 from datetime import datetime
 
 from gi.repository import GObject, Gio, GLib
-from .utils import log_function_calls
+from ..utils import log_function_calls
 
 
 class FileManagerBackend(GObject.GObject):

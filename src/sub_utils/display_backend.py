@@ -9,7 +9,7 @@ Provides robust X11 vs Wayland detection, replacing the simple env check.
 import os
 from enum import Enum
 from typing import Optional
-from .sub_utils.logging_utils import log_function_calls
+from .logging_utils import log_function_calls
 
 
 

@@ -4,7 +4,8 @@ import subprocess
 import logging
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gio, GLib
+gi.require_version('Gdk', '3.0')
+from gi.repository import Gio, GLib, Gdk
 from ..constants import APP_ID
 
 logger = logging.getLogger(APP_ID)
@@ -29,15 +30,91 @@ def get_active_appinfo_wayland(data=None):
     return source_app, source_icon
 
 @log_function_calls
-def paste_from_clipboard_wayland():
+def paste_from_clipboard_wayland(app=None):
+    """
+    Paste from clipboard using Mutter RemoteDesktop.
+    """
+    is_terminal = False
+    if app and hasattr(app, 'window_manager'):
+        active_app = app.window_manager.last_seen.get('title')
+        if active_app:
+            terminals = ["terminal", "term", "konsole", "uxterm", "xterm", "tilix", "alacritty", "kitty", "gnome-terminal"]
+            if any(term in active_app.lower() for term in terminals):
+                is_terminal = True
+                logger.debug(f"Terminal detected: {active_app}")
 
-    if shutil.which("wtype") is not None:
-        try:
-            subprocess.run(["wtype", "-M", "ctrl", "-P", "v", "-m", "ctrl"], check=True)
-            return True
-        except subprocess.CalledProcessError:
-            return False
-    else:
+    try:
+        bus = Gio.bus_get_sync(Gio.BusType.SESSION, None)
+        res = bus.call_sync(
+            "org.gnome.Mutter.RemoteDesktop",
+            "/org/gnome/Mutter/RemoteDesktop",
+            "org.gnome.Mutter.RemoteDesktop",
+            "CreateSession",
+            None,
+            GLib.VariantType.new("(o)"),
+            Gio.DBusCallFlags.NONE,
+            -1,
+            None
+        )
+        session_path = res.unpack()[0]
+        
+        bus.call_sync(
+            "org.gnome.Mutter.RemoteDesktop",
+            session_path,
+            "org.gnome.Mutter.RemoteDesktop.Session",
+            "Start",
+            None,
+            None,
+            Gio.DBusCallFlags.NONE,
+            -1,
+            None
+        )
+
+        control_l = Gdk.keyval_from_name("Control_L")
+        shift_l = Gdk.keyval_from_name("Shift_L")
+        v_key = Gdk.keyval_from_name("v")
+
+        # Helper to send key
+        def send_key(keyval, pressed):
+            bus.call_sync(
+                "org.gnome.Mutter.RemoteDesktop",
+                session_path,
+                "org.gnome.Mutter.RemoteDesktop.Session",
+                "NotifyKeyboardKeysym",
+                GLib.Variant("(ub)", [keyval, pressed]),
+                None,
+                Gio.DBusCallFlags.NONE,
+                -1,
+                None
+            )
+
+        # Press keys
+        send_key(control_l, True)
+        if is_terminal:
+            send_key(shift_l, True)
+        send_key(v_key, True)
+
+        # Release keys
+        send_key(v_key, False)
+        if is_terminal:
+            send_key(shift_l, False)
+        send_key(control_l, False)
+
+        # Stop session
+        bus.call_sync(
+            "org.gnome.Mutter.RemoteDesktop",
+            session_path,
+            "org.gnome.Mutter.RemoteDesktop.Session",
+            "Stop",
+            None,
+            None,
+            Gio.DBusCallFlags.NONE,
+            -1,
+            None
+        )
+        return True
+    except Exception as e:
+        logger.debug(f"Error in paste_from_clipboard_wayland: {e}")
         return False
 
 @log_function_calls

@@ -307,56 +307,7 @@ class ClipsContainer(Gtk.EventBox):
         self.cache_file = os.path.join(self.cache_filedir, self.cache_file)
         self.content = None
 
-        # Container types based on clips_supported.py
-        if "office/spreadsheet" in self.type:
-            self.content = SpreadsheetContainer(self.cache_file, self.type, app)
-        elif "office/presentation" in self.type:
-            self.content = PresentationContainer(self.cache_file, self.type, app)
-        elif "office/word" in self.type:
-            self.content = WordContainer(self.cache_file, self.type, app)
-        elif "files" in self.type:
-            is_files = True
-            file = open(self.cache_file, "rb")
-            encoding_name = chardet.detect(file.read())["encoding"]
-            file.close()
-            with open(self.cache_file, encoding=encoding_name) as file:
-                file_content = file.readlines()
-            if len(file_content) == 1:
-                file_content = file_content[0].replace("copy","").replace("file://","").strip().replace("%20", " ").replace("\n","")
-                if os.path.exists(file_content):
-                    mime_type, val = Gio.content_type_guess(file_content, data=None)
-                    if "image" in mime_type and not "webp" in mime_type:
-                        self.content = ImageContainer(file_content, mime_type, app)
-                        is_files = False
-            if is_files:
-                self.content = FilesContainer(self.cache_file, self.type, app)
-        elif "image" in self.type:
-            self.content = ImageContainer(self.cache_file, self.type, app)
-        elif "html" in self.type:
-            thumbnail = os.path.splitext(self.cache_file)[0]+'-thumb.png'
-            # Only use HtmlContainer if thumbnail already exists (from previous session)
-            # Don't generate screenshots during startup to avoid window errors
-            if os.path.exists(thumbnail):
-                self.content = HtmlContainer(self.cache_file, self.type, app)
-            else:
-                # Use PlainTextContainer if no thumbnail available
-                # New HTML content will get screenshots from cache_manager
-                self.content = PlainTextContainer(self.cache_file, self.type, app)
-        elif "richtext" in self.type:
-            self.content = FilesContainer(self.cache_file, self.type, app)
-        elif "plaintext" in self.type and self.protected == "no":
-            self.content = PlainTextContainer(self.cache_file, self.type, app)
-        elif "plaintext" in self.type and self.protected == "yes":
-            self.content = ProtectedContainer(self.cache_file, self.type, app)
-        elif "color" in self.type:
-            self.content = ColorContainer(self.cache_file, self.type, app)
-        elif "url" in self.type:
-            self.content = UrlContainer(self.cache_file, self.type, app, self.cache_filedir)
-        elif "mail" in self.type:
-            self.content = EmailContainer(self.cache_file, self.type, app, self.cache_filedir)
-        else:
-            self.app.logger.debug("clips_view.py: FallbackContainer: " + self.cache_file + " " + self.type)
-            self.content = FallbackContainer(self.cache_file, self.type, app)
+        self.content = self._select_container()
 
         self.extended_info = self.content.label
         self.clip_action_notify_revealer = self.generate_clip_action_notify()
@@ -381,6 +332,80 @@ class ClipsContainer(Gtk.EventBox):
         self.on_cursor_entering_clip_handler_id = self.connect("enter-notify-event", self.on_cursor_entering_clip)
         self.on_cursor_leaving_clip_handler_id = self.connect("leave-notify-event", self.on_cursor_leaving_clip)
         self.on_double_clicked_clip_handler_id = self.connect("button-press-event", self.on_double_clicked_clip)
+
+    def _select_container(self):
+        # Container types based on clips_supported.py
+        if "office/spreadsheet" in self.type:
+            return SpreadsheetContainer(self.cache_file, self.type, self.app)
+        elif "office/presentation" in self.type:
+            return PresentationContainer(self.cache_file, self.type, self.app)
+        elif "office/word" in self.type:
+            return WordContainer(self.cache_file, self.type, self.app)
+        elif "files" in self.type:
+            is_files = True
+            file = open(self.cache_file, "rb")
+            encoding_name = chardet.detect(file.read())["encoding"]
+            file.close()
+            with open(self.cache_file, encoding=encoding_name) as file:
+                file_content = file.readlines()
+            if len(file_content) == 1:
+                file_content = file_content[0].replace("copy","").replace("file://","").strip().replace("%20", " ").replace("\n","")
+                if os.path.exists(file_content):
+                    mime_type, val = Gio.content_type_guess(file_content, data=None)
+                    if "image" in mime_type and not "webp" in mime_type:
+                        return ImageContainer(file_content, mime_type, self.app)
+                        is_files = False
+            if is_files:
+                return FilesContainer(self.cache_file, self.type, self.app)
+        elif "image" in self.type:
+            return ImageContainer(self.cache_file, self.type, self.app)
+        elif "html" in self.type:
+            thumbnail = self.get_thumbnail_path(self.cache_file)
+            if thumbnail:
+                return HtmlContainer(self.cache_file, self.type, self.app)
+            else:
+                return PlainTextContainer(self.cache_file, self.type, self.app)
+        elif "richtext" in self.type:
+            return FilesContainer(self.cache_file, self.type, self.app)
+        elif "plaintext" in self.type and self.protected == "no":
+            return PlainTextContainer(self.cache_file, self.type, self.app)
+        elif "plaintext" in self.type and self.protected == "yes":
+            return ProtectedContainer(self.cache_file, self.type, self.app)
+        elif "color" in self.type:
+            return ColorContainer(self.cache_file, self.type, self.app)
+        elif "url" in self.type:
+            with open(self.cache_file, encoding="utf-8", errors="replace") as file:
+                url = file.readline().strip()
+            thumbnail = self.get_thumbnail_path(self.cache_file)
+            if thumbnail and self.app.utils.is_image_url(url):
+                return UrlImageContainer(self.cache_file, self.type, self.app, self.cache_filedir)
+            else:
+                return UrlContainer(self.cache_file, self.type, self.app, self.cache_filedir)
+        elif "mail" in self.type:
+            return EmailContainer(self.cache_file, self.type, self.app, self.cache_filedir)
+        else:
+            self.app.logger.debug("clips_view.py: FallbackContainer: " + self.cache_file + " " + self.type)
+            return FallbackContainer(self.cache_file, self.type, self.app)
+
+    @log_function_calls
+    def refresh(self):
+        """Refresh the container content, e.g. when thumbnail or metadata is ready"""
+        # Remove old content
+        self.container_overlay.remove(self.content)
+        
+        # Select and add new content
+        self.content = self._select_container()
+        self.container_overlay.add(self.content)
+        
+        self.content.show_all()
+        self.extended_info = self.content.label
+
+    def get_thumbnail_path(self, filepath):
+        import glob
+        thumbnail_files = glob.glob(os.path.splitext(filepath)[0]+'-thumb.*')
+        if thumbnail_files:
+            return thumbnail_files[0]
+        return None
 
     def generate_clip_select_button(self):
         button = Gtk.Button(image=Gtk.Image().new_from_icon_name("com.github.hezral.clips-select", Gtk.IconSize.SMALL_TOOLBAR))
@@ -584,8 +609,13 @@ class ClipsContainer(Gtk.EventBox):
         self.clip_action_revealer.set_reveal_child(True)
         self.source_icon_revealer.set_reveal_child(True)
         image_container = self.app.utils.get_widget_by_name(widget=self, child_name="image-container", level=0)
+        if image_container is None:
+            image_container = self.app.utils.get_widget_by_name(widget=self, child_name="url-image-container", level=0)
+        if image_container is None:
+            image_container = self.app.utils.get_widget_by_name(widget=self, child_name="html-container", level=0)
+
         if image_container is not None:
-            if "gif" in image_container.type:
+            if "gif" in image_container.type or image_container.filepath.lower().endswith(".gif"):
                 image_container.stop_threads = False
                 import threading
                 image_container.play_gif_thread = threading.Thread(target=image_container.animation_func)
@@ -605,8 +635,13 @@ class ClipsContainer(Gtk.EventBox):
             if flowboxchild_selected[0].get_children()[0].clip_action_notify_revealer.get_child_revealed():
                 flowboxchild_selected[0].get_children()[0].clip_action_notify_revealer.set_reveal_child(False)
         image_container = self.app.utils.get_widget_by_name(widget=self, child_name="image-container", level=0)
+        if image_container is None:
+            image_container = self.app.utils.get_widget_by_name(widget=self, child_name="url-image-container", level=0)
+        if image_container is None:
+            image_container = self.app.utils.get_widget_by_name(widget=self, child_name="html-container", level=0)
+
         if image_container is not None:
-            if "gif" in image_container.type:
+            if "gif" in image_container.type or image_container.filepath.lower().endswith(".gif"):
                 if image_container.play_gif_thread is not None:
                     image_container.stop_threads = True
                     image_container.play_gif_thread.join()
@@ -781,7 +816,7 @@ class ClipsContainer(Gtk.EventBox):
                    The paste goes to whatever window receives focus after
                    Clips hides (usually the previously focused window).
         """
-        from .display_backend import is_wayland
+        from .sub_utils.display_backend import is_wayland
         
         def paste(data=None):
             if not is_wayland():
@@ -791,7 +826,7 @@ class ClipsContainer(Gtk.EventBox):
                     )
                 except Exception as e:
                     self.app.logger.debug(f"X11 window activation: {e}")
-            self.app.utils.paste_from_clipboard()
+            self.app.utils.paste_from_clipboard(self.app)
             self.app.on_clipsapp_action()
 
         if self.app.gio_settings.get_value("quick-paste"):
@@ -879,18 +914,16 @@ class FallbackContainer(DefaultContainer):
         self.attach(self.content, 0, 0, 1, 1)
         self.label = str(len(type)) + " chars"
 
-
 class ImageContainer(DefaultContainer):
-    stop_threads = False
-    play_gif_thread = None
-    alpha = False
-
     def __init__(self, filepath, type, app, scale_mode="fill", *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.type = type
         self.filepath = filepath
+        self.stop_threads = False
+        self.play_gif_thread = None
+        self.alpha = False
         self.scale_mode = scale_mode
-        if "gif" in self.type:
+        if "gif" in self.type or filepath.lower().endswith(".gif"):
             self.pixbuf_original = GdkPixbuf.PixbufAnimation.new_from_file(filepath)
             self.pixbuf_original_height = self.pixbuf_original.get_height()
             self.pixbuf_original_width = self.pixbuf_original.get_width()
@@ -931,7 +964,7 @@ class ImageContainer(DefaultContainer):
         height = int(self.get_allocated_height() * scale * hover_scale)
         radius = 4 * scale
         
-        if "gif" in self.type:
+        if "gif" in self.type or self.filepath.lower().endswith(".gif"):
             pixbuf = GdkPixbuf.PixbufAnimationIter.get_pixbuf(self.iter)
         else:
             pixbuf = self.pixbuf_original
@@ -1057,7 +1090,9 @@ class PlainTextContainer(DefaultContainer):
 
 class HtmlContainer(ImageContainer):
     def __init__(self, filepath, type, app, *args, **kwargs):
-        thumbnail = os.path.splitext(filepath)[0]+'-thumb.png'
+        import glob
+        thumbnail_files = glob.glob(os.path.splitext(filepath)[0]+'-thumb.*')
+        thumbnail = thumbnail_files[0] if thumbnail_files else os.path.splitext(filepath)[0]+'-thumb.png'
         # Screenshot is generated before this container is created
         # See ClipsContainer.__init__ for HTML type handling
         super().__init__(thumbnail, type, app, scale_mode="natural-left")
@@ -1269,6 +1304,72 @@ class UrlContainer(DefaultContainer):
         self.attach(domain_label, 0, 2, 1, 1)
         self.props.margin = 10
         self.props.valign = Gtk.Align.FILL
+        self.label = "Internet URL"
+
+
+class UrlImageContainer(ImageContainer):
+    def __init__(self, filepath, type, app, cache_filedir, *args, **kwargs):
+        import glob
+        thumbnail_files = glob.glob(os.path.splitext(filepath)[0]+'-thumb.*')
+        thumbnail = thumbnail_files[0] if thumbnail_files else os.path.splitext(filepath)[0]+'-thumb.png'
+        super().__init__(thumbnail, type, app, scale_mode="fill")
+        self.props.name = "url-image-container"
+        
+        with open(filepath, encoding="utf-8") as file:
+            self.content = file.readlines()
+        domain = app.utils.get_domain(self.content[0].replace("\n",""))
+        checksum = os.path.splitext(filepath)[0].split("/")[-1]
+        icon_size = 32 * self.get_scale_factor()
+        favicon_file = os.path.join(cache_filedir[:-6],"icon", domain + "-" + checksum + ".ico")
+        
+        try:
+            pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_size(favicon_file, icon_size, icon_size)
+            favicon = Gtk.Image()
+            favicon.props.pixbuf = pixbuf
+        except:
+            favicon = Gtk.Image().new_from_icon_name("applications-internet", Gtk.IconSize.LARGE_TOOLBAR)
+            favicon.set_pixel_size(icon_size)
+            
+        favicon.props.hexpand = True
+        favicon.props.vexpand = True
+        
+        title = Gtk.Label(self.content[1] if len(self.content) > 1 else domain)
+        title.props.max_width_chars = 20
+        title.props.wrap = True
+        title.props.ellipsize = Pango.EllipsizeMode.NONE
+        title.props.justify = Gtk.Justification.CENTER
+        title.props.halign = Gtk.Align.FILL
+        title.props.hexpand = True
+        title.props.vexpand = True
+        
+        domain_label = Gtk.Label(domain)
+        domain_label.props.halign = Gtk.Align.FILL
+        domain_label.props.hexpand = True
+        domain_label.props.vexpand = True
+
+        # Create a grid for the elements to overlay on top of the image
+        overlay_grid = Gtk.Grid()
+        overlay_grid.attach(favicon, 0, 0, 1, 1)
+        overlay_grid.attach(title, 0, 1, 1, 1)
+        overlay_grid.attach(domain_label, 0, 2, 1, 1)
+        overlay_grid.props.margin = 10
+        overlay_grid.props.valign = Gtk.Align.FILL
+        overlay_grid.props.hexpand = True
+        overlay_grid.props.vexpand = True
+        
+        # Add a semi-transparent background to the overlay grid to make text readable
+        css = "#url-image-overlay { background-color: rgba(0,0,0,0.4); border-radius: 4px; }"
+        provider = Gtk.CssProvider()
+        provider.load_from_data(bytes(css.encode()))
+        overlay_grid.get_style_context().add_provider(provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+        overlay_grid.props.name = "url-image-overlay"
+        
+        # Use an overlay to put the grid on top of the DrawingArea (which is attached to self by ImageContainer)
+        # Wait, if I want to use Gtk.Overlay, I should have used it from the start.
+        # But ImageContainer is a Grid.
+        # I'll try to use a little trick: attach the overlay_grid to the same cell as the DrawingArea.
+        self.attach(overlay_grid, 0, 0, 1, 1)
+        
         self.label = "Internet URL"
 
 

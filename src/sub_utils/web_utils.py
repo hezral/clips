@@ -138,3 +138,20 @@ def open_file_gio(filepath):
         except:
             logger.error("Unable to launch {file}".format(file=view_file))
             pass
+@log_function_calls
+def download_image(url, out_file_path):
+
+    ''' Function to download an image from a URL '''
+    import requests
+    try:
+        response = requests.get(url, allow_redirects=True)
+        if response.status_code == 200:
+            with open(out_file_path, "wb") as f:
+                f.write(response.content)
+            return True
+        else:
+            logger.error(f"Failed to download image from {url}: Status code {response.status_code}")
+            return False
+    except Exception as e:
+        logger.error(f"Error downloading image from {url}: {e}")
+        return False

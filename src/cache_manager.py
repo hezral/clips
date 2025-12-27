@@ -16,7 +16,7 @@ import chardet
 from .utils import log_function_calls
 
 # Import display backend detection
-from .display_backend import get_backend_name
+from .sub_utils.display_backend import get_backend_name
 
 
 class CacheManager():
@@ -370,8 +370,8 @@ class CacheManager():
     @log_function_calls
     def delete_cache_file(self, cache_file, clip_type):
 
-
-        thumbnail_file = os.path.splitext(cache_file)[0]+'-thumb.png'
+        import glob
+        thumbnail_files = glob.glob(os.path.splitext(cache_file)[0]+'-thumb.*')
         alt_cache_file = cache_file.replace("html", "txt")
 
         if 'http' in clip_type:
@@ -388,13 +388,16 @@ class CacheManager():
             try:
                 os.remove(favicon_file)
             except OSError:
-                return OSError
+                pass
 
         try:
             os.remove(cache_file)
             if "html" in clip_type:
-                os.remove(alt_cache_file)
-            os.remove(thumbnail_file)
+                try: os.remove(alt_cache_file)
+                except: pass
+            for thumb in thumbnail_files:
+                try: os.remove(thumb)
+                except: pass
             return True
         except OSError:
             return OSError
@@ -542,28 +545,74 @@ class CacheManager():
             if "yes" in protected and type == "plaintext":
                 cache_file = self.encrypt_file(cache_uri)
 
-            # save thumbnail if available
-            if thumbnail is not None:
-                cache_thumbnail_file = checksum + "-thumb" + ".png"
-                cache_thumbnail_uri = self.cache_filedir + '/' + cache_thumbnail_file
-                if content_type in ("html", "url"):
-                    try:
-                        self.app.utils.do_webview_screenshot(uri=cache_uri, out_file_path=cache_thumbnail_uri)
-                    except Exception as e:
-                        self.app.logger.debug(f"Screenshot generation failed: {e}")
-                else:
-                    file = open(cache_thumbnail_uri,"wb")
-                    file.write(thumbnail.get_data())
-                    file.close()
-            
-            from datetime import datetime
-            if "http" in type:
-                url = content.get_text()
-                self.app.utils.get_web_data(url, cache_uri, self.icon_cache_filedir, checksum)
+            @self.app.utils.run_async
+            def process_network_data_async():
+                # save thumbnail if available
+                if thumbnail is not None or content_type == "html" or "url" in content_type:
+                    url_text = content.get_text()
+                    # Determine extension: provided thumbnail is always PNG from GdkPixbuf, 
+                    # but downloaded images should keep their original extension
+                    ext = ".png"
+                    if "url" in content_type and self.app.utils.is_image_url(url_text):
+                        _, downloaded_ext = os.path.splitext(url_text.split("?")[0])
+                        if downloaded_ext:
+                            ext = downloaded_ext.lower()
 
-            if "mail" in type:
-                url = "https://" + content.get_text().split("@")[-1]
-                self.app.utils.get_web_data(url, cache_uri, self.icon_cache_filedir, checksum)
+                    cache_thumbnail_file = checksum + "-thumb" + ext
+                    cache_thumbnail_uri = self.cache_filedir + '/' + cache_thumbnail_file
+                    
+                    if content_type == "html" or "url" in content_type:
+                        if "url" in content_type and self.app.utils.is_image_url(url_text):
+                            try:
+                                if self.app.utils.download_image(url=url_text, out_file_path=cache_thumbnail_uri):
+                                    self.app.logger.debug(f"Image thumbnail downloaded for {url_text}")
+                                    # Update UI after download
+                                    GLib.idle_add(self.update_cache_on_newdata, cache_file, checksum)
+                                else:
+                                    # Fallback to screenshot if download fails
+                                    # Screenshots are always PNG
+                                    cache_thumbnail_uri = self.cache_filedir + '/' + checksum + "-thumb.png"
+                                    self.app.utils.do_webview_screenshot(uri=cache_uri, out_file_path=cache_thumbnail_uri)
+                                    GLib.idle_add(self.update_cache_on_newdata, cache_file, checksum)
+                            except Exception as e:
+                                self.app.logger.debug(f"Image download failed: {e}")
+                                try:
+                                    cache_thumbnail_uri = self.cache_filedir + '/' + checksum + "-thumb.png"
+                                    self.app.utils.do_webview_screenshot(uri=cache_uri, out_file_path=cache_thumbnail_uri)
+                                    GLib.idle_add(self.update_cache_on_newdata, cache_file, checksum)
+                                except:
+                                    pass
+                        elif content_type == "html":
+                            try:
+                                # HTML screenshots are ALWAYS PNG
+                                cache_thumbnail_uri = self.cache_filedir + '/' + checksum + "-thumb.png"
+                                self.app.utils.do_webview_screenshot(uri=cache_uri, out_file_path=cache_thumbnail_uri)
+                                GLib.idle_add(self.update_cache_on_newdata, cache_file, checksum)
+                            except Exception as e:
+                                self.app.logger.debug(f"Screenshot generation failed: {e}")
+                    elif thumbnail is not None:
+                        try:
+                            # Provided thumbnails (from ImageContainer or other sources) are usually PNG
+                            cache_thumbnail_uri = self.cache_filedir + '/' + checksum + "-thumb.png"
+                            with open(cache_thumbnail_uri,"wb") as f:
+                                f.write(thumbnail.get_data())
+                        except Exception as e:
+                            self.app.logger.debug(f"Failed to save provided thumbnail: {e}")
+                
+                if "url" in content_type:
+                    url = content.get_text()
+                    # Only fetch web data (title/favicon) if it's not a direct image URL
+                    if not self.app.utils.is_image_url(url):
+                        self.app.utils.get_web_data(url, cache_uri, self.icon_cache_filedir, checksum)
+                        GLib.idle_add(self.update_cache_on_newdata, cache_file, checksum)
+
+                if "mail" in content_type:
+                    url = "https://" + content.get_text().split("@")[-1]
+                    self.app.utils.get_web_data(url, cache_uri, self.icon_cache_filedir, checksum)
+                    GLib.idle_add(self.update_cache_on_newdata, cache_file, checksum)
+
+            # Start asynchronous processing
+            process_network_data_async()
 
             # fallback for source_icon
             # save a copy of the icon in case the app is uninstalled and no icon to use
@@ -660,16 +709,16 @@ class CacheManager():
         cache_file = clip[6]
         type = clip[7]
         protected = clip[8]
-        created_short = clip[9]
 
         # Only update UI if main window exists and has clips loaded
         if self.main_window is not None:
             # Find the matching flowbox child
             matching_children = [child for child in self.main_window.clips_view.flowbox.get_children() if child.get_children()[0].id == id]
             if matching_children:
-                # update timestamp
+                # refresh content
                 flowboxchild_updated = matching_children[0]
                 clips_container = flowboxchild_updated.get_children()[0]
+                clips_container.refresh()
 
                 self.main_window.clips_view.flowbox.invalidate_sort()
 

@@ -23,14 +23,14 @@ from gi.repository import Gtk, Gio, GLib, Gdk, Granite
 from .main_window import ClipsWindow
 from .clipboard_manager import ClipboardManager
 from .cache_manager import CacheManager
-# from .shake_listener import ShakeListener
+from .sub_utils.shake_listener import ShakeListener
 from . import utils
 from .utils import log_function_calls
 
 # Use display_backend module for X11/Wayland detection
-from .display_backend import is_wayland, get_backend_name
+from .sub_utils.display_backend import is_wayland, get_backend_name
 from .active_window_manager import ActiveWindowManager
-from .filemanager_backend import FileManagerBackend
+from .sub_utils.filemanager_backend import FileManagerBackend
 
 from datetime import datetime
 import time
@@ -92,6 +92,10 @@ class Application(Gtk.Application):
         self.cache_manager = CacheManager(gtk_application=self, clipboard_manager=self.clipboard_manager)
         self.window_manager = ActiveWindowManager(gtk_application=self)
         self.file_manager = FileManagerBackend(gtk_application=self)
+        
+        # Shake listener synchronization
+        self.gio_settings.connect("changed::shake-reveal", self.create_shakelistener)
+        self.gio_settings.connect("changed::shake-sensitivity", self.create_shakelistener)
         self.create_shakelistener()
 
         # prepend custom path for icon theme
@@ -409,12 +413,31 @@ class Application(Gtk.Application):
         self.gtk_settings.set_property("gtk-application-prefer-dark-theme", prefers_color_scheme)
 
     @log_function_calls
-    def create_shakelistener(self, *args):
-        if self.shake_listener is not None:
-            self.shake_listener.listener.stop()
-            self.shake_listener = None
-        if self.gio_settings.get_value("shake-reveal"):
-            self.shake_listener = ShakeListener(app=self, reveal_callback=self.do_activate, sensitivity=self.gio_settings.get_int("shake-sensitivity"))
+    def create_shakelistener(self, settings=None, key=None):
+        should_reveal = self.gio_settings.get_boolean("shake-reveal")
+        sensitivity = self.gio_settings.get_int("shake-sensitivity")
+
+        if key == "shake-sensitivity" and self.shake_listener is not None:
+            self.shake_listener.update_sensitivity(sensitivity)
+            return
+
+        if not should_reveal:
+            if self.shake_listener is not None:
+                self.logger.info("Stopping shake_listener")
+                self.shake_listener.remove_listener()
+                self.shake_listener = None
+            return
+
+        if self.shake_listener is None:
+            self.logger.info("Starting shake_listener")
+            self.shake_listener = ShakeListener(
+                app=self, 
+                reveal_callback=self.do_activate, 
+                sensitivity=sensitivity
+            )
+        else:
+            # If shake-reveal was already ON, but maybe we need to refresh due to some reason
+            self.shake_listener.update_sensitivity(sensitivity)
 
 @log_function_calls
 def main(version):

@@ -141,7 +141,7 @@ class SettingsView(Gtk.Grid):
         self.flowbox.add(protected)
 
         # others -------------------------------------------------
-        add_shortcut = SubSettings(type="button", name="add-shortcut", label="Add Shortcut", sublabel="Launch with keyboard shortcut like ⌘+Ctrl+C\nSet with 'gtk-launch com.github.hezral.clips'", separator=True, params=(" Add", Gtk.Image().new_from_icon_name("com.github.hezral.clips", Gtk.IconSize.LARGE_TOOLBAR),))
+        add_shortcut = SubSettings(type="button", name="add-shortcut", label="Add Shortcut", sublabel="Launch with keyboard shortcut like ⌘+C\nSet with 'gtk-launch com.github.hezral.clips'", separator=True, params=(" Add", Gtk.Image().new_from_icon_name("com.github.hezral.clips", Gtk.IconSize.LARGE_TOOLBAR),))
         add_shortcut.button.connect("clicked", self.on_button_clicked)
 
         reset_password = SubSettings(type="button", name="reset-password", label="Reset Password", sublabel="All protected clips will be changed", separator=True, params=(" Reset", Gtk.Image().new_from_icon_name("dialog-password", Gtk.IconSize.LARGE_TOOLBAR),))
@@ -163,19 +163,18 @@ class SettingsView(Gtk.Grid):
         unprotect_timeout.spinbutton.connect("value-changed", self.on_spinbutton_activated)
         self.gio_settings.bind("unprotect-timeout", unprotect_timeout.spinbutton, "value", Gio.SettingsBindFlags.DEFAULT)
 
-        # quick_paste = SubSettings(type="switch", name="quick-paste", label="Quick paste", sublabel="Paste contents in active window after copy action",separator=True)
-        # self.gio_settings.bind("quick-paste", quick_paste.switch, "active", Gio.SettingsBindFlags.DEFAULT)
+        quick_paste = SubSettings(type="switch", name="quick-paste", label="Quick paste", sublabel="Paste contents in active window after copy action",separator=True)
+        self.gio_settings.bind("quick-paste", quick_paste.switch, "active", Gio.SettingsBindFlags.DEFAULT)
 
-        # shake_reveal = SubSettings(type="switch", name="shake-reveal", label="Shake to reveal   ! experimental !", sublabel="Shake mouse to reveal app",separator=True)
-        # # shake_reveal.switch.connect_after("notify::active", self.on_switch_activated)
-        # self.app.gio_settings.bind("shake-reveal", shake_reveal.switch, "active", Gio.SettingsBindFlags.DEFAULT)
+        shake_reveal = SubSettings(type="switch", name="shake-reveal", label="Shake to reveal   ! experimental !", sublabel="Shake mouse to reveal app",separator=True)
+        # shake_reveal.switch.connect_after("notify::active", self.on_switch_activated)
+        self.app.gio_settings.bind("shake-reveal", shake_reveal.switch, "active", Gio.SettingsBindFlags.DEFAULT)
 
-        # shake_sensitivity = SubSettings(type="spinbutton", name="shake-sensitivity", label="Shake sensitivity", sublabel="Adjust shake to reveal sensitivity", separator=False, params=(3,10,1))
-        # shake_sensitivity.spinbutton.connect("value-changed", self.on_spinbutton_activated)
-        # self.app.gio_settings.bind("shake-sensitivity", shake_sensitivity.spinbutton, "value", Gio.SettingsBindFlags.DEFAULT)
+        shake_sensitivity = SubSettings(type="spinbutton", name="shake-sensitivity", label="Shake sensitivity", sublabel="Adjust shake to reveal sensitivity", separator=False, params=(3,10,1))
+        shake_sensitivity.spinbutton.connect("value-changed", self.on_spinbutton_activated)
+        self.app.gio_settings.bind("shake-sensitivity", shake_sensitivity.spinbutton, "value", Gio.SettingsBindFlags.DEFAULT)
 
-        # others = SettingsGroup("Other", (add_shortcut, protected_mode, unprotect_timeout, reset_password, quick_paste, shake_reveal, shake_sensitivity))
-        others = SettingsGroup("Other", (add_shortcut, protected_mode, unprotect_timeout, reset_password))
+        others = SettingsGroup("Other", (add_shortcut, protected_mode, unprotect_timeout, reset_password, quick_paste, shake_reveal, shake_sensitivity))
         self.flowbox.add(others)
 
         # support -------------------------------------------------
@@ -375,10 +374,8 @@ class SettingsView(Gtk.Grid):
             #     print("spin:", spinbutton, spinbutton.props.value, name)
 
             if name == "shake-sensitivity":
-                # print("spin:", spinbutton, spinbutton.props.value, name, main_window.app.shake_listener.needed_shake_count)
                 if self.app.shake_listener is not None:
-                    self.app.shake_listener.needed_shake_count = spinbutton.props.value
-                    # print(self.app.shake_listener.needed_shake_count)
+                    self.app.shake_listener.update_sensitivity(spinbutton.props.value)
 
     @log_function_calls
     def on_switch_activated(self, switch, gparam):

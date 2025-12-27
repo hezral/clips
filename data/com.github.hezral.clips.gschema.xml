@@ -100,8 +100,8 @@
             <description>Shake to reveal</description>
         </key>
         <key type="i" name="shake-sensitivity">
-            <default>3</default>
-            <range min="1" max="10"/>
+            <default>6</default>
+            <range min="3" max="15"/>
             <summary>Shake sensitivity</summary>
             <description>Shake sensitivity</description>
         </key>

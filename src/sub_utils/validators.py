@@ -41,3 +41,13 @@ def is_valid_email(string):
     EMAIL = r"(^(mailto\:)?[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)"
     regex = EMAIL
     return validate_string_with_regex(string, regex)
+@log_function_calls
+def is_image_url(string):
+
+    '''
+    Function to validate if a string is an image url
+    '''
+    IMAGE_URL = r".*\.(jpg|jpeg|png|gif|bmp|webp|tiff|svg|ico)$"
+    regex = IMAGE_URL
+    import re
+    return re.match(regex, string.lower()) is not None
