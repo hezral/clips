@@ -626,6 +626,10 @@ class ClipsContainer(Gtk.EventBox):
                 image_container.play_gif_thread = threading.Thread(target=image_container.animation_func)
                 image_container.play_gif_thread.start()
 
+        files_container = self.app.utils.get_widget_by_name(widget=self, child_name="files-container", level=0)
+        if files_container is not None:
+            files_container.start_hover()
+
     def on_cursor_leaving_clip(self, widget, eventcrossing):
         self.get_parent().get_style_context().remove_class("hover")
         flowboxchild = self.get_parent()
@@ -651,6 +655,10 @@ class ClipsContainer(Gtk.EventBox):
                     image_container.stop_threads = True
                     image_container.play_gif_thread.join()
                     image_container.play_gif_thread = None
+
+        files_container = self.app.utils.get_widget_by_name(widget=self, child_name="files-container", level=0)
+        if files_container is not None:
+            files_container.stop_hover()
 
     @log_function_calls
     def on_clip_action(self, button=None, action=None, validated=False, data=None):
@@ -1143,16 +1151,28 @@ class FilesContainer(DefaultContainer):
             logger.error(f"Error reading files cache {filepath}: {e}")
             file_content = []
         
-        # Limit stack to 5 items that actually exist
+        # Limit stack to 10 items that actually exist
         for line in file_content:
             if "file://" in line:
                 line = line.replace("copy","").replace("file://","").strip().replace("%20", " ")
                 if os.path.exists(line):
                     mime_type = "inode/directory" if os.path.isdir(line) else Gio.content_type_guess(line, data=None)[0]
                     self.update_stack(line, mime_type)
-                    if len(self.stack_items) >= 5:
+                    if len(self.stack_items) >= 10:
                         break
         
+        # Center the stack items for a balanced spread
+        if self.stack_items:
+            # If only one item, don't rotate it
+            if len(self.stack_items) == 1:
+                self.stack_items[0]['angle'] = 0
+            
+            avg_x = sum(item['offset_x'] for item in self.stack_items) / len(self.stack_items)
+            avg_y = sum(item['offset_y'] for item in self.stack_items) / len(self.stack_items)
+            for item in self.stack_items:
+                item['offset_x'] -= avg_x
+                item['offset_y'] -= avg_y
+
         self.props.name = "files-container"
         self.hover_progress = 0.0
         self.target_hover_progress = 0.0
@@ -1161,25 +1181,20 @@ class FilesContainer(DefaultContainer):
         drawing_area = Gtk.DrawingArea()
         drawing_area.props.expand = True
         drawing_area.props.can_focus = False
-        drawing_area.add_events(Gdk.EventMask.ENTER_NOTIFY_MASK | Gdk.EventMask.LEAVE_NOTIFY_MASK)
-        drawing_area.connect("enter-notify-event", self.on_hover_enter)
-        drawing_area.connect("leave-notify-event", self.on_hover_leave)
         drawing_area.connect("draw", self.draw)
         self.attach(drawing_area, 0, 0, 1, 1)
         self.label = str(len(file_content)) + " files"
         logger.debug(f"FilesContainer initialized with {len(self.stack_items)} items")
 
-    def on_hover_enter(self, widget, event):
+    def start_hover(self):
         self.target_hover_progress = 1.0
         if self.animation_id is None:
             self.animation_id = GLib.timeout_add(16, self.animate_spread)
-        return False
 
-    def on_hover_leave(self, widget, event):
+    def stop_hover(self):
         self.target_hover_progress = 0.0
         if self.animation_id is None:
             self.animation_id = GLib.timeout_add(16, self.animate_spread)
-        return False
 
     def animate_spread(self):
         step = 0.1
@@ -1243,7 +1258,8 @@ class FilesContainer(DefaultContainer):
         cy = height / 2
         
         # Spread factor based on hover progress
-        spread = 1.0 + self.hover_progress * 1.5
+        # Increased from 1.5 to 4.0 for a bigger spread effect
+        spread = 1.0 + self.hover_progress * 3.0
         
         # Draw items from bottom to top
         # To have the first item (most important) on top, draw it LAST
