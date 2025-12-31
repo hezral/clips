@@ -548,7 +548,7 @@ class CacheManager():
             @self.app.utils.run_async
             def process_network_data_async():
                 # save thumbnail if available
-                if thumbnail is not None or content_type == "html" or "url" in content_type:
+                if thumbnail is not None or content_type == "html" or "url" in content_type or content_type == "files":
                     url_text = content.get_text()
                     # Determine extension: provided thumbnail is always PNG from GdkPixbuf, 
                     # but downloaded images should keep their original extension
@@ -590,6 +590,28 @@ class CacheManager():
                                 GLib.idle_add(self.update_cache_on_newdata, cache_file, checksum)
                             except Exception as e:
                                 self.app.logger.debug(f"Screenshot generation failed: {e}")
+                    elif content_type == "files":
+                        # For local files, check if it's a single image and generate a thumbnail
+                        try:
+                            file = open(cache_uri, "rb")
+                            encoding_name = chardet.detect(file.read())["encoding"]
+                            file.close()
+                            with open(cache_uri, encoding=encoding_name) as f:
+                                file_content = f.readlines()
+                            if len(file_content) == 1:
+                                line = file_content[0].replace("copy","").replace("file://","").strip().replace("%20", " ").replace("\n","")
+                                if os.path.exists(line):
+                                    mime_type, _ = Gio.content_type_guess(line, data=None)
+                                    if "image" in mime_type:
+                                        # Use GdkPixbuf to create a thumbnail for local image
+                                        # Using -thumb.png as convention for local thumbnails
+                                        cache_thumbnail_uri = self.cache_filedir + '/' + checksum + "-thumb.png"
+                                        pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(line, 200, 200, True)
+                                        pixbuf.savev(cache_thumbnail_uri, "png", [], [])
+                                        self.app.logger.debug(f"Local image thumbnail generated for {line}")
+                                        GLib.idle_add(self.update_cache_on_newdata, cache_file, checksum)
+                        except Exception as e:
+                            self.app.logger.debug(f"Failed to generate local file thumbnail: {e}")
                     elif thumbnail is not None:
                         try:
                             # Provided thumbnails (from ImageContainer or other sources) are usually PNG

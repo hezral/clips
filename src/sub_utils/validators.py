@@ -26,9 +26,9 @@ def is_valid_unix_uri(string):
 
     '''
     Function to validate if a string is a unix url
-    https://stackoverflow.com/a/38521489/14741406
+    Supports common path characters: letters, numbers, underscores, dashes, dots, and spaces.
     '''
-    UNIXPATH = r"^(\/[\w^ ]+)+\/?([\w.])+[^.]$"
+    UNIXPATH = r"^(\/[\w\-. ]+)+\/?([\w\-. ])+$"
     regex = UNIXPATH
     return validate_string_with_regex(string, regex)
 

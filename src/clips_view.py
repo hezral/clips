@@ -14,8 +14,13 @@ from .utils import log_function_calls
 import os
 from datetime import datetime
 import time
+from math import pi
+import random
 
 import chardet
+
+import logging
+logger = logging.getLogger(__name__)
 
 global stop_threads
 
@@ -1119,51 +1124,156 @@ class FilesContainer(DefaultContainer):
         self.app = app
         scale = self.get_scale_factor()
         self.icon_size = 72 * scale
-        self.iconstack_offset = 0
-        self.iconstack_overlay = Gtk.Overlay()
-        self.iconstack_overlay.props.expand = True
-        file = open(filepath, "rb")
-        encoding_name = chardet.detect(file.read())["encoding"]
-        file.close()
-        with open(filepath, encoding=encoding_name) as file:
-            file_content = file.readlines()
+        self.stack_items = []
+        
+        logger.debug(f"Initializing FilesContainer for {filepath}")
+        
+        try:
+            file = open(filepath, "rb")
+            raw_data = file.read()
+            file.close()
+            
+            # Use chardet safely
+            detect_res = chardet.detect(raw_data)
+            encoding_name = detect_res["encoding"] if detect_res else "utf-8"
+            if not encoding_name: encoding_name = "utf-8"
+            
+            file_content = raw_data.decode(encoding_name, errors="replace").splitlines()
+        except Exception as e:
+            logger.error(f"Error reading files cache {filepath}: {e}")
+            file_content = []
+        
+        # Limit stack to 5 items that actually exist
         for line in file_content:
             if "file://" in line:
                 line = line.replace("copy","").replace("file://","").strip().replace("%20", " ")
                 if os.path.exists(line):
                     mime_type = "inode/directory" if os.path.isdir(line) else Gio.content_type_guess(line, data=None)[0]
                     self.update_stack(line, mime_type)
+                    if len(self.stack_items) >= 5:
+                        break
+        
         self.props.name = "files-container"
-        self.attach(self.iconstack_overlay, 0, 0, 1, 1)
+        self.hover_progress = 0.0
+        self.target_hover_progress = 0.0
+        self.animation_id = None
+        
+        drawing_area = Gtk.DrawingArea()
+        drawing_area.props.expand = True
+        drawing_area.props.can_focus = False
+        drawing_area.add_events(Gdk.EventMask.ENTER_NOTIFY_MASK | Gdk.EventMask.LEAVE_NOTIFY_MASK)
+        drawing_area.connect("enter-notify-event", self.on_hover_enter)
+        drawing_area.connect("leave-notify-event", self.on_hover_leave)
+        drawing_area.connect("draw", self.draw)
+        self.attach(drawing_area, 0, 0, 1, 1)
         self.label = str(len(file_content)) + " files"
+        logger.debug(f"FilesContainer initialized with {len(self.stack_items)} items")
+
+    def on_hover_enter(self, widget, event):
+        self.target_hover_progress = 1.0
+        if self.animation_id is None:
+            self.animation_id = GLib.timeout_add(16, self.animate_spread)
+        return False
+
+    def on_hover_leave(self, widget, event):
+        self.target_hover_progress = 0.0
+        if self.animation_id is None:
+            self.animation_id = GLib.timeout_add(16, self.animate_spread)
+        return False
+
+    def animate_spread(self):
+        step = 0.1
+        if abs(self.hover_progress - self.target_hover_progress) < step:
+            self.hover_progress = self.target_hover_progress
+            self.queue_draw()
+            self.animation_id = None
+            return False
+        
+        if self.hover_progress < self.target_hover_progress:
+            self.hover_progress += step
+        else:
+            self.hover_progress -= step
+            
+        self.queue_draw()
+        return True
 
     def update_stack(self, path, mime_type):
-        icon = self.generate_default_icon(mime_type)
+        pixbuf = None
         if "image" in mime_type and "gif" not in mime_type:
             try:
-                icon = Gtk.Image()
-                icon.props.pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_size(path, self.icon_size, self.icon_size)
-            except:
-                pass
-        icon.props.halign = icon.props.valign = Gtk.Align.CENTER
-        import random
-        if len(self.iconstack_overlay.get_children()) != 1:
-            margin = random.randint(24,64) + self.iconstack_offset
-            random.choice([icon.set_margin_bottom, icon.set_margin_top, icon.set_margin_left, icon.set_margin_right])(margin)
-        self.iconstack_overlay.add_overlay(icon)
-        self.iconstack_offset = 0 if self.iconstack_offset >= 30 else self.iconstack_offset + 2
+                pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_size(path, self.icon_size, self.icon_size)
+            except Exception as e:
+                logger.warning(f"Failed to load image preview for {path}: {e}")
+        
+        if not pixbuf:
+            pixbuf = self.generate_default_pixbuf(mime_type)
+        
+        if not pixbuf:
+            return
 
-    def generate_default_icon(self, mime_type):
-        icon = Gtk.Image()
+        # Random transformation
+        angle = random.uniform(-15, 15) * (pi / 180) # -15 to 15 degrees in radians
+        offset_x = random.uniform(-10, 10)
+        offset_y = random.uniform(-10, 10)
+        
+        self.stack_items.append({
+            'pixbuf': pixbuf,
+            'angle': angle,
+            'offset_x': offset_x,
+            'offset_y': offset_y
+        })
+
+    def generate_default_pixbuf(self, mime_type):
         icons = Gio.content_type_get_icon(mime_type)
         for icon_name in icons.to_string().split():
             if icon_name not in (".", "GThemedIcon"):
                 try:
-                    icon.props.pixbuf = self.app.icon_theme.load_icon(icon_name, self.icon_size, 0)
-                    break
+                    return self.app.icon_theme.load_icon(icon_name, self.icon_size, 0)
                 except:
                     pass
-        return icon
+        return None
+
+    def draw(self, drawing_area, cr):
+        scale = self.get_scale_factor()
+        width = drawing_area.get_allocated_width()
+        height = drawing_area.get_allocated_height()
+        
+        # Center of the widget
+        cx = width / 2
+        cy = height / 2
+        
+        # Spread factor based on hover progress
+        spread = 1.0 + self.hover_progress * 1.5
+        
+        # Draw items from bottom to top
+        # To have the first item (most important) on top, draw it LAST
+        for item in reversed(self.stack_items):
+            pixbuf = item.get('pixbuf')
+            if not pixbuf: continue
+            
+            pw_device = pixbuf.get_width()
+            ph_device = pixbuf.get_height()
+            pw = pw_device / scale
+            ph = ph_device / scale
+            
+            cr.save()
+            cr.translate(cx + item['offset_x'] * spread, cy + item['offset_y'] * spread)
+            cr.rotate(item['angle'] * (1.0 + self.hover_progress * 0.5))
+            
+            # Draw the icon/preview
+            # Coordinate system is currently at center of icon, unscaled
+            # We want to place the pixbuf such that its center is at (0,0)
+            Gdk.cairo_set_source_pixbuf(cr, pixbuf, -pw/2 * scale, -ph/2 * scale)
+            
+            # Constraint the paint to just the icon area to avoid overdrawing
+            cr.rectangle(-pw/2, -ph/2, pw, ph)
+            cr.clip()
+            
+            # Scale down to logical units for the paint operation
+            cr.scale(1/scale, 1/scale)
+            cr.paint()
+            
+            cr.restore()
 
 
 class FilesContainerPopover(Gtk.Popover):
@@ -1177,16 +1287,24 @@ class FilesContainerPopover(Gtk.Popover):
         self.flowbox.props.max_children_per_line = 3
         self.flowbox.props.min_children_per_line = 3
         self.flowbox.connect("child-activated", self.on_files_activated)
-        file = open(filepath, "rb")
-        encoding_name = chardet.detect(file.read())["encoding"]
-        file.close()
-        with open(filepath, encoding=encoding_name) as file:
-            for line in file.readlines():
-                if "file://" in line:
-                    line = line.replace("copy","").replace("file://","").strip().replace("%20", " ")
-                    if os.path.exists(line):
-                        mime_type = "inode/directory" if os.path.isdir(line) else Gio.content_type_guess(line, data=None)[0]
-                        self.add_file_item(line, mime_type)
+        try:
+            file = open(filepath, "rb")
+            raw_data = file.read()
+            file.close()
+            detect_res = chardet.detect(raw_data)
+            encoding_name = detect_res["encoding"] if detect_res else "utf-8"
+            if not encoding_name: encoding_name = "utf-8"
+            file_content = raw_data.decode(encoding_name, errors="replace").splitlines()
+        except Exception as e:
+            logger.error(f"Error reading files cache for popover {filepath}: {e}")
+            file_content = []
+
+        for line in file_content:
+            if "file://" in line:
+                line = line.replace("copy","").replace("file://","").strip().replace("%20", " ")
+                if os.path.exists(line):
+                    mime_type = "inode/directory" if os.path.isdir(line) else Gio.content_type_guess(line, data=None)[0]
+                    self.add_file_item(line, mime_type)
         scrolled_window = Gtk.ScrolledWindow()
         scrolled_window.props.expand = True
         scrolled_window.add(self.flowbox)
@@ -1212,7 +1330,9 @@ class FilesContainerPopover(Gtk.Popover):
         for icon_name in icons.to_string().split():
             if icon_name not in (".", "GThemedIcon"):
                 try:
-                    icon.props.pixbuf = self.app.icon_theme.load_icon(icon_name, self.icon_size, 0)
+                    # Keep a reference to the pixbuf to avoid RuntimeWarning (marshaling borrowed reference)
+                    pixbuf = self.app.icon_theme.load_icon(icon_name, self.icon_size, 0)
+                    icon.props.pixbuf = pixbuf
                     break
                 except:
                     pass

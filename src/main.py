@@ -336,10 +336,6 @@ class Application(Gtk.Application):
                 
                 # Update UI
                 self.main_window.clipsapp_toggle.props.tooltip_text = "Clipboard Monitoring: Disabled"
-                self.main_window.clipsapp_toggle.set_image(
-                    Gtk.Image().new_from_icon_name("com.github.hezral.clips-disabled-symbolic", Gtk.IconSize.SMALL_TOOLBAR)
-                )
-                self.main_window.clipsapp_toggle.props.name = "app-action-disable"
                 self.main_window.clipsapp_toggle.get_style_context().add_class("app-action-disabled")
                 self.main_window.clipsapp_toggle.get_style_context().remove_class("app-action-enabled")
                 
@@ -353,10 +349,6 @@ class Application(Gtk.Application):
                 
                 # Update UI
                 self.main_window.clipsapp_toggle.props.tooltip_text = "Clipboard Monitoring: Enabled"
-                self.main_window.clipsapp_toggle.set_image(
-                    Gtk.Image().new_from_icon_name("com.github.hezral.clips-enabled-symbolic", Gtk.IconSize.SMALL_TOOLBAR)
-                )
-                self.main_window.clipsapp_toggle.props.name = "app-action-enable"
                 self.main_window.clipsapp_toggle.get_style_context().add_class("app-action-enabled")
                 self.main_window.clipsapp_toggle.get_style_context().remove_class("app-action-disabled")
                 
